@@ -12,9 +12,11 @@ const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers = {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers || {})
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string> || {})
   };
 
   const res = await fetch(url, { ...options, headers });
@@ -26,6 +28,57 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const api = {
+  // --- AUTHENTICATION ---
+  auth: {
+    async loginOperator(email = 'm.riva@voltagroup.it', password = 'admin123', totpCode = '123456') {
+      try {
+        const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-operator', {
+          method: 'POST',
+          body: JSON.stringify({ email, password, totpCode })
+        });
+        if (data.token && typeof window !== 'undefined') {
+          localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+        }
+        return data;
+      } catch (err) {
+        console.warn('[API Client] Login operatore non riuscito, fallback locale:', err);
+        return null;
+      }
+    },
+
+    async loginCustomer(identifier: string, password = 'customer123') {
+      try {
+        const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-customer', {
+          method: 'POST',
+          body: JSON.stringify({ identifier, password })
+        });
+        if (data.token && typeof window !== 'undefined') {
+          localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+        }
+        return data;
+      } catch (err) {
+        console.warn('[API Client] Login cliente non riuscito, fallback locale:', err);
+        return null;
+      }
+    },
+
+    async ensureToken(): Promise<string | null> {
+      if (typeof window === 'undefined') return null;
+      let token = localStorage.getItem('VOLTA_AUTH_TOKEN');
+      if (!token) {
+        const res = await api.auth.loginOperator();
+        token = res?.token || null;
+      }
+      return token;
+    },
+
+    logout() {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('VOLTA_AUTH_TOKEN');
+      }
+    }
+  },
+
   // --- HEALTH & STATUS ---
   async getHealth() {
     try {
@@ -39,6 +92,7 @@ export const api = {
   leads: {
     async getAll(): Promise<Lead[]> {
       try {
+        await api.auth.ensureToken();
         const data = await request<{ success: boolean; leads: Lead[] }>('/leads');
         return data.leads;
       } catch (err) {
@@ -105,6 +159,7 @@ export const api = {
   customers: {
     async getAll(): Promise<Customer[]> {
       try {
+        await api.auth.ensureToken();
         const data = await request<{ success: boolean; customers: Customer[] }>('/customers');
         return data.customers;
       } catch (err) {
@@ -115,6 +170,7 @@ export const api = {
 
     async getById(id: string): Promise<Customer | undefined> {
       try {
+        await api.auth.ensureToken();
         const data = await request<{ success: boolean; customer: Customer }>(`/customers/${id}`);
         return data.customer;
       } catch {
@@ -124,6 +180,7 @@ export const api = {
 
     async create(customerData: Partial<Customer>): Promise<Customer> {
       try {
+        await api.auth.ensureToken();
         const data = await request<{ success: boolean; customer: Customer }>('/customers', {
           method: 'POST',
           body: JSON.stringify(customerData)
@@ -175,6 +232,7 @@ export const api = {
 
     async getAudits(): Promise<SwitchAudit[]> {
       try {
+        await api.auth.ensureToken();
         const data = await request<{ success: boolean; audits: SwitchAudit[] }>('/switch/audit');
         return data.audits;
       } catch (err) {
@@ -193,6 +251,7 @@ export const api = {
       supplier?: string;
     }) {
       try {
+        await api.auth.ensureToken();
         return await request<{ success: boolean; signatureReceipt: any }>('/switch/sign', {
           method: 'POST',
           body: JSON.stringify(payload)
