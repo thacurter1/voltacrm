@@ -28,7 +28,7 @@ interface TeamProfilesManagerProps {
 export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
   currentUser,
   profiles,
-  customers,
+  customers: _customers,
   onProfilesUpdated,
   onCustomerCreated,
   onToast,

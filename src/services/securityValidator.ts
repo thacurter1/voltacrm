@@ -69,7 +69,7 @@ export const securityValidator = {
         sanitizedName,
         error: 'Firma binaria del file non valida. Sono consentiti solo veri documenti PDF, JPG o PNG.',
       };
-    } catch (err) {
+    } catch {
       return {
         isValid: false,
         fileType: 'unknown',

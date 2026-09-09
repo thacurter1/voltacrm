@@ -5,12 +5,9 @@ import {
   CheckCircle2, 
   Clock, 
   Search, 
-  Filter, 
   Eye, 
   Zap, 
-  Flame, 
-  ArrowRight,
-  Download
+  Flame
 } from 'lucide-react';
 import { CustomerBill } from '../types';
 
@@ -23,7 +20,7 @@ interface ClientBillsInboxProps {
 export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({
   bills,
   onOpenOcrForBill,
-  onMarkAnalyzed,
+  onMarkAnalyzed: _onMarkAnalyzed,
 }) => {
   const [filter, setFilter] = useState<'all' | 'in_review' | 'analyzed'>('all');
   const [search, setSearch] = useState('');

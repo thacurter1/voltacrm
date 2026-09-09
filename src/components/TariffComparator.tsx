@@ -3,10 +3,7 @@ import {
   Zap, 
   Flame, 
   Calculator, 
-  Check, 
-  Sparkles,
-  ArrowRight,
-  ShieldCheck
+  Check
 } from 'lucide-react';
 import { MARKET_OFFERS, calculateAnnualCost } from '../services/energyEngine';
 import { MarketIndex } from '../types';
@@ -17,7 +14,7 @@ interface TariffComparatorProps {
 
 export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex }) => {
   const [activeType, setActiveType] = useState<'luce' | 'gas'>('luce');
-  const [filterPricing, setFilterPricing] = useState<'all' | 'fixed' | 'indexed'>('all');
+  const [filterPricing] = useState<'all' | 'fixed' | 'indexed'>('all');
   
   const [simKwh, setSimKwh] = useState<number>(3200);
   const [simSmc, setSimSmc] = useState<number>(1000);

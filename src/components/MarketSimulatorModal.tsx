@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, Zap, Flame, RefreshCw, X, TrendingUp, TrendingDown, Check } from 'lucide-react';
+import { SlidersHorizontal, Zap, Flame, X, TrendingUp, TrendingDown, Check } from 'lucide-react';
 import { MarketIndex } from '../types';
 
 interface MarketSimulatorModalProps {

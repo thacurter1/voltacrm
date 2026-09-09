@@ -4,13 +4,10 @@ import {
   Users, 
   ShieldCheck, 
   RefreshCw, 
-  Zap, 
-  Flame, 
   FileSearch, 
   Plus, 
   SlidersHorizontal,
-  ArrowRight,
-  X
+  ArrowRight
 } from 'lucide-react';
 import { Customer, Lead } from '../types';
 

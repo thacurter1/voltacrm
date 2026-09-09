@@ -1,78 +1,47 @@
 import { Router, Request, Response } from 'express';
-import { UserProfile } from '../types.js';
+import bcrypt from 'bcryptjs';
+import { users } from '../services/dataStore.js';
+import { generateToken, authenticateToken, requireRole } from '../middleware/auth.js';
+import { loginLimiter } from '../middleware/rateLimiter.js';
+import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema } from '../middleware/validate.js';
 
 export const authRouter = Router();
 
-// Demo users database in-memory (sincronizzato con Supabase se configurato)
-let users: UserProfile[] = [
-  {
-    id: 'user-admin-1',
-    name: 'Matteo Riva (Broker Owner)',
-    email: 'm.riva@voltagroup.it',
-    role: 'admin',
-    phone: '+39 347 1122334',
-    whatsapp: '+393471122334',
-    avatar: 'MR',
-    is2faEnabled: true,
-    onboardingStatus: 'active',
-    createdAt: '2026-01-15'
-  },
-  {
-    id: 'user-op-2',
-    name: 'Chiara Bianchi (Consulente Senior)',
-    email: 'c.bianchi@voltagroup.it',
-    role: 'call_center',
-    phone: '+39 338 5566778',
-    whatsapp: '+393385566778',
-    avatar: 'CB',
-    is2faEnabled: true,
-    onboardingStatus: 'active',
-    createdAt: '2026-02-10'
-  },
-  {
-    id: 'user-cust-1',
-    name: 'Andrea Moretti',
-    email: 'andrea.moretti@email.it',
-    role: 'customer',
-    phone: '+39 340 1234567',
-    whatsapp: '+393401234567',
-    fiscalCode: 'MRTNDR85M01H501Z',
-    customerId: 'cust-1',
-    assignedBrokerId: 'user-admin-1',
-    assignedBrokerName: 'Matteo Riva',
-    avatar: 'AM',
-    is2faEnabled: false,
-    onboardingStatus: 'active',
-    createdAt: '2026-03-01'
-  }
-];
+const toSafeProfile = (user: any) => {
+  const { password: _password, ...safeUser } = user;
+  return safeUser;
+};
 
 // POST /api/auth/login-operator
-authRouter.post('/login-operator', (req: Request, res: Response): void => {
+authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), (req: Request, res: Response): void => {
   const { email, password, totpCode } = req.body;
   const user = users.find(u => u.email.toLowerCase() === (email || '').toLowerCase() && u.role !== 'customer');
 
-  if (!user) {
+  if (!user || !bcrypt.compareSync(password, user.password)) {
     res.status(401).json({ success: false, message: 'Credenziali operatore non valide.' });
     return;
   }
 
   // Verifica 2FA TOTP (se abilitato, richiede codice valido)
-  if (user.is2faEnabled && !totpCode) {
-    res.status(403).json({ success: false, require2FA: true, message: 'Inserisci il codice 2FA da Authenticator.' });
-    return;
+  if (user.is2faEnabled) {
+    if (!totpCode || totpCode.length !== 6) {
+      res.status(403).json({ success: false, require2FA: true, message: 'Inserisci il codice 2FA da Authenticator.' });
+      return;
+    }
   }
+
+  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
   res.json({
     success: true,
-    token: `jwt-mock-token-${user.id}-${Date.now()}`,
-    user
+    token,
+    user: toSafeProfile(user)
   });
 });
 
 // POST /api/auth/login-customer
-authRouter.post('/login-customer', (req: Request, res: Response): void => {
-  const { identifier } = req.body;
+authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), (req: Request, res: Response): void => {
+  const { identifier, password } = req.body;
   const query = (identifier || '').trim().toLowerCase();
   
   const user = users.find(u => 
@@ -80,27 +49,33 @@ authRouter.post('/login-customer', (req: Request, res: Response): void => {
       u.email.toLowerCase() === query || 
       u.fiscalCode?.toLowerCase() === query
     )
-  ) || users.find(u => u.role === 'customer');
+  );
+
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    res.status(401).json({ success: false, message: 'Credenziali cliente non valide.' });
+    return;
+  }
+
+  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
   res.json({
     success: true,
-    token: `jwt-mock-customer-${user?.id}-${Date.now()}`,
-    user
+    token,
+    user: toSafeProfile(user)
   });
 });
 
 // POST /api/auth/register-customer
-authRouter.post('/register-customer', (req: Request, res: Response): void => {
-  const { name, email, phone, fiscalCode } = req.body;
-  if (!name || !email) {
-    res.status(400).json({ success: false, message: 'Nome ed email sono obbligatori.' });
-    return;
-  }
+authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSchema), (req: Request, res: Response): void => {
+  const { name, email, phone, fiscalCode, password } = req.body;
+  
+  const hashedPassword = bcrypt.hashSync(password || 'customer123', 10);
 
-  const newProfile: UserProfile = {
+  const newProfile = {
     id: `user-cust-${Date.now()}`,
     name,
     email,
+    password: hashedPassword,
     role: 'customer',
     phone: phone || '+39 340 0000000',
     whatsapp: (phone || '+39340000000').replace(/[^0-9+]/g, ''),
@@ -114,16 +89,18 @@ authRouter.post('/register-customer', (req: Request, res: Response): void => {
     createdAt: new Date().toISOString().split('T')[0]
   };
 
-  users.unshift(newProfile);
+  users.unshift(newProfile as any);
+
+  const token = generateToken({ userId: newProfile.id, email: newProfile.email, role: newProfile.role });
 
   res.status(201).json({
     success: true,
-    user: newProfile,
-    token: `jwt-mock-customer-${newProfile.id}`
+    user: toSafeProfile(newProfile),
+    token
   });
 });
 
 // GET /api/auth/profiles (Solo per operatori autorizzati)
-authRouter.get('/profiles', (_req: Request, res: Response) => {
-  res.json({ success: true, profiles: users });
+authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center'), (_req: Request, res: Response) => {
+  res.json({ success: true, profiles: users.map(toSafeProfile) });
 });

@@ -33,16 +33,24 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'switch' | 'totem' | 'security'>('all');
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [browserPermission, setBrowserPermission] = useState<NotificationPermission>('default');
+  const [browserPermission, setBrowserPermission] = useState<NotificationPermission>(() => typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default');
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   // Play synthetic chime via Web Audio API (Zero external assets needed)
   const playChime = () => {
     if (!soundEnabled) return;
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
+      if (!audioContextRef.current) {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioContextRef.current = new AudioContextClass();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       
@@ -64,28 +72,21 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   };
 
   // Carica le notifiche dal server/local API
-  const loadNotifications = async () => {
+  const loadNotifications = React.useCallback(async () => {
     try {
       const res = await api.notifications.getAll(userRole);
       setNotifications(res.notifications);
     } catch (err) {
       console.warn('Errore caricamento notifiche:', err);
     }
-  };
+  }, [userRole]);
 
   useEffect(() => {
     loadNotifications();
     // Poll per aggiornamenti periodici ogni 30 secondi
-    const interval = setInterval(loadNotifications, 30000);
+    const interval: ReturnType<typeof setInterval> = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
-  }, [userRole]);
-
-  // Check browser notification permission
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setBrowserPermission(Notification.permission);
-    }
-  }, []);
+  }, [loadNotifications]);
 
   // Chiudi cliccando fuori
   useEffect(() => {
@@ -104,8 +105,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    const prev = [...notifications];
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-    await api.notifications.markRead(id);
+    try {
+      await api.notifications.markRead(id);
+    } catch {
+      setNotifications(prev);
+      if (onToast) onToast('Errore', 'Impossibile segnare la notifica come letta.', 'warning');
+    }
   };
 
   const handleMarkAllAsRead = async () => {
@@ -114,9 +121,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     if (onToast) onToast('Notifiche Aggiornate', 'Tutte le notifiche sono state lette.', 'info');
   };
 
-  const handleClearNotifications = () => {
+  const handleClearNotifications = async () => {
+    const prev = [...notifications];
     setNotifications([]);
-    if (onToast) onToast('Notifiche Eliminate', 'Archivio notifiche svuotato.', 'info');
+    try {
+      await api.notifications.markAllRead(); // Best effort server side clear
+      if (onToast) onToast('Notifiche Eliminate', 'Archivio notifiche svuotato.', 'info');
+    } catch {
+      setNotifications(prev);
+      if (onToast) onToast('Errore', 'Impossibile eliminare le notifiche.', 'warning');
+    }
   };
 
   const handleNotificationClick = (n: AppNotification) => {
@@ -245,7 +259,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-[#635bff]' : 'text-slate-500'}`} />
         
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs animate-pulse">
+          <span aria-live="polite" className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

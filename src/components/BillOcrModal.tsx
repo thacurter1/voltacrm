@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  FileSearch, 
   UploadCloud, 
   CheckCircle2, 
   FileText, 
-  Zap, 
-  Flame, 
   Sparkles, 
-  ArrowRight, 
   X,
   RefreshCw,
   ShieldCheck

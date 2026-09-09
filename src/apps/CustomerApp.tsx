@@ -23,7 +23,7 @@ export const CustomerApp: React.FC = () => {
 
   const activeCustomer = customers.find(c => c.id === selectedCustomerId) || customers[0];
 
-  const [currentUser] = useState<UserProfile>({
+  const currentUser = React.useMemo<UserProfile>(() => ({
     id: activeCustomer.id,
     name: activeCustomer.name,
     email: activeCustomer.email,
@@ -31,7 +31,7 @@ export const CustomerApp: React.FC = () => {
     customerId: activeCustomer.id,
     phone: activeCustomer.phone,
     is2faEnabled: false
-  });
+  }), [activeCustomer]);
 
   // Modal states
   const [selectedAuditForPdf, setSelectedAuditForPdf] = useState<SwitchAudit | null>(null);

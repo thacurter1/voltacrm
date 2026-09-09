@@ -87,7 +87,7 @@ export const cryptoService = {
 
       const dec = new TextDecoder();
       return dec.decode(decryptedBuffer);
-    } catch (err) {
+    } catch {
       // Se fallisce, potrebbe essere testo non cifrato (backward compatibility)
       return encryptedBase64;
     }

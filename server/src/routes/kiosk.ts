@@ -1,11 +1,14 @@
 import { Router, Request, Response } from 'express';
+import { addLead } from '../services/dataStore.js';
+import { kioskLimiter } from '../middleware/rateLimiter.js';
+import { validate, kioskLeadSchema } from '../middleware/validate.js';
 import { Lead } from '../types.js';
 
 export const kioskRouter = Router();
 
 // POST /api/kiosk/lead
-kioskRouter.post('/lead', (req: Request, res: Response): void => {
-  const { name, phone, email, supplyType, monthlyExpenseEur, totemId, mallLocation } = req.body;
+kioskRouter.post('/lead', kioskLimiter, validate(kioskLeadSchema), (req: Request, res: Response): void => {
+  const { name, firstName, lastName, phone, email, supplyType, monthlyExpenseEur, totemId, mallLocation } = req.body;
 
   if (!phone || phone.replace(/\D/g, '').length < 8) {
     res.status(400).json({ 
@@ -16,13 +19,13 @@ kioskRouter.post('/lead', (req: Request, res: Response): void => {
   }
 
   const expense = Number(monthlyExpenseEur) || 120;
-  // Calcolo stima risparmio immediata per il display del Totem
   const estimatedAnnualCost = expense * 12;
-  const estimatedSavings = Math.round(estimatedAnnualCost * 0.28); // Stima media Volta CRM ~28%
+  const estimatedSavings = Math.round(estimatedAnnualCost * 0.28); 
+  const fullName = name || (firstName ? `${firstName} ${lastName || ''}`.trim() : 'Visitatore Totem');
 
   const newLead: Lead = {
     id: `totem-${Date.now()}`,
-    name: name || 'Visitatore Totem',
+    name: fullName,
     phone: phone.trim(),
     email: email || '',
     city: mallLocation || 'Punto Totem Centro Commerciale',
@@ -33,6 +36,8 @@ kioskRouter.post('/lead', (req: Request, res: Response): void => {
     estimatedConsumptionKwh: supplyType === 'gas' ? 0 : Math.round((expense * 12 * 0.6) / 0.25),
     estimatedConsumptionSmc: supplyType === 'luce' ? 0 : Math.round((expense * 12 * 0.4) / 1.10),
   };
+
+  addLead(newLead);
 
   res.status(201).json({
     success: true,

@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import 'express-async-errors';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
@@ -8,6 +9,8 @@ import { customersRouter } from './routes/customers.js';
 import { switchRouter } from './routes/switch.js';
 import { kioskRouter } from './routes/kiosk.js';
 import { notificationsRouter } from './routes/notifications.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
+import { getCustomers, getLeads, getNotifications } from './services/dataStore.js';
 
 dotenv.config();
 
@@ -19,13 +22,16 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'http://localhost:5173'];
+
 app.use(cors({
-  origin: '*', // Consentito per CRM broker, Portale Cliente, Totem Kiosk
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Client-Version']
 }));
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(apiLimiter);
 
 // Request logger
 app.use((req: Request, _res: Response, next) => {
@@ -52,7 +58,11 @@ app.get('/api/health', (_req: Request, res: Response): void => {
       punPsvMonitoring: true,
       digitalSignatureOTP: true,
       totemKioskGateway: true,
-      supabaseConnected: !!process.env.SUPABASE_URL
+      dataStoreMetrics: {
+        activeCustomers: getCustomers().length,
+        inboundLeads: getLeads().length,
+        systemNotifications: getNotifications().length
+      }
     }
   });
 });
@@ -73,11 +83,21 @@ app.use((req: Request, res: Response): void => {
   });
 });
 
+// Error handler
+app.use((err: any, req: Request, res: Response, _next: NextFunction): void => {
+  if (err.type === 'entity.parse.failed' || err.status === 400) {
+    res.status(400).json({ success: false, message: 'Payload JSON non valido o malformato.' });
+    return;
+  }
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({ success: false, message: err.message || 'Si è verificato un errore interno nel server.' });
+});
+
 app.listen(PORT, () => {
   console.log(`=================================================`);
-  console.log(`⚡ VOLTACRM BACKEND API SERVER ATTIVO`);
+  console.log(`🚀 VOLTACRM BACKEND API SERVER ATTIVO`);
   console.log(`📡 URL Locale: http://localhost:${PORT}`);
-  console.log(`🩺 Health Check: http://localhost:${PORT}/api/health`);
+  console.log(`⚕️ Health Check: http://localhost:${PORT}/api/health`);
   console.log(`💼 CRM Broker: http://localhost:${PORT}/api/switch/audit`);
   console.log(`🖥️ Totem Kiosk: http://localhost:${PORT}/api/kiosk/lead`);
   console.log(`=================================================`);

@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, 
   Search, 
   Zap, 
   Flame, 
   Clock, 
   CheckCircle2, 
   AlertCircle, 
-  RefreshCw,
-  Building,
-  User
+  RefreshCw
 } from 'lucide-react';
 import { Customer } from '../types';
 

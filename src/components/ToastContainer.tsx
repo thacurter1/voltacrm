@@ -27,6 +27,8 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
         return (
           <div
             key={toast.id}
+            role="alert"
+            aria-live="assertive"
             className="pointer-events-auto p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_10px_25px_rgba(0,0,0,0.08)] flex items-start gap-3 transition-all animate-in slide-in-from-top-2 duration-200"
           >
             {isSuccess && (

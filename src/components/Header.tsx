@@ -1,19 +1,16 @@
 import React from 'react';
 import { 
   Zap, 
-  Flame, 
   RefreshCw, 
   PhoneCall, 
   Users, 
   ShieldCheck, 
   BarChart3,
   Search,
-  Bell,
   ChevronDown,
   FileSearch,
   SlidersHorizontal,
   User,
-  Headphones,
   UploadCloud,
   Lock,
   FileText

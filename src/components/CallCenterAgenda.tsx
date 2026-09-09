@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { 
-  Calendar as CalendarIcon, 
   PhoneCall, 
   MapPin, 
   Video, 
   Clock, 
   CheckCircle2, 
   XCircle, 
-  Plus, 
-  Filter,
-  Sparkles,
-  User,
-  ArrowRight
+  Sparkles
 } from 'lucide-react';
 import { Appointment, AppointmentStatus, AppointmentType, Lead } from '../types';
 

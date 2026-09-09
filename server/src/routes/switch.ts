@@ -1,28 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine.js';
+import { getCustomers, getSignatureLogs, addSignatureLog } from '../services/dataStore.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { validate, signContractSchema } from '../middleware/validate.js';
 import { Customer } from '../types.js';
 
 export const switchRouter = Router();
 
-// Mock in-memory audit logs for signatures
-interface SignatureLog {
-  id: string;
-  auditId?: string;
-  customerId: string;
-  customerName: string;
-  signerFiscalCode: string;
-  phone: string;
-  otpCode: string;
-  offerId: string;
-  supplier: string;
-  timestamp: string;
-  ipAddress: string;
-  signatureHash: string;
-}
-
-const signatureLogs: SignatureLog[] = [];
-
-// GET /api/switch/market-indices
+// GET /api/switch/market-indices (Pubblico per comparatore tariffe)
 switchRouter.get('/market-indices', (_req: Request, res: Response): void => {
   res.json({
     success: true,
@@ -30,7 +15,7 @@ switchRouter.get('/market-indices', (_req: Request, res: Response): void => {
   });
 });
 
-// GET /api/switch/offers
+// GET /api/switch/offers (Pubblico per comparatore tariffe)
 switchRouter.get('/offers', (_req: Request, res: Response): void => {
   res.json({
     success: true,
@@ -39,52 +24,9 @@ switchRouter.get('/offers', (_req: Request, res: Response): void => {
 });
 
 // GET /api/switch/audit
-switchRouter.get('/audit', async (req: Request, res: Response): Promise<void> => {
+switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    // In production this pulls from DB; here we use default customer dataset
-    const customersModule = await import('./customers.js');
-    // Call customers router mock array or fetch
-    const response = await fetch(`http://localhost:${process.env.PORT || 5000}/api/customers`).catch(() => null);
-    let customerList: Customer[] = [];
-
-    if (response && response.ok) {
-      const data = await response.json();
-      customerList = data.customers || [];
-    }
-
-    // Fallback if internal fetch is not reachable yet
-    if (customerList.length === 0) {
-      customerList = [
-        {
-          id: 'cust-1',
-          name: 'Andrea Moretti',
-          fiscalCode: 'MRTNRA82M15F205X',
-          phone: '+39 335 1122334',
-          email: 'andrea.moretti@email.it',
-          city: 'Torino (TO)',
-          contractStartDate: '2026-05-01',
-          lastSwitchAuditDate: '2026-05-01',
-          nextSwitchAuditDate: '2026-09-01',
-          accountManager: 'Valentina Neri',
-          hasBrokerageMandate: true,
-          utilityPoints: [
-            {
-              id: 'util-1-luce',
-              type: 'luce',
-              podOrPdr: 'IT001E00459821',
-              annualConsumption: 3400,
-              powerKw: 3.5,
-              currentSupplier: 'Enel Energia (Vecchia Tariffa)',
-              currentOfferName: 'Open Luce Sicura 2024',
-              currentTariffType: 'fixed',
-              currentUnitCost: 0.178,
-              currentFixedFeeYear: 144.0,
-            }
-          ]
-        }
-      ];
-    }
-
+    const customerList: Customer[] = getCustomers();
     const audits = runQuarterlyAudit(customerList);
     res.json({
       success: true,
@@ -97,7 +39,7 @@ switchRouter.get('/audit', async (req: Request, res: Response): Promise<void> =>
 });
 
 // POST /api/switch/sign (Digital Signature & Mandato Brokeraggio)
-switchRouter.post('/sign', (req: Request, res: Response): void => {
+switchRouter.post('/sign', authenticateToken, validate(signContractSchema), (req: Request, res: Response): void => {
   const { customerId, customerName, signerFiscalCode, phone, otpCode, offerId, supplier } = req.body;
 
   if (!customerName || !signerFiscalCode || !phone || !otpCode) {
@@ -108,7 +50,7 @@ switchRouter.post('/sign', (req: Request, res: Response): void => {
   const timestamp = new Date().toISOString();
   const signatureHash = `SHA256-${Buffer.from(`${signerFiscalCode}-${timestamp}-${otpCode}`).toString('base64').substring(0, 32)}`;
 
-  const log: SignatureLog = {
+  const log = {
     id: `sig-${Date.now()}`,
     customerId: customerId || `cust-${Date.now()}`,
     customerName,
@@ -122,7 +64,7 @@ switchRouter.post('/sign', (req: Request, res: Response): void => {
     signatureHash
   };
 
-  signatureLogs.unshift(log);
+  addSignatureLog(log);
 
   res.status(201).json({
     success: true,
@@ -132,9 +74,9 @@ switchRouter.post('/sign', (req: Request, res: Response): void => {
 });
 
 // GET /api/switch/signatures
-switchRouter.get('/signatures', (_req: Request, res: Response): void => {
+switchRouter.get('/signatures', authenticateToken, (_req: Request, res: Response): void => {
   res.json({
     success: true,
-    signatures: signatureLogs
+    signatures: getSignatureLogs()
   });
 });

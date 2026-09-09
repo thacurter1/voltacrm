@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, LogOut, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Eye, LogOut } from 'lucide-react';
 import { AuthUser } from '../types';
 
 interface ImpersonationBannerProps {

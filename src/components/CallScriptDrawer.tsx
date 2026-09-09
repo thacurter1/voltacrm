@@ -2,15 +2,10 @@ import React, { useState } from 'react';
 import { 
   Phone, 
   X, 
-  CheckCircle2, 
   Clock, 
   Calendar, 
-  AlertCircle, 
-  Zap, 
-  Flame, 
   MessageSquare, 
-  ChevronRight,
-  User
+  ChevronRight
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../types';
 

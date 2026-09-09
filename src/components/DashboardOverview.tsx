@@ -1,18 +1,10 @@
 import React from 'react';
 import { 
-  Users, 
-  PhoneCall, 
-  ShieldCheck, 
   RefreshCw, 
   ArrowUpRight, 
-  Clock, 
   Sparkles, 
-  CheckCircle2,
   Calendar,
-  Layers,
-  ArrowRight,
-  TrendingUp,
-  FileCheck
+  ArrowRight
 } from 'lucide-react';
 import { Customer, Lead, SwitchAudit } from '../types';
 

@@ -26,9 +26,9 @@ import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { TotemKioskMode } from './components/TotemKioskMode';
-import { TotemApp } from './apps/TotemApp';
-import { CustomerApp } from './apps/CustomerApp';
-import { CrmApp } from './apps/CrmApp';
+const TotemApp = React.lazy(() => import('./apps/TotemApp'));
+const CustomerApp = React.lazy(() => import('./apps/CustomerApp'));
+const CrmApp = React.lazy(() => import('./apps/CrmApp'));
 import { dbService, DEMO_USERS } from './services/db';
 import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
@@ -663,19 +663,25 @@ function UnifiedApp() {
   );
 }
 
+const Fallback = () => (
+  <div className="flex h-screen w-full items-center justify-center bg-slate-950">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-500"></div>
+  </div>
+);
+
 export function App() {
   const host = typeof window !== 'undefined' ? window.location.hostname : '';
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const appParam = searchParams.get('app') || searchParams.get('mode');
 
   if (host.startsWith('totem.') || appParam === 'totem') {
-    return <TotemApp />;
+    return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
   if (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer') {
-    return <CustomerApp />;
+    return <React.Suspense fallback={<Fallback />}><CustomerApp /></React.Suspense>;
   }
   if (host.startsWith('crm.') || appParam === 'crm') {
-    return <CrmApp />;
+    return <React.Suspense fallback={<Fallback />}><CrmApp /></React.Suspense>;
   }
 
   return <UnifiedApp />;

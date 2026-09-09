@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
 import { 
-  Users, 
   Plus, 
   Search, 
   Phone, 
   CalendarPlus, 
   Flame, 
   Zap, 
-  Share2, 
-  ChevronDown,
-  X,
-  Building,
-  Mail,
-  MapPin
+  X
 } from 'lucide-react';
 import { Lead, LeadSource, LeadStatus } from '../types';
 
@@ -29,7 +23,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
   leads,
   onAddLead,
   onOpenScheduleModal,
-  onUpdateStatus,
+  onUpdateStatus: _onUpdateStatus,
   onSelectLead,
   onOpenCallScript,
 }) => {

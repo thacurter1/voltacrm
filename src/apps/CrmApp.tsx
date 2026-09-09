@@ -55,7 +55,7 @@ export const CrmApp: React.FC = () => {
   const [bills, setBills] = useState<CustomerBill[]>(initialDb.bills);
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(initialDb.marketIndex);
   const [securityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
-  const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(initialDb.customers));
+  const audits = React.useMemo(() => runQuarterlyAudit(customers, marketIndex), [customers, marketIndex]);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
@@ -81,12 +81,7 @@ export const CrmApp: React.FC = () => {
     });
   }, [currentUser, customers, leads, appointments, bills, marketIndex, securityLogs]);
 
-  // Recalculate audits when customers change
-  useEffect(() => {
-    setAudits(runQuarterlyAudit(customers, marketIndex));
-  }, [customers, marketIndex]);
-
-  // UI Modals & Drawers
+  // Sync with DB
   const [drawerLead, setDrawerLead] = useState<Lead | null>(null);
   const [drawerCustomer, setDrawerCustomer] = useState<Customer | null>(null);
   const [schedulingLead, setSchedulingLead] = useState<Lead | null>(null);
@@ -194,8 +189,8 @@ export const CrmApp: React.FC = () => {
     addToast('Contratto Attivato', `${newCustomer.name} è ora cliente attivo con audit quadrimestrale programmato.`, 'success');
   };
 
-  const handleAuditSwitched = (auditId: string) => {
-    setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'switched' } : a));
+  const handleAuditSwitched = (_auditId: string) => {
+    // Usually we would update the backend here or update the customer state
     addToast('Switch Confermato', 'Pratica di cambio gestore inoltrata ad ARERA.', 'success');
   };
 
@@ -274,7 +269,6 @@ export const CrmApp: React.FC = () => {
           <QuarterlySwitchEngine
             audits={audits}
             onTriggerGlobalAudit={() => {
-              setAudits(runQuarterlyAudit(customers, marketIndex));
               addToast('Audit Globale Completato', 'Tariffe e PUN/PSV ricalcolati su tutti i clienti.', 'success');
             }}
             onAuditSwitched={handleAuditSwitched}

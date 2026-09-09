@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { UserProfile, Customer } from '../types';
+import { UserProfile } from '../types';
 
 // Credenziali lette dalle variabili d'ambiente (configurabili su Vercel e in locale)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';

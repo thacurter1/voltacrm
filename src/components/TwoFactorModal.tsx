@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Lock, Smartphone, ArrowRight, RefreshCw, X, CheckCircle2 } from 'lucide-react';
+import { Lock, Smartphone, RefreshCw, X, CheckCircle2 } from 'lucide-react';
 import { AuthUser } from '../types';
 import { securityValidator } from '../services/securityValidator';
 

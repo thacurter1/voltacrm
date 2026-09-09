@@ -7,11 +7,7 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   RefreshCw, 
-  Download, 
-  Server, 
-  EyeOff, 
-  Users, 
-  FileSpreadsheet
+  Download
 } from 'lucide-react';
 import { SecurityAuditLog, SecurityCheckItem } from '../types';
 import { INITIAL_SECURITY_CHECKS } from '../services/db';
@@ -27,7 +23,7 @@ export const SecurityAuditDashboard: React.FC<SecurityAuditDashboardProps> = ({
 }) => {
   const [filterType, setFilterType] = useState<string>('all');
   const [isScanning, setIsScanning] = useState(false);
-  const [checks, setChecks] = useState<SecurityCheckItem[]>(INITIAL_SECURITY_CHECKS);
+  const [checks, _setChecks] = useState<SecurityCheckItem[]>(INITIAL_SECURITY_CHECKS);
 
   const handleRunScan = () => {
     setIsScanning(true);

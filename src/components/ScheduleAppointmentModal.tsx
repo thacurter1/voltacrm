@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Appointment, AppointmentType, Lead } from '../types';
 
 interface ScheduleAppointmentModalProps {

@@ -6,7 +6,6 @@ import {
   Zap, 
   Flame, 
   Clock,
-  ArrowRight,
   FileText
 } from 'lucide-react';
 import { SwitchAudit } from '../types';

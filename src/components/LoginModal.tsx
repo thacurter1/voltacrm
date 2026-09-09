@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Lock, 
   Headphones, 
   User, 
-  ArrowRight, 
   Zap, 
-  ShieldCheck, 
-  CheckCircle2, 
-  X,
-  FileText
+  X
 } from 'lucide-react';
 import { AuthUser, Customer } from '../types';
 import { DEMO_USERS } from '../services/db';
@@ -29,14 +24,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   customers,
 }) => {
   const [activeTab, setActiveTab] = useState<'call_center' | 'customer'>('call_center');
-  const [fiscalCodeInput, setFiscalCodeInput] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState(customers[0]?.id || 'cust-1');
 
   if (!isOpen) return null;
 
   const handleCustomerLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const matched = customers.find(c => c.id === selectedCustomerId || c.fiscalCode.toLowerCase() === fiscalCodeInput.toLowerCase());
+    const matched = customers.find(c => c.id === selectedCustomerId);
     if (matched) {
       const user: AuthUser = {
         id: `user-${matched.id}`,
