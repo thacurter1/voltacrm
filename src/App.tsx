@@ -19,7 +19,11 @@ import { TwoFactorModal } from './components/TwoFactorModal';
 import { SecurityAuditDashboard } from './components/SecurityAuditDashboard';
 import { ClientBillsInbox } from './components/ClientBillsInbox';
 import { CallScriptDrawer } from './components/CallScriptDrawer';
+import { TeamProfilesManager } from './components/TeamProfilesManager';
+import { CustomerProfileSection } from './components/CustomerProfileSection';
+import { PortalGate } from './components/PortalGate';
 import { dbService, DEMO_USERS } from './services/db';
+import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
 import { 
   Appointment, 
@@ -31,6 +35,7 @@ import {
   MarketIndex,
   ToastNotification,
   AuthUser,
+  UserProfile,
   CustomerBill,
   SecurityAuditLog
 } from './types';
@@ -38,7 +43,12 @@ import {
 export function App() {
   const initialDb = dbService.load();
 
-  const [currentUser, setCurrentUser] = useState<AuthUser>(initialDb.currentUser);
+  // Auth & Session State
+  const [currentUser, setCurrentUser] = useState<UserProfile>(initialDb.currentUser || INITIAL_PROFILES[0]);
+  const [isGateOpen, setIsGateOpen] = useState(false);
+  const [profiles, setProfiles] = useState<UserProfile[]>(INITIAL_PROFILES);
+
+  // Business Data State
   const [customers, setCustomers] = useState<Customer[]>(initialDb.customers);
   const [leads, setLeads] = useState<Lead[]>(initialDb.leads);
   const [appointments, setAppointments] = useState<Appointment[]>(initialDb.appointments);
@@ -51,7 +61,16 @@ export function App() {
     currentUser.role === 'customer' ? 'customer_overview' : 'dashboard'
   );
 
-  // Persistenza automatica nel database localStorage
+  // Carica i profili utente
+  useEffect(() => {
+    profileService.getProfiles().then(data => {
+      if (data && data.length > 0) {
+        setProfiles(data);
+      }
+    });
+  }, []);
+
+  // Persistenza automatica nel database locale
   useEffect(() => {
     dbService.save({
       customers,
@@ -108,7 +127,7 @@ export function App() {
   const [isBillOcrOpen, setIsBillOcrOpen] = useState(false);
   const [isMarketSimulatorOpen, setIsMarketSimulatorOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [pending2FAUser, setPending2FAUser] = useState<AuthUser | null>(null);
+  const [pending2FAUser, setPending2FAUser] = useState<UserProfile | null>(null);
   
   // Slide Over Drawer State
   const [drawerState, setDrawerState] = useState<{
@@ -137,11 +156,12 @@ export function App() {
   const pendingBills = bills.filter(b => b.status === 'in_review');
 
   // Switch User Profile / Role
-  const handleSelectUser = (newUser: AuthUser) => {
+  const handleSelectUser = (newUser: UserProfile) => {
     setCurrentUser(newUser);
+    setIsGateOpen(false);
     if (newUser.role === 'customer') {
       setActiveTab('customer_overview');
-      addToast('Accesso Portale Cliente', `Benvenuto nel tuo cruscotto personale, ${newUser.name}.`, 'success');
+      addToast('Accesso Portale Cliente', `Benvenuto nella tua Area Risparmio, ${newUser.name}.`, 'success');
       recordSecurityLog('gdpr_consent_logged', 'safe', `Accesso registrato al portale cliente per ${newUser.email}`);
     } else {
       setActiveTab('dashboard');
@@ -151,7 +171,7 @@ export function App() {
   };
 
   // 2FA Trigger and Verification
-  const handleRequire2FA = (user: AuthUser) => {
+  const handleRequire2FA = (user: UserProfile) => {
     setPending2FAUser(user);
   };
 
@@ -238,104 +258,79 @@ export function App() {
           podOrPdr: `0${Math.floor(1000000000000 + Math.random() * 900000000000)}`,
           annualConsumption: lead?.estimatedConsumptionSmc || 900,
           currentSupplier: 'Eni Plenitude',
-          currentOfferName: 'Plenitude Trend Casa Gas',
+          currentOfferName: 'Trend Casa Gas',
           currentTariffType: 'indexed',
-          currentUnitCost: 0.427,
+          currentUnitCost: 0.442,
           currentFixedFeeYear: 108.0,
         }
-      ],
-      notes: 'Acquisito via Call Center da campagna Marketing. Delega switch attiva.',
+      ]
     };
 
     setCustomers(prev => [newCustomer, ...prev]);
-    handleUpdateAppointmentStatus(app.id, 'completed');
+    setAudits(runQuarterlyAudit([newCustomer, ...customers]));
+    
+    setAppointments(prev => prev.map(a => a.id === app.id ? { ...a, status: 'completed' as AppointmentStatus } : a));
     if (lead) {
-      handleUpdateLeadStatus(lead.id, 'contract_signed');
+      handleUpdateLeadStatus(lead.id, 'contract_signed', 'Contratto sottoscritto con successo');
     }
-
-    const updatedCustomers = [newCustomer, ...customers];
-    setAudits(runQuarterlyAudit(updatedCustomers));
-    setActiveTab('crm');
-    addToast('Cliente Attivato nel Database', `${newCustomer.name} è memorizzato nel CRM. Ciclo switch programmato a 120 giorni.`, 'success');
-    recordSecurityLog('switch_signed_otp', 'safe', `Mandato di brokeraggio e consenso GDPR attivati per ${newCustomer.name}`);
+    addToast('Contratto Attivato', `${newCustomer.name} è ora cliente attivo con audit quadrimestrale programmato.`, 'success');
   };
 
-  // Trigger global audit
-  const handleTriggerGlobalAudit = () => {
-    const freshAudits = runQuarterlyAudit(customers);
-    setAudits(freshAudits);
-    addToast('Audit Globale Ricalcolato', `Ricalcolate le tariffe per tutti i ${customers.length} clienti a database.`, 'info');
-  };
+  // Importazione da OCR Bolletta
+  const handleImportFromOcr = (customerData: Partial<Customer>) => {
+    const today = new Date();
+    const nextAudit = new Date();
+    nextAudit.setDate(today.getDate() + 120);
 
-  // Switch confermato
-  const handleAuditSwitched = (auditId: string) => {
-    const audit = audits.find(a => a.id === auditId);
-    if (!audit) return;
+    const newCustomer: Customer = {
+      id: `cust-${Date.now()}`,
+      name: customerData.name || 'Nuovo Cliente da Bolletta',
+      fiscalCode: customerData.fiscalCode || 'CF' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+      phone: customerData.phone || '+39 347 0000000',
+      email: customerData.email || 'cliente.ocr@email.it',
+      city: customerData.city || 'Milano',
+      contractStartDate: today.toISOString().split('T')[0],
+      lastSwitchAuditDate: today.toISOString().split('T')[0],
+      nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
+      accountManager: currentUser.name,
+      hasBrokerageMandate: true,
+      utilityPoints: customerData.utilityPoints || []
+    };
 
-    setCustomers(prev => prev.map(c => {
-      if (c.id === audit.customerId) {
-        const nextAudit = new Date();
-        nextAudit.setDate(nextAudit.getDate() + 120);
-
-        const updatedPoints = c.utilityPoints.map(u => {
-          if (u.podOrPdr === audit.podOrPdr) {
-            return {
-              ...u,
-              currentSupplier: audit.bestOffer.supplier,
-              currentOfferName: audit.bestOffer.name,
-              currentTariffType: audit.bestOffer.pricingType === 'fixed' ? ('fixed' as const) : ('indexed' as const),
-              currentUnitCost: audit.bestOffer.unitPriceOrSpread,
-              currentFixedFeeYear: audit.bestOffer.fixedAnnualFee,
-            };
-          }
-          return u;
-        });
-
-        return {
-          ...c,
-          lastSwitchAuditDate: new Date().toISOString().split('T')[0],
-          nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
-          utilityPoints: updatedPoints,
-        };
-      }
-      return c;
-    }));
-
-    setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'already_optimal' } : a));
-    addToast('Switch Tariffario Applicato', `${audit.customerName} è passato a ${audit.bestOffer.supplier}. Risparmio generato: €${audit.annualSavings.toFixed(0)}/anno.`, 'success');
-    recordSecurityLog('switch_signed_otp', 'safe', `Cambio fornitore autorizzato verso ${audit.bestOffer.supplier} per ${audit.customerName}`);
-  };
-
-  // OCR import
-  const handleImportFromOcr = (newCust: Customer) => {
-    setCustomers(prev => [newCust, ...prev]);
-    const updated = [newCust, ...customers];
+    const updated = [newCustomer, ...customers];
+    setCustomers(updated);
     setAudits(runQuarterlyAudit(updated));
-    setActiveTab('crm');
-    addToast('Cliente Importato da OCR', `Dati estratti con successo per ${newCust.name} e salvati nel database.`, 'success');
+    addToast('Bolletta Importata con Successo', `${newCustomer.name} aggiunto al portafoglio clienti con audit attivo.`, 'success');
   };
 
   // Upload bolletta dal portale cliente
-  const handleCustomerUploadBill = (newBill: CustomerBill) => {
-    setBills(prev => [newBill, ...prev]);
-    addToast('Bolletta Ricevuta', `Il file ${newBill.fileName} è stato caricato e inoltrato all'inbox del call center.`, 'success');
-    recordSecurityLog('pod_decrypted', 'safe', `Nuova bolletta caricata dal cliente ${newBill.customerName}`);
+  const handleCustomerUploadBill = (bill: CustomerBill) => {
+    setBills(prev => [bill, ...prev]);
+    addToast('Bolletta Ricevuta', `Il documento "${bill.fileName}" è stato inviato per la verifica di conformità ARERA.`, 'success');
   };
 
-  // Segna bolletta cliente come analizzata
-  const handleMarkBillAnalyzed = (billId: string, savingsEur: number) => {
-    setBills(prev => prev.map(b => b.id === billId ? { 
-      ...b, 
-      status: 'analyzed' as const, 
-      extractedSavingsEur: savingsEur 
-    } : b));
-    addToast('Bolletta Verificata', `Dossier completato con risparmio rilevato di €${savingsEur}/anno.`, 'success');
+  // Marcare bolletta come analizzata
+  const handleMarkBillAnalyzed = (billId: string) => {
+    setBills(prev => prev.map(b => b.id === billId ? { ...b, status: 'analyzed' as const, extractedSavingsEur: 180.0 } : b));
+    addToast('Bolletta Lavorata', 'Analisi completata e caricata nel portale del cliente.', 'success');
   };
 
-  // Market Simulator application
+  // Switch approval
+  const handleAuditSwitched = (auditId: string) => {
+    setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'switched' as const } : a));
+    recordSecurityLog('switch_signed_otp', 'safe', `Mandato di switch perfezionato per audit ${auditId}`);
+    addToast('Switch Perfezionato!', 'Cambio fornitore attivato con successo e notifica inviata.', 'success');
+  };
+
+  const handleTriggerGlobalAudit = () => {
+    const freshAudits = runQuarterlyAudit(customers);
+    setAudits(freshAudits);
+    addToast('Audit Quadrimestrale Eseguito', `Analizzate ${customers.length} posizioni cliente su PUN/PSV correnti.`, 'info');
+  };
+
   const handleApplyMarketIndex = (newIndex: MarketIndex) => {
     setMarketIndex(newIndex);
-    const recomputed = runQuarterlyAudit(customers);
+    const recomputed = runQuarterlyAudit(customers, newIndex);
     setAudits(recomputed);
     addToast('Scenario Mercato Aggiornato', `PUN impostato a ${newIndex.punEurKwh.toFixed(4)} €/kWh, PSV a ${newIndex.psvEurSmc.toFixed(4)} €/Smc.`, 'warning');
   };
@@ -343,13 +338,39 @@ export function App() {
   // Ricerca cliente attivo per la vista cliente
   const activeCustomer = customers.find(c => c.id === currentUser.customerId) || customers[0];
 
+  // Se l'utente non è autenticato o ha scelto "Esci", mostra la schermata di selezione portale / login
+  if (isGateOpen) {
+    return (
+      <>
+        <PortalGate
+          onLoginCustomer={handleSelectUser}
+          onLoginOperator={handleSelectUser}
+          onRequire2FA={handleRequire2FA}
+          customers={customers}
+          profiles={profiles}
+          onToast={addToast}
+        />
+        <TwoFactorModal
+          isOpen={!!pending2FAUser}
+          user={pending2FAUser}
+          onClose={() => setPending2FAUser(null)}
+          onVerified={handle2FAVerified}
+        />
+        <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
-      {/* Impersonation Banner se si naviga come Cliente */}
+      {/* Impersonation Banner se un operatore naviga come Cliente */}
       {currentUser.role === 'customer' && (
         <ImpersonationBanner
           currentUser={currentUser}
-          onReturnToCallCenter={() => handleSelectUser(DEMO_USERS[0])}
+          onReturnToCallCenter={() => {
+            const operator = profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
+            handleSelectUser(operator);
+          }}
         />
       )}
 
@@ -363,21 +384,30 @@ export function App() {
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenMarketSimulator={() => setIsMarketSimulatorOpen(true)}
         onOpenBillOcr={() => setIsBillOcrOpen(true)}
-        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenLogin={() => setIsGateOpen(true)}
       />
 
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* VISTA 1: PORTALE CLIENTE FINALE (Isolamento rigoroso BOLA / Tenant Scoping) */}
+        {/* VISTA 1: PORTALE CLIENTE FINALE */}
         {currentUser.role === 'customer' ? (
-          <CustomerPortal
-            customer={activeCustomer}
-            currentUser={currentUser}
-            audits={audits.filter(a => a.customerId === activeCustomer.id)}
-            bills={bills.filter(b => b.customerId === activeCustomer.id)}
-            onUploadBill={handleCustomerUploadBill}
-            onApproveSwitch={handleAuditSwitched}
-            onSwitchUser={() => setIsLoginModalOpen(true)}
-          />
+          activeTab === 'customer_profile' ? (
+            <CustomerProfileSection
+              customer={activeCustomer}
+              currentUser={currentUser}
+              onUpdateCustomer={(updated) => setCustomers(prev => prev.map(c => c.id === updated.id ? updated : c))}
+              onToast={addToast}
+            />
+          ) : (
+            <CustomerPortal
+              customer={activeCustomer}
+              currentUser={currentUser}
+              audits={audits.filter(a => a.customerId === activeCustomer.id)}
+              bills={bills.filter(b => b.customerId === activeCustomer.id)}
+              onUploadBill={handleCustomerUploadBill}
+              onApproveSwitch={handleAuditSwitched}
+              onSwitchUser={() => setIsGateOpen(true)}
+            />
+          )
         ) : (
           /* VISTA 2: BACKEND CALL CENTER & BROKER */
           <>
@@ -426,6 +456,20 @@ export function App() {
                   setActiveTab('switch4m');
                 }}
                 onSelectCustomer={(customer) => setDrawerState({ isOpen: true, customer, lead: null })}
+              />
+            )}
+
+            {activeTab === 'team_profiles' && (
+              <TeamProfilesManager
+                currentUser={currentUser}
+                profiles={profiles}
+                customers={customers}
+                onProfilesUpdated={setProfiles}
+                onCustomerCreated={(newCust) => {
+                  setCustomers(prev => [newCust, ...prev]);
+                  setAudits(runQuarterlyAudit([newCust, ...customers]));
+                }}
+                onToast={addToast}
               />
             )}
 
@@ -540,7 +584,7 @@ export function App() {
           <span className="text-slate-400">
             {currentUser.role === 'customer' 
               ? 'Connesso come Cliente: ' + currentUser.name
-              : 'Connesso come Operatore Call Center • 2FA Attivo • Premi ⌘K'}
+              : 'Connesso come Operatore: ' + currentUser.name + ' • 2FA Attivo'}
           </span>
         </div>
       </footer>

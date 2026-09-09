@@ -133,13 +133,15 @@ export function calculateAnnualCost(
 // Analisi comparativa per un punto fornitura rispetto al mercato
 export function findBestMarketOffer(
   utility: UtilityPoint, 
-  offers: SupplierOffer[] = MARKET_OFFERS
+  offers: SupplierOffer[] = MARKET_OFFERS,
+  marketIndex: MarketIndex = CURRENT_MARKET_INDEX
 ): { bestOffer: SupplierOffer; currentCost: number; bestCost: number; savings: number; savingsPercent: number } {
   const currentCost = calculateAnnualCost(
     utility,
     utility.currentTariffType,
     utility.currentUnitCost,
-    utility.currentFixedFeeYear
+    utility.currentFixedFeeYear,
+    marketIndex
   );
 
   const eligibleOffers = offers.filter(o => o.energyType === utility.type);
@@ -152,7 +154,8 @@ export function findBestMarketOffer(
       utility,
       offer.pricingType,
       offer.unitPriceOrSpread,
-      offer.fixedAnnualFee
+      offer.fixedAnnualFee,
+      marketIndex
     );
     if (cost < bestCost) {
       bestCost = cost;
@@ -173,12 +176,15 @@ export function findBestMarketOffer(
 }
 
 // Esecuzione dell'Audit Quadrimestrale su tutti i contratti
-export function runQuarterlyAudit(customers: Customer[]): SwitchAudit[] {
+export function runQuarterlyAudit(
+  customers: Customer[],
+  marketIndex: MarketIndex = CURRENT_MARKET_INDEX
+): SwitchAudit[] {
   const audits: SwitchAudit[] = [];
 
   for (const customer of customers) {
     for (const utility of customer.utilityPoints) {
-      const comparison = findBestMarketOffer(utility);
+      const comparison = findBestMarketOffer(utility, MARKET_OFFERS, marketIndex);
       
       // Calcolo giorni di attività
       const start = new Date(customer.contractStartDate).getTime();

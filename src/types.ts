@@ -138,15 +138,24 @@ export interface BillOcrResult {
 
 export type UserRole = 'call_center' | 'customer' | 'admin';
 
-export interface AuthUser {
+export interface UserProfile {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  phone?: string;
+  whatsapp?: string;
+  fiscalCode?: string;
   customerId?: string;
+  assignedBrokerId?: string;
+  assignedBrokerName?: string;
   avatar?: string;
   is2faEnabled?: boolean;
+  onboardingStatus?: 'active' | 'invited' | 'pending_verification';
+  createdAt?: string;
 }
+
+export interface AuthUser extends UserProfile {}
 
 export interface CustomerBill {
   id: string;

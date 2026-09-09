@@ -65,6 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
       badge: pendingBillsCount > 0 ? pendingBillsCount : undefined
     },
     { id: 'crm', label: 'Clienti (POD/PDR)', icon: ShieldCheck },
+    { id: 'team_profiles', label: 'Team & Profili', icon: Users },
     { id: 'tariffe', label: 'Tariffe & Simulator', icon: Zap },
     { 
       id: 'switch4m', 
@@ -78,6 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
   const customerNavItems: NavItem[] = [
     { id: 'customer_overview', label: 'Le Mie Forniture', icon: ShieldCheck },
     { id: 'customer_upload', label: 'Carica Nuova Bolletta', icon: UploadCloud },
+    { id: 'customer_profile', label: 'Il Mio Profilo & GDPR', icon: User },
   ];
 
   const navItems: NavItem[] = isCustomer ? customerNavItems : callCenterNavItems;
