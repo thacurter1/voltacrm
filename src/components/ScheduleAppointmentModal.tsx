@@ -15,14 +15,21 @@ export const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> =
   onClose,
   onSchedule,
 }) => {
-  if (!isOpen || !lead) return null;
-
   const [agentName, setAgentName] = useState('Alessandro Mori (Energy Specialist)');
   const [date, setDate] = useState('2026-09-05');
   const [time, setTime] = useState('11:00');
   const [duration, setDuration] = useState(45);
   const [type, setType] = useState<AppointmentType>('phone_consultation');
-  const [notes, setNotes] = useState(lead.notes || 'Verifica bolletta luce e gas.');
+  const [notes, setNotes] = useState('');
+
+  // Update notes if lead changes
+  React.useEffect(() => {
+    if (lead?.notes) {
+      setNotes(lead.notes);
+    }
+  }, [lead]);
+
+  if (!isOpen || !lead) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

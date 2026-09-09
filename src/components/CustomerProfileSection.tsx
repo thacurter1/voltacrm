@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { 
   User, 
-  Mail, 
-  Phone, 
-  FileText, 
-  Shield, 
   KeyRound, 
   Download, 
   Check, 
-  Lock, 
   MessageSquare, 
-  Save, 
-  AlertTriangle 
+  Save 
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
 import { profileService } from '../services/supabaseClient';

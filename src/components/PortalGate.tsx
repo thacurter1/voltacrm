@@ -2,17 +2,13 @@ import React, { useState } from 'react';
 import { 
   Zap, 
   Headphones, 
-  User, 
   ShieldCheck, 
   Sparkles, 
   ArrowRight, 
   Lock, 
-  CheckCircle2, 
-  FileText, 
-  KeyRound,
-  Building2
+  CheckCircle2 
 } from 'lucide-react';
-import { AuthUser, Customer, UserProfile } from '../types';
+import { Customer, UserProfile } from '../types';
 import { profileService } from '../services/supabaseClient';
 
 interface PortalGateProps {
@@ -41,7 +37,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const [activePortal, setActivePortal] = useState<'customer' | 'operator'>(initialPortal);
   
   // Customer Auth State
-  const [customerMode, setCustomerMode] = useState<'login' | 'register'>('login');
+  const [customerMode, setCustomerMode] = useState<'login' | 'register'>(
+    initialInvite ? 'register' : 'login'
+  );
   const [customerIdentifier, setCustomerIdentifier] = useState(initialEmail);
   const [customerPassword, setCustomerPassword] = useState('');
 

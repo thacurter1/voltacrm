@@ -4,17 +4,14 @@ import {
   UserPlus, 
   ShieldCheck, 
   Send, 
-  ExternalLink, 
   Copy, 
   Check, 
   Phone, 
-  Mail, 
   Sparkles, 
   Building2, 
-  MessageSquare,
-  KeyRound,
-  X,
-  UserCheck
+  MessageSquare, 
+  X, 
+  UserCheck 
 } from 'lucide-react';
 import { UserProfile, Customer } from '../types';
 import { profileService } from '../services/supabaseClient';
@@ -566,6 +563,17 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                       className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Città di Fornitura</label>
+                  <input
+                    type="text"
+                    placeholder="Milano"
+                    value={inviteCity}
+                    onChange={e => setInviteCity(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                  />
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-[11px] text-[#425466]">

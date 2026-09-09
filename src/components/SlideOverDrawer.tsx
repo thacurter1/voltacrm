@@ -4,17 +4,12 @@ import {
   Zap, 
   Flame, 
   Clock, 
-  ShieldCheck, 
-  Calendar, 
   Phone, 
   Mail, 
   MapPin, 
   FileText, 
   RefreshCw, 
-  CheckCircle2, 
-  ArrowRight,
-  Sparkles,
-  MessageSquare
+  MessageSquare 
 } from 'lucide-react';
 import { Customer, Lead } from '../types';
 
