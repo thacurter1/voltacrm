@@ -22,6 +22,9 @@ import { CallScriptDrawer } from './components/CallScriptDrawer';
 import { TeamProfilesManager } from './components/TeamProfilesManager';
 import { CustomerProfileSection } from './components/CustomerProfileSection';
 import { PortalGate } from './components/PortalGate';
+import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
+import { DigitalSignatureModal } from './components/DigitalSignatureModal';
+import { InstallAppBanner } from './components/InstallAppBanner';
 import { dbService, DEMO_USERS } from './services/db';
 import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
@@ -128,6 +131,8 @@ export function App() {
   const [isMarketSimulatorOpen, setIsMarketSimulatorOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [pending2FAUser, setPending2FAUser] = useState<UserProfile | null>(null);
+  const [pdfProposalAudit, setPdfProposalAudit] = useState<SwitchAudit | null>(null);
+  const [signatureAudit, setSignatureAudit] = useState<SwitchAudit | null>(null);
   
   // Slide Over Drawer State
   const [drawerState, setDrawerState] = useState<{
@@ -404,8 +409,14 @@ export function App() {
               audits={audits.filter(a => a.customerId === activeCustomer.id)}
               bills={bills.filter(b => b.customerId === activeCustomer.id)}
               onUploadBill={handleCustomerUploadBill}
-              onApproveSwitch={handleAuditSwitched}
+              onApproveSwitch={(auditId) => {
+                const a = audits.find(x => x.id === auditId);
+                if (a) setSignatureAudit(a);
+                else handleAuditSwitched(auditId);
+              }}
               onSwitchUser={() => setIsGateOpen(true)}
+              onOpenPdfProposal={(audit) => setPdfProposalAudit(audit)}
+              onOpenSignature={(audit) => setSignatureAudit(audit)}
             />
           )
         ) : (
@@ -482,6 +493,7 @@ export function App() {
                 audits={audits}
                 onTriggerGlobalAudit={handleTriggerGlobalAudit}
                 onAuditSwitched={handleAuditSwitched}
+                onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
               />
             )}
 
@@ -568,6 +580,39 @@ export function App() {
         onClose={() => setPending2FAUser(null)}
         onVerified={handle2FAVerified}
       />
+
+      {/* Studio di Fattibilità Energetica & Proposta PDF */}
+      <SavingsProposalPdfModal
+        isOpen={!!pdfProposalAudit}
+        onClose={() => setPdfProposalAudit(null)}
+        audit={pdfProposalAudit}
+        customer={customers.find(c => c.id === pdfProposalAudit?.customerId)}
+        advisorName={currentUser.name}
+        onProceedToSign={() => {
+          const a = pdfProposalAudit;
+          setPdfProposalAudit(null);
+          if (a) setSignatureAudit(a);
+        }}
+      />
+
+      {/* Firma Digitale Mandato Switch Modal */}
+      <DigitalSignatureModal
+        isOpen={!!signatureAudit}
+        onClose={() => setSignatureAudit(null)}
+        audit={signatureAudit}
+        customerPhone={customers.find(c => c.id === signatureAudit?.customerId)?.phone}
+        onSigned={(auditId, signatureType) => {
+          handleAuditSwitched(auditId);
+          recordSecurityLog(
+            'switch_signed_otp', 
+            'safe', 
+            `Mandato di switch perfezionato digitalmente tramite ${signatureType === 'canvas' ? 'firma biometrica su schermo' : 'codice OTP SMS/WhatsApp'} per audit ${auditId}`
+          );
+        }}
+      />
+
+      {/* Install PWA Mobile Banner */}
+      <InstallAppBanner />
 
       {/* Toast Notifications */}
       <ToastContainer

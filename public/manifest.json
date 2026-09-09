@@ -1,0 +1,24 @@
+{
+  "name": "VoltaCRM - Piattaforma Energia & Risparmio",
+  "short_name": "VoltaCRM",
+  "description": "Monitoraggio bollette luce e gas, audit quadrimestrale dei costi e cruscotto energetico trasparente.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a2540",
+  "theme_color": "#635bff",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ]
+}

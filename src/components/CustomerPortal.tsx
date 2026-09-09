@@ -36,16 +36,20 @@ interface CustomerPortalProps {
   onUploadBill: (bill: CustomerBill) => void;
   onApproveSwitch: (auditId: string) => void;
   onSwitchUser: () => void;
+  onOpenPdfProposal?: (audit: SwitchAudit) => void;
+  onOpenSignature?: (audit: SwitchAudit) => void;
 }
 
 export const CustomerPortal: React.FC<CustomerPortalProps> = ({
   customer,
-  currentUser,
+  currentUser: _currentUser,
   audits,
   bills,
   onUploadBill,
   onApproveSwitch,
   onSwitchUser,
+  onOpenPdfProposal,
+  onOpenSignature,
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -312,13 +316,28 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
           </div>
 
           {recommendedAudit && (
-            <button
-              onClick={() => onApproveSwitch(recommendedAudit.id)}
-              className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
-            >
-              <span>Porta il voto a 9.5/10</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+            <div className="space-y-2 pt-1">
+              <button
+                onClick={() => {
+                  if (onOpenSignature) onOpenSignature(recommendedAudit);
+                  else onApproveSwitch(recommendedAudit.id);
+                }}
+                className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <span>Firma Mandato (+€{recommendedAudit.annualSavings.toFixed(0)}/anno)</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+
+              {onOpenPdfProposal && (
+                <button
+                  onClick={() => onOpenPdfProposal(recommendedAudit)}
+                  className="w-full py-2 rounded-xl border border-[#e3e8ee] hover:bg-slate-50 text-[#0a2540] font-semibold text-[11px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <FileText className="h-3.5 w-3.5 text-[#635bff]" />
+                  <span>Scarica Proposta Energetica (PDF)</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
 

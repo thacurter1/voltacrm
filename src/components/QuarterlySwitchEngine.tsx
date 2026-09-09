@@ -6,7 +6,8 @@ import {
   Zap, 
   Flame, 
   Clock,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 import { SwitchAudit } from '../types';
 import { SwitchProposalModal } from './SwitchProposalModal';
@@ -15,12 +16,14 @@ interface QuarterlySwitchEngineProps {
   audits: SwitchAudit[];
   onTriggerGlobalAudit: () => void;
   onAuditSwitched: (auditId: string) => void;
+  onOpenProposalPdf?: (audit: SwitchAudit) => void;
 }
 
 export const QuarterlySwitchEngine: React.FC<QuarterlySwitchEngineProps> = ({
   audits,
   onTriggerGlobalAudit,
   onAuditSwitched,
+  onOpenProposalPdf,
 }) => {
   const [filterStatus, setFilterStatus] = useState<'all' | 'switch_recommended' | 'already_optimal'>('all');
   const [activeModalAudit, setActiveModalAudit] = useState<SwitchAudit | null>(null);
@@ -203,13 +206,25 @@ export const QuarterlySwitchEngine: React.FC<QuarterlySwitchEngineProps> = ({
                     {/* Azione */}
                     <td className="py-3.5 px-4 text-right">
                       {isSwitchRecommended ? (
-                        <button
-                          onClick={() => setActiveModalAudit(audit)}
-                          className="px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium text-xs inline-flex items-center gap-1 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
-                        >
-                          <RefreshCw className="h-3 w-3" />
-                          Dossier Switch
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {onOpenProposalPdf && (
+                            <button
+                              onClick={() => onOpenProposalPdf(audit)}
+                              className="px-2.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-100 text-[#0a2540] font-semibold text-xs inline-flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                              title="Visualizza e Stampa Studio di Fattibilità PDF"
+                            >
+                              <FileText className="h-3 w-3 text-[#635bff]" />
+                              <span>PDF</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setActiveModalAudit(audit)}
+                            className="px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium text-xs inline-flex items-center gap-1 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                            Dossier Switch
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => alert(`Notifica automatica inviata a ${audit.customerName}: 'Gentile cliente, la tua tariffa luce/gas è monitorata ed è tuttora la più conveniente sul mercato.'`)}
