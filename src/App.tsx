@@ -11,6 +11,7 @@ import { SlideOverDrawer } from './components/SlideOverDrawer';
 import { CommandPalette } from './components/CommandPalette';
 import { BillOcrModal } from './components/BillOcrModal';
 import { AddCustomerModal } from './components/AddCustomerModal';
+import { ImportCustomersModal } from './components/ImportCustomersModal';
 import { MarketSimulatorModal } from './components/MarketSimulatorModal';
 import { ToastContainer } from './components/ToastContainer';
 import { CustomerPortal } from './components/CustomerPortal';
@@ -68,6 +69,8 @@ function UnifiedApp() {
   const [securityLogs, setSecurityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
   const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(initialDb.customers));
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+  const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<string>(
     currentUser.role === 'customer' ? 'customer_overview' : 'dashboard'
@@ -359,6 +362,31 @@ function UnifiedApp() {
     recordSecurityLog('gdpr_consent_logged', 'safe', `Nuovo cliente e mandato registrato per ${newCustomer.name}`);
   };
 
+  // Importazione Massiva Clienti (CSV / Excel)
+  const handleBatchAddCustomers = (newCustomers: Customer[]) => {
+    if (!newCustomers.length) return;
+    const updated = [...newCustomers, ...customers];
+    setCustomers(updated);
+    setAudits(runQuarterlyAudit(updated, marketIndex));
+
+    newCustomers.forEach(c => {
+      api.customers.create(c).catch(err => {
+        console.warn('[App] Fallback locale per cliente batch:', err);
+      });
+    });
+
+    addToast(
+      'Importazione Massiva Completata',
+      `${newCustomers.length} clienti importati con successo e inseriti nell'audit ARERA.`,
+      'success'
+    );
+    recordSecurityLog(
+      'gdpr_consent_logged',
+      'safe',
+      `Importati ${newCustomers.length} clienti da file CSV/Excel con consenso e mandato registrati.`
+    );
+  };
+
   // Upload bolletta dal portale cliente
   const handleCustomerUploadBill = (bill: CustomerBill) => {
     setBills(prev => [bill, ...prev]);
@@ -496,6 +524,7 @@ function UnifiedApp() {
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenMarketSimulator={() => setIsMarketSimulatorOpen(true)}
         onOpenBillOcr={() => setIsBillOcrOpen(true)}
+        onOpenAddCustomer={() => setIsAddCustomerModalOpen(true)}
         onOpenLogin={() => setIsGateOpen(true)}
         onOpenTotem={() => setIsTotemOpen(true)}
         onRefreshMarketIndex={handleRefreshMarketIndices}
@@ -538,6 +567,7 @@ function UnifiedApp() {
                 customers={customers}
                 audits={audits}
                 onNavigate={setActiveTab}
+                onOpenAddCustomer={() => setIsAddCustomerModalOpen(true)}
               />
             )}
 
@@ -578,6 +608,9 @@ function UnifiedApp() {
                 }}
                 onSelectCustomer={(customer) => setDrawerState({ isOpen: true, customer, lead: null })}
                 onAddCustomer={handleAddCustomer}
+                onBatchAddCustomers={handleBatchAddCustomers}
+                onOpenBillOcr={() => setIsBillOcrOpen(true)}
+                onNavigateToLeads={() => setActiveTab('leads')}
               />
             )}
 
@@ -640,10 +673,24 @@ function UnifiedApp() {
 
       {/* Modal di Conversione Lead in Cliente o Creazione Diretta */}
       <AddCustomerModal
-        isOpen={!!convertingLead}
-        onClose={() => setConvertingLead(null)}
+        isOpen={isAddCustomerModalOpen || !!convertingLead}
+        onClose={() => {
+          setIsAddCustomerModalOpen(false);
+          setConvertingLead(null);
+        }}
         initialLead={convertingLead}
-        onSave={handleAddCustomer}
+        onSave={(cust) => {
+          handleAddCustomer(cust);
+          setIsAddCustomerModalOpen(false);
+          setConvertingLead(null);
+        }}
+      />
+
+      {/* Modal Importazione Massiva Clienti (CSV / Excel) */}
+      <ImportCustomersModal
+        isOpen={isImportCustomersModalOpen}
+        onClose={() => setIsImportCustomersModalOpen(false)}
+        onImportCustomers={handleBatchAddCustomers}
       />
 
       {/* Call Script Quick-Dialer Drawer per Call Center */}
@@ -676,6 +723,8 @@ function UnifiedApp() {
           else if (actionId === 'market_sim') setIsMarketSimulatorOpen(true);
           else if (actionId === 'switch_4m') setActiveTab('switch4m');
           else if (actionId === 'new_lead') setActiveTab('leads');
+          else if (actionId === 'new_customer') setIsAddCustomerModalOpen(true);
+          else if (actionId === 'import_customers') setIsImportCustomersModalOpen(true);
         }}
       />
 

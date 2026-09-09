@@ -4,7 +4,8 @@ import {
   ArrowUpRight, 
   Sparkles, 
   Calendar,
-  ArrowRight
+  ArrowRight,
+  UserPlus
 } from 'lucide-react';
 import { Customer, Lead, SwitchAudit } from '../types';
 
@@ -13,6 +14,7 @@ interface DashboardOverviewProps {
   customers: Customer[];
   audits: SwitchAudit[];
   onNavigate: (tab: string) => void;
+  onOpenAddCustomer?: () => void;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
@@ -20,6 +22,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   customers,
   audits,
   onNavigate,
+  onOpenAddCustomer,
 }) => {
   const pendingAudits = audits.filter(a => a.status === 'switch_recommended');
   const totalPotentialSavings = pendingAudits.reduce((acc, a) => acc + a.annualSavings, 0);
@@ -71,11 +74,22 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-xs font-medium text-[#425466] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
             Settembre 2026
           </div>
+          {onOpenAddCustomer && (
+            <button
+              type="button"
+              onClick={onOpenAddCustomer}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] hover:bg-slate-50 text-[#0a2540] font-bold text-xs shadow-2xs active:scale-[0.99] transition-all cursor-pointer"
+              title="Registra subito un nuovo cliente"
+            >
+              <UserPlus className="h-3.5 w-3.5 text-[#635bff]" />
+              <span>+ Nuovo Cliente</span>
+            </button>
+          )}
           <button
             onClick={() => onNavigate('switch4m')}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#635bff] text-white font-medium text-xs shadow-[0_1px_2px_rgba(99,91,255,0.3)] hover:bg-[#5851ea] active:scale-[0.99] transition-all cursor-pointer"
@@ -277,6 +291,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           <div className="space-y-2 pt-2">
+            {onOpenAddCustomer && (
+              <button
+                type="button"
+                onClick={onOpenAddCustomer}
+                className="w-full py-2.5 px-3 rounded-lg bg-indigo-50/70 hover:bg-indigo-100/70 border border-indigo-200 text-xs font-bold text-[#635bff] flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-[#635bff]" />
+                  <span>+ Registra Nuovo Cliente & POD</span>
+                </span>
+                <ArrowRight className="h-3.5 w-3.5 text-[#635bff]" />
+              </button>
+            )}
+
             <button
               onClick={() => onNavigate('leads')}
               className="w-full py-2.5 px-3 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-xs font-semibold text-[#0a2540] flex items-center justify-between transition-colors cursor-pointer"

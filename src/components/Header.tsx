@@ -18,7 +18,8 @@ import {
   TrendingDown,
   Coins,
   Menu,
-  X
+  X,
+  UserPlus
 } from 'lucide-react';
 import { AuthUser, MarketIndex } from '../types';
 import { NotificationCenter } from './NotificationCenter';
@@ -35,6 +36,7 @@ interface HeaderProps {
   onOpenMarketSimulator: () => void;
   onOpenBillOcr: () => void;
   onOpenLogin: () => void;
+  onOpenAddCustomer?: () => void;
   onOpenTotem?: () => void;
   onRefreshMarketIndex?: () => void;
   isRefreshingMarketIndex?: boolean;
@@ -52,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenMarketSimulator,
   onOpenBillOcr,
   onOpenLogin,
+  onOpenAddCustomer,
   onOpenTotem,
   onRefreshMarketIndex,
   isRefreshingMarketIndex = false,
@@ -238,6 +241,18 @@ export const Header: React.FC<HeaderProps> = ({
 
           {!isCustomer && (
             <>
+              {onOpenAddCustomer && (
+                <button
+                  type="button"
+                  onClick={onOpenAddCustomer}
+                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-2xs cursor-pointer transition-all active:scale-[0.99]"
+                  title="Registra manualmente un nuovo cliente con relative forniture"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  <span>+ Nuovo Cliente</span>
+                </button>
+              )}
+
               <button
                 onClick={onOpenBillOcr}
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-xs font-semibold text-[#0a2540] shadow-2xs cursor-pointer transition-colors"
@@ -396,6 +411,20 @@ export const Header: React.FC<HeaderProps> = ({
 
                 {!isCustomer && (
                   <>
+                    {onOpenAddCustomer && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          onOpenAddCustomer();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-50 text-[#635bff] hover:bg-indigo-100 font-bold mb-1 transition-colors text-left"
+                      >
+                        <UserPlus className="h-4 w-4 text-[#635bff]" />
+                        <span>+ Nuovo Cliente & POD/PDR</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => {

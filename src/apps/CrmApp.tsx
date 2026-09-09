@@ -11,6 +11,7 @@ import { SlideOverDrawer } from '../components/SlideOverDrawer';
 import { CommandPalette } from '../components/CommandPalette';
 import { BillOcrModal } from '../components/BillOcrModal';
 import { AddCustomerModal } from '../components/AddCustomerModal';
+import { ImportCustomersModal } from '../components/ImportCustomersModal';
 import { MarketSimulatorModal } from '../components/MarketSimulatorModal';
 import { ToastContainer } from '../components/ToastContainer';
 import { TwoFactorModal } from '../components/TwoFactorModal';
@@ -61,6 +62,8 @@ export const CrmApp: React.FC = () => {
   const [securityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
   const audits = React.useMemo(() => runQuarterlyAudit(customers, marketIndex), [customers, marketIndex]);
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+  const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
@@ -250,6 +253,24 @@ export const CrmApp: React.FC = () => {
     }).catch(err => console.warn('[CrmApp] Errore calcolo provvigione:', err));
   };
 
+  // Importazione Massiva Clienti (CSV / Excel)
+  const handleBatchAddCustomers = (newCustomers: Customer[]) => {
+    if (!newCustomers.length) return;
+    setCustomers(prev => [...newCustomers, ...prev]);
+
+    newCustomers.forEach(c => {
+      api.customers.create(c).catch(err => {
+        console.warn('[CrmApp] Fallback locale per cliente batch:', err);
+      });
+    });
+
+    addToast(
+      'Importazione Massiva Completata',
+      `${newCustomers.length} clienti importati con successo e inseriti nell'audit ARERA.`,
+      'success'
+    );
+  };
+
   const handleAuditSwitched = (auditId: string) => {
     const audit = audits.find(a => a.id === auditId);
     if (audit) {
@@ -304,6 +325,7 @@ export const CrmApp: React.FC = () => {
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenMarketSimulator={() => setIsMarketSimOpen(true)}
         onOpenBillOcr={() => setIsBillOcrOpen(true)}
+        onOpenAddCustomer={() => setIsAddCustomerModalOpen(true)}
         onOpenLogin={() => setIs2faModalOpen(true)}
         onOpenTotem={() => { window.location.search = '?app=totem'; }}
         onRefreshMarketIndex={handleRefreshMarketIndices}
@@ -318,6 +340,7 @@ export const CrmApp: React.FC = () => {
             customers={customers}
             audits={audits}
             onNavigate={(tab) => setActiveTab(tab)}
+            onOpenAddCustomer={() => setIsAddCustomerModalOpen(true)}
           />
         )}
 
@@ -357,6 +380,9 @@ export const CrmApp: React.FC = () => {
               setDrawerLead(null);
             }}
             onAddCustomer={handleAddCustomer}
+            onBatchAddCustomers={handleBatchAddCustomers}
+            onOpenBillOcr={() => setIsBillOcrOpen(true)}
+            onNavigateToLeads={() => setActiveTab('leads')}
           />
         )}
 
@@ -445,10 +471,24 @@ export const CrmApp: React.FC = () => {
 
       {/* Modal Creazione Cliente da Lead o Diretto */}
       <AddCustomerModal
-        isOpen={!!convertingLead}
-        onClose={() => setConvertingLead(null)}
+        isOpen={isAddCustomerModalOpen || !!convertingLead}
+        onClose={() => {
+          setIsAddCustomerModalOpen(false);
+          setConvertingLead(null);
+        }}
         initialLead={convertingLead}
-        onSave={handleAddCustomer}
+        onSave={(cust) => {
+          handleAddCustomer(cust);
+          setIsAddCustomerModalOpen(false);
+          setConvertingLead(null);
+        }}
+      />
+
+      {/* Modal Importazione Massiva Clienti (CSV / Excel) */}
+      <ImportCustomersModal
+        isOpen={isImportCustomersModalOpen}
+        onClose={() => setIsImportCustomersModalOpen(false)}
+        onImportCustomers={handleBatchAddCustomers}
       />
 
       {/* Appointment Scheduling */}
@@ -478,6 +518,8 @@ export const CrmApp: React.FC = () => {
           else if (actionId === 'market_sim') setIsMarketSimOpen(true);
           else if (actionId === 'switch_4m') setActiveTab('switch4m');
           else if (actionId === 'new_lead') setActiveTab('leads');
+          else if (actionId === 'new_customer') setIsAddCustomerModalOpen(true);
+          else if (actionId === 'import_customers') setIsImportCustomersModalOpen(true);
         }}
       />
 

@@ -7,7 +7,9 @@ import {
   FileSearch, 
   Plus, 
   SlidersHorizontal,
-  ArrowRight
+  ArrowRight,
+  UserPlus,
+  UploadCloud
 } from 'lucide-react';
 import { Customer, Lead } from '../types';
 
@@ -63,7 +65,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   );
 
   const quickActions = [
-    { id: 'ocr_bill', label: 'Analizza Bolletta con OCR AI', icon: FileSearch, category: 'Azione' },
+    { id: 'new_customer', label: 'Registra Nuovo Cliente & Forniture (POD/PDR)', icon: UserPlus, category: 'Azione' },
+    { id: 'import_customers', label: 'Importa Clienti da File CSV / Excel', icon: UploadCloud, category: 'Azione' },
+    { id: 'ocr_bill', label: 'Analizza Bolletta con OCR AI (Crea Cliente)', icon: FileSearch, category: 'Azione' },
     { id: 'market_sim', label: 'Simula Scenario di Mercato (PUN / PSV)', icon: SlidersHorizontal, category: 'Azione' },
     { id: 'switch_4m', label: 'Vai al Motore di Switch 4 Mesi', icon: RefreshCw, category: 'Navigazione' },
     { id: 'new_lead', label: 'Simula Inbound Lead Marketing (Webhook)', icon: Plus, category: 'Azione' },
