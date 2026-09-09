@@ -1,4 +1,4 @@
-export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral';
+export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk';
 
 export type LeadStatus = 
   | 'new' 

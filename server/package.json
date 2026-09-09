@@ -1,0 +1,28 @@
+{
+  "name": "voltacrm-backend-api",
+  "version": "1.0.0",
+  "description": "Backend API standalone per VoltaCRM SaaS (ARERA Energy Switch Engine, Auth 2FA, Totem Leads & Supabase Connector)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": ["energy-crm", "arera", "pun-psv", "switch-engine", "totem-kiosk"],
+  "author": "Volta Energy",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

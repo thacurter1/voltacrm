@@ -1,0 +1,84 @@
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import { authRouter } from './routes/auth.js';
+import { leadsRouter } from './routes/leads.js';
+import { customersRouter } from './routes/customers.js';
+import { switchRouter } from './routes/switch.js';
+import { kioskRouter } from './routes/kiosk.js';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Security & Middlewares
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+app.use(cors({
+  origin: '*', // Consentito per CRM broker, Portale Cliente, Totem Kiosk
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Client-Version']
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+// Request logger
+app.use((req: Request, _res: Response, next) => {
+  const start = Date.now();
+  const { method, url } = req;
+  _res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${method} ${url} ${_res.statusCode} - ${duration}ms`);
+  });
+  next();
+});
+
+// Root & Health check
+app.get('/api/health', (_req: Request, res: Response): void => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'VoltaCRM SaaS Standalone Backend API',
+    version: '1.0.0',
+    uptimeSeconds: Math.floor(process.uptime()),
+    features: {
+      auth2FA: true,
+      areraSwitchEngine: true,
+      punPsvMonitoring: true,
+      digitalSignatureOTP: true,
+      totemKioskGateway: true,
+      supabaseConnected: !!process.env.SUPABASE_URL
+    }
+  });
+});
+
+// Mount Routes
+app.use('/api/auth', authRouter);
+app.use('/api/leads', leadsRouter);
+app.use('/api/customers', customersRouter);
+app.use('/api/switch', switchRouter);
+app.use('/api/kiosk', kioskRouter);
+
+// 404 handler
+app.use((req: Request, res: Response): void => {
+  res.status(404).json({
+    success: false,
+    message: `Endpoint non trovato: ${req.method} ${req.originalUrl}`
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`=================================================`);
+  console.log(`⚡ VOLTACRM BACKEND API SERVER ATTIVO`);
+  console.log(`📡 URL Locale: http://localhost:${PORT}`);
+  console.log(`🩺 Health Check: http://localhost:${PORT}/api/health`);
+  console.log(`💼 CRM Broker: http://localhost:${PORT}/api/switch/audit`);
+  console.log(`🖥️ Totem Kiosk: http://localhost:${PORT}/api/kiosk/lead`);
+  console.log(`=================================================`);
+});
+
+export default app;

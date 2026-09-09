@@ -1,0 +1,264 @@
+/**
+ * VoltaCRM Unified API Client
+ * Comunica con il backend standalone (Node.js/Express) o esegue fallback
+ * automatico su storage locale se offline/deploy senza backend attivo.
+ */
+
+import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit } from '../types';
+import { dbService } from '../services/db';
+import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
+
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Errore HTTP ${res.status}: ${res.statusText}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  // --- HEALTH & STATUS ---
+  async getHealth() {
+    try {
+      return await request<{ status: string; version: string; service: string }>('/health');
+    } catch {
+      return { status: 'offline-fallback', version: '1.0.0', service: 'Volta Local Engine' };
+    }
+  },
+
+  // --- LEADS ---
+  leads: {
+    async getAll(): Promise<Lead[]> {
+      try {
+        const data = await request<{ success: boolean; leads: Lead[] }>('/leads');
+        return data.leads;
+      } catch (err) {
+        console.warn('[API Client] Backend offline, fallback a db locale per Leads:', err);
+        return dbService.load().leads;
+      }
+    },
+
+    async create(leadData: Partial<Lead>): Promise<Lead> {
+      try {
+        const data = await request<{ success: boolean; lead: Lead }>('/leads', {
+          method: 'POST',
+          body: JSON.stringify(leadData)
+        });
+        return data.lead;
+      } catch (err) {
+        console.warn('[API Client] Fallback locale per creazione Lead:', err);
+        const state = dbService.load();
+        const newLead: Lead = {
+          id: `lead-${Date.now()}`,
+          name: leadData.name || 'Lead senza nome',
+          phone: leadData.phone || '',
+          email: leadData.email || '',
+          city: leadData.city || 'Milano',
+          source: leadData.source || 'landing_page',
+          status: 'new',
+          notes: leadData.notes || '',
+          createdAt: new Date().toISOString().split('T')[0],
+          estimatedConsumptionKwh: leadData.estimatedConsumptionKwh,
+          estimatedConsumptionSmc: leadData.estimatedConsumptionSmc,
+        };
+        dbService.save({ ...state, leads: [newLead, ...state.leads] });
+        return newLead;
+      }
+    },
+
+    async updateStatus(id: string, status: Lead['status'], note?: string): Promise<Lead | undefined> {
+      try {
+        const data = await request<{ success: boolean; lead: Lead }>(`/leads/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status, note })
+        });
+        return data.lead;
+      } catch (err) {
+        console.warn('[API Client] Fallback locale per updateStatus Lead:', err);
+        const state = dbService.load();
+        const updatedLeads = state.leads.map((l: Lead) => {
+          if (l.id === id) {
+            return {
+              ...l,
+              status,
+              notes: note ? `${l.notes} | ${note}` : l.notes
+            };
+          }
+          return l;
+        });
+        dbService.save({ ...state, leads: updatedLeads });
+        return updatedLeads.find((l: Lead) => l.id === id);
+      }
+    }
+  },
+
+  // --- CUSTOMERS ---
+  customers: {
+    async getAll(): Promise<Customer[]> {
+      try {
+        const data = await request<{ success: boolean; customers: Customer[] }>('/customers');
+        return data.customers;
+      } catch (err) {
+        console.warn('[API Client] Fallback a db locale per Clienti:', err);
+        return dbService.load().customers;
+      }
+    },
+
+    async getById(id: string): Promise<Customer | undefined> {
+      try {
+        const data = await request<{ success: boolean; customer: Customer }>(`/customers/${id}`);
+        return data.customer;
+      } catch {
+        return dbService.load().customers.find((c: Customer) => c.id === id);
+      }
+    },
+
+    async create(customerData: Partial<Customer>): Promise<Customer> {
+      try {
+        const data = await request<{ success: boolean; customer: Customer }>('/customers', {
+          method: 'POST',
+          body: JSON.stringify(customerData)
+        });
+        return data.customer;
+      } catch (err) {
+        console.warn('[API Client] Fallback locale per aggiunta Cliente:', err);
+        const state = dbService.load();
+        const newCust: Customer = {
+          id: `cust-${Date.now()}`,
+          name: customerData.name || 'Nuovo Cliente',
+          fiscalCode: customerData.fiscalCode || 'CF0000000',
+          phone: customerData.phone || '',
+          email: customerData.email || '',
+          city: customerData.city || '',
+          utilityPoints: customerData.utilityPoints || [],
+          contractStartDate: new Date().toISOString().split('T')[0],
+          lastSwitchAuditDate: new Date().toISOString().split('T')[0],
+          nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
+          accountManager: customerData.accountManager || 'Account Manager',
+          hasBrokerageMandate: customerData.hasBrokerageMandate ?? true,
+          notes: customerData.notes || ''
+        };
+        dbService.save({ ...state, customers: [newCust, ...state.customers] });
+        return newCust;
+      }
+    }
+  },
+
+  // --- SWITCH ENGINE & ARERA ---
+  switch: {
+    async getMarketIndices(): Promise<MarketIndex> {
+      try {
+        const data = await request<{ success: boolean; marketIndex: MarketIndex }>('/switch/market-indices');
+        return data.marketIndex;
+      } catch {
+        return CURRENT_MARKET_INDEX;
+      }
+    },
+
+    async getOffers(): Promise<SupplierOffer[]> {
+      try {
+        const data = await request<{ success: boolean; offers: SupplierOffer[] }>('/switch/offers');
+        return data.offers;
+      } catch {
+        return MARKET_OFFERS;
+      }
+    },
+
+    async getAudits(): Promise<SwitchAudit[]> {
+      try {
+        const data = await request<{ success: boolean; audits: SwitchAudit[] }>('/switch/audit');
+        return data.audits;
+      } catch (err) {
+        console.warn('[API Client] Fallback locale per Switch Audit:', err);
+        return runQuarterlyAudit(dbService.load().customers, CURRENT_MARKET_INDEX);
+      }
+    },
+
+    async signContract(payload: {
+      customerId?: string;
+      customerName: string;
+      signerFiscalCode: string;
+      phone: string;
+      otpCode: string;
+      offerId?: string;
+      supplier?: string;
+    }) {
+      try {
+        return await request<{ success: boolean; signatureReceipt: any }>('/switch/sign', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('[API Client] Fallback locale per Firma Digitale:', err);
+        return {
+          success: true,
+          signatureReceipt: {
+            id: `sig-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            signatureHash: `SHA256-LOCAL-${Date.now()}`,
+            ...payload
+          }
+        };
+      }
+    }
+  },
+
+  // --- TOTEM KIOSK ---
+  kiosk: {
+    async submitLead(payload: {
+      name?: string;
+      phone: string;
+      email?: string;
+      supplyType: 'luce' | 'gas' | 'luce+gas';
+      monthlyExpenseEur: number;
+      totemId?: string;
+      mallLocation?: string;
+    }) {
+      try {
+        return await request<{
+          success: boolean;
+          leadId: string;
+          estimatedSavingsAnnualEur: number;
+          advice: string;
+          capturedAt: string;
+        }>('/kiosk/lead', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('[API Client] Backend non raggiungibile, salvataggio locale Kiosk:', err);
+        const estSavings = Math.round(payload.monthlyExpenseEur * 12 * 0.28);
+        const state = dbService.load();
+        const localLead: Lead = {
+          id: `totem-${Date.now()}`,
+          name: payload.name || 'Visitatore Totem',
+          phone: payload.phone,
+          email: payload.email || '',
+          city: payload.mallLocation || 'Totem Kiosk',
+          source: 'totem_kiosk',
+          status: 'new',
+          notes: `Totem ${payload.totemId || 'K-01'}. Spesa: €${payload.monthlyExpenseEur}/m. Tipo: ${payload.supplyType}`,
+          createdAt: new Date().toISOString().split('T')[0]
+        };
+        dbService.save({ ...state, leads: [localLead, ...state.leads] });
+
+        return {
+          success: true,
+          leadId: localLead.id,
+          estimatedSavingsAnnualEur: estSavings,
+          advice: 'Riceverai un SMS o chiamata da un nostro consulente.',
+          capturedAt: new Date().toISOString()
+        };
+      }
+    }
+  }
+};

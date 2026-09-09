@@ -26,6 +26,9 @@ import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { TotemKioskMode } from './components/TotemKioskMode';
+import { TotemApp } from './apps/TotemApp';
+import { CustomerApp } from './apps/CustomerApp';
+import { CrmApp } from './apps/CrmApp';
 import { dbService, DEMO_USERS } from './services/db';
 import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
@@ -44,15 +47,13 @@ import {
   SecurityAuditLog
 } from './types';
 
-export function App() {
+function UnifiedApp() {
   const initialDb = dbService.load();
 
   // Auth & Session State
   const [currentUser, setCurrentUser] = useState<UserProfile>(initialDb.currentUser || INITIAL_PROFILES[0]);
   const [isGateOpen, setIsGateOpen] = useState(false);
-  const [isTotemOpen, setIsTotemOpen] = useState(
-    () => new URLSearchParams(window.location.search).get('mode') === 'totem'
-  );
+  const [isTotemOpen, setIsTotemOpen] = useState(false);
   const [profiles, setProfiles] = useState<UserProfile[]>(INITIAL_PROFILES);
 
   // Business Data State
@@ -662,4 +663,23 @@ export function App() {
   );
 }
 
+export function App() {
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const appParam = searchParams.get('app') || searchParams.get('mode');
+
+  if (host.startsWith('totem.') || appParam === 'totem') {
+    return <TotemApp />;
+  }
+  if (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer') {
+    return <CustomerApp />;
+  }
+  if (host.startsWith('crm.') || appParam === 'crm') {
+    return <CrmApp />;
+  }
+
+  return <UnifiedApp />;
+}
+
 export default App;
+
