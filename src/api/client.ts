@@ -260,5 +260,75 @@ export const api = {
         };
       }
     }
+  },
+
+  // --- NOTIFICATIONS ---
+  notifications: {
+    async getAll(role?: string): Promise<{ notifications: any[]; unreadCount: number }> {
+      try {
+        const query = role ? `?role=${role}` : '';
+        const data = await request<{ success: boolean; notifications: any[]; unreadCount: number }>(`/notifications${query}`);
+        return { notifications: data.notifications, unreadCount: data.unreadCount };
+      } catch (err) {
+        console.warn('[API Client] Fallback locale per Notifiche:', err);
+        return {
+          notifications: [
+            {
+              id: 'notif-local-1',
+              type: 'totem_lead',
+              title: 'Nuovo Lead da Totem Kiosk',
+              message: 'Visitatore acquisito al Totem Centro Commerciale. Risparmio stimato: €340/anno.',
+              timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+              isRead: false,
+              priority: 'urgent',
+              targetRole: 'call_center',
+              actionTab: 'leads'
+            },
+            {
+              id: 'notif-local-2',
+              type: 'switch_due',
+              title: 'Audit 120 Giorni Scaduto!',
+              message: 'Andrea Moretti ha superato i 120 giorni. Risparmio annuo: €204 con Octopus.',
+              timestamp: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+              isRead: false,
+              priority: 'high',
+              targetRole: 'call_center',
+              actionTab: 'switch4m'
+            }
+          ],
+          unreadCount: 2
+        };
+      }
+    },
+
+    async markRead(id: string): Promise<boolean> {
+      try {
+        await request(`/notifications/${id}/read`, { method: 'PATCH' });
+        return true;
+      } catch {
+        return true;
+      }
+    },
+
+    async markAllRead(): Promise<boolean> {
+      try {
+        await request(`/notifications/mark-all-read`, { method: 'POST' });
+        return true;
+      } catch {
+        return true;
+      }
+    },
+
+    async trigger(notificationData: any): Promise<any> {
+      try {
+        return await request(`/notifications/trigger`, {
+          method: 'POST',
+          body: JSON.stringify(notificationData)
+        });
+      } catch {
+        return { success: true, notification: { id: `notif-${Date.now()}`, ...notificationData, isRead: false } };
+      }
+    }
   }
 };
+

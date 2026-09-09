@@ -8,6 +8,7 @@ import { dbService } from '../services/db';
 import { runQuarterlyAudit } from '../services/energyEngine';
 import { Customer, CustomerBill, SwitchAudit, ToastNotification, UserProfile } from '../types';
 import { ShieldCheck, Zap, ArrowLeft } from 'lucide-react';
+import { NotificationCenter } from '../components/NotificationCenter';
 
 export const CustomerApp: React.FC = () => {
   const initialDb = dbService.load();
@@ -90,6 +91,8 @@ export const CustomerApp: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <NotificationCenter userRole="customer" onToast={addToast} />
+
           {/* Customer Switcher for multi-account demo */}
           <select 
             value={selectedCustomerId}

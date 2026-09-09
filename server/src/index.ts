@@ -7,6 +7,7 @@ import { leadsRouter } from './routes/leads.js';
 import { customersRouter } from './routes/customers.js';
 import { switchRouter } from './routes/switch.js';
 import { kioskRouter } from './routes/kiosk.js';
+import { notificationsRouter } from './routes/notifications.js';
 
 dotenv.config();
 
@@ -62,6 +63,7 @@ app.use('/api/leads', leadsRouter);
 app.use('/api/customers', customersRouter);
 app.use('/api/switch', switchRouter);
 app.use('/api/kiosk', kioskRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // 404 handler
 app.use((req: Request, res: Response): void => {

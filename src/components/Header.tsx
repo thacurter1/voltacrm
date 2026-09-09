@@ -19,6 +19,7 @@ import {
   FileText
 } from 'lucide-react';
 import { AuthUser, MarketIndex } from '../types';
+import { NotificationCenter } from './NotificationCenter';
 
 interface HeaderProps {
   activeTab: string;
@@ -174,6 +175,12 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </>
           )}
+
+          {/* Notification Center */}
+          <NotificationCenter 
+            onNavigateTab={setActiveTab} 
+            userRole={currentUser.role} 
+          />
 
           {/* User Profile & Role Switcher */}
           <button

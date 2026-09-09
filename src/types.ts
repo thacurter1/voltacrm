@@ -190,5 +190,31 @@ export interface SecurityCheckItem {
   remediation?: string;
 }
 
+export type NotificationType = 
+  | 'switch_due'
+  | 'totem_lead'
+  | 'bill_uploaded'
+  | 'signature_completed'
+  | 'price_drop'
+  | 'security_alert';
 
+export type NotificationPriority = 'urgent' | 'high' | 'normal' | 'info';
 
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: string;
+  isRead: boolean;
+  priority: NotificationPriority;
+  targetRole?: 'all' | 'call_center' | 'admin' | 'customer';
+  actionTab?: string;
+  meta?: {
+    customerId?: string;
+    leadId?: string;
+    savingsEur?: number;
+    phone?: string;
+    auditId?: string;
+  };
+}
