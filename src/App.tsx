@@ -10,6 +10,7 @@ import { ScheduleAppointmentModal } from './components/ScheduleAppointmentModal'
 import { SlideOverDrawer } from './components/SlideOverDrawer';
 import { CommandPalette } from './components/CommandPalette';
 import { BillOcrModal } from './components/BillOcrModal';
+import { AddCustomerModal } from './components/AddCustomerModal';
 import { MarketSimulatorModal } from './components/MarketSimulatorModal';
 import { ToastContainer } from './components/ToastContainer';
 import { CustomerPortal } from './components/CustomerPortal';
@@ -66,6 +67,7 @@ function UnifiedApp() {
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(initialDb.marketIndex);
   const [securityLogs, setSecurityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
   const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(initialDb.customers));
+  const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
 
   const [activeTab, setActiveTab] = useState<string>(
     currentUser.role === 'customer' ? 'customer_overview' : 'dashboard'
@@ -331,6 +333,32 @@ function UnifiedApp() {
     addToast('Bolletta Importata con Successo', `${newCustomer.name} aggiunto al portafoglio clienti con audit attivo.`, 'success');
   };
 
+  // Aggiunta Nuovo Cliente (Manuale da CRM o da Conversione Lead)
+  const handleAddCustomer = async (newCustomer: Customer) => {
+    try {
+      await api.customers.create(newCustomer);
+    } catch (err) {
+      console.warn('[App] Fallback locale per creazione cliente:', err);
+    }
+
+    const updated = [newCustomer, ...customers];
+    setCustomers(updated);
+    setAudits(runQuarterlyAudit(updated, marketIndex));
+
+    // Se il cliente corrisponde a un lead attivo, aggiorna il lead a 'contract_signed'
+    const matchedLead = leads.find(l => l.phone === newCustomer.phone || l.name.toLowerCase() === newCustomer.name.toLowerCase());
+    if (matchedLead) {
+      handleUpdateLeadStatus(matchedLead.id, 'contract_signed', 'Convertito in cliente con successo');
+    }
+
+    addToast(
+      'Cliente Registrato con Successo',
+      `${newCustomer.name} è stato inserito a portafoglio (${newCustomer.utilityPoints.length} forniture). Audit ARERA attivato.`,
+      'success'
+    );
+    recordSecurityLog('gdpr_consent_logged', 'safe', `Nuovo cliente e mandato registrato per ${newCustomer.name}`);
+  };
+
   // Upload bolletta dal portale cliente
   const handleCustomerUploadBill = (bill: CustomerBill) => {
     setBills(prev => [bill, ...prev]);
@@ -549,6 +577,7 @@ function UnifiedApp() {
                   setActiveTab('switch4m');
                 }}
                 onSelectCustomer={(customer) => setDrawerState({ isOpen: true, customer, lead: null })}
+                onAddCustomer={handleAddCustomer}
               />
             )}
 
@@ -603,6 +632,18 @@ function UnifiedApp() {
         customer={drawerState.customer}
         lead={drawerState.lead}
         onTriggerSwitch={(_cId) => setActiveTab('switch4m')}
+        onConvertLeadToCustomer={(lead) => {
+          setDrawerState({ isOpen: false, customer: null, lead: null });
+          setConvertingLead(lead);
+        }}
+      />
+
+      {/* Modal di Conversione Lead in Cliente o Creazione Diretta */}
+      <AddCustomerModal
+        isOpen={!!convertingLead}
+        onClose={() => setConvertingLead(null)}
+        initialLead={convertingLead}
+        onSave={handleAddCustomer}
       />
 
       {/* Call Script Quick-Dialer Drawer per Call Center */}

@@ -10,6 +10,7 @@ import { ScheduleAppointmentModal } from '../components/ScheduleAppointmentModal
 import { SlideOverDrawer } from '../components/SlideOverDrawer';
 import { CommandPalette } from '../components/CommandPalette';
 import { BillOcrModal } from '../components/BillOcrModal';
+import { AddCustomerModal } from '../components/AddCustomerModal';
 import { MarketSimulatorModal } from '../components/MarketSimulatorModal';
 import { ToastContainer } from '../components/ToastContainer';
 import { TwoFactorModal } from '../components/TwoFactorModal';
@@ -59,6 +60,7 @@ export const CrmApp: React.FC = () => {
   const [isRefreshingMarketIndex, setIsRefreshingMarketIndex] = useState(false);
   const [securityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
   const audits = React.useMemo(() => runQuarterlyAudit(customers, marketIndex), [customers, marketIndex]);
+  const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
@@ -216,6 +218,38 @@ export const CrmApp: React.FC = () => {
     }).catch(err => console.warn('[VoltaCRM] Errore calcolo provvigione:', err));
   };
 
+  // Aggiunta Nuovo Cliente (Manuale da CRM o da Conversione Lead)
+  const handleAddCustomer = async (newCustomer: Customer) => {
+    try {
+      await api.customers.create(newCustomer);
+    } catch (err) {
+      console.warn('[CrmApp] Fallback locale per creazione cliente:', err);
+    }
+
+    setCustomers(prev => [newCustomer, ...prev]);
+
+    const matchedLead = leads.find(l => l.phone === newCustomer.phone || l.name.toLowerCase() === newCustomer.name.toLowerCase());
+    if (matchedLead) {
+      handleUpdateLeadStatus(matchedLead.id, 'contract_signed', 'Convertito in cliente con successo');
+    }
+
+    addToast(
+      'Cliente Registrato con Successo',
+      `${newCustomer.name} è stato inserito a portafoglio (${newCustomer.utilityPoints.length} forniture). Audit ARERA programmato.`,
+      'success'
+    );
+
+    api.commissions.generate({
+      agentId: currentUser.id,
+      agentName: currentUser.name,
+      contractId: `cnt-${Date.now()}`,
+      customerName: newCustomer.name,
+      podOrPdr: newCustomer.utilityPoints[0]?.podOrPdr || 'IT001EXXXXXXXX',
+      utilityType: newCustomer.utilityPoints[0]?.type || 'luce',
+      annualConsumption: newCustomer.utilityPoints[0]?.annualConsumption || 3000
+    }).catch(err => console.warn('[CrmApp] Errore calcolo provvigione:', err));
+  };
+
   const handleAuditSwitched = (auditId: string) => {
     const audit = audits.find(a => a.id === auditId);
     if (audit) {
@@ -322,6 +356,7 @@ export const CrmApp: React.FC = () => {
               setDrawerCustomer(customer);
               setDrawerLead(null);
             }}
+            onAddCustomer={handleAddCustomer}
           />
         )}
 
@@ -401,6 +436,19 @@ export const CrmApp: React.FC = () => {
           setDrawerCustomer(null);
         }}
         onTriggerSwitch={() => setActiveTab('switch4m')}
+        onConvertLeadToCustomer={(lead) => {
+          setDrawerLead(null);
+          setDrawerCustomer(null);
+          setConvertingLead(lead);
+        }}
+      />
+
+      {/* Modal Creazione Cliente da Lead o Diretto */}
+      <AddCustomerModal
+        isOpen={!!convertingLead}
+        onClose={() => setConvertingLead(null)}
+        initialLead={convertingLead}
+        onSave={handleAddCustomer}
       />
 
       {/* Appointment Scheduling */}

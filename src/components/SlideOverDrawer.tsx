@@ -9,7 +9,8 @@ import {
   MapPin, 
   FileText, 
   RefreshCw, 
-  MessageSquare 
+  MessageSquare,
+  UserCheck
 } from 'lucide-react';
 import { Customer, Lead } from '../types';
 
@@ -19,6 +20,7 @@ interface SlideOverDrawerProps {
   customer?: Customer | null;
   lead?: Lead | null;
   onTriggerSwitch?: (customerId: string) => void;
+  onConvertLeadToCustomer?: (lead: Lead) => void;
 }
 
 export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
@@ -27,6 +29,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
   customer,
   lead,
   onTriggerSwitch,
+  onConvertLeadToCustomer,
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'timeline' | 'documents'>('details');
 
@@ -283,6 +286,20 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Avvia Switch Offerta
+              </button>
+            )}
+
+            {lead && onConvertLeadToCustomer && (
+              <button
+                onClick={() => {
+                  onConvertLeadToCustomer(lead);
+                  onClose();
+                }}
+                className="flex-1 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
+                title="Trasforma questo lead in cliente attivo completando l'anagrafica e le forniture"
+              >
+                <UserCheck className="h-3.5 w-3.5" />
+                Converti in Cliente Attivo
               </button>
             )}
 

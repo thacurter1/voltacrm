@@ -6,22 +6,27 @@ import {
   Clock, 
   CheckCircle2, 
   AlertCircle, 
-  RefreshCw
+  RefreshCw,
+  UserPlus
 } from 'lucide-react';
 import { Customer } from '../types';
+import { AddCustomerModal } from './AddCustomerModal';
 
 interface CustomerCrmProps {
   customers: Customer[];
   onTriggerAuditForCustomer: (customerId: string) => void;
   onSelectCustomer: (customer: Customer) => void;
+  onAddCustomer?: (customer: Customer) => Promise<void> | void;
 }
 
 export const CustomerCrm: React.FC<CustomerCrmProps> = ({
   customers,
   onTriggerAuditForCustomer,
   onSelectCustomer,
+  onAddCustomer,
 }) => {
   const [search, setSearch] = useState('');
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 
   const filteredCustomers = customers.filter((c) => {
     return (
@@ -49,11 +54,23 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[#425466]">Mandati con Delega Continua:</span>
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/60 font-bold text-emerald-700 text-xs">
-            {customers.filter((c) => c.hasBrokerageMandate).length} / {customers.length}
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="text-xs text-[#425466]">Mandati con Delega Continua:</span>
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/60 font-bold text-emerald-700 text-xs">
+              {customers.filter((c) => c.hasBrokerageMandate).length} / {customers.length}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAddCustomerModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-[0.99]"
+            title="Registra manualmente un nuovo cliente con relative forniture"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            <span>Nuovo Cliente</span>
+          </button>
         </div>
       </div>
 
@@ -205,6 +222,17 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
         })
       )}
       </div>
+
+      {/* Modal Aggiungi Nuovo Cliente */}
+      <AddCustomerModal
+        isOpen={isAddCustomerModalOpen}
+        onClose={() => setIsAddCustomerModalOpen(false)}
+        onSave={async (newC) => {
+          if (onAddCustomer) {
+            await onAddCustomer(newC);
+          }
+        }}
+      />
     </div>
   );
 };

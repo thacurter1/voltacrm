@@ -8,9 +8,26 @@ import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionReco
 import { dbService } from '../services/db';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+// Rileva se l'app sta girando in locale (sviluppo) o su un dominio cloud pubblico (es. Vercel, Netlify)
+const isLocalhost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.endsWith('.local')
+);
+
+// In produzione cloud (es. Vercel), se VITE_API_URL non è configurato con un backend HTTPS remoto,
+// NON effettuiamo chiamate verso localhost:5000 per evitare il prompt di sicurezza di Chrome
+// "Accedere ad altri servizi e app su questo dispositivo" (Private Network Access / mixed-content).
+const configuredApiUrl = (import.meta as any).env?.VITE_API_URL;
+const API_BASE_URL: string | null = configuredApiUrl 
+  ? configuredApiUrl 
+  : (isLocalhost ? 'http://localhost:5000/api' : null);
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  if (!API_BASE_URL) {
+    throw new Error('Backend remoto non configurato su questo host, attivazione fallback locale integrato.');
+  }
+
   const url = `${API_BASE_URL}${endpoint}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
   const headers: Record<string, string> = {
