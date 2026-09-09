@@ -134,6 +134,11 @@ export interface BillOcrResult {
   rawCostTotal: number;
   estimatedSavingEur: number;
   confidenceScore: number;
+  powerKw?: number;
+  currentUnitCost?: number;
+  currentFixedFeeYear?: number;
+  period?: string;
+  notes?: string;
 }
 
 export type UserRole = 'call_center' | 'customer' | 'admin';

@@ -9,6 +9,7 @@ import { customersRouter } from './routes/customers.js';
 import { switchRouter } from './routes/switch.js';
 import { kioskRouter } from './routes/kiosk.js';
 import { notificationsRouter } from './routes/notifications.js';
+import { ocrRouter } from './routes/ocr.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { getCustomers, getLeads, getNotifications, initDataStore } from './services/dataStore.js';
 import { testDatabaseConnection } from './services/dbClient.js';
@@ -77,6 +78,7 @@ app.use('/api/customers', customersRouter);
 app.use('/api/switch', switchRouter);
 app.use('/api/kiosk', kioskRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/ocr', ocrRouter);
 
 // 404 handler
 app.use((req: Request, res: Response): void => {
