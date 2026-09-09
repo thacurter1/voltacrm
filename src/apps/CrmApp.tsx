@@ -25,6 +25,7 @@ import { InstallAppBanner } from '../components/InstallAppBanner';
 import { dbService } from '../services/db';
 import { profileService, INITIAL_PROFILES } from '../services/supabaseClient';
 import { runQuarterlyAudit } from '../services/energyEngine';
+import { api } from '../api/client';
 import { 
   Appointment, 
   Customer, 
@@ -54,10 +55,24 @@ export const CrmApp: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>(initialDb.appointments);
   const [bills, setBills] = useState<CustomerBill[]>(initialDb.bills);
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(initialDb.marketIndex);
+  const [isRefreshingMarketIndex, setIsRefreshingMarketIndex] = useState(false);
   const [securityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
   const audits = React.useMemo(() => runQuarterlyAudit(customers, marketIndex), [customers, marketIndex]);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+
+  // Load GME live feed on startup
+  useEffect(() => {
+    api.switch.getMarketIndices()
+      .then(liveIndex => {
+        if (liveIndex && liveIndex.punEurKwh) {
+          setMarketIndex(liveIndex);
+        }
+      })
+      .catch(err => {
+        console.warn('[VoltaCRM] Impossibile caricare feed GME live in CrmApp:', err);
+      });
+  }, []);
 
   // Load cloud profiles
   useEffect(() => {
@@ -194,6 +209,25 @@ export const CrmApp: React.FC = () => {
     addToast('Switch Confermato', 'Pratica di cambio gestore inoltrata ad ARERA.', 'success');
   };
 
+  const handleRefreshMarketIndices = async () => {
+    setIsRefreshingMarketIndex(true);
+    try {
+      const refreshed = await api.switch.refreshMarketIndices();
+      if (refreshed && refreshed.punEurKwh) {
+        setMarketIndex(refreshed);
+        addToast(
+          'Feed GME Sincronizzato',
+          `PUN: ${refreshed.punEurKwh.toFixed(4)} €/kWh (F1: ${refreshed.punF1?.toFixed(4) || '—'}) | PSV: ${refreshed.psvEurSmc.toFixed(4)} €/Smc.`,
+          'success'
+        );
+      }
+    } catch (err: any) {
+      addToast('Errore Feed GME', err?.message || 'Impossibile sincronizzare indici GME.', 'warning');
+    } finally {
+      setIsRefreshingMarketIndex(false);
+    }
+  };
+
   const pendingSwitchesCount = audits.filter(a => a.status === 'switch_recommended').length;
   const pendingBillsCount = bills.filter(b => b.status === 'in_review').length;
 
@@ -214,6 +248,8 @@ export const CrmApp: React.FC = () => {
         onOpenBillOcr={() => setIsBillOcrOpen(true)}
         onOpenLogin={() => setIs2faModalOpen(true)}
         onOpenTotem={() => { window.location.search = '?app=totem'; }}
+        onRefreshMarketIndex={handleRefreshMarketIndices}
+        isRefreshingMarketIndex={isRefreshingMarketIndex}
       />
 
       {/* Main Container */}
@@ -385,6 +421,8 @@ export const CrmApp: React.FC = () => {
           setMarketIndex(newIndex);
           addToast('Simulazione Applicata', 'Nuovi indici PUN/PSV attivi sul calcolo.', 'info');
         }}
+        onRefreshFromGme={handleRefreshMarketIndices}
+        isRefreshingFromGme={isRefreshingMarketIndex}
       />
 
       {/* 2FA Modal */}

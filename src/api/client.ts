@@ -221,6 +221,17 @@ export const api = {
       }
     },
 
+    async refreshMarketIndices(): Promise<MarketIndex> {
+      try {
+        const data = await request<{ success: boolean; marketIndex: MarketIndex }>('/switch/refresh-indices', {
+          method: 'POST'
+        });
+        return data.marketIndex;
+      } catch {
+        return CURRENT_MARKET_INDEX;
+      }
+    },
+
     async getOffers(): Promise<SupplierOffer[]> {
       try {
         const data = await request<{ success: boolean; offers: SupplierOffer[] }>('/switch/offers');

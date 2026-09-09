@@ -13,7 +13,9 @@ import {
   User,
   UploadCloud,
   Lock,
-  FileText
+  FileText,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
 import { AuthUser, MarketIndex } from '../types';
 import { NotificationCenter } from './NotificationCenter';
@@ -30,6 +32,8 @@ interface HeaderProps {
   onOpenBillOcr: () => void;
   onOpenLogin: () => void;
   onOpenTotem?: () => void;
+  onRefreshMarketIndex?: () => void;
+  isRefreshingMarketIndex?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -44,6 +48,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenBillOcr,
   onOpenLogin,
   onOpenTotem,
+  onRefreshMarketIndex,
+  isRefreshingMarketIndex = false,
 }) => {
   const isCustomer = currentUser.role === 'customer';
 
@@ -128,27 +134,76 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right: Live Market Ticker & User Role Switcher */}
         <div className="flex items-center gap-3">
           {/* Live PUN & PSV Ticker Pills */}
-          <div 
-            onClick={onOpenMarketSimulator}
-            className="hidden sm:flex items-center gap-2 cursor-pointer group"
-            title="Clicca per simulare scenari di mercato PUN/PSV"
-          >
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] group-hover:border-[#635bff]/40 text-xs transition-colors">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-slate-500 font-medium">PUN:</span>
-              <span className="font-semibold text-[#0a2540] tabular-nums font-mono">
-                {marketIndex.punEurKwh.toFixed(4)} €/kWh
-              </span>
+          <div className="hidden sm:flex items-center gap-1.5">
+            <div 
+              onClick={onOpenMarketSimulator}
+              className="flex items-center gap-2 cursor-pointer group"
+              title={`Clicca per simulare scenari PUN/PSV o vedere fasce F1/F2/F3. Ultimo aggiornamento: ${marketIndex.lastUpdated}`}
+            >
+              {/* PUN Pill */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] group-hover:border-[#635bff]/40 text-xs transition-colors">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-slate-500 font-medium">PUN:</span>
+                <span className="font-semibold text-[#0a2540] tabular-nums font-mono">
+                  {marketIndex.punEurKwh.toFixed(4)} €
+                </span>
+                {marketIndex.punChangePercent !== undefined && (
+                  <span className={`inline-flex items-center text-[10px] font-bold ${
+                    marketIndex.punChangePercent > 0 
+                      ? 'text-rose-600' 
+                      : marketIndex.punChangePercent < 0 
+                        ? 'text-emerald-600' 
+                        : 'text-slate-400'
+                  }`}>
+                    {marketIndex.punChangePercent > 0 ? (
+                      <TrendingUp className="h-2.5 w-2.5 mr-0.5 inline" />
+                    ) : marketIndex.punChangePercent < 0 ? (
+                      <TrendingDown className="h-2.5 w-2.5 mr-0.5 inline" />
+                    ) : null}
+                    {marketIndex.punChangePercent > 0 ? '+' : ''}{marketIndex.punChangePercent}%
+                  </span>
+                )}
+              </div>
+
+              {/* PSV Pill */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] group-hover:border-[#635bff]/40 text-xs transition-colors">
+                <span className="h-2 w-2 rounded-full bg-sky-500" />
+                <span className="text-slate-500 font-medium">PSV:</span>
+                <span className="font-semibold text-[#0a2540] tabular-nums font-mono">
+                  {marketIndex.psvEurSmc.toFixed(4)} €
+                </span>
+                {marketIndex.psvChangePercent !== undefined && (
+                  <span className={`inline-flex items-center text-[10px] font-bold ${
+                    marketIndex.psvChangePercent > 0 
+                      ? 'text-rose-600' 
+                      : marketIndex.psvChangePercent < 0 
+                        ? 'text-emerald-600' 
+                        : 'text-slate-400'
+                  }`}>
+                    {marketIndex.psvChangePercent > 0 ? (
+                      <TrendingUp className="h-2.5 w-2.5 mr-0.5 inline" />
+                    ) : marketIndex.psvChangePercent < 0 ? (
+                      <TrendingDown className="h-2.5 w-2.5 mr-0.5 inline" />
+                    ) : null}
+                    {marketIndex.psvChangePercent > 0 ? '+' : ''}{marketIndex.psvChangePercent}%
+                  </span>
+                )}
+                <SlidersHorizontal className="h-3 w-3 text-slate-400 group-hover:text-[#635bff] ml-0.5" />
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] group-hover:border-[#635bff]/40 text-xs transition-colors">
-              <span className="h-2 w-2 rounded-full bg-sky-500" />
-              <span className="text-slate-500 font-medium">PSV:</span>
-              <span className="font-semibold text-[#0a2540] tabular-nums font-mono">
-                {marketIndex.psvEurSmc.toFixed(4)} €/Smc
-              </span>
-              <SlidersHorizontal className="h-3 w-3 text-slate-400 group-hover:text-[#635bff]" />
-            </div>
+            {/* Refresh GME Feed Button */}
+            {onRefreshMarketIndex && (
+              <button
+                type="button"
+                onClick={onRefreshMarketIndex}
+                disabled={isRefreshingMarketIndex}
+                className="p-1.5 rounded-md border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-500 hover:text-[#635bff] transition-colors disabled:opacity-50 cursor-pointer"
+                title={`Aggiorna feed GME in tempo reale (Ultimo: ${marketIndex.lastUpdated})`}
+              >
+                <RefreshCw className={`h-3 w-3 ${isRefreshingMarketIndex ? 'animate-spin text-[#635bff]' : ''}`} />
+              </button>
+            )}
           </div>
 
           {!isCustomer && (

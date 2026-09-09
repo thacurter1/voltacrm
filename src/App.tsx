@@ -32,6 +32,7 @@ const CrmApp = React.lazy(() => import('./apps/CrmApp'));
 import { dbService, DEMO_USERS } from './services/db';
 import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
+import { api } from './api/client';
 import { 
   Appointment, 
   Customer, 
@@ -68,6 +69,22 @@ function UnifiedApp() {
   const [activeTab, setActiveTab] = useState<string>(
     currentUser.role === 'customer' ? 'customer_overview' : 'dashboard'
   );
+
+  const [isRefreshingMarketIndex, setIsRefreshingMarketIndex] = useState(false);
+
+  // Carica indici di mercato live dal feed GME all'avvio
+  useEffect(() => {
+    api.switch.getMarketIndices()
+      .then(liveIndex => {
+        if (liveIndex && liveIndex.punEurKwh) {
+          setMarketIndex(liveIndex);
+          setAudits(() => runQuarterlyAudit(customers.length > 0 ? customers : initialDb.customers, liveIndex));
+        }
+      })
+      .catch(err => {
+        console.warn('[VoltaCRM] Impossibile caricare feed GME live all\'avvio, uso cache locale:', err);
+      });
+  }, []);
 
   // Carica i profili utente
   useEffect(() => {
@@ -333,7 +350,7 @@ function UnifiedApp() {
   };
 
   const handleTriggerGlobalAudit = () => {
-    const freshAudits = runQuarterlyAudit(customers);
+    const freshAudits = runQuarterlyAudit(customers, marketIndex);
     setAudits(freshAudits);
     addToast('Audit Quadrimestrale Eseguito', `Analizzate ${customers.length} posizioni cliente su PUN/PSV correnti.`, 'info');
   };
@@ -343,6 +360,27 @@ function UnifiedApp() {
     const recomputed = runQuarterlyAudit(customers, newIndex);
     setAudits(recomputed);
     addToast('Scenario Mercato Aggiornato', `PUN impostato a ${newIndex.punEurKwh.toFixed(4)} €/kWh, PSV a ${newIndex.psvEurSmc.toFixed(4)} €/Smc.`, 'warning');
+  };
+
+  const handleRefreshMarketIndices = async () => {
+    setIsRefreshingMarketIndex(true);
+    try {
+      const refreshed = await api.switch.refreshMarketIndices();
+      if (refreshed && refreshed.punEurKwh) {
+        setMarketIndex(refreshed);
+        const recomputed = runQuarterlyAudit(customers, refreshed);
+        setAudits(recomputed);
+        addToast(
+          'Feed GME Sincronizzato',
+          `PUN: ${refreshed.punEurKwh.toFixed(4)} €/kWh (F1: ${refreshed.punF1?.toFixed(4) || '—'}) | PSV: ${refreshed.psvEurSmc.toFixed(4)} €/Smc.`,
+          'success'
+        );
+      }
+    } catch (err: any) {
+      addToast('Errore Feed GME', err?.message || 'Impossibile contattare il server per aggiornare gli indici.', 'warning');
+    } finally {
+      setIsRefreshingMarketIndex(false);
+    }
   };
 
   // Ricerca cliente attivo per la vista cliente
@@ -416,6 +454,8 @@ function UnifiedApp() {
         onOpenBillOcr={() => setIsBillOcrOpen(true)}
         onOpenLogin={() => setIsGateOpen(true)}
         onOpenTotem={() => setIsTotemOpen(true)}
+        onRefreshMarketIndex={handleRefreshMarketIndices}
+        isRefreshingMarketIndex={isRefreshingMarketIndex}
       />
 
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -588,6 +628,8 @@ function UnifiedApp() {
         onClose={() => setIsMarketSimulatorOpen(false)}
         currentIndex={marketIndex}
         onApplyIndex={handleApplyMarketIndex}
+        onRefreshFromGme={handleRefreshMarketIndices}
+        isRefreshingFromGme={isRefreshingMarketIndex}
       />
 
       {/* Login & Role Switcher Modal */}

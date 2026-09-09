@@ -1,17 +1,29 @@
 import { Router, Request, Response } from 'express';
-import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine.js';
+import { MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine.js';
 import { getCustomers, getSignatureLogs, addSignatureLog } from '../services/dataStore.js';
+import { getLiveMarketIndices, refreshMarketIndices } from '../services/gmeFeedService.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { validate, signContractSchema } from '../middleware/validate.js';
 import { Customer } from '../types.js';
 
 export const switchRouter = Router();
 
-// GET /api/switch/market-indices (Pubblico per comparatore tariffe)
-switchRouter.get('/market-indices', (_req: Request, res: Response): void => {
+// GET /api/switch/market-indices (Pubblico per comparatore tariffe con fasce F1/F2/F3 e trend)
+switchRouter.get('/market-indices', async (_req: Request, res: Response): Promise<void> => {
+  const marketIndex = await getLiveMarketIndices();
   res.json({
     success: true,
-    marketIndex: CURRENT_MARKET_INDEX
+    marketIndex
+  });
+});
+
+// POST /api/switch/refresh-indices (Sincronizzazione forzata con il feed live GME)
+switchRouter.post('/refresh-indices', async (_req: Request, res: Response): Promise<void> => {
+  const marketIndex = await refreshMarketIndices(true);
+  res.status(200).json({
+    success: true,
+    message: 'Indici di mercato GME sincronizzati in tempo reale.',
+    marketIndex
   });
 });
 
@@ -27,7 +39,8 @@ switchRouter.get('/offers', (_req: Request, res: Response): void => {
 switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const customerList: Customer[] = getCustomers();
-    const audits = runQuarterlyAudit(customerList);
+    const liveIndex = await getLiveMarketIndices();
+    const audits = runQuarterlyAudit(customerList, liveIndex);
     res.json({
       success: true,
       count: audits.length,

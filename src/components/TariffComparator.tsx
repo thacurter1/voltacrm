@@ -142,7 +142,8 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex 
             { type: activeType, annualConsumption: consumption },
             offer.pricingType,
             offer.unitPriceOrSpread,
-            offer.fixedAnnualFee
+            offer.fixedAnnualFee,
+            marketIndex
           );
 
           const savings = Math.max(0, simulatedCurrentAnnualCost - annualCost);

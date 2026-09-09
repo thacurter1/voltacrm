@@ -74,12 +74,24 @@ export interface Customer {
   notes?: string;
 }
 
+export interface MonthlyMarketIndex {
+  month: string;
+  punEurKwh: number;
+  psvEurSmc: number;
+}
+
 export interface MarketIndex {
   punEurKwh: number;
   psvEurSmc: number;
+  punF1?: number;
+  punF2?: number;
+  punF3?: number;
+  punChangePercent?: number;
+  psvChangePercent?: number;
   lastUpdated: string;
   punTrend: 'up' | 'down' | 'stable';
   psvTrend: 'up' | 'down' | 'stable';
+  historical6m?: MonthlyMarketIndex[];
 }
 
 export interface SupplierOffer {
