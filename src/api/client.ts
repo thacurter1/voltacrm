@@ -15,13 +15,22 @@ const isLocalhost = typeof window !== 'undefined' && (
   window.location.hostname.endsWith('.local')
 );
 
-// In produzione cloud (es. Vercel), se VITE_API_URL non è configurato con un backend HTTPS remoto,
-// NON effettuiamo chiamate verso localhost:5000 per evitare il prompt di sicurezza di Chrome
-// "Accedere ad altri servizi e app su questo dispositivo" (Private Network Access / mixed-content).
-const configuredApiUrl = (import.meta as any).env?.VITE_API_URL;
-const API_BASE_URL: string | null = configuredApiUrl 
-  ? configuredApiUrl 
-  : (isLocalhost ? 'http://localhost:5000/api' : null);
+// Determina in modo sicuro l'endpoint del backend:
+// Su domini remoti (es. Vercel), se VITE_API_URL non è impostato oppure punta a localhost,
+// impostiamo API_BASE_URL a null per EVITARE categoricamente che il browser tenti connessioni
+// a localhost/127.0.0.1 scatenando il popup di Chrome "Accedere ad altri servizi e app su questo dispositivo" (Private Network Access).
+function resolveApiBaseUrl(): string | null {
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    if (!isLocalhost && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+      return null;
+    }
+    return envUrl.trim();
+  }
+  return isLocalhost ? 'http://localhost:5000/api' : null;
+}
+
+const API_BASE_URL: string | null = resolveApiBaseUrl();
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   if (!API_BASE_URL) {
