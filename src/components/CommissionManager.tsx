@@ -12,7 +12,8 @@ import {
   Flame, 
   Award,
   Wallet,
-  User
+  User,
+  Download
 } from 'lucide-react';
 import { api } from '../api/client';
 import { CommissionRecord, AgentCommissionSummary, SettlementBatch, AuthUser } from '../types';
@@ -109,6 +110,125 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
     } finally {
       setIsSubmittingSettle(false);
     }
+  };
+
+  // Helper esportazione CSV compatibile Excel / Home Banking SEPA (UTF-8 con BOM, delimitatore ;)
+  const downloadCsv = (filename: string, headers: string[], rows: (string | number)[][]) => {
+    const escapeCell = (val: string | number | undefined | null) => {
+      if (val === undefined || val === null) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const csvContent = '\uFEFF' + [
+      headers.map(escapeCell).join(';'),
+      ...rows.map(row => row.map(escapeCell).join(';'))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Esportazione CSV per singola distinta (SEPA bonifico / payroll)
+  const handleExportBatchCsv = (batch: SettlementBatch) => {
+    const batchCommissions = commissions.filter(c => c.paymentReference === batch.paymentReference);
+    const headers = [
+      'Protocollo Distinta',
+      'Data Liquidazione',
+      'Periodo Competenza',
+      'Consulente Commerciale',
+      'Cliente Fornitura',
+      'Tipo Utenza',
+      'POD / PDR',
+      'Tipologia Provvigione',
+      'Importo Lordo (€)',
+      'Note Contabili'
+    ];
+
+    const targetList = batchCommissions.length > 0 
+      ? batchCommissions 
+      : commissions.filter(c => c.agentId === batch.agentId && c.status === 'settled');
+
+    const rows: (string | number)[][] = targetList.map(c => [
+      batch.paymentReference,
+      batch.settlementDate,
+      batch.period,
+      batch.agentName,
+      c.customerName,
+      c.utilityType.toUpperCase(),
+      c.podOrPdr,
+      c.type === 'upfront' ? 'Gettone Attivazione' : c.type === 'recurring' ? 'Ricorrente Consumo' : 'Bonus Dual Fuel',
+      c.amountEur.toFixed(2),
+      c.notes || ''
+    ]);
+
+    // Riga di riepilogo totale distinta
+    rows.push([
+      'TOTALE DISTINTA',
+      batch.settlementDate,
+      batch.period,
+      batch.agentName,
+      `${batch.commissionCount} voci liquidate`,
+      '',
+      '',
+      'TOTALE BONIFICO',
+      batch.totalAmountEur.toFixed(2),
+      batch.notes || 'Disposizione SEPA approvata'
+    ]);
+
+    const sanitizedAgent = batch.agentName.replace(/\s+/g, '_').toLowerCase();
+    const filename = `distinta_sepa_${batch.paymentReference}_${sanitizedAgent}.csv`;
+    downloadCsv(filename, headers, rows);
+    onToast('Export Distinta', `Distinta ${batch.paymentReference} esportata con successo in CSV.`, 'success');
+  };
+
+  // Esportazione CSV registro filtrato
+  const handleExportLedgerCsv = () => {
+    if (filteredCommissions.length === 0) {
+      onToast('Nessun Dato', 'Nessuna voce da esportare con i filtri correnti.', 'warning');
+      return;
+    }
+
+    const headers = [
+      'ID Registrazione',
+      'Data Maturazione',
+      'Periodo Competenza',
+      'Consulente Commerciale',
+      'Cliente Finale',
+      'Tipo Utenza',
+      'Codice POD / PDR',
+      'Tipologia Compenso',
+      'Importo Lordo (€)',
+      'Stato Voce',
+      'Protocollo Distinta',
+      'Note'
+    ];
+
+    const rows: (string | number)[][] = filteredCommissions.map(c => [
+      c.id,
+      c.accrualDate,
+      c.period,
+      c.agentName,
+      c.customerName,
+      c.utilityType.toUpperCase(),
+      c.podOrPdr,
+      c.type === 'upfront' ? 'Gettone Attivazione' : c.type === 'recurring' ? 'Ricorrente Consumo' : 'Bonus Dual Fuel',
+      c.amountEur.toFixed(2),
+      c.status === 'settled' ? 'Liquidata' : c.status === 'accrued' ? 'Maturata' : 'In attivazione',
+      c.paymentReference || '',
+      c.notes || ''
+    ]);
+
+    const filename = `registro_provvigioni_${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadCsv(filename, headers, rows);
+    onToast('Export Registro', `Esportate ${rows.length} voci provvigionali in CSV.`, 'success');
   };
 
   // Calcolo KPI Globali
@@ -377,6 +497,17 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
               <option value="recurring">Ricorrente Mensile</option>
               <option value="bonus">Bonus Dual Fuel</option>
             </select>
+
+            {/* Esporta CSV Registro */}
+            <button
+              type="button"
+              onClick={handleExportLedgerCsv}
+              className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+              title="Esporta registro provvigionale filtrato in formato CSV (Excel / Contabilità)"
+            >
+              <Download className="h-3.5 w-3.5 text-[#635bff]" />
+              <span>Esporta CSV</span>
+            </button>
           </div>
         </div>
 
@@ -464,6 +595,89 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                       ) : (
                         <span className="text-slate-300">—</span>
                       )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Storico Distinte di Liquidazione & Bonifici SEPA */}
+      <div className="p-5 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-[#635bff]" />
+            <h2 className="text-sm font-bold text-[#0a2540]">
+              Distinte di Liquidazione & Ordini di Bonifico SEPA
+            </h2>
+            <span className="text-xs text-slate-400">({batches.length} distinte emesse)</span>
+          </div>
+          <span className="text-xs text-slate-500">
+            Formato compatibile con tracciato bancario SEPA CBI e sistemi paghe
+          </span>
+        </div>
+
+        <div className="border border-slate-200 rounded-lg overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold">
+              <tr>
+                <th className="py-2.5 px-3 font-mono">Protocollo Distinta</th>
+                <th className="py-2.5 px-3">Data Emessa</th>
+                <th className="py-2.5 px-3">Consulente Commerciale</th>
+                <th className="py-2.5 px-3">Periodo</th>
+                <th className="py-2.5 px-3">Voci Saldate</th>
+                <th className="py-2.5 px-3 font-mono">Totale Bonifico</th>
+                <th className="py-2.5 px-3">Note</th>
+                <th className="py-2.5 px-3 text-right">Azione</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {batches.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                    Nessuna distinta contabile ancora registrata. Clicca su &quot;Emetti Distinta Liquidazione&quot; per generare un ordine di pagamento.
+                  </td>
+                </tr>
+              ) : (
+                batches.map((b) => (
+                  <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-2.5 px-3 font-mono font-bold text-[#0a2540] whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-[#635bff]">
+                        {b.paymentReference}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                      {b.settlementDate}
+                    </td>
+                    <td className="py-2.5 px-3 font-medium text-slate-800 whitespace-nowrap">
+                      {b.agentName}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                      {b.period}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded bg-slate-100 font-semibold text-slate-700">
+                        {b.commissionCount} voci
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 font-mono font-bold text-sm text-emerald-700 whitespace-nowrap">
+                      € {b.totalAmountEur.toFixed(2)}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-500 max-w-xs truncate">
+                      {b.notes || '—'}
+                    </td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleExportBatchCsv(b)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-[#e3e8ee] hover:bg-slate-100 text-[#0a2540] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Scarica distinta in formato CSV per bonifico bancario SEPA"
+                      >
+                        <Download className="h-3 w-3 text-[#635bff]" />
+                        <span>Esporta CSV</span>
+                      </button>
                     </td>
                   </tr>
                 ))

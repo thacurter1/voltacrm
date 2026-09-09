@@ -335,3 +335,131 @@ grant select, insert, update on public.leads to authenticated, anon;
 grant select, insert on public.signature_logs to authenticated;
 grant select, insert, update on public.notifications to authenticated;
 
+-- ==============================================================================
+-- 8. TABELLA PROVVIGIONI AGENTI & GETTONI COMMERCIALI
+-- ==============================================================================
+create table if not exists public.commissions (
+  id text primary key,
+  agent_id text not null,
+  agent_name text not null,
+  contract_id text not null,
+  customer_name text not null,
+  pod_or_pdr text not null,
+  utility_type text not null check (utility_type in ('luce', 'gas')),
+  customer_type text check (customer_type in ('residential', 'business')) default 'residential',
+  annual_consumption numeric default 3000 check (annual_consumption >= 0),
+  type text not null check (type in ('upfront', 'recurring', 'bonus', 'clawback')),
+  amount_eur numeric not null check (amount_eur >= 0),
+  status text not null check (status in ('pending', 'accrued', 'settled', 'clawback')) default 'pending',
+  period text not null, -- formato YYYY-MM
+  accrual_date date default current_date not null,
+  settlement_date date,
+  payment_reference text,
+  notes text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Indici di performance per reporting mensile e filtri per agente
+create index if not exists idx_commissions_agent_id on public.commissions (agent_id);
+create index if not exists idx_commissions_status on public.commissions (status);
+create index if not exists idx_commissions_period on public.commissions (period);
+
+-- RLS Provvigioni
+alter table public.commissions enable row level security;
+
+drop policy if exists "Operatori visualizzano proprie provvigioni o admin tutto" on public.commissions;
+create policy "Operatori visualizzano proprie provvigioni o admin tutto"
+  on public.commissions for select
+  to authenticated
+  using (
+    public.is_admin() or 
+    agent_id = auth.uid()::text or 
+    agent_id in (select id::text from public.profiles where id = auth.uid())
+  );
+
+drop policy if exists "Inserimento e liquidazione provvigioni riservato ad admin o engine" on public.commissions;
+create policy "Inserimento e liquidazione provvigioni riservato ad admin o engine"
+  on public.commissions for all
+  to authenticated
+  using (public.is_operator_or_admin())
+  with check (public.is_operator_or_admin());
+
+grant select, insert, update on public.commissions to authenticated;
+
+-- ==============================================================================
+-- 9. TABELLA DISTINTE CONTABILI DI LIQUIDAZIONE (BONIFICI)
+-- ==============================================================================
+create table if not exists public.settlement_batches (
+  id text primary key,
+  agent_id text not null,
+  agent_name text not null,
+  settlement_date date default current_date not null,
+  payment_reference text not null,
+  period text not null,
+  total_amount_eur numeric not null check (total_amount_eur >= 0),
+  commission_count integer not null check (commission_count >= 0),
+  notes text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create index if not exists idx_batches_agent_id on public.settlement_batches (agent_id);
+create index if not exists idx_batches_reference on public.settlement_batches (payment_reference);
+
+alter table public.settlement_batches enable row level security;
+
+drop policy if exists "Visualizzazione distinte per agente o admin" on public.settlement_batches;
+create policy "Visualizzazione distinte per agente o admin"
+  on public.settlement_batches for select
+  to authenticated
+  using (
+    public.is_admin() or 
+    agent_id = auth.uid()::text or 
+    agent_id in (select id::text from public.profiles where id = auth.uid())
+  );
+
+drop policy if exists "Creazione distinte riservata a backoffice e admin" on public.settlement_batches;
+create policy "Creazione distinte riservata a backoffice e admin"
+  on public.settlement_batches for insert
+  to authenticated
+  with check (public.is_operator_or_admin());
+
+grant select, insert on public.settlement_batches to authenticated;
+
+-- ==============================================================================
+-- 10. TABELLA FEED LIVE & STORICO INDICI GME ARERA (PUN & PSV)
+-- ==============================================================================
+create table if not exists public.market_indices (
+  id text primary key, -- 'latest' per il corrente, o 'YYYY-MM' per consuntivo
+  pun_eur_kwh numeric not null check (pun_eur_kwh >= 0),
+  psv_eur_smc numeric not null check (psv_eur_smc >= 0),
+  pun_f1 numeric check (pun_f1 is null or pun_f1 >= 0),
+  pun_f2 numeric check (pun_f2 is null or pun_f2 >= 0),
+  pun_f3 numeric check (pun_f3 is null or pun_f3 >= 0),
+  pun_change_percent numeric,
+  psv_change_percent numeric,
+  pun_trend text check (pun_trend in ('up', 'down', 'stable')),
+  psv_trend text check (psv_trend in ('up', 'down', 'stable')),
+  historical_6m jsonb,
+  last_updated text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.market_indices enable row level security;
+
+drop policy if exists "Lettura pubblica indici di mercato GME" on public.market_indices;
+create policy "Lettura pubblica indici di mercato GME"
+  on public.market_indices for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Aggiornamento indici riservato a backoffice e cronjob" on public.market_indices;
+create policy "Aggiornamento indici riservato a backoffice e cronjob"
+  on public.market_indices for all
+  to authenticated
+  using (public.is_operator_or_admin())
+  with check (public.is_operator_or_admin());
+
+grant select on public.market_indices to anon, authenticated;
+grant insert, update on public.market_indices to authenticated;
+
+

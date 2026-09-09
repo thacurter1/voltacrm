@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CustomerPortal } from '../components/CustomerPortal';
 import { SavingsProposalPdfModal } from '../components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from '../components/DigitalSignatureModal';
@@ -6,6 +6,7 @@ import { InstallAppBanner } from '../components/InstallAppBanner';
 import { ToastContainer } from '../components/ToastContainer';
 import { dbService } from '../services/db';
 import { runQuarterlyAudit } from '../services/energyEngine';
+import { api } from '../api/client';
 import { Customer, CustomerBill, SwitchAudit, ToastNotification, UserProfile } from '../types';
 import { ShieldCheck, Zap, ArrowLeft } from 'lucide-react';
 import { NotificationCenter } from '../components/NotificationCenter';
@@ -15,6 +16,22 @@ export const CustomerApp: React.FC = () => {
   const [customers] = useState<Customer[]>(initialDb.customers);
   const [bills, setBills] = useState<CustomerBill[]>(initialDb.bills);
   const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(initialDb.customers));
+
+  // Sincronizzazione automatica indici PUN/PSV live GME all'avvio
+  useEffect(() => {
+    let isMounted = true;
+    api.switch.getMarketIndices().then((liveIndex) => {
+      if (isMounted && liveIndex) {
+        setAudits(runQuarterlyAudit(customers, liveIndex));
+      }
+    }).catch((err) => {
+      console.warn('[CustomerApp] Sincronizzazione indici GME fallback locale:', err);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [customers]);
 
   // Current customer selection
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
