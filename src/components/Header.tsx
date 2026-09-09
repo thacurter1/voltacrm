@@ -31,6 +31,7 @@ interface HeaderProps {
   onOpenMarketSimulator: () => void;
   onOpenBillOcr: () => void;
   onOpenLogin: () => void;
+  onOpenTotem?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -44,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenMarketSimulator,
   onOpenBillOcr,
   onOpenLogin,
+  onOpenTotem,
 }) => {
   const isCustomer = currentUser.role === 'customer';
 
@@ -152,13 +154,25 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {!isCustomer && (
-            <button
-              onClick={onOpenBillOcr}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-xs font-semibold text-[#0a2540] shadow-2xs cursor-pointer transition-colors"
-            >
-              <FileSearch className="h-3.5 w-3.5 text-[#635bff]" />
-              <span className="hidden sm:inline">OCR Bolletta</span>
-            </button>
+            <>
+              <button
+                onClick={onOpenBillOcr}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-xs font-semibold text-[#0a2540] shadow-2xs cursor-pointer transition-colors"
+              >
+                <FileSearch className="h-3.5 w-3.5 text-[#635bff]" />
+                <span className="hidden sm:inline">OCR Bolletta</span>
+              </button>
+
+              {onOpenTotem && (
+                <button
+                  onClick={onOpenTotem}
+                  className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#00d4aa]/40 bg-[#00d4aa]/10 hover:bg-[#00d4aa]/20 text-xs font-bold text-[#0a2540] shadow-2xs cursor-pointer transition-colors"
+                  title="Attiva Totem Kiosk per il negozio o centro commerciale"
+                >
+                  <span>🖥️ Kiosk Point</span>
+                </button>
+              )}
+            </>
           )}
 
           {/* User Profile & Role Switcher */}

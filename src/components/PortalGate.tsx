@@ -18,6 +18,7 @@ interface PortalGateProps {
   customers: Customer[];
   profiles: UserProfile[];
   onToast: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
+  onOpenTotem?: () => void;
 }
 
 export const PortalGate: React.FC<PortalGateProps> = ({
@@ -27,6 +28,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   customers,
   profiles,
   onToast,
+  onOpenTotem,
 }) => {
   // Check URL params for initial portal selection or invite
   const searchParams = new URLSearchParams(window.location.search);
@@ -187,6 +189,15 @@ export const PortalGate: React.FC<PortalGateProps> = ({
           >
             Accesso Broker & Call Center
           </button>
+          {onOpenTotem && (
+            <button
+              onClick={onOpenTotem}
+              className="px-3.5 py-1.5 rounded-xl font-bold bg-[#00d4aa]/20 hover:bg-[#00d4aa]/30 text-[#00d4aa] border border-[#00d4aa]/40 transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+              title="Attiva la modalità Totem Touchscreen per punti vendita e centri commerciali"
+            >
+              <span>🖥️ Modalità Totem</span>
+            </button>
+          )}
         </div>
       </header>
 

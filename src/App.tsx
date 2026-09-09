@@ -25,6 +25,7 @@ import { PortalGate } from './components/PortalGate';
 import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 import { InstallAppBanner } from './components/InstallAppBanner';
+import { TotemKioskMode } from './components/TotemKioskMode';
 import { dbService, DEMO_USERS } from './services/db';
 import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
@@ -49,6 +50,9 @@ export function App() {
   // Auth & Session State
   const [currentUser, setCurrentUser] = useState<UserProfile>(initialDb.currentUser || INITIAL_PROFILES[0]);
   const [isGateOpen, setIsGateOpen] = useState(false);
+  const [isTotemOpen, setIsTotemOpen] = useState(
+    () => new URLSearchParams(window.location.search).get('mode') === 'totem'
+  );
   const [profiles, setProfiles] = useState<UserProfile[]>(INITIAL_PROFILES);
 
   // Business Data State
@@ -343,6 +347,25 @@ export function App() {
   // Ricerca cliente attivo per la vista cliente
   const activeCustomer = customers.find(c => c.id === currentUser.customerId) || customers[0];
 
+  // Se è attiva la modalità Totem Kiosk per negozi e centri commerciali
+  if (isTotemOpen) {
+    return (
+      <TotemKioskMode
+        isOpen={isTotemOpen}
+        onExitTotem={() => setIsTotemOpen(false)}
+        onLeadCaptured={(newLead) => {
+          handleAddLead(newLead);
+          recordSecurityLog(
+            'gdpr_consent_logged', 
+            'safe', 
+            `Lead registrato da Totem Point touch: ${newLead.phone} (${newLead.notes})`
+          );
+        }}
+        onToast={addToast}
+      />
+    );
+  }
+
   // Se l'utente non è autenticato o ha scelto "Esci", mostra la schermata di selezione portale / login
   if (isGateOpen) {
     return (
@@ -354,6 +377,7 @@ export function App() {
           customers={customers}
           profiles={profiles}
           onToast={addToast}
+          onOpenTotem={() => setIsTotemOpen(true)}
         />
         <TwoFactorModal
           isOpen={!!pending2FAUser}
@@ -390,6 +414,7 @@ export function App() {
         onOpenMarketSimulator={() => setIsMarketSimulatorOpen(true)}
         onOpenBillOcr={() => setIsBillOcrOpen(true)}
         onOpenLogin={() => setIsGateOpen(true)}
+        onOpenTotem={() => setIsTotemOpen(true)}
       />
 
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
