@@ -86,49 +86,49 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-12 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-6 md:p-12 flex items-center justify-center">
       <div 
         onClick={onClose}
         className="fixed inset-0 bg-[#0a2540]/60 backdrop-blur-xs transition-opacity" 
       />
 
-      <div className="relative w-full max-w-md bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.22)] p-6 space-y-6 animate-in zoom-in-95 duration-150 text-xs">
+      <div className="relative w-full max-w-md bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.22)] p-4 sm:p-6 space-y-5 sm:space-y-6 animate-in zoom-in-95 duration-150 text-xs">
         {/* Header */}
         <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#635bff] shadow-2xs">
+            <div className="h-10 w-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#635bff] shadow-2xs shrink-0">
               <Smartphone className="h-5 w-5" />
             </div>
             <div>
               <span className="text-[10px] font-bold text-[#635bff] uppercase tracking-wider block">
                 Sicurezza & Protezione Account
               </span>
-              <h3 className="text-base font-bold text-[#0a2540]">
+              <h3 className="text-sm sm:text-base font-bold text-[#0a2540]">
                 Verifica a Due Fattori (2FA)
               </h3>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer shrink-0">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <p className="text-xs text-[#425466] leading-relaxed">
-          Inserisci il codice monouso a 6 cifre generato dalla tua app di autenticazione (Google Authenticator, 1Password) per confermare l'accesso come <strong>{user.email}</strong>.
+          Inserisci il codice monouso a 6 cifre generato dalla tua app di autenticazione per confermare l'accesso come <strong>{user.email}</strong>.
         </p>
 
         {/* Demo Helper Banner */}
-        <div className="p-3 rounded-xl bg-slate-50 border border-[#e3e8ee] flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Lock className="h-3.5 w-3.5 text-slate-500" />
-            <span className="text-[11px] text-slate-700">
-              Codice TOTP Dinamico (RFC 6238): <strong className="font-mono text-[#0a2540]">{dynamicTotp.code}</strong>
+        <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-[#e3e8ee] flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Lock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+            <span className="text-[11px] text-slate-700 truncate">
+              Codice: <strong className="font-mono text-[#0a2540]">{dynamicTotp.code}</strong>
             </span>
           </div>
           <button
             type="button"
             onClick={handleFillDemoCode}
-            className="px-2.5 py-1 rounded bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-[10px] cursor-pointer shadow-2xs"
+            className="px-2.5 py-1 rounded bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-[10px] cursor-pointer shadow-2xs shrink-0"
           >
             Inserisci rapido
           </button>
@@ -136,7 +136,7 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
 
         {/* OTP Input Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-1.5 sm:gap-2">
             {code.map((digit, idx) => (
               <input
                 key={idx}
@@ -148,7 +148,7 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 onPaste={handlePaste}
-                className="w-11 h-13 text-center text-lg font-mono font-bold text-[#0a2540] bg-slate-50 border border-[#e3e8ee] rounded-xl focus:border-[#635bff] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#635bff]/20 transition-all shadow-xs"
+                className="w-9 sm:w-11 h-11 sm:h-13 text-center text-base sm:text-lg font-mono font-bold text-[#0a2540] bg-slate-50 border border-[#e3e8ee] rounded-xl focus:border-[#635bff] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#635bff]/20 transition-all shadow-xs"
               />
             ))}
           </div>
@@ -158,21 +158,21 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
           )}
 
           <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-            <span className="flex items-center gap-1 font-mono">
+            <span className="flex items-center gap-1 font-mono text-[10px] sm:text-[11px]">
               <RefreshCw className="h-3 w-3 text-slate-400 animate-spin" />
-              Nuovo codice tra {dynamicTotp.secondsRemaining}s
+              Nuovo tra {dynamicTotp.secondsRemaining}s
             </span>
-            <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[10px] sm:text-[11px]">
               Anti-Replay Attivo
             </span>
           </div>
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-sm active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="w-full min-h-[44px] py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-sm active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <CheckCircle2 className="h-4 w-4" />
-            Conferma e Accedi al CRM
+            <span>Conferma e Accedi al CRM</span>
           </button>
         </form>
       </div>

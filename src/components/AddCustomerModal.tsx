@@ -194,7 +194,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-10 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-6 md:p-10 flex items-center justify-center">
       {/* Backdrop */}
       <div 
         onClick={onClose}
@@ -202,11 +202,11 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 border-b border-[#e3e8ee] bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 flex items-start justify-between">
+        <div className="p-4 sm:p-6 border-b border-[#e3e8ee] bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#635bff] uppercase tracking-wider">
                 <UserPlus className="h-4 w-4" />
                 Registrazione Anagrafica & Portafoglio
@@ -217,7 +217,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-bold text-[#0a2540] tracking-tight mt-1">
+            <h2 className="text-lg sm:text-xl font-bold text-[#0a2540] tracking-tight mt-1">
               Nuovo Cliente & Forniture Energetiche
             </h2>
             <p className="text-xs text-[#425466] mt-0.5">
@@ -228,18 +228,18 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           <button 
             type="button"
             onClick={onClose} 
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex border-b border-[#e3e8ee] px-6 text-xs bg-slate-50/50">
+        <div className="flex border-b border-[#e3e8ee] px-3 sm:px-6 text-xs bg-slate-50/50 overflow-x-auto whitespace-nowrap">
           <button
             type="button"
             onClick={() => setActiveTab('anagrafica')}
-            className={`py-3 px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
+            className={`py-3 px-3 sm:px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
               activeTab === 'anagrafica'
                 ? 'border-[#635bff] text-[#635bff] bg-white rounded-t-lg'
                 : 'border-transparent text-[#425466] hover:text-[#0a2540]'
@@ -252,7 +252,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('forniture')}
-            className={`py-3 px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
+            className={`py-3 px-3 sm:px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
               activeTab === 'forniture'
                 ? 'border-[#635bff] text-[#635bff] bg-white rounded-t-lg'
                 : 'border-transparent text-[#425466] hover:text-[#0a2540]'
@@ -269,7 +269,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
           {error && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-rose-500" />
@@ -643,12 +643,12 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
           )}
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-[#e3e8ee]">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-0 pt-4 border-t border-[#e3e8ee]">
             {activeTab === 'forniture' ? (
               <button
                 type="button"
                 onClick={() => setActiveTab('anagrafica')}
-                className="px-3.5 py-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer"
+                className="min-h-[44px] px-3.5 py-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer text-center"
               >
                 ← Indietro a Dati Anagrafici
               </button>
@@ -656,7 +656,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer"
+                className="min-h-[44px] px-3.5 py-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer text-center"
               >
                 Annulla
               </button>
@@ -677,7 +677,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                   setError(null);
                   setActiveTab('forniture');
                 }}
-                className="px-4 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center gap-1.5"
+                className="min-h-[44px] px-4 py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-1.5"
               >
                 <span>Avanti: Configura Forniture →</span>
               </button>
@@ -685,7 +685,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-5 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-[44px] px-5 py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>{isSubmitting ? 'Salvataggio in corso...' : 'Salva & Attiva Cliente'}</span>

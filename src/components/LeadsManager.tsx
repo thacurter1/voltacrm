@@ -203,8 +203,85 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
         </div>
       </div>
 
-      {/* Stripe Table for Leads */}
-      <div className="rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+      {/* Mobile Cards for Leads (<sm screens) */}
+      <div className="sm:hidden space-y-3">
+        {filteredLeads.length === 0 ? (
+          <div className="p-8 text-center rounded-xl bg-white border border-[#e3e8ee] text-slate-400 text-xs">
+            Nessun lead trovato con i filtri correnti.
+          </div>
+        ) : (
+          filteredLeads.map((lead) => (
+            <div
+              key={lead.id}
+              onClick={() => onSelectLead(lead)}
+              className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-xs space-y-3 active:border-[#635bff]/60 transition-all cursor-pointer"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-bold text-[#0a2540] text-sm">{lead.name}</h4>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                    <span className="font-mono text-slate-700 font-semibold">{lead.phone}</span>
+                    <span>•</span>
+                    <span>{lead.city}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {getStatusBadge(lead.status)}
+                  {getSourceBadge(lead.source)}
+                </div>
+              </div>
+
+              {lead.notes && (
+                <p className="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2">
+                  "{lead.notes}"
+                </p>
+              )}
+
+              <div className="flex items-center gap-3 pt-1 text-[11px] text-slate-600 font-mono">
+                <div className="flex items-center gap-1">
+                  <Zap className="h-3.5 w-3.5 text-amber-500" />
+                  <span>{lead.estimatedConsumptionKwh?.toLocaleString()} kWh</span>
+                </div>
+                {lead.estimatedConsumptionSmc && (
+                  <div className="flex items-center gap-1">
+                    <Flame className="h-3.5 w-3.5 text-sky-500" />
+                    <span>{lead.estimatedConsumptionSmc?.toLocaleString()} Smc</span>
+                  </div>
+                )}
+                {lead.assignedCallCenterAgent && (
+                  <span className="ml-auto text-[10px] text-slate-400 truncate max-w-[100px]">
+                    {lead.assignedCallCenterAgent}
+                  </span>
+                )}
+              </div>
+
+              {/* Mobile Action Buttons */}
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => onOpenCallScript(lead)}
+                  className="flex-1 min-h-[44px] px-3 py-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-700 font-semibold text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Phone className="h-4 w-4 text-emerald-600" />
+                  <span>Chiama</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onOpenScheduleModal(lead)}
+                  className="flex-1 min-h-[44px] px-3 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                  <span>Fissa Appuntamento</span>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop/Tablet Table for Leads (>=sm screens) */}
+      <div className="hidden sm:block rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#f8fafc] text-[#425466] font-semibold border-b border-[#e3e8ee]">
@@ -309,23 +386,23 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
 
       {/* Stripe Modal: Ingestion Lead Simulation */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#e3e8ee] rounded-xl w-full max-w-lg p-6 space-y-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)]">
+        <div className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white border border-[#e3e8ee] rounded-xl w-full max-w-lg p-4 sm:p-6 space-y-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)] max-h-[94vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-[#e3e8ee] pb-3">
               <div>
-                <h3 className="font-bold text-base text-[#0a2540]">Simula Webhook Inbound Marketing</h3>
+                <h3 className="font-bold text-sm sm:text-base text-[#0a2540]">Simula Webhook Inbound Marketing</h3>
                 <p className="text-xs text-[#425466]">Inietta un nuovo contatto generato da Meta Lead Ads o Google Ads</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 p-1.5 cursor-pointer rounded-lg hover:bg-slate-100"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[#425466] font-medium block mb-1">Nome o Ragione Sociale *</label>
                   <input
@@ -334,7 +411,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     placeholder="es. Marco Rossi"
                     value={newLeadName}
                     onChange={(e) => setNewLeadName(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                   />
                 </div>
                 <div>
@@ -345,12 +422,12 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     placeholder="es. +39 347 1234567"
                     value={newLeadPhone}
                     onChange={(e) => setNewLeadPhone(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[#425466] font-medium block mb-1">Email</label>
                   <input
@@ -358,7 +435,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     placeholder="marco.rossi@email.it"
                     value={newLeadEmail}
                     onChange={(e) => setNewLeadEmail(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                   />
                 </div>
                 <div>
@@ -368,18 +445,18 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     placeholder="Milano (MI)"
                     value={newLeadCity}
                     onChange={(e) => setNewLeadCity(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-[#425466] font-medium block mb-1">Campagna</label>
                   <select
                     value={newLeadSource}
                     onChange={(e) => setNewLeadSource(e.target.value as LeadSource)}
-                    className="w-full px-2 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                   >
                     <option value="facebook_ads">Meta Lead Ads</option>
                     <option value="google_ads">Google Ads</option>
@@ -393,7 +470,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     type="number"
                     value={newLeadKwh}
                     onChange={(e) => setNewLeadKwh(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                   />
                 </div>
                 <div>
@@ -402,7 +479,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     type="number"
                     value={newLeadSmc}
                     onChange={(e) => setNewLeadSmc(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                   />
                 </div>
               </div>
@@ -414,21 +491,21 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   placeholder="es. Campagna Instagram comparatore bolletta con upload foto."
                   value={newLeadNotes}
                   onChange={(e) => setNewLeadNotes(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2.5 pt-3 border-t border-[#e3e8ee]">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-[#e3e8ee]">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded-lg border border-[#e3e8ee] text-[#425466] hover:bg-slate-50 font-medium cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 rounded-lg border border-[#e3e8ee] text-[#425466] hover:bg-slate-50 font-semibold cursor-pointer text-center"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium shadow-xs cursor-pointer"
+                  className="min-h-[44px] px-5 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer text-center"
                 >
                   Invia Lead al CRM
                 </button>

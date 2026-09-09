@@ -103,17 +103,17 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               <div 
                 key={customer.id}
                 onClick={() => onSelectCustomer(customer)}
-                className="p-6 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4 hover:border-[#635bff]/40 hover:shadow-[0_4px_12px_rgba(99,91,255,0.06)] transition-all cursor-pointer group"
+                className="p-4 sm:p-6 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4 hover:border-[#635bff]/40 hover:shadow-[0_4px_12px_rgba(99,91,255,0.06)] transition-all cursor-pointer group"
               >
               {/* Header: Name, CF, Delegation & 4-Month Status */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#e3e8ee] pb-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 border-b border-[#e3e8ee] pb-4">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-base font-bold text-[#0a2540]">{customer.name}</h3>
                     {customer.hasBrokerageMandate ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        Delega Switch Continua Attiva
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                        <span>Delega Switch Attiva</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
@@ -121,78 +121,83 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#425466]">
-                    <span>CF / P.IVA: <strong className="font-mono text-[#0a2540]">{customer.fiscalCode}</strong></span>
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#425466]">
+                    <span>CF: <strong className="font-mono text-[#0a2540]">{customer.fiscalCode}</strong></span>
                     <span>•</span>
                     <span>{customer.city}</span>
                     <span>•</span>
                     <span>Tel: <strong className="text-[#0a2540]">{customer.phone}</strong></span>
-                    <span>•</span>
-                    <span>Account: <strong className="text-[#0a2540]">{customer.accountManager}</strong></span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="hidden sm:inline">Account: <strong className="text-[#0a2540]">{customer.accountManager}</strong></span>
                   </div>
                 </div>
 
                 {/* 120 Days Badge */}
-                <div className="flex items-center gap-3 bg-slate-50 px-3.5 py-2 rounded-lg border border-[#e3e8ee]">
-                  <Clock className={`h-4 w-4 ${isAuditDue ? 'text-orange-500' : 'text-slate-400'}`} />
-                  <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#425466] block">
-                      Ciclo 4 Mesi (120gg)
-                    </span>
-                    {isAuditDue ? (
-                      <span className="text-xs font-bold text-orange-600 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        Scadenza raggiunta ({Math.abs(daysToAudit)} gg fa)
+                <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 bg-slate-50 px-3 py-2 rounded-lg border border-[#e3e8ee]">
+                  <div className="flex items-center gap-2">
+                    <Clock className={`h-4 w-4 shrink-0 ${isAuditDue ? 'text-orange-500' : 'text-slate-400'}`} />
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#425466] block">
+                        Ciclo 4 Mesi (120gg)
                       </span>
-                    ) : (
-                      <span className="text-xs font-semibold text-emerald-600">
-                        Prossimo audit tra {daysToAudit} giorni
-                      </span>
-                    )}
+                      {isAuditDue ? (
+                        <span className="text-xs font-bold text-orange-600 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3 shrink-0" />
+                          <span>Scadenza raggiunta ({Math.abs(daysToAudit)} gg fa)</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs font-semibold text-emerald-600">
+                          Prossimo audit tra {daysToAudit} giorni
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {isAuditDue && (
                     <button
-                      onClick={() => onTriggerAuditForCustomer(customer.id)}
-                      className="ml-2 px-3 py-1.5 rounded-md bg-[#635bff] hover:bg-[#5851ea] text-white font-medium text-xs shadow-xs cursor-pointer inline-flex items-center gap-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTriggerAuditForCustomer(customer.id);
+                      }}
+                      className="px-3 py-1.5 rounded-md bg-[#635bff] hover:bg-[#5851ea] text-white font-medium text-xs shadow-xs cursor-pointer inline-flex items-center gap-1 min-h-[36px]"
                     >
                       <RefreshCw className="h-3 w-3" />
-                      Verifica Switch
+                      <span>Verifica Switch</span>
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Utility Points Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {customer.utilityPoints.map((utility) => (
                   <div 
                     key={utility.id}
-                    className="p-4 rounded-lg bg-[#f8fafc] border border-[#e3e8ee] space-y-3"
+                    className="p-3.5 sm:p-4 rounded-lg bg-[#f8fafc] border border-[#e3e8ee] space-y-3"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         {utility.type === 'luce' ? (
-                          <div className="p-1.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200/60">
+                          <div className="p-1.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200/60 shrink-0">
                             <Zap className="h-4 w-4" />
                           </div>
                         ) : (
-                          <div className="p-1.5 rounded-md bg-sky-50 text-sky-600 border border-sky-200/60">
+                          <div className="p-1.5 rounded-md bg-sky-50 text-sky-600 border border-sky-200/60 shrink-0">
                             <Flame className="h-4 w-4" />
                           </div>
                         )}
-                        <div>
-                          <span className="text-xs font-bold uppercase text-[#0a2540]">
-                            Fornitura {utility.type === 'luce' ? 'Luce (POD)' : 'Gas (PDR)'}
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold uppercase text-[#0a2540] block truncate">
+                            {utility.type === 'luce' ? 'Luce (POD)' : 'Gas (PDR)'}
                           </span>
-                          <span className="text-xs font-mono block text-slate-600 font-semibold">
+                          <span className="text-xs font-mono block text-slate-600 font-semibold truncate">
                             {utility.podOrPdr}
                           </span>
                         </div>
                       </div>
 
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-white border border-[#e3e8ee] text-[#425466]">
-                        {utility.currentTariffType === 'fixed' ? 'Prezzo Fisso' : 'Indicizzato PUN/PSV'}
+                      <span className="text-[10px] sm:text-[11px] font-medium px-2 py-0.5 rounded bg-white border border-[#e3e8ee] text-[#425466] shrink-0">
+                        {utility.currentTariffType === 'fixed' ? 'Prezzo Fisso' : 'Indicizzato'}
                       </span>
                     </div>
 
@@ -202,14 +207,14 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                         <span className="font-semibold text-[#0a2540] truncate block">{utility.currentSupplier}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#425466] block">Consumo Annuo</span>
-                        <span className="font-semibold text-[#0a2540] font-mono">
+                        <span className="text-[10px] text-[#425466] block">Consumo</span>
+                        <span className="font-semibold text-[#0a2540] font-mono text-[11px] block truncate">
                           {utility.annualConsumption.toLocaleString()} {utility.type === 'luce' ? 'kWh' : 'Smc'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#425466] block">Prezzo Materia</span>
-                        <span className="font-bold text-[#0a2540] font-mono">
+                        <span className="text-[10px] text-[#425466] block">Prezzo</span>
+                        <span className="font-bold text-[#0a2540] font-mono text-[11px] block truncate">
                           {utility.currentUnitCost.toFixed(4)} €
                         </span>
                       </div>

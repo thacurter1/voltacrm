@@ -46,30 +46,30 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
         className="absolute inset-0 bg-[#0a2540]/30 backdrop-blur-xs transition-opacity" 
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white border-l border-[#e3e8ee] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-screen max-w-full sm:max-w-md bg-white border-l border-[#e3e8ee] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col">
           {/* Drawer Header */}
-          <div className="p-6 border-b border-[#e3e8ee] flex items-start justify-between bg-[#fcfdff]">
-            <div className="space-y-1">
+          <div className="p-4 sm:p-6 border-b border-[#e3e8ee] flex items-start justify-between bg-[#fcfdff]">
+            <div className="space-y-1 pr-2">
               <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#635bff] uppercase tracking-wider">
                 {customer ? 'Cliente Attivo a Portafoglio' : 'Lead Inbound Marketing'}
               </span>
-              <h2 className="text-lg font-bold text-[#0a2540]">{title}</h2>
-              <p className="text-xs text-[#425466] font-mono">{subtitle}</p>
+              <h2 className="text-base sm:text-lg font-bold text-[#0a2540] break-words">{title}</h2>
+              <p className="text-xs text-[#425466] font-mono break-all">{subtitle}</p>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Tab Navigation */}
-          <div className="px-6 border-b border-[#e3e8ee] flex gap-4 text-xs">
+          <div className="px-3 sm:px-6 border-b border-[#e3e8ee] flex gap-4 text-xs overflow-x-auto whitespace-nowrap">
             <button
               onClick={() => setActiveTab('details')}
-              className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px ${
+              className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px shrink-0 ${
                 activeTab === 'details' ? 'border-[#635bff] text-[#635bff]' : 'border-transparent text-[#425466] hover:text-[#0a2540]'
               }`}
             >
@@ -77,7 +77,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('timeline')}
-              className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px ${
+              className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px shrink-0 ${
                 activeTab === 'timeline' ? 'border-[#635bff] text-[#635bff]' : 'border-transparent text-[#425466] hover:text-[#0a2540]'
               }`}
             >
@@ -85,7 +85,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('documents')}
-              className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px ${
+              className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px shrink-0 ${
                 activeTab === 'documents' ? 'border-[#635bff] text-[#635bff]' : 'border-transparent text-[#425466] hover:text-[#0a2540]'
               }`}
             >
@@ -94,7 +94,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
           </div>
 
           {/* Drawer Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-xs">
             {/* TAB 1: DETAILS */}
             {activeTab === 'details' && (
               <div className="space-y-5">
@@ -275,17 +275,17 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
           </div>
 
           {/* Drawer Footer Actions */}
-          <div className="p-4 border-t border-[#e3e8ee] bg-[#fcfdff] flex items-center gap-2">
+          <div className="p-3 sm:p-4 border-t border-[#e3e8ee] bg-[#fcfdff] flex items-center gap-2">
             {customer && onTriggerSwitch && (
               <button
                 onClick={() => {
                   onTriggerSwitch(customer.id);
                   onClose();
                 }}
-                className="flex-1 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
+                className="flex-1 min-h-[44px] py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Avvia Switch Offerta
+                <RefreshCw className="h-4 w-4" />
+                <span>Avvia Switch Offerta</span>
               </button>
             )}
 
@@ -295,20 +295,20 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                   onConvertLeadToCustomer(lead);
                   onClose();
                 }}
-                className="flex-1 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
+                className="flex-1 min-h-[44px] py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
                 title="Trasforma questo lead in cliente attivo completando l'anagrafica e le forniture"
               >
-                <UserCheck className="h-3.5 w-3.5" />
-                Converti in Cliente Attivo
+                <UserCheck className="h-4 w-4" />
+                <span>Converti in Cliente Attivo</span>
               </button>
             )}
 
             <button
               onClick={() => alert(`Apertura WhatsApp Web per invio messaggio a ${customer?.phone || lead?.phone}`)}
-              className="p-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-emerald-600 font-medium text-xs flex items-center justify-center cursor-pointer transition-colors"
+              className="min-h-[44px] min-w-[44px] p-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-emerald-600 font-medium text-xs flex items-center justify-center cursor-pointer transition-colors"
               title="Invia WhatsApp"
             >
-              <MessageSquare className="h-4 w-4" />
+              <MessageSquare className="h-5 w-5" />
             </button>
           </div>
         </div>
