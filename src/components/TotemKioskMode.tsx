@@ -12,6 +12,7 @@ import {
   ChevronLeft 
 } from 'lucide-react';
 import { Lead } from '../types';
+import { api } from '../api/client';
 
 interface TotemKioskModeProps {
   isOpen: boolean;
@@ -113,6 +114,17 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
 
     onLeadCaptured(newLead);
     setLeadSent(true);
+
+    // Invio automatico WhatsApp preventivo & link interattivo
+    api.messaging.sendOfferWhatsApp({
+      phone: `+39 ${phoneNumber}`,
+      customerName: newLead.name,
+      savingsEur: estimatedSavings,
+      utilityType: selectedUtility,
+      offerName: 'Miglior Tariffa Mercato Libero (ARERA)'
+    }).catch(err => {
+      console.warn('[Totem] Invio preventivo WhatsApp non riuscito:', err);
+    });
 
     setTimeout(() => {
       // Dopo 5 secondi di ringraziamento, resetta per il cliente successivo
