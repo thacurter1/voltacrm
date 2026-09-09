@@ -62,6 +62,50 @@ create table if not exists public.security_logs (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 5. Tabella Leads Marketing & Totem Kiosk Point
+create table if not exists public.leads (
+  id text primary key,
+  name text not null,
+  phone text not null,
+  email text,
+  city text default 'Milano',
+  source text not null check (source in ('totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page')) default 'totem_kiosk',
+  status text not null check (status in ('new', 'call_center_queue', 'contacted', 'appointment_booked', 'in_negotiation', 'won', 'lost')) default 'new',
+  notes text,
+  estimated_consumption_kwh numeric default 2800,
+  estimated_consumption_smc numeric default 1000,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 6. Tabella Log Firme Digitali & Mandati di Brokeraggio (Anti-Tamper SHA-256)
+create table if not exists public.signature_logs (
+  id text primary key,
+  customer_id text,
+  customer_name text not null,
+  signer_fiscal_code text not null,
+  phone text not null,
+  otp_code text not null,
+  offer_id text,
+  supplier text,
+  signature_hash text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 7. Tabella Notifiche Operative di Sistema & Scadenze 120 Giorni
+create table if not exists public.notifications (
+  id text primary key,
+  type text not null check (type in ('totem_lead', 'switch_due', 'bill_uploaded', 'signature_completed', 'security_alert', 'market_trend')),
+  title text not null,
+  message text not null,
+  timestamp timestamp with time zone default timezone('utc'::text, now()) not null,
+  is_read boolean default false not null,
+  priority text not null check (priority in ('low', 'normal', 'high', 'urgent', 'info')) default 'normal',
+  target_role text not null check (target_role in ('all', 'admin', 'call_center', 'customer')) default 'all',
+  action_tab text,
+  meta jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- ==============================================================================
 -- FUNZIONI SICURE DI CONTROLLO RUOLI (SECURITY DEFINER CON SEARCH_PATH PROTETTO)
 -- ==============================================================================
@@ -259,3 +303,35 @@ grant select, insert, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.utility_points to authenticated;
 grant select, insert, update, delete on public.bills to authenticated;
 grant select, insert on public.security_logs to authenticated;
+
+-- Permessi per leads, firme e notifiche
+alter table public.leads enable row level security;
+alter table public.signature_logs enable row level security;
+alter table public.notifications enable row level security;
+
+-- Policy Leads: Operatori e Admin possono gestire tutti i lead; il Totem o inserimenti anonimi possono solo inserire
+drop policy if exists "Operatori gestiscono leads" on public.leads;
+create policy "Operatori gestiscono leads" on public.leads for all to authenticated using (public.is_operator_or_admin());
+
+drop policy if exists "Inserimento lead aperto per kiosk" on public.leads;
+create policy "Inserimento lead aperto per kiosk" on public.leads for insert to anon, authenticated with check (true);
+
+-- Policy Signature Logs: Immutabili (solo inserimento e lettura per operatori/clienti interessati)
+drop policy if exists "Visualizzazione log di firma" on public.signature_logs;
+create policy "Visualizzazione log di firma" on public.signature_logs for select to authenticated using (public.is_operator_or_admin());
+
+drop policy if exists "Inserimento log di firma" on public.signature_logs;
+create policy "Inserimento log di firma" on public.signature_logs for insert to authenticated with check (true);
+revoke update, delete on public.signature_logs from public, authenticated, anon;
+
+-- Policy Notifiche
+drop policy if exists "Visualizzazione notifiche per ruolo" on public.notifications;
+create policy "Visualizzazione notifiche per ruolo" on public.notifications for select to authenticated using (true);
+
+drop policy if exists "Aggiornamento stato lettura notifiche" on public.notifications;
+create policy "Aggiornamento stato lettura notifiche" on public.notifications for update to authenticated using (true);
+
+grant select, insert, update on public.leads to authenticated, anon;
+grant select, insert on public.signature_logs to authenticated;
+grant select, insert, update on public.notifications to authenticated;
+

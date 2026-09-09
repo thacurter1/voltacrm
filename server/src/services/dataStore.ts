@@ -233,11 +233,126 @@ export let notifications: any[] = [
 
 export let signatureLogs: any[] = [];
 
+import { supabase, isSupabaseConfigured } from './dbClient.js';
+
 export const getLeads = () => leads;
-export const addLead = (lead: any) => leads.unshift(lead);
+
+export const addLead = (lead: any) => {
+  leads.unshift(lead);
+  if (isSupabaseConfigured && supabase) {
+    supabase.from('leads').insert([{
+      id: lead.id,
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email || null,
+      city: lead.city || 'Milano',
+      source: lead.source || 'totem_kiosk',
+      status: lead.status || 'new',
+      notes: lead.notes || null,
+      estimated_consumption_kwh: lead.estimatedConsumptionKwh || null,
+      estimated_consumption_smc: lead.estimatedConsumptionSmc || null,
+    }]).then(({ error }) => {
+      if (error) console.warn('[Supabase Sync] Errore inserimento lead:', error.message);
+      else console.log(`[Supabase Sync] Lead ${lead.id} persistito su PostgreSQL`);
+    });
+  }
+};
+
 export const getCustomers = () => customers;
-export const addCustomer = (customer: any) => customers.unshift(customer);
+
+export const addCustomer = (customer: any) => {
+  customers.unshift(customer);
+  if (isSupabaseConfigured && supabase) {
+    supabase.from('profiles').insert([{
+      id: customer.id,
+      email: customer.email || `${customer.id}@cliente.voltacrm.it`,
+      full_name: customer.name,
+      role: 'customer',
+      phone: customer.phone,
+      fiscal_code: customer.fiscalCode
+    }]).then(({ error }) => {
+      if (error) console.warn('[Supabase Sync] Errore inserimento profilo cliente:', error.message);
+      else console.log(`[Supabase Sync] Cliente ${customer.id} persistito su PostgreSQL`);
+    });
+  }
+};
+
 export const getNotifications = () => notifications;
-export const addNotification = (notification: any) => notifications.unshift(notification);
+
+export const addNotification = (notification: any) => {
+  notifications.unshift(notification);
+  if (isSupabaseConfigured && supabase) {
+    supabase.from('notifications').insert([{
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      timestamp: notification.timestamp,
+      is_read: notification.isRead || false,
+      priority: notification.priority || 'normal',
+      target_role: notification.targetRole || 'all',
+      action_tab: notification.actionTab || null,
+      meta: notification.meta || null
+    }]).then(({ error }) => {
+      if (error) console.warn('[Supabase Sync] Errore salvataggio notifica:', error.message);
+    });
+  }
+};
+
 export const getSignatureLogs = () => signatureLogs;
-export const addSignatureLog = (log: any) => signatureLogs.push(log);
+
+export const addSignatureLog = (log: any) => {
+  signatureLogs.push(log);
+  if (isSupabaseConfigured && supabase) {
+    supabase.from('signature_logs').insert([{
+      id: log.id,
+      customer_id: log.customerId,
+      customer_name: log.customerName,
+      signer_fiscal_code: log.signerFiscalCode,
+      phone: log.phone,
+      otp_code: log.otpCode,
+      offer_id: log.offerId,
+      supplier: log.supplier,
+      signature_hash: log.signatureHash
+    }]).then(({ error }) => {
+      if (error) console.warn('[Supabase Sync] Errore salvataggio log di firma:', error.message);
+      else console.log(`[Supabase Sync] Firma digitale ${log.id} registrata immutabilmente su DB`);
+    });
+  }
+};
+
+/**
+ * Idratatore iniziale da Supabase su avvio server
+ */
+export async function initDataStore(): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) {
+    console.log('📦 [Database Mode] Modalità in-memory attiva con demo data.');
+    return;
+  }
+
+  try {
+    const { data: dbLeads, error: leadsErr } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+    if (!leadsErr && dbLeads && dbLeads.length > 0) {
+      leads = [
+        ...dbLeads.map((l: any) => ({
+          id: l.id,
+          name: l.name,
+          phone: l.phone,
+          email: l.email,
+          city: l.city,
+          source: l.source,
+          status: l.status,
+          notes: l.notes,
+          createdAt: l.created_at?.split('T')[0],
+          estimatedConsumptionKwh: l.estimated_consumption_kwh,
+          estimatedConsumptionSmc: l.estimated_consumption_smc
+        })),
+        ...leads
+      ];
+      console.log(`📦 [Database Sync] Caricati ${dbLeads.length} lead storici da Supabase PostgreSQL.`);
+    }
+  } catch (err: any) {
+    console.warn('[Database Sync] Avviso durante idratazione iniziale:', err.message);
+  }
+}
+

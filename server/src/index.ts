@@ -10,7 +10,8 @@ import { switchRouter } from './routes/switch.js';
 import { kioskRouter } from './routes/kiosk.js';
 import { notificationsRouter } from './routes/notifications.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
-import { getCustomers, getLeads, getNotifications } from './services/dataStore.js';
+import { getCustomers, getLeads, getNotifications, initDataStore } from './services/dataStore.js';
+import { testDatabaseConnection } from './services/dbClient.js';
 
 dotenv.config();
 
@@ -45,13 +46,15 @@ app.use((req: Request, _res: Response, next) => {
 });
 
 // Root & Health check
-app.get('/api/health', (_req: Request, res: Response): void => {
+app.get('/api/health', async (_req: Request, res: Response): Promise<void> => {
+  const dbHealth = await testDatabaseConnection();
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     service: 'VoltaCRM SaaS Standalone Backend API',
     version: '1.0.0',
     uptimeSeconds: Math.floor(process.uptime()),
+    database: dbHealth,
     features: {
       auth2FA: true,
       areraSwitchEngine: true,
@@ -92,6 +95,8 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction): void => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({ success: false, message: err.message || 'Si è verificato un errore interno nel server.' });
 });
+
+initDataStore().catch(err => console.warn('[Startup] Warning durante inizializzazione DB:', err.message));
 
 app.listen(PORT, () => {
   console.log(`=================================================`);
