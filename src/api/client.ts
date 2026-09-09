@@ -4,7 +4,7 @@
  * automatico su storage locale se offline/deploy senza backend attivo.
  */
 
-import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit } from '../types';
+import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionRecord, AgentCommissionSummary, SettlementBatch } from '../types';
 import { dbService } from '../services/db';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
 
@@ -502,6 +502,110 @@ export const api = {
           deliveryChannel: 'local_fallback'
         };
       }
+    }
+  },
+
+  // --- COMMISSIONS & SETTLEMENTS ---
+  commissions: {
+    async getSummaries(): Promise<AgentCommissionSummary[]> {
+      try {
+        const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
+        return data.summaries;
+      } catch (err) {
+        console.warn('[API Client] Errore getSummaries commissions, uso fallback locale:', err);
+        return [
+          {
+            agentId: 'user-admin-1',
+            agentName: 'Matteo Riva (Broker Owner)',
+            role: 'admin',
+            pendingCount: 0,
+            pendingAmountEur: 0,
+            accruedCount: 2,
+            accruedAmountEur: 166.25,
+            settledCount: 1,
+            settledAmountEur: 95.00,
+            totalEarnedEur: 261.25,
+            contractsCount: 2
+          },
+          {
+            agentId: 'user-op-2',
+            agentName: 'Chiara Bianchi (Consulente Senior)',
+            role: 'call_center',
+            pendingCount: 1,
+            pendingAmountEur: 40.00,
+            accruedCount: 3,
+            accruedAmountEur: 148.50,
+            settledCount: 1,
+            settledAmountEur: 45.00,
+            totalEarnedEur: 193.50,
+            contractsCount: 4
+          }
+        ];
+      }
+    },
+
+    async getAll(filters?: { agentId?: string; status?: string; period?: string; type?: string }): Promise<CommissionRecord[]> {
+      try {
+        const queryParams = new URLSearchParams();
+        if (filters?.agentId) queryParams.append('agentId', filters.agentId);
+        if (filters?.status) queryParams.append('status', filters.status);
+        if (filters?.period) queryParams.append('period', filters.period);
+        if (filters?.type) queryParams.append('type', filters.type);
+
+        const qs = queryParams.toString();
+        const data = await request<{ success: boolean; commissions: CommissionRecord[] }>(`/commissions${qs ? `?${qs}` : ''}`);
+        return data.commissions;
+      } catch (err) {
+        console.warn('[API Client] Errore getAll commissions, uso fallback locale:', err);
+        return [];
+      }
+    },
+
+    async getBatches(agentId?: string): Promise<SettlementBatch[]> {
+      try {
+        const qs = agentId ? `?agentId=${encodeURIComponent(agentId)}` : '';
+        const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
+        return data.batches;
+      } catch (err) {
+        console.warn('[API Client] Errore getBatches commissions:', err);
+        return [];
+      }
+    },
+
+    async generate(payload: {
+      agentId: string;
+      agentName: string;
+      contractId?: string;
+      customerName: string;
+      podOrPdr: string;
+      utilityType: 'luce' | 'gas';
+      customerType?: 'residential' | 'business';
+      annualConsumption?: number;
+      isDualFuel?: boolean;
+    }): Promise<{ records: CommissionRecord[]; totalEur: number }> {
+      try {
+        const data = await request<{ success: boolean; records: CommissionRecord[]; totalEur: number }>('/commissions/generate', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        return { records: data.records, totalEur: data.totalEur };
+      } catch (err) {
+        console.warn('[API Client] Errore generate commissions:', err);
+        return { records: [], totalEur: 0 };
+      }
+    },
+
+    async settle(payload: {
+      agentId: string;
+      commissionIds: string[];
+      paymentReference?: string;
+      notes?: string;
+    }): Promise<{ batch: SettlementBatch; updatedCount: number }> {
+      const data = await request<{ success: boolean; batch: SettlementBatch; updatedCount: number }>('/commissions/settle', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      return { batch: data.batch, updatedCount: data.updatedCount };
     }
   }
 };

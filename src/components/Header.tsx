@@ -15,7 +15,8 @@ import {
   Lock,
   FileText,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Coins
 } from 'lucide-react';
 import { AuthUser, MarketIndex } from '../types';
 import { NotificationCenter } from './NotificationCenter';
@@ -26,6 +27,7 @@ interface HeaderProps {
   marketIndex: MarketIndex;
   pendingSwitchesCount: number;
   pendingBillsCount: number;
+  pendingCommissionsCount?: number;
   currentUser: AuthUser;
   onOpenCommandPalette: () => void;
   onOpenMarketSimulator: () => void;
@@ -42,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   marketIndex,
   pendingSwitchesCount,
   pendingBillsCount,
+  pendingCommissionsCount,
   currentUser,
   onOpenCommandPalette,
   onOpenMarketSimulator,
@@ -72,6 +75,12 @@ export const Header: React.FC<HeaderProps> = ({
     },
     { id: 'crm', label: 'Clienti (POD/PDR)', icon: ShieldCheck },
     { id: 'team_profiles', label: 'Team & Profili', icon: Users },
+    { 
+      id: 'commissions', 
+      label: 'Provvigioni', 
+      icon: Coins, 
+      badge: pendingCommissionsCount && pendingCommissionsCount > 0 ? pendingCommissionsCount : undefined 
+    },
     { id: 'tariffe', label: 'Tariffe & Simulator', icon: Zap },
     { 
       id: 'switch4m', 

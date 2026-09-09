@@ -235,3 +235,53 @@ export interface AppNotification {
     auditId?: string;
   };
 }
+
+export type CommissionType = 'upfront' | 'recurring' | 'bonus' | 'clawback';
+export type CommissionStatus = 'pending' | 'accrued' | 'settled' | 'clawback';
+
+export interface CommissionRecord {
+  id: string;
+  agentId: string;
+  agentName: string;
+  contractId: string;
+  customerName: string;
+  podOrPdr: string;
+  utilityType: 'luce' | 'gas';
+  customerType?: 'residential' | 'business';
+  annualConsumption: number;
+  type: CommissionType;
+  amountEur: number;
+  status: CommissionStatus;
+  period: string; // YYYY-MM
+  accrualDate: string;
+  settlementDate?: string;
+  paymentReference?: string;
+  notes?: string;
+}
+
+export interface AgentCommissionSummary {
+  agentId: string;
+  agentName: string;
+  role: string;
+  pendingCount: number;
+  pendingAmountEur: number;
+  accruedCount: number;
+  accruedAmountEur: number;
+  settledCount: number;
+  settledAmountEur: number;
+  totalEarnedEur: number;
+  contractsCount: number;
+}
+
+export interface SettlementBatch {
+  id: string;
+  agentId: string;
+  agentName: string;
+  settlementDate: string;
+  paymentReference: string;
+  period: string;
+  totalAmountEur: number;
+  commissionCount: number;
+  notes?: string;
+}
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SlidersHorizontal, Zap, Flame, X, TrendingUp, TrendingDown, Check, RefreshCw, Calendar, Clock } from 'lucide-react';
 import { MarketIndex } from '../types';
 

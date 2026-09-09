@@ -20,6 +20,7 @@ import { TeamProfilesManager } from '../components/TeamProfilesManager';
 import { CustomerProfileSection } from '../components/CustomerProfileSection';
 import { SavingsProposalPdfModal } from '../components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from '../components/DigitalSignatureModal';
+import { CommissionManager } from '../components/CommissionManager';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 
 import { dbService } from '../services/db';
@@ -202,11 +203,33 @@ export const CrmApp: React.FC = () => {
       handleUpdateLeadStatus(lead.id, 'contract_signed', 'Contratto sottoscritto con successo');
     }
     addToast('Contratto Attivato', `${newCustomer.name} è ora cliente attivo con audit quadrimestrale programmato.`, 'success');
+
+    // Registra la provvigione commerciale per l'agente
+    api.commissions.generate({
+      agentId: currentUser.id,
+      agentName: currentUser.name,
+      contractId: `cnt-${Date.now()}`,
+      customerName: newCustomer.name,
+      podOrPdr: newCustomer.utilityPoints[0]?.podOrPdr || 'IT001EXXXXXXXX',
+      utilityType: 'luce',
+      annualConsumption: lead?.estimatedConsumptionKwh || 3200
+    }).catch(err => console.warn('[VoltaCRM] Errore calcolo provvigione:', err));
   };
 
-  const handleAuditSwitched = (_auditId: string) => {
-    // Usually we would update the backend here or update the customer state
-    addToast('Switch Confermato', 'Pratica di cambio gestore inoltrata ad ARERA.', 'success');
+  const handleAuditSwitched = (auditId: string) => {
+    const audit = audits.find(a => a.id === auditId);
+    if (audit) {
+      api.commissions.generate({
+        agentId: currentUser.id,
+        agentName: currentUser.name,
+        contractId: `switch-${auditId}`,
+        customerName: audit.customerName,
+        podOrPdr: audit.podOrPdr,
+        utilityType: audit.utilityType,
+        annualConsumption: 3500
+      }).catch(err => console.warn('[VoltaCRM] Errore provvigione su switch:', err));
+    }
+    addToast('Switch Confermato', 'Pratica inoltrata ad ARERA e provvigione registrata.', 'success');
   };
 
   const handleRefreshMarketIndices = async () => {
@@ -242,6 +265,7 @@ export const CrmApp: React.FC = () => {
         marketIndex={marketIndex}
         pendingSwitchesCount={pendingSwitchesCount}
         pendingBillsCount={pendingBillsCount}
+        pendingCommissionsCount={2}
         currentUser={currentUser}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenMarketSimulator={() => setIsMarketSimOpen(true)}
@@ -334,6 +358,13 @@ export const CrmApp: React.FC = () => {
             customers={customers}
             onProfilesUpdated={(updated) => setProfiles(updated)}
             onCustomerCreated={(newCust) => setCustomers(prev => [newCust, ...prev])}
+            onToast={addToast}
+          />
+        )}
+
+        {activeTab === 'commissions' && (
+          <CommissionManager
+            currentUser={currentUser}
             onToast={addToast}
           />
         )}

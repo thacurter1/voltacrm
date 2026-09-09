@@ -11,6 +11,7 @@ import { kioskRouter } from './routes/kiosk.js';
 import { notificationsRouter } from './routes/notifications.js';
 import { ocrRouter } from './routes/ocr.js';
 import { messagingRouter } from './routes/messaging.js';
+import { commissionRouter } from './routes/commissions.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { getCustomers, getLeads, getNotifications, initDataStore } from './services/dataStore.js';
 import { testDatabaseConnection } from './services/dbClient.js';
@@ -81,6 +82,7 @@ app.use('/api/kiosk', kioskRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/ocr', ocrRouter);
 app.use('/api/messaging', messagingRouter);
+app.use('/api/commissions', commissionRouter);
 
 // 404 handler
 app.use((req: Request, res: Response): void => {

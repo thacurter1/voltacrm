@@ -24,6 +24,7 @@ import { CustomerProfileSection } from './components/CustomerProfileSection';
 import { PortalGate } from './components/PortalGate';
 import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
+import { CommissionManager } from './components/CommissionManager';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { TotemKioskMode } from './components/TotemKioskMode';
 const TotemApp = React.lazy(() => import('./apps/TotemApp'));
@@ -346,7 +347,21 @@ function UnifiedApp() {
   const handleAuditSwitched = (auditId: string) => {
     setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'switched' as const } : a));
     recordSecurityLog('switch_signed_otp', 'safe', `Mandato di switch perfezionato per audit ${auditId}`);
-    addToast('Switch Perfezionato!', 'Cambio fornitore attivato con successo e notifica inviata.', 'success');
+    
+    const audit = audits.find(a => a.id === auditId);
+    if (audit) {
+      api.commissions.generate({
+        agentId: currentUser.id,
+        agentName: currentUser.name,
+        contractId: `switch-${auditId}`,
+        customerName: audit.customerName,
+        podOrPdr: audit.podOrPdr,
+        utilityType: audit.utilityType,
+        annualConsumption: 3500
+      }).catch(err => console.warn('[VoltaCRM] Errore provvigione su switch:', err));
+    }
+
+    addToast('Switch Perfezionato!', 'Cambio fornitore attivato con successo e provvigione registrata.', 'success');
   };
 
   const handleTriggerGlobalAudit = () => {
@@ -448,6 +463,7 @@ function UnifiedApp() {
         marketIndex={marketIndex}
         pendingSwitchesCount={pendingSwitches.length}
         pendingBillsCount={pendingBills.length}
+        pendingCommissionsCount={2}
         currentUser={currentUser}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenMarketSimulator={() => setIsMarketSimulatorOpen(true)}
@@ -546,6 +562,13 @@ function UnifiedApp() {
                   setCustomers(prev => [newCust, ...prev]);
                   setAudits(runQuarterlyAudit([newCust, ...customers]));
                 }}
+                onToast={addToast}
+              />
+            )}
+
+            {activeTab === 'commissions' && (
+              <CommissionManager
+                currentUser={currentUser}
                 onToast={addToast}
               />
             )}
