@@ -291,17 +291,28 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           <div className="space-y-2 pt-2">
+            <button
+              onClick={() => onNavigate('onboarding')}
+              className="w-full py-2.5 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold text-indigo-700 flex items-center justify-between transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-indigo-600" />
+                <span>Centro Onboarding & Attivazioni</span>
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 text-indigo-600" />
+            </button>
+
             {onOpenAddCustomer && (
               <button
                 type="button"
                 onClick={onOpenAddCustomer}
-                className="w-full py-2.5 px-3 rounded-lg bg-indigo-50/70 hover:bg-indigo-100/70 border border-indigo-200 text-xs font-bold text-[#635bff] flex items-center justify-between transition-colors cursor-pointer"
+                className="w-full py-2.5 px-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
               >
                 <span className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4 text-[#635bff]" />
+                  <UserPlus className="h-4 w-4 text-slate-600" />
                   <span>+ Registra Nuovo Cliente & POD</span>
                 </span>
-                <ArrowRight className="h-3.5 w-3.5 text-[#635bff]" />
+                <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
               </button>
             )}
 

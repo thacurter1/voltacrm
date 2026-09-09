@@ -285,3 +285,29 @@ export interface SettlementBatch {
   notes?: string;
 }
 
+export type OnboardingStage = 'bozza' | 'verifica_tecnica' | 'firma_mandato' | 'switch_programmato' | 'attivo';
+
+export interface OnboardingRecord {
+  id: string;
+  customerName: string;
+  fiscalCode: string;
+  customerType: 'residential' | 'business';
+  phone: string;
+  email: string;
+  city: string;
+  stage: OnboardingStage;
+  utilityTypes: ('luce' | 'gas')[];
+  pod?: string;
+  pdr?: string;
+  annualConsumptionKwh?: number;
+  annualConsumptionSmc?: number;
+  estimatedAnnualSavingsEur?: number;
+  supplier?: string;
+  assignedAgent: string;
+  mandateSigned: boolean;
+  documentsUploaded: boolean;
+  startedAt: string;
+  updatedAt: string;
+  notes?: string;
+}
+

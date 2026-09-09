@@ -19,7 +19,8 @@ import {
   Coins,
   Menu,
   X,
-  UserPlus
+  UserPlus,
+  Sparkles
 } from 'lucide-react';
 import { AuthUser, MarketIndex } from '../types';
 import { NotificationCenter } from './NotificationCenter';
@@ -71,6 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const callCenterNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Panoramica', icon: BarChart3 },
+    { id: 'onboarding', label: 'Onboarding', icon: Sparkles },
     { id: 'leads', label: 'Lead Marketing', icon: Users },
     { id: 'callcenter', label: 'Call Center & Agenda', icon: PhoneCall },
     { 

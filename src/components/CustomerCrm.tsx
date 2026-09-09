@@ -27,6 +27,7 @@ interface CustomerCrmProps {
   onBatchAddCustomers?: (customers: Customer[]) => Promise<void> | void;
   onOpenBillOcr?: () => void;
   onNavigateToLeads?: () => void;
+  onNavigateToOnboarding?: () => void;
 }
 
 export const CustomerCrm: React.FC<CustomerCrmProps> = ({
@@ -37,6 +38,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
   onBatchAddCustomers,
   onOpenBillOcr,
   onNavigateToLeads,
+  onNavigateToOnboarding,
 }) => {
   const [search, setSearch] = useState('');
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
@@ -82,6 +84,18 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
 
         {/* Action Buttons Group */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          {onNavigateToOnboarding && (
+            <button
+              type="button"
+              onClick={onNavigateToOnboarding}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-[#635bff] text-xs font-bold shadow-2xs transition-colors cursor-pointer min-h-[38px]"
+              title="Avvia il percorso di onboarding guidato per un nuovo cliente"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-[#635bff]" />
+              <span>Percorso Onboarding</span>
+            </button>
+          )}
+
           {onOpenBillOcr && (
             <button
               type="button"

@@ -4,6 +4,7 @@ import { DashboardOverview } from '../components/DashboardOverview';
 import { LeadsManager } from '../components/LeadsManager';
 import { CallCenterAgenda } from '../components/CallCenterAgenda';
 import { CustomerCrm } from '../components/CustomerCrm';
+import { OnboardingManager } from '../components/OnboardingManager';
 import { TariffComparator } from '../components/TariffComparator';
 import { QuarterlySwitchEngine } from '../components/QuarterlySwitchEngine';
 import { ScheduleAppointmentModal } from '../components/ScheduleAppointmentModal';
@@ -344,6 +345,23 @@ export const CrmApp: React.FC = () => {
           />
         )}
 
+        {activeTab === 'onboarding' && (
+          <OnboardingManager
+            customers={customers}
+            leads={leads}
+            marketIndex={marketIndex}
+            currentUserRole={currentUser.role}
+            currentUserName={currentUser.name}
+            onAddCustomer={handleAddCustomer}
+            onOpenBillOcr={() => setIsBillOcrOpen(true)}
+            onOpenImportCsv={() => setIsImportCustomersModalOpen(true)}
+            onSelectCustomer={(customer) => {
+              setDrawerCustomer(customer);
+              setDrawerLead(null);
+            }}
+          />
+        )}
+
         {activeTab === 'leads' && (
           <LeadsManager
             leads={leads}
@@ -383,6 +401,7 @@ export const CrmApp: React.FC = () => {
             onBatchAddCustomers={handleBatchAddCustomers}
             onOpenBillOcr={() => setIsBillOcrOpen(true)}
             onNavigateToLeads={() => setActiveTab('leads')}
+            onNavigateToOnboarding={() => setActiveTab('onboarding')}
           />
         )}
 
@@ -518,6 +537,7 @@ export const CrmApp: React.FC = () => {
           else if (actionId === 'market_sim') setIsMarketSimOpen(true);
           else if (actionId === 'switch_4m') setActiveTab('switch4m');
           else if (actionId === 'new_lead') setActiveTab('leads');
+          else if (actionId === 'onboarding') setActiveTab('onboarding');
           else if (actionId === 'new_customer') setIsAddCustomerModalOpen(true);
           else if (actionId === 'import_customers') setIsImportCustomersModalOpen(true);
         }}
