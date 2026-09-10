@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { BillOcrResult, Customer } from '../types';
 import { api } from '../api/client';
+import { securityValidator } from '../services/securityValidator';
 
 interface BillOcrModalProps {
   isOpen: boolean;
@@ -90,11 +91,9 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
   const handleFileProcess = async (file: File) => {
     if (!file) return;
 
-    const validExtensions = /\.(pdf|jpg|jpeg|png|webp)$/i;
-    const validMimes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
-
-    if (!validMimes.includes(file.type) && !file.name.match(validExtensions)) {
-      setErrorMessage('Formato non supportato. Carica un PDF o un\'immagine (JPG, PNG, WebP).');
+    const validation = await securityValidator.validateFile(file);
+    if (!validation.isValid) {
+      setErrorMessage(validation.error || 'Formato non supportato o file non valido (ammessi PDF, JPG, PNG, WebP).');
       return;
     }
 

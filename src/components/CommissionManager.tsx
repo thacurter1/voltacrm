@@ -23,7 +23,7 @@ interface CommissionManagerProps {
   onToast: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
 }
 
-export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUser: _currentUser, onToast }) => {
+export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUser, onToast }) => {
   const [summaries, setSummaries] = useState<AgentCommissionSummary[]>([]);
   const [commissions, setCommissions] = useState<CommissionRecord[]>([]);
   const [batches, setBatches] = useState<SettlementBatch[]>([]);
@@ -83,6 +83,11 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
 
   // Conferma liquidazione
   const handleConfirmSettle = async () => {
+    if (currentUser.role !== 'admin') {
+      onToast('Accesso Negato', 'Solo gli amministratori possono approvare ed emettere distinte di liquidazione.', 'warning');
+      return;
+    }
+
     if (!settleAgentId || selectedCommissionIds.length === 0) {
       onToast('Nessuna Voce Selezionata', 'Seleziona almeno una provvigione da liquidare.', 'warning');
       return;
@@ -423,15 +428,21 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleOpenSettleModal(agent.agentId)}
-                disabled={agent.accruedAmountEur === 0}
-                className="w-full py-1.5 px-3 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-100 text-xs font-semibold text-[#0a2540] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
-              >
-                <Wallet className="h-3.5 w-3.5 text-[#635bff]" />
-                <span>Emetti Distinta Liquidazione</span>
-              </button>
+              {currentUser.role === 'admin' ? (
+                <button
+                  type="button"
+                  onClick={() => handleOpenSettleModal(agent.agentId)}
+                  disabled={agent.accruedAmountEur === 0}
+                  className="w-full py-1.5 px-3 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-100 text-xs font-semibold text-[#0a2540] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
+                >
+                  <Wallet className="h-3.5 w-3.5 text-[#635bff]" />
+                  <span>Emetti Distinta Liquidazione</span>
+                </button>
+              ) : (
+                <div className="w-full py-1.5 px-3 rounded-lg bg-slate-100 text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1">
+                  <span>Liquidazione riservata ad amministratori</span>
+                </div>
+              )}
             </div>
           ))}
         </div>

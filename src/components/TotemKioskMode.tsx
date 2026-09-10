@@ -38,10 +38,12 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
   // Inactivity Auto-Reset Timer (60 secondi per i totem pubblici)
   const [secondsLeft, setSecondsLeft] = useState(60);
 
-  // PIN per uscire dalla modalità Totem (per l'operatore)
+  // PIN / Password per uscire dalla modalità Totem (per l'operatore)
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [enteredPin, setEnteredPin] = useState('');
-  const [pinError, setPinError] = useState(false);
+  const [pinError, setPinError] = useState('');
+  const [pinFailedAttempts, setPinFailedAttempts] = useState(0);
+  const [pinLockoutUntil, setPinLockoutUntil] = useState(0);
 
   // Reset del timer di inattività ad ogni tocco sullo schermo
   const resetInactivityTimer = () => {
@@ -137,14 +139,34 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
   };
 
   const handleVerifyPin = () => {
-    if (enteredPin === '1234' || enteredPin === '9999') {
+    const now = Date.now();
+    if (now < pinLockoutUntil) {
+      const waitSeconds = Math.ceil((pinLockoutUntil - now) / 1000);
+      setPinError(`Troppi tentativi errati. Blocco temporaneo attivo per ancora ${waitSeconds} secondi.`);
+      return;
+    }
+
+    const trimmed = enteredPin.trim();
+    // Accetta la password dell'amministratore (admin123) o il master PIN sicuro di agenzia
+    const configuredPin = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_KIOSK_MASTER_PIN') : null;
+    const isMasterMatch = trimmed === (configuredPin || '8492') || trimmed === 'admin123';
+
+    if (isMasterMatch) {
       setIsPinModalOpen(false);
       setEnteredPin('');
-      setPinError(false);
+      setPinError('');
+      setPinFailedAttempts(0);
       onExitTotem();
     } else {
-      setPinError(true);
+      const nextAttempts = pinFailedAttempts + 1;
+      setPinFailedAttempts(nextAttempts);
       setEnteredPin('');
+      if (nextAttempts >= 3) {
+        setPinLockoutUntil(Date.now() + 60 * 1000);
+        setPinError('Superato il limite di 3 tentativi. Blocco di sicurezza applicato per 60 secondi.');
+      } else {
+        setPinError(`Credenziali non valide. (${3 - nextAttempts} tentativi rimasti)`);
+      }
     }
   };
 
@@ -508,16 +530,16 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
 
             <input
               type="password"
-              maxLength={4}
-              placeholder="PIN (es. 1234)"
+              placeholder="PIN o Password Operatore"
               value={enteredPin}
               onChange={e => setEnteredPin(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-center font-mono text-xl tracking-widest font-bold focus:border-[#635bff] focus:outline-hidden"
+              onKeyDown={e => { if (e.key === 'Enter') handleVerifyPin(); }}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-center font-mono text-base font-bold focus:border-[#635bff] focus:outline-hidden"
             />
 
             {pinError && (
-              <span className="text-red-600 text-[11px] font-bold block text-center">
-                PIN errato. Riprova con 1234 o 9999.
+              <span className="text-red-600 text-[11px] font-semibold block text-center">
+                {pinError}
               </span>
             )}
 

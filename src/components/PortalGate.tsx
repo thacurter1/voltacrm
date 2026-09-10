@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
 import { profileService } from '../services/supabaseClient';
+import { api } from '../api/client';
 
 interface PortalGateProps {
   onLoginOperator: (user: UserProfile) => void;
@@ -60,25 +61,50 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const operators = profiles.filter(p => p.role === 'admin' || p.role === 'call_center');
 
   // Customer Login Handler
-  const handleCustomerLogin = (e: React.FormEvent) => {
+  const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const query = customerIdentifier.trim().toLowerCase();
+    const query = customerIdentifier.trim();
+    const pwd = customerPassword.trim();
 
-    // Cerca tra i profili clienti o nelle anagrafiche clienti
+    if (!query) {
+      onToast('Dati Mancanti', 'Inserisci la tua email o Codice Fiscale.', 'warning');
+      return;
+    }
+
+    if (!pwd) {
+      onToast('Password Richiesta', 'Inserisci la tua password di accesso.', 'warning');
+      return;
+    }
+
+    // 1. Tenta autenticazione crittografica tramite backend REST
+    try {
+      const authRes = await api.auth.loginCustomer(query, pwd);
+      if (authRes?.success && authRes.user) {
+        onToast('Accesso Eseguito', `Benvenuto ${authRes.user.name}`, 'success');
+        onLoginCustomer(authRes.user);
+        return;
+      }
+    } catch (err) {
+      console.warn('[PortalGate] Backend offline, verifica locale:', err);
+    }
+
+    // 2. Verifica su profili locali/mock con controllo password
+    const queryLower = query.toLowerCase();
     const matchedProfile = profiles.find(p => 
       p.role === 'customer' && (
-        p.email.toLowerCase() === query || 
-        p.fiscalCode?.toLowerCase() === query
+        p.email.toLowerCase() === queryLower || 
+        p.fiscalCode?.toLowerCase() === queryLower
       )
     );
 
     const matchedCustomer = customers.find(c => 
-      c.email.toLowerCase() === query || 
-      c.fiscalCode.toLowerCase() === query ||
-      c.id === customerIdentifier
+      c.email.toLowerCase() === queryLower || 
+      c.fiscalCode.toLowerCase() === queryLower ||
+      c.id === query
     );
 
-    if (matchedProfile || matchedCustomer) {
+    // I profili demo/locali accettano la password 'customer123'
+    if ((matchedProfile || matchedCustomer) && pwd === 'customer123') {
       const user: UserProfile = matchedProfile || {
         id: `user-${matchedCustomer!.id}`,
         name: matchedCustomer!.name,
@@ -91,25 +117,10 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         onboardingStatus: 'active',
       };
 
+      onToast('Accesso Eseguito', `Benvenuto ${user.name}`, 'success');
       onLoginCustomer(user);
     } else {
-      // Per agevolare il test rapido, effettua il login con il primo cliente demo se vuoto o non trovato
-      const fallback = customers[0];
-      if (fallback) {
-        const user: UserProfile = {
-          id: `user-${fallback.id}`,
-          name: fallback.name,
-          email: fallback.email,
-          role: 'customer',
-          customerId: fallback.id,
-          phone: fallback.phone,
-          fiscalCode: fallback.fiscalCode,
-          avatar: fallback.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
-          onboardingStatus: 'active',
-        };
-        onToast('Accesso Demo Cliente', `Benvenuto ${fallback.name}`, 'info');
-        onLoginCustomer(user);
-      }
+      onToast('Accesso Negato', 'Credenziali non valide. Verifica email/codice fiscale e password.', 'warning');
     }
   };
 
@@ -310,6 +321,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       </div>
                       <input
                         type="password"
+                        required
                         placeholder="••••••••••••"
                         value={customerPassword}
                         onChange={e => setCustomerPassword(e.target.value)}

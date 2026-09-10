@@ -90,17 +90,20 @@ export const CrmApp: React.FC = () => {
     });
   }, []);
 
-  // Sync with DB
+  // Sync with DB (debounced to avoid blocking I/O on rapid state mutations)
   useEffect(() => {
-    dbService.save({
-      currentUser,
-      customers,
-      leads,
-      appointments,
-      bills,
-      marketIndex,
-      securityLogs,
-    });
+    const timer = setTimeout(() => {
+      dbService.save({
+        currentUser,
+        customers,
+        leads,
+        appointments,
+        bills,
+        marketIndex,
+        securityLogs,
+      });
+    }, 400);
+    return () => clearTimeout(timer);
   }, [currentUser, customers, leads, appointments, bills, marketIndex, securityLogs]);
 
   // Sync with DB
@@ -144,7 +147,12 @@ export const CrmApp: React.FC = () => {
     addToast('Stato Lead Aggiornato', 'Il contatto è stato aggiornato in agenda call center.', 'info');
   };
 
-  const handleAddLead = (newLead: Lead) => {
+  const handleAddLead = async (newLead: Lead) => {
+    try {
+      await api.leads.create(newLead);
+    } catch (err) {
+      console.warn('[CrmApp] Fallback locale per creazione lead:', err);
+    }
     setLeads(prev => [newLead, ...prev]);
     addToast('Nuovo Lead Acquisito', `${newLead.name} è stato inserito nel CRM.`, 'success');
   };
@@ -169,57 +177,28 @@ export const CrmApp: React.FC = () => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: st } : a));
   };
 
+  // Conversione vendite in Cliente CRM attivo (richiede dati anagrafici e POD/PDR reali via AddCustomerModal)
   const handleConvertToCustomer = (app: Appointment) => {
     const lead = leads.find(l => l.id === app.leadId);
-    const today = new Date();
-    const nextAudit = new Date();
-    nextAudit.setDate(today.getDate() + 120);
-
-    const newCustomer: Customer = {
-      id: `cust-${Date.now()}`,
-      name: app.customerName,
-      fiscalCode: 'CF' + Math.random().toString(36).substring(2, 10).toUpperCase(),
-      phone: app.phone,
-      email: lead?.email || 'cliente@energia.it',
-      city: app.city,
-      contractStartDate: today.toISOString().split('T')[0],
-      lastSwitchAuditDate: today.toISOString().split('T')[0],
-      nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
-      accountManager: app.agentName,
-      hasBrokerageMandate: true,
-      utilityPoints: [
-        {
-          id: `util-${Date.now()}-luce`,
-          type: 'luce',
-          podOrPdr: `IT001E${Math.floor(10000000 + Math.random() * 90000000)}`,
-          annualConsumption: lead?.estimatedConsumptionKwh || 3200,
-          powerKw: 3.0,
-          currentSupplier: 'A2A Energia',
-          currentOfferName: 'A2A Easy Luce Index',
-          currentTariffType: 'indexed',
-          currentUnitCost: 0.1265,
-          currentFixedFeeYear: 114.0,
-        }
-      ]
-    };
-
-    setCustomers(prev => [newCustomer, ...prev]);
-    setAppointments(prev => prev.map(a => a.id === app.id ? { ...a, status: 'completed' as AppointmentStatus } : a));
     if (lead) {
-      handleUpdateLeadStatus(lead.id, 'contract_signed', 'Contratto sottoscritto con successo');
+      setConvertingLead(lead);
+    } else {
+      const tempLead: Lead = {
+        id: `lead-app-${app.id}`,
+        name: app.customerName,
+        phone: app.phone,
+        email: `cliente.${app.phone.replace(/\D/g, '')}@energia.it`,
+        city: app.city,
+        source: 'landing_page',
+        status: 'contract_signed',
+        notes: app.notes || 'Contratto perfezionato da call center.',
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setConvertingLead(tempLead);
     }
-    addToast('Contratto Attivato', `${newCustomer.name} è ora cliente attivo con audit quadrimestrale programmato.`, 'success');
 
-    // Registra la provvigione commerciale per l'agente
-    api.commissions.generate({
-      agentId: currentUser.id,
-      agentName: currentUser.name,
-      contractId: `cnt-${Date.now()}`,
-      customerName: newCustomer.name,
-      podOrPdr: newCustomer.utilityPoints[0]?.podOrPdr || 'IT001EXXXXXXXX',
-      utilityType: 'luce',
-      annualConsumption: lead?.estimatedConsumptionKwh || 3200
-    }).catch(err => console.warn('[VoltaCRM] Errore calcolo provvigione:', err));
+    setAppointments(prev => prev.map(a => a.id === app.id ? { ...a, status: 'completed' as AppointmentStatus } : a));
+    addToast('Perfeziona Anagrafica', `Compila i dati fiscali e POD/PDR effettivi per ${app.customerName}.`, 'info');
   };
 
   // Aggiunta Nuovo Cliente (Manuale da CRM o da Conversione Lead)

@@ -64,12 +64,26 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
   const [copiedReferral, setCopiedReferral] = useState(false);
   const referralCode = `VOLTA-${customer.name.split(' ')[0].toUpperCase()}${customer.city.slice(0, 2).toUpperCase()}30`;
 
-  // Autolettura Contatore State
+  // Autolettura Contatore State & Storico
   const [readingF1, setReadingF1] = useState('');
   const [readingF2, setReadingF2] = useState('');
   const [readingF3, setReadingF3] = useState('');
   const [readingGas, setReadingGas] = useState('');
   const [readingSubmitted, setReadingSubmitted] = useState(false);
+  const [lastReading, setLastReading] = useState<{
+    date: string;
+    f1?: string;
+    f2?: string;
+    f3?: string;
+    gas?: string;
+  } | null>(() => {
+    try {
+      const saved = localStorage.getItem(`VOLTA_READING_${customer.id}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Audits attivi per questo cliente
   const customerAudits = audits.filter(a => a.customerId === customer.id);
@@ -154,6 +168,23 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
   const handleSubmitReading = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!readingF1 && !readingF2 && !readingF3 && !readingGas) return;
+
+    const readingData = {
+      date: new Date().toLocaleDateString('it-IT'),
+      f1: readingF1 || undefined,
+      f2: readingF2 || undefined,
+      f3: readingF3 || undefined,
+      gas: readingGas || undefined,
+    };
+
+    try {
+      localStorage.setItem(`VOLTA_READING_${customer.id}`, JSON.stringify(readingData));
+    } catch {
+      // ignore
+    }
+
+    setLastReading(readingData);
     setReadingSubmitted(true);
     setTimeout(() => {
       setReadingSubmitted(false);
@@ -560,17 +591,37 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
               Invia la lettura dal 25 al 30 del mese per azzerare i consumi stimati e i conguagli.
             </p>
           </div>
+          {lastReading && !readingSubmitted && (
+            <span className="stripe-badge-neutral text-[11px] font-mono">
+              Ultima: {lastReading.date}
+            </span>
+          )}
           <span className="stripe-badge-success">
             Finestra Aperta
           </span>
         </div>
+
+        {lastReading && (
+          <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-[#425466]">
+            <span className="font-semibold text-[#0a2540] flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+              Ultima lettura inviata il {lastReading.date}:
+            </span>
+            <div className="flex flex-wrap items-center gap-3 font-mono font-bold text-[#0a2540]">
+              {lastReading.f1 && <span>F1: {lastReading.f1} kWh</span>}
+              {lastReading.f2 && <span>F2: {lastReading.f2} kWh</span>}
+              {lastReading.f3 && <span>F3: {lastReading.f3} kWh</span>}
+              {lastReading.gas && <span>Gas: {lastReading.gas} Smc</span>}
+            </div>
+          </div>
+        )}
 
         {readingSubmitted ? (
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
             <div>
               <span className="font-bold block">Autolettura Registrata con Successo!</span>
-              <span className="text-[11px]">I tuoi dati sono stati trasmessi al distributore per la fatturazione a consumo reale.</span>
+              <span className="text-[11px]">I tuoi dati sono stati memorizzati e trasmessi per la fatturazione a consumo reale.</span>
             </div>
           </div>
         ) : (

@@ -138,8 +138,10 @@ export const Header: React.FC<HeaderProps> = ({
             <>
               <div className="hidden md:flex items-center h-5 w-px bg-slate-200" />
               <button
+                type="button"
                 onClick={onOpenCommandPalette}
-                className="hidden lg:flex items-center w-64 h-8 px-2.5 rounded-lg bg-slate-50 border border-[#e3e8ee] text-xs text-slate-400 hover:border-slate-300 hover:bg-slate-100 transition-all cursor-pointer justify-between"
+                aria-label="Cerca nel CRM o premi Ctrl+K"
+                className="hidden lg:flex items-center w-64 h-8 px-2.5 rounded-lg bg-slate-50 border border-[#e3e8ee] text-xs text-slate-400 hover:border-slate-300 hover:bg-slate-100 transition-all cursor-pointer justify-between focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
               >
                 <div className="flex items-center">
                   <Search className="h-3.5 w-3.5 text-slate-400 mr-2 shrink-0" strokeWidth={1.75} />
@@ -156,9 +158,11 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right: Live Market Ticker, OCR & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3">
           {/* Mobile PUN compact pill */}
-          <div 
+          <button 
+            type="button"
             onClick={onOpenMarketSimulator}
-            className="flex sm:hidden items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] text-[11px] cursor-pointer"
+            aria-label={`Visualizza simulatore indici: PUN a ${marketIndex.punEurKwh.toFixed(3)} euro`}
+            className="flex sm:hidden items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] text-[11px] cursor-pointer hover:bg-slate-100 transition-colors"
             title="Clicca per visualizzare simulatore e fasce F1/F2/F3"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -166,13 +170,15 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-semibold text-[#0a2540] font-mono">
               {marketIndex.punEurKwh.toFixed(3)}€
             </span>
-          </div>
+          </button>
 
           {/* Desktop/Tablet Live PUN & PSV Ticker */}
           <div className="hidden sm:flex items-center gap-1.5">
-            <div 
+            <button 
+              type="button"
               onClick={onOpenMarketSimulator}
-              className="flex items-center gap-2 cursor-pointer group"
+              aria-label={`Visualizza scenari e fasce: PUN ${marketIndex.punEurKwh.toFixed(4)} euro, PSV ${marketIndex.psvEurSmc.toFixed(4)} euro`}
+              className="flex items-center gap-2 cursor-pointer group text-left p-0 border-0 bg-transparent"
               title={`Clicca per simulare scenari PUN/PSV o vedere fasce F1/F2/F3. Ultimo aggiornamento: ${marketIndex.lastUpdated}`}
             >
               {/* PUN Pill */}
@@ -225,7 +231,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
                 <SlidersHorizontal className="h-3 w-3 text-slate-400 group-hover:text-[#635bff] ml-0.5" />
               </div>
-            </div>
+            </button>
 
             {/* Refresh GME Feed Button */}
             {onRefreshMarketIndex && (
@@ -233,7 +239,8 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={onRefreshMarketIndex}
                 disabled={isRefreshingMarketIndex}
-                className="p-1.5 rounded-md border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-500 hover:text-[#635bff] transition-colors disabled:opacity-50 cursor-pointer"
+                aria-label="Aggiorna quotazioni PUN e PSV in tempo reale dal GME"
+                className="p-1.5 rounded-md border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-500 hover:text-[#635bff] transition-colors disabled:opacity-50 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
                 title={`Aggiorna feed GME in tempo reale (Ultimo: ${marketIndex.lastUpdated})`}
               >
                 <RefreshCw className={`h-3 w-3 ${isRefreshingMarketIndex ? 'animate-spin text-[#635bff]' : ''}`} />
@@ -247,7 +254,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={onOpenAddCustomer}
-                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-2xs cursor-pointer transition-all active:scale-[0.99]"
+                  aria-label="Registra manualmente un nuovo cliente"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-2xs cursor-pointer transition-all active:scale-[0.99] focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
                   title="Registra manualmente un nuovo cliente con relative forniture"
                 >
                   <UserPlus className="h-3.5 w-3.5" />
@@ -256,8 +264,10 @@ export const Header: React.FC<HeaderProps> = ({
               )}
 
               <button
+                type="button"
                 onClick={onOpenBillOcr}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-xs font-semibold text-[#0a2540] shadow-2xs cursor-pointer transition-colors"
+                aria-label="Analisi e scansione OCR Bolletta"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-xs font-semibold text-[#0a2540] shadow-2xs cursor-pointer transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
               >
                 <FileSearch className="h-3.5 w-3.5 text-[#635bff]" />
                 <span>OCR Bolletta</span>
@@ -265,8 +275,10 @@ export const Header: React.FC<HeaderProps> = ({
 
               {onOpenTotem && (
                 <button
+                  type="button"
                   onClick={onOpenTotem}
-                  className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#00d4aa]/40 bg-[#00d4aa]/10 hover:bg-[#00d4aa]/20 text-xs font-bold text-[#0a2540] shadow-2xs cursor-pointer transition-colors"
+                  aria-label="Attiva Totem Kiosk per negozio o punto vendita"
+                  className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#00d4aa]/40 bg-[#00d4aa]/10 hover:bg-[#00d4aa]/20 text-xs font-bold text-[#0a2540] shadow-2xs cursor-pointer transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#00d4aa]"
                   title="Attiva Totem Kiosk per il negozio o centro commerciale"
                 >
                   <span>🖥️ Kiosk Point</span>
@@ -283,8 +295,10 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* User Profile & Role Switcher */}
           <button
+            type="button"
             onClick={onOpenLogin}
-            className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 hover:opacity-80 transition-opacity cursor-pointer text-left"
+            aria-label={`Profilo utente attuale: ${currentUser.name}. Clicca per cambiare profilo`}
+            className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 hover:opacity-80 transition-opacity cursor-pointer text-left focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff] rounded-r-lg"
             title="Clicca per cambiare utente o ruolo"
           >
             <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${
@@ -307,8 +321,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="sm:hidden p-2 rounded-lg text-slate-600 hover:text-[#0a2540] hover:bg-slate-100 transition-colors cursor-pointer"
-            aria-label={isMobileMenuOpen ? 'Chiudi menu' : 'Apri menu'}
+            className="sm:hidden p-2 rounded-lg text-slate-600 hover:text-[#0a2540] hover:bg-slate-100 transition-colors cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
+            aria-label={isMobileMenuOpen ? 'Chiudi menu navigazione' : 'Apri menu navigazione'}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -316,31 +330,37 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Desktop/Tablet Navigation Tabs */}
-      <div className="hidden sm:flex max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto gap-6 text-sm">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer -mb-px ${
-                isActive
-                  ? `${isCustomer ? 'border-emerald-600 text-emerald-700' : 'border-[#635bff] text-[#635bff]'}`
-                  : 'border-transparent text-[#425466] hover:text-[#0a2540] hover:border-slate-300'
-              }`}
-            >
-              <Icon className={`h-4 w-4 ${isActive ? (isCustomer ? 'text-emerald-600' : 'text-[#635bff]') : 'text-slate-400'}`} strokeWidth={1.75} />
-              <span>{item.label}</span>
-              {item.badge !== undefined && (
-                <span className="px-1.5 py-0.5 text-[11px] font-bold rounded-full bg-[#635bff] text-white">
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      <nav aria-label="Navigazione principale" className="hidden sm:block border-t border-slate-100/80">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto scroll-smooth">
+          <div role="tablist" className="flex items-center gap-4 md:gap-5 lg:gap-6 text-sm min-w-max">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer -mb-px focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff] ${
+                    isActive
+                      ? `${isCustomer ? 'border-emerald-600 text-emerald-700' : 'border-[#635bff] text-[#635bff]'}`
+                      : 'border-transparent text-[#425466] hover:text-[#0a2540] hover:border-slate-300'
+                  }`}
+                >
+                  <Icon className={`h-4 w-4 ${isActive ? (isCustomer ? 'text-emerald-600' : 'text-[#635bff]') : 'text-slate-400'}`} strokeWidth={1.75} />
+                  <span>{item.label}</span>
+                  {item.badge !== undefined && (
+                    <span className="px-1.5 py-0.5 text-[11px] font-bold rounded-full bg-[#635bff] text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
 
       {/* Mobile Drawer / Full Navigation Sheet */}
       {isMobileMenuOpen && (

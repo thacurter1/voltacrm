@@ -141,8 +141,10 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               </h3>
             </div>
             <button
+              type="button"
               onClick={() => setShowGuide(false)}
-              className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+              aria-label="Chiudi guida rapida anagrafica clienti"
+              className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff] rounded px-1"
             >
               ✕ Chiudi
             </button>
@@ -150,9 +152,11 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             {/* Card 1: Modale Diretto */}
-            <div 
+            <button 
+              type="button"
               onClick={() => setIsAddCustomerModalOpen(true)}
-              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1"
+              aria-label="Inserimento diretto cliente: apri modulo"
+              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1 text-left w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
@@ -161,18 +165,20 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#635bff] transition-colors" />
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 font-normal">
                 Compila i dati anagrafici, associa POD/PDR e attiva il mandato di brokeraggio.
               </p>
               <span className="text-[10px] font-bold text-[#635bff] inline-block pt-1">Apri modulo →</span>
-            </div>
+            </button>
 
             {/* Card 2: OCR Bolletta */}
-            <div 
+            <button 
+              type="button"
               onClick={() => {
                 if (onOpenBillOcr) onOpenBillOcr();
               }}
-              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1"
+              aria-label="Scanner OCR Bolletta: avvia riconoscimento automatico da fattura"
+              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1 text-left w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
@@ -181,18 +187,20 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#635bff] transition-colors" />
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 font-normal">
                 Carica PDF/foto della bolletta: l'AI estrae intestatario, POD/PDR, spesa e crea il cliente.
               </p>
               <span className="text-[10px] font-bold text-[#635bff] inline-block pt-1">Avvia OCR →</span>
-            </div>
+            </button>
 
             {/* Card 3: Lead Conversion */}
-            <div 
+            <button 
+              type="button"
               onClick={() => {
                 if (onNavigateToLeads) onNavigateToLeads();
               }}
-              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1"
+              aria-label="Conversione Lead: vai alla lista contatti telemarketing"
+              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1 text-left w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500"
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
@@ -201,16 +209,18 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-emerald-600 transition-colors" />
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 font-normal">
                 Dai contatti telemarketing/campagne: clicca "Converti in Cliente" sul lead firmato.
               </p>
               <span className="text-[10px] font-bold text-emerald-700 inline-block pt-1">Vai ai Lead →</span>
-            </div>
+            </button>
 
             {/* Card 4: Import Massivo */}
-            <div 
+            <button 
+              type="button"
               onClick={() => setIsImportModalOpen(true)}
-              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1"
+              aria-label="Import Massivo CSV: carica file anagrafiche"
+              className="p-3 bg-white rounded-xl border border-indigo-100/80 hover:border-[#635bff]/50 hover:shadow-xs transition-all cursor-pointer group space-y-1 text-left w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500"
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
@@ -219,11 +229,11 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-sky-600 transition-colors" />
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 font-normal">
                 Carica elenchi Excel/CSV: importa centinaia di anagrafiche e punti con un solo click.
               </p>
               <span className="text-[10px] font-bold text-sky-700 inline-block pt-1">Importa file →</span>
-            </div>
+            </button>
           </div>
         </div>
       )}
@@ -235,6 +245,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
           <input
             type="text"
             placeholder="Cerca cliente per nome, Codice Fiscale, POD o PDR..."
+            aria-label="Cerca cliente per nome, Codice Fiscale, POD o PDR"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] placeholder-slate-400 focus:outline-none focus:border-[#635bff] focus:bg-white text-xs transition-colors"
@@ -303,8 +314,17 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
             return (
               <div 
                 key={customer.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Scheda cliente: ${customer.name}, Codice Fiscale ${customer.fiscalCode}. Premi Invio per aprire dettagli.`}
                 onClick={() => onSelectCustomer(customer)}
-                className="p-4 sm:p-6 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4 hover:border-[#635bff]/40 hover:shadow-[0_4px_12px_rgba(99,91,255,0.06)] transition-all cursor-pointer group"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectCustomer(customer);
+                  }
+                }}
+                className="p-4 sm:p-6 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4 hover:border-[#635bff]/40 hover:shadow-[0_4px_12px_rgba(99,91,255,0.06)] transition-all cursor-pointer group focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
               >
               {/* Header: Name, CF, Delegation & 4-Month Status */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 border-b border-[#e3e8ee] pb-4">

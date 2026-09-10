@@ -18,7 +18,8 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
 }) => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
-  const [dynamicTotp, setDynamicTotp] = useState(securityValidator.generateCurrentTotp());
+  const userIdentifier = user?.email || user?.id || 'volta_user';
+  const [dynamicTotp, setDynamicTotp] = useState(securityValidator.generateCurrentTotp(userIdentifier));
 
   useEffect(() => {
     if (!isOpen) return;
@@ -26,10 +27,10 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
     setError('');
 
     const interval = setInterval(() => {
-      setDynamicTotp(securityValidator.generateCurrentTotp());
+      setDynamicTotp(securityValidator.generateCurrentTotp(userIdentifier));
     }, 1000);
     return () => clearInterval(interval);
-  }, [isOpen]);
+  }, [isOpen, userIdentifier]);
 
   if (!isOpen || !user) return null;
 
@@ -71,7 +72,7 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
       return;
     }
 
-    const result = securityValidator.verifyTotp(fullCode);
+    const result = securityValidator.verifyTotp(fullCode, userIdentifier);
     if (result.valid) {
       onVerified(user);
       onClose();

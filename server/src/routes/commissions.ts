@@ -10,8 +10,12 @@ import {
   SettleCommissionInput
 } from '../services/commissionService.js';
 import { CommissionStatus, CommissionType } from '../types.js';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
 
 export const commissionRouter = Router();
+
+// Tutte le rotte provvigionali richiedono token JWT valido
+commissionRouter.use(authenticateToken);
 
 // GET /api/commissions/summaries - Riepiloghi aggregati e KPI per agente
 commissionRouter.get('/summaries', (_req: Request, res: Response): void => {
@@ -81,8 +85,8 @@ commissionRouter.post('/generate', (req: Request, res: Response): void => {
   });
 });
 
-// POST /api/commissions/settle - Liquidazione distinte provvigionali
-commissionRouter.post('/settle', (req: Request, res: Response): void => {
+// POST /api/commissions/settle - Liquidazione distinte provvigionali (riservato amministratori)
+commissionRouter.post('/settle', requireRole('admin'), (req: Request, res: Response): void => {
   const body = req.body as SettleCommissionInput;
 
   if (!body.agentId || !body.commissionIds || !Array.isArray(body.commissionIds) || body.commissionIds.length === 0) {

@@ -25,13 +25,46 @@ function request(options, data) {
 async function runTests() {
   console.log('=== TEST SUITE: COMMISSIONS & SETTLEMENT ENGINE ===');
 
-  // Test 1: GET /api/commissions/summaries
-  console.log('\n--- TEST 1: GET /api/commissions/summaries ---');
-  const res1 = await request({
+  // Test 0: Verifica rifiuto chiamate non autenticate (401)
+  console.log('\n--- TEST 0: Chiamata non autenticata (deve fallire 401) ---');
+  const resUnauth = await request({
     hostname: 'localhost',
     port: 5000,
     path: '/api/commissions/summaries',
     method: 'GET'
+  });
+  console.log('Unauth Status:', resUnauth.status);
+  if (resUnauth.status !== 401) {
+    throw new Error(`Previsto 401 Unauthorized, ricevuto ${resUnauth.status}`);
+  }
+
+  // Ottieni token admin via login-operator
+  console.log('\n--- TEST LOGIN: Ottenimento token Admin ---');
+  const loginRes = await request({
+    hostname: 'localhost',
+    port: 5000,
+    path: '/api/auth/login-operator',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }, {
+    email: 'm.riva@voltagroup.it',
+    password: 'admin123',
+    totpCode: '123456'
+  });
+
+  const adminToken = loginRes.data && loginRes.data.token;
+  if (!adminToken) {
+    throw new Error('Impossibile ottenere token admin per i test: ' + JSON.stringify(loginRes.data || loginRes.raw));
+  }
+
+  // Test 1: GET /api/commissions/summaries (autenticato)
+  console.log('\n--- TEST 1: GET /api/commissions/summaries (autenticato) ---');
+  const res1 = await request({
+    hostname: 'localhost',
+    port: 5000,
+    path: '/api/commissions/summaries',
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${adminToken}` }
   });
   console.log('T1 Status:', res1.status);
   if (res1.status !== 200 || !res1.data || !res1.data.success || !Array.isArray(res1.data.summaries)) {
@@ -46,7 +79,8 @@ async function runTests() {
     hostname: 'localhost',
     port: 5000,
     path: '/api/commissions',
-    method: 'GET'
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${adminToken}` }
   });
   console.log('T2 Status:', res2.status);
   if (res2.status !== 200 || !res2.data || !res2.data.success || !Array.isArray(res2.data.commissions)) {
@@ -61,7 +95,10 @@ async function runTests() {
     port: 5000,
     path: '/api/commissions/generate',
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    }
   }, {
     agentId: 'user-op-2',
     agentName: 'Chiara Bianchi (Consulente Senior)',
@@ -78,7 +115,7 @@ async function runTests() {
   }
   console.log('Provvigioni generate:', res3.data.records.length, 'Importo totale:', res3.data.totalEur, '€');
 
-  // Test 4: POST /api/commissions/settle (liquidazione)
+  // Test 4: POST /api/commissions/settle (liquidazione con token admin)
   console.log('\n--- TEST 4: POST /api/commissions/settle ---');
   // Trova provvigioni in stato accrued per Chiara
   const chiaraAccrued = res2.data.commissions.filter(c => c.agentId === 'user-op-2' && c.status === 'accrued');
@@ -89,7 +126,10 @@ async function runTests() {
     port: 5000,
     path: '/api/commissions/settle',
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    }
   }, {
     agentId: 'user-op-2',
     commissionIds: idsToSettle,

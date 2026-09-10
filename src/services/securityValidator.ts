@@ -96,25 +96,31 @@ export const securityValidator = {
   },
 
   /**
-   * Generatore & Validatore Dinamico TOTP (RFC 6238)
+   * Generatore Dinamico TOTP con isolamento per account utente (previene codice globale identico)
    * Calcola il token a 6 cifre per la finestra temporale corrente di 30 secondi.
    */
-  generateCurrentTotp(): { code: string; secondsRemaining: number } {
+  generateCurrentTotp(userId = 'volta_user'): { code: string; secondsRemaining: number } {
     const epochSeconds = Math.floor(Date.now() / 1000);
     const windowStep = Math.floor(epochSeconds / 30);
     const secondsRemaining = 30 - (epochSeconds % 30);
 
-    // Algoritmo deterministico basato su hash SHA-256 della finestra temporale
-    const codeNumber = ((windowStep * 1103515245 + 12345) & 0x7fffffff) % 1000000;
+    // Hashing non lineare con salt e identità utente
+    let hash = 0x811c9dc5;
+    const input = `${userId}:${windowStep}:VOLTA_2FA_SALT_2026`;
+    for (let i = 0; i < input.length; i++) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    const codeNumber = Math.abs(hash) % 1000000;
     const code = codeNumber.toString().padStart(6, '0');
 
     return { code, secondsRemaining };
   },
 
   /**
-   * Validazione con Anti-Replay e Rate Limiting
+   * Validazione con Anti-Replay e Rate Limiting vincolata al profilo utente
    */
-  verifyTotp(inputCode: string): { valid: boolean; error?: string } {
+  verifyTotp(inputCode: string, userId = 'volta_user'): { valid: boolean; error?: string } {
     const now = Date.now();
 
     // 1. Controllo Lockout da Rate Limiting
@@ -126,12 +132,17 @@ export const securityValidator = {
       };
     }
 
-    const { code } = this.generateCurrentTotp();
+    const { code } = this.generateCurrentTotp(userId);
     
-    // Supporto anche alla finestra temporale precedente (tolleranza clock skew 30s)
+    // Supporto alla finestra temporale precedente (tolleranza clock skew 30s)
     const prevWindowStep = Math.floor((Math.floor(now / 1000) - 30) / 30);
-    const prevCodeNumber = ((prevWindowStep * 1103515245 + 12345) & 0x7fffffff) % 1000000;
-    const prevCode = prevCodeNumber.toString().padStart(6, '0');
+    let prevHash = 0x811c9dc5;
+    const prevInput = `${userId}:${prevWindowStep}:VOLTA_2FA_SALT_2026`;
+    for (let i = 0; i < prevInput.length; i++) {
+      prevHash ^= prevInput.charCodeAt(i);
+      prevHash = Math.imul(prevHash, 0x01000193);
+    }
+    const prevCode = (Math.abs(prevHash) % 1000000).toString().padStart(6, '0');
 
     const isValidMatch = inputCode === code || inputCode === prevCode;
 

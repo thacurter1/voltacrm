@@ -102,17 +102,21 @@ function UnifiedApp() {
     });
   }, []);
 
-  // Persistenza automatica nel database locale
+  // Persistenza automatica con debouncing nel database locale
   useEffect(() => {
-    dbService.save({
-      customers,
-      leads,
-      appointments,
-      bills,
-      marketIndex,
-      currentUser,
-      securityLogs,
-    });
+    const timer = setTimeout(() => {
+      dbService.save({
+        customers,
+        leads,
+        appointments,
+        bills,
+        marketIndex,
+        currentUser,
+        securityLogs,
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [customers, leads, appointments, bills, marketIndex, currentUser, securityLogs]);
 
   // Toasts
@@ -218,6 +222,9 @@ function UnifiedApp() {
   // Lead handlers
   const handleAddLead = (newLead: Lead) => {
     setLeads(prev => [newLead, ...prev]);
+    api.leads.create(newLead).catch(err => {
+      console.warn('[App] Sincronizzazione lead su backend REST:', err);
+    });
     addToast('Nuovo Lead Registrato', `${newLead.name} è stato registrato nel database da ${newLead.source}.`, 'success');
   };
 
@@ -254,60 +261,28 @@ function UnifiedApp() {
     setAppointments(prev => prev.map(a => a.id === appId ? { ...a, status } : a));
   };
 
-  // Conversione vendite in Cliente CRM attivo
+  // Conversione vendite in Cliente CRM attivo (richiede dati anagrafici e POD/PDR reali)
   const handleConvertToCustomer = (app: Appointment) => {
     const lead = leads.find(l => l.id === app.leadId);
-    const today = new Date();
-    const nextAudit = new Date();
-    nextAudit.setDate(today.getDate() + 120);
-
-    const newCustomer: Customer = {
-      id: `cust-${Date.now()}`,
-      name: app.customerName,
-      fiscalCode: 'CF' + Math.random().toString(36).substring(2, 10).toUpperCase(),
-      phone: app.phone,
-      email: lead?.email || 'cliente@energia.it',
-      city: app.city,
-      contractStartDate: today.toISOString().split('T')[0],
-      lastSwitchAuditDate: today.toISOString().split('T')[0],
-      nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
-      accountManager: app.agentName,
-      hasBrokerageMandate: true,
-      utilityPoints: [
-        {
-          id: `util-${Date.now()}-luce`,
-          type: 'luce',
-          podOrPdr: `IT001E${Math.floor(10000000 + Math.random() * 90000000)}`,
-          annualConsumption: lead?.estimatedConsumptionKwh || 3200,
-          powerKw: 3.0,
-          currentSupplier: 'A2A Energia',
-          currentOfferName: 'A2A Easy Luce Index',
-          currentTariffType: 'indexed',
-          currentUnitCost: 0.1265,
-          currentFixedFeeYear: 114.0,
-        },
-        {
-          id: `util-${Date.now()}-gas`,
-          type: 'gas',
-          podOrPdr: `0${Math.floor(1000000000000 + Math.random() * 900000000000)}`,
-          annualConsumption: lead?.estimatedConsumptionSmc || 900,
-          currentSupplier: 'Eni Plenitude',
-          currentOfferName: 'Trend Casa Gas',
-          currentTariffType: 'indexed',
-          currentUnitCost: 0.442,
-          currentFixedFeeYear: 108.0,
-        }
-      ]
-    };
-
-    setCustomers(prev => [newCustomer, ...prev]);
-    setAudits(runQuarterlyAudit([newCustomer, ...customers]));
-    
-    setAppointments(prev => prev.map(a => a.id === app.id ? { ...a, status: 'completed' as AppointmentStatus } : a));
     if (lead) {
-      handleUpdateLeadStatus(lead.id, 'contract_signed', 'Contratto sottoscritto con successo');
+      setConvertingLead(lead);
+    } else {
+      const tempLead: Lead = {
+        id: `lead-app-${app.id}`,
+        name: app.customerName,
+        phone: app.phone,
+        email: `cliente.${app.phone.replace(/\D/g, '')}@energia.it`,
+        city: app.city,
+        source: 'landing_page',
+        status: 'contract_signed',
+        notes: app.notes || 'Contratto perfezionato da call center.',
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setConvertingLead(tempLead);
     }
-    addToast('Contratto Attivato', `${newCustomer.name} è ora cliente attivo con audit quadrimestrale programmato.`, 'success');
+
+    setAppointments(prev => prev.map(a => a.id === app.id ? { ...a, status: 'completed' as AppointmentStatus } : a));
+    addToast('Perfeziona Anagrafica', `Compila i dati fiscali e POD/PDR effettivi per ${app.customerName}.`, 'info');
   };
 
   // Importazione da OCR Bolletta
@@ -799,12 +774,12 @@ function UnifiedApp() {
         onClose={() => setSignatureAudit(null)}
         audit={signatureAudit}
         customerPhone={customers.find(c => c.id === signatureAudit?.customerId)?.phone}
-        onSigned={(auditId, signatureType) => {
+        onSigned={(auditId, signatureType, documentHash) => {
           handleAuditSwitched(auditId);
           recordSecurityLog(
             'switch_signed_otp', 
             'safe', 
-            `Mandato di switch perfezionato digitalmente tramite ${signatureType === 'canvas' ? 'firma biometrica su schermo' : 'codice OTP SMS/WhatsApp'} per audit ${auditId}`
+            `Mandato di switch perfezionato digitalmente tramite ${signatureType === 'canvas' ? 'firma biometrica su schermo' : 'codice OTP SMS/WhatsApp'} per audit ${auditId} [Sigillo: ${documentHash || 'N/A'}]`
           );
         }}
       />

@@ -93,24 +93,25 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
       const cols = line.split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
       if (cols.length < 2) continue;
 
-      const name = cols[0] || `Cliente ${i}`;
-      const fiscalCode = cols[1] || `CF${Math.floor(10000000 + Math.random() * 90000000)}`;
-      const phone = cols[2] || '+39 ';
-      const email = cols[3] || `${name.toLowerCase().replace(/\s+/g, '.')}@email.it`;
-      const city = cols[4] || 'Milano';
+      const name = cols[0] ? cols[0].trim() : '';
+      const fiscalCode = cols[1] ? cols[1].trim().toUpperCase() : '';
+      const phone = cols[2] ? cols[2].trim() : '';
+      const email = cols[3] ? cols[3].trim() : (name ? `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@email.it` : '');
+      const city = cols[4] ? cols[4].trim() : 'Milano';
       const typeRaw = (cols[5] || 'luce').toLowerCase();
       const utilityType: 'luce' | 'gas' = typeRaw.includes('gas') ? 'gas' : 'luce';
-      const podOrPdr = cols[6] || (utilityType === 'luce' ? `IT001E${Math.floor(10000000 + Math.random() * 90000000)}` : Math.floor(10000000000000 + Math.random() * 90000000000000).toString());
+      const podOrPdr = cols[6] ? cols[6].trim().toUpperCase() : '';
       const annualConsumption = Number(cols[7]) || (utilityType === 'luce' ? 3200 : 950);
-      const supplier = cols[8] || (utilityType === 'luce' ? 'Enel Energia' : 'Eni Plenitude');
+      const supplier = cols[8] ? cols[8].trim() : (utilityType === 'luce' ? 'Enel Energia' : 'Eni Plenitude');
       const unitCost = Number(cols[9]) || (utilityType === 'luce' ? 0.165 : 0.680);
 
       const errors: string[] = [];
-      if (!name || name.length < 3) errors.push('Nome non valido');
-      if (!fiscalCode || fiscalCode.length < 6) errors.push('Codice Fiscale incompleto');
+      if (!name || name.length < 3) errors.push('Nome o Ragione Sociale non valido (min 3 caratteri)');
+      if (!fiscalCode || fiscalCode.length < 11) errors.push('Codice Fiscale o P.IVA mancante o incompleto (min 11 caratteri)');
+      if (!podOrPdr || podOrPdr.length < 10) errors.push(`Codice ${utilityType === 'luce' ? 'POD' : 'PDR'} mancante o incompleto`);
 
       rows.push({
-        name,
+        name: name || `Cliente Riga ${i}`,
         fiscalCode,
         phone,
         email,

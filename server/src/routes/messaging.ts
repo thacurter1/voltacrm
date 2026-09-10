@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { sendOtp, verifyOtp, sendOfferWhatsApp } from '../services/messagingService.js';
+import { otpLimiter } from '../middleware/rateLimiter.js';
 
 export const messagingRouter = Router();
 
 // POST /api/messaging/send-otp
-messagingRouter.post('/send-otp', async (req: Request, res: Response): Promise<void> => {
+messagingRouter.post('/send-otp', otpLimiter, async (req: Request, res: Response): Promise<void> => {
   const { phone, channel, reason } = req.body;
 
   if (!phone || typeof phone !== 'string' || phone.trim().length < 8) {
@@ -47,7 +48,7 @@ messagingRouter.post('/verify-otp', (req: Request, res: Response): void => {
 });
 
 // POST /api/messaging/send-offer-whatsapp
-messagingRouter.post('/send-offer-whatsapp', async (req: Request, res: Response): Promise<void> => {
+messagingRouter.post('/send-offer-whatsapp', otpLimiter, async (req: Request, res: Response): Promise<void> => {
   const { phone, customerName, savingsEur, utilityType, offerName } = req.body;
 
   if (!phone || !customerName || savingsEur === undefined || !utilityType) {

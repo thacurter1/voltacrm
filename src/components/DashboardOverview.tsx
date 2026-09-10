@@ -103,10 +103,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* Stripe Metric Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {stats.map((stat, i) => (
-          <div
+          <button
+            type="button"
             key={i}
             onClick={stat.action}
-            className={`p-5 rounded-xl border transition-all cursor-pointer bg-white ${
+            aria-label={`${stat.title}: ${stat.value}. Clicca per aprire la sezione dedicata.`}
+            className={`p-5 rounded-xl border transition-all cursor-pointer bg-white text-left w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff] ${
               stat.highlight
                 ? 'border-[#635bff]/40 shadow-[0_4px_12px_rgba(99,91,255,0.08)] ring-1 ring-[#635bff]/20'
                 : 'border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-slate-300 hover:shadow-[0_4px_10px_rgba(0,0,0,0.06)]'
@@ -129,7 +131,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </span>
               <span className="text-[#425466] text-[11px]">{stat.subtext}</span>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 

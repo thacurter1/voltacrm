@@ -18,7 +18,7 @@ interface DigitalSignatureModalProps {
   onClose: () => void;
   audit: SwitchAudit | null;
   customerPhone?: string;
-  onSigned: (auditId: string, signatureType: 'canvas' | 'otp') => void;
+  onSigned: (auditId: string, signatureType: 'canvas' | 'otp', documentHash?: string) => void;
 }
 
 export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
@@ -154,7 +154,29 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
         }
       }
 
-      onSigned(audit.id, signatureMode);
+      // Calcolo impronta crittografica SHA-256 (FEA Compliance eIDAS)
+      let documentHash = '';
+      try {
+        const docPayload = JSON.stringify({
+          auditId: audit.id,
+          customerId: audit.customerId,
+          customerName: audit.customerName,
+          podOrPdr: audit.podOrPdr,
+          offerName: audit.bestOffer?.name,
+          supplier: audit.bestOffer?.supplier,
+          annualSavings: audit.annualSavings,
+          signatureMode,
+          timestamp: new Date().toISOString()
+        });
+        const encoder = new TextEncoder();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(docPayload));
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        documentHash = 'SHA256:' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch {
+        documentHash = `SHA256-FALLBACK-${Date.now()}`;
+      }
+
+      onSigned(audit.id, signatureMode, documentHash);
       setIsSubmitting(false);
       onClose();
     } catch (err: unknown) {

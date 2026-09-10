@@ -119,15 +119,17 @@ export function calculateAnnualCost(
     }
   }
 
+  const safeConsumption = Math.max(0, utility.annualConsumption || 0);
+
   // Costo materia prima + quota fissa di commercializzazione (CCV)
-  const rawCost = (utility.annualConsumption * effectiveUnitCost) + fixedAnnualFee;
+  const rawCost = (safeConsumption * effectiveUnitCost) + fixedAnnualFee;
   
   // Stima oneri di sistema, trasporto e imposte (circa 35% del totale spesa nel mercato italiano)
   const estimatedTaxesAndNetwork = utility.type === 'luce' 
-    ? (utility.annualConsumption * 0.075) + 60 
-    : (utility.annualConsumption * 0.22) + 75;
+    ? (safeConsumption * 0.075) + 60 
+    : (safeConsumption * 0.22) + 75;
 
-  return Math.round((rawCost + estimatedTaxesAndNetwork) * 100) / 100;
+  return Math.max(0, Math.round((rawCost + estimatedTaxesAndNetwork) * 100) / 100);
 }
 
 // Analisi comparativa per un punto fornitura rispetto al mercato
@@ -145,6 +147,27 @@ export function findBestMarketOffer(
   );
 
   const eligibleOffers = offers.filter(o => o.energyType === utility.type);
+
+  if (eligibleOffers.length === 0) {
+    return {
+      bestOffer: {
+        id: `off-fallback-${utility.type}`,
+        supplier: utility.currentSupplier || 'Fornitore di Riferimento',
+        name: utility.currentOfferName || 'Tariffa Base Mercato',
+        energyType: utility.type,
+        pricingType: 'fixed',
+        unitPriceOrSpread: utility.currentUnitCost,
+        fixedAnnualFee: utility.currentFixedFeeYear,
+        durationMonths: 12,
+        greenCertified: false,
+        tag: 'Broker Choice',
+      },
+      currentCost,
+      bestCost: currentCost,
+      savings: 0,
+      savingsPercent: 0,
+    };
+  }
 
   let bestOffer = eligibleOffers[0];
   let bestCost = Infinity;

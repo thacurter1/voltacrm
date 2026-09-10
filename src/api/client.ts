@@ -72,7 +72,7 @@ export const api = {
       }
     },
 
-    async loginCustomer(identifier: string, password = 'customer123') {
+    async loginCustomer(identifier: string, password: string) {
       try {
         const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-customer', {
           method: 'POST',
@@ -498,12 +498,11 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err: unknown) {
-        console.warn('[API Client] Errore verifyOtp backend, fallback locale:', err);
-        const isValid = payload.code === '849201' || payload.code.length === 6;
+        console.warn('[API Client] Errore verifyOtp backend:', err);
         return {
-          success: isValid,
-          verified: isValid,
-          message: isValid ? 'Codice OTP verificato con successo.' : 'Codice OTP non valido.'
+          success: false,
+          verified: false,
+          message: err instanceof Error ? err.message : 'Verifica OTP non riuscita. Riprova.'
         };
       }
     },
@@ -535,6 +534,7 @@ export const api = {
   commissions: {
     async getSummaries(): Promise<AgentCommissionSummary[]> {
       try {
+        await api.auth.ensureToken();
         const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
         return data.summaries;
       } catch (err) {
@@ -572,6 +572,7 @@ export const api = {
 
     async getAll(filters?: { agentId?: string; status?: string; period?: string; type?: string }): Promise<CommissionRecord[]> {
       try {
+        await api.auth.ensureToken();
         const queryParams = new URLSearchParams();
         if (filters?.agentId) queryParams.append('agentId', filters.agentId);
         if (filters?.status) queryParams.append('status', filters.status);
@@ -589,6 +590,7 @@ export const api = {
 
     async getBatches(agentId?: string): Promise<SettlementBatch[]> {
       try {
+        await api.auth.ensureToken();
         const qs = agentId ? `?agentId=${encodeURIComponent(agentId)}` : '';
         const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
         return data.batches;
@@ -610,6 +612,7 @@ export const api = {
       isDualFuel?: boolean;
     }): Promise<{ records: CommissionRecord[]; totalEur: number }> {
       try {
+        await api.auth.ensureToken();
         const data = await request<{ success: boolean; records: CommissionRecord[]; totalEur: number }>('/commissions/generate', {
           method: 'POST',
           body: JSON.stringify(payload)
@@ -627,6 +630,7 @@ export const api = {
       paymentReference?: string;
       notes?: string;
     }): Promise<{ batch: SettlementBatch; updatedCount: number }> {
+      await api.auth.ensureToken();
       const data = await request<{ success: boolean; batch: SettlementBatch; updatedCount: number }>('/commissions/settle', {
         method: 'POST',
         body: JSON.stringify(payload)

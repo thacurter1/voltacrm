@@ -22,6 +22,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Security & Middlewares
+// Trust first proxy (Reverse proxy come Nginx, Cloud Run, Vercel, AWS ALB)
+app.set('trust proxy', 1);
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
@@ -34,7 +37,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Client-Version']
 }));
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(apiLimiter);
 
 // Request logger
@@ -99,7 +103,11 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction): void => {
     return;
   }
   console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({ success: false, message: err.message || 'Si è verificato un errore interno nel server.' });
+  const isProd = process.env.NODE_ENV === 'production';
+  const message = isProd 
+    ? 'Si è verificato un errore interno nel server.' 
+    : (err.message || 'Si è verificato un errore interno nel server.');
+  res.status(err.status || 500).json({ success: false, message });
 });
 
 initDataStore().catch(err => console.warn('[Startup] Warning durante inizializzazione DB:', err.message));

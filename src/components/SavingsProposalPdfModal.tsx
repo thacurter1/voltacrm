@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { 
   Printer, 
   Send, 
@@ -33,8 +33,11 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
 
   if (!isOpen || !audit) return null;
 
-  const today = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
-  const protocolNumber = `VOLTA-${audit.customerId.slice(-4).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+  const today = useMemo(() => new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' }), []);
+  const protocolNumber = useMemo(() => {
+    const hashSeed = audit.id.split('-').pop() || '0000';
+    return `VOLTA-${audit.customerId.slice(-4).toUpperCase()}-${hashSeed.slice(-4).toUpperCase()}`;
+  }, [audit.id, audit.customerId]);
 
   const handlePrint = () => {
     window.print();
@@ -78,7 +81,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
             <a
               href={whatsappUrl}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
             >
               <Send className="h-3.5 w-3.5" />
@@ -105,7 +108,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
         </div>
 
         {/* PRINTABLE DOCUMENT BODY (A4 formatted) */}
-        <div ref={printRef} className="p-8 sm:p-10 overflow-y-auto space-y-6 text-[#0a2540] bg-white print:p-0 print:m-0">
+        <div id="printable-proposal" ref={printRef} className="p-8 sm:p-10 overflow-y-auto space-y-6 text-[#0a2540] bg-white print:p-0 print:m-0">
           
           {/* Document Header */}
           <div className="flex justify-between items-start border-b-2 border-[#0a2540] pb-6">

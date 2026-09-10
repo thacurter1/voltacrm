@@ -75,3 +75,39 @@
   color: #4f46e5;
   border: 1px solid #c7d2fe;
 }
+
+/* Print optimization for Proposal PDF */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Hide all background app components during print */
+  header, nav, aside, footer, .print\:hidden, [role="tablist"] {
+    display: none !important;
+  }
+
+  /* Ensure printable proposal takes full page without clipping */
+  #printable-proposal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  /* Prevent awkward page breaks inside cards and tables */
+  .border, tr {
+    break-inside: avoid;
+  }
+}

@@ -1,11 +1,12 @@
-﻿import { Router, Request, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { analyzeBillWithGemini } from '../services/geminiOcrService.js';
 import { apiLimiter } from '../middleware/rateLimiter.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 export const ocrRouter = Router();
 
 // POST /api/ocr/analyze-bill
-ocrRouter.post('/analyze-bill', apiLimiter, async (req: Request, res: Response): Promise<void> => {
+ocrRouter.post('/analyze-bill', apiLimiter, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   const { fileName, mimeType, base64Data } = req.body;
 
   if (!base64Data) {

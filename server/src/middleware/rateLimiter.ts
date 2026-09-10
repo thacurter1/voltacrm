@@ -17,3 +17,11 @@ export const apiLimiter = rateLimit({
   max: 100,
   message: { success: false, message: 'Limite di richieste superato.' }
 });
+
+export const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: { success: false, message: 'Troppe richieste di invio codice OTP o notifiche. Riprova tra 15 minuti.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

@@ -3,36 +3,21 @@
  * Standard NIST SP 800-38D compliant encryption for energy identifiers (POD/PDR) and Fiscal Codes.
  */
 
-const ENCRYPTION_SALT = new Uint8Array([78, 142, 203, 44, 91, 12, 178, 55, 99, 10, 240, 18, 65, 87, 190, 33]);
-const SECRET_PASSPHRASE = 'VOLTA_ENERGY_AES256_LOCAL_MASTER_KEY_V1';
+// Chiave di sessione effimera generata dinamicamente in memoria RAM (nessun segreto cablato nel client bundle)
+let sessionKeyPromise: Promise<CryptoKey> | null = null;
 
-let cachedKey: CryptoKey | null = null;
-
-async function getDerivedKey(): Promise<CryptoKey> {
-  if (cachedKey) return cachedKey;
-  const enc = new TextEncoder();
-  const keyMaterial = await window.crypto.subtle.importKey(
-    'raw',
-    enc.encode(SECRET_PASSPHRASE),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveBits', 'deriveKey']
-  );
-
-  cachedKey = await window.crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: ENCRYPTION_SALT,
-      iterations: 100000,
-      hash: 'SHA-256'
-    },
-    keyMaterial,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
-
-  return cachedKey;
+async function getSessionKey(): Promise<CryptoKey> {
+  if (typeof window === 'undefined' || !window.crypto?.subtle) {
+    throw new Error('WebCrypto API non disponibile in questo ambiente');
+  }
+  if (!sessionKeyPromise) {
+    sessionKeyPromise = window.crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      false, // non esportabile
+      ['encrypt', 'decrypt']
+    );
+  }
+  return sessionKeyPromise;
 }
 
 export const cryptoService = {
@@ -41,7 +26,7 @@ export const cryptoService = {
    */
   async encrypt(data: string): Promise<string> {
     try {
-      const key = await getDerivedKey();
+      const key = await getSessionKey();
       const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV
       const enc = new TextEncoder();
       const encodedData = enc.encode(data);
@@ -69,7 +54,7 @@ export const cryptoService = {
    */
   async decrypt(encryptedBase64: string): Promise<string> {
     try {
-      const key = await getDerivedKey();
+      const key = await getSessionKey();
       const rawString = atob(encryptedBase64);
       const combined = new Uint8Array(rawString.length);
       for (let i = 0; i < rawString.length; i++) {

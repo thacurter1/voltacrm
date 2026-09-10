@@ -17,6 +17,11 @@ create table if not exists public.profiles (
   fiscal_code text,
   assigned_broker_id uuid references public.profiles(id),
   avatar_initials text,
+  contract_start_date date default current_date,
+  last_switch_audit_date date default current_date,
+  next_switch_audit_date date default (current_date + interval '120 days'),
+  has_brokerage_mandate boolean default true not null,
+  deleted_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -70,7 +75,9 @@ create table if not exists public.leads (
   email text,
   city text default 'Milano',
   source text not null check (source in ('totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page')) default 'totem_kiosk',
-  status text not null check (status in ('new', 'call_center_queue', 'contacted', 'appointment_booked', 'in_negotiation', 'won', 'lost')) default 'new',
+  status text not null check (status in ('new', 'call_center_queue', 'contacted', 'appointment_booked', 'in_negotiation', 'contract_signed', 'unreachable', 'won', 'lost')) default 'new',
+  assigned_call_center_agent text,
+  appointment_id text,
   notes text,
   estimated_consumption_kwh numeric default 2800,
   estimated_consumption_smc numeric default 1000,
@@ -94,6 +101,7 @@ create table if not exists public.signature_logs (
 -- 7. Tabella Notifiche Operative di Sistema & Scadenze 120 Giorni
 create table if not exists public.notifications (
   id text primary key,
+  user_id text,
   type text not null check (type in ('totem_lead', 'switch_due', 'bill_uploaded', 'signature_completed', 'security_alert', 'market_trend')),
   title text not null,
   message text not null,
@@ -285,12 +293,15 @@ create policy "Lettura log audit solo per operatori e admin"
   to authenticated
   using (public.is_operator_or_admin());
 
--- Gli utenti autenticati possono solo inserire eventi di sicurezza (nessuna modifica o cancellazione ammessa)
+-- Gli utenti autenticati possono solo inserire eventi di sicurezza associati alla propria identità
 drop policy if exists "Scrittura log audit consentita" on public.security_logs;
 create policy "Scrittura log audit consentita"
   on public.security_logs for insert
   to authenticated
-  with check (true);
+  with check (
+    user_email = (select email from auth.users where id = auth.uid()) or
+    public.is_operator_or_admin()
+  );
 
 -- Divieto assoluto di UPDATE e DELETE su security_logs per garantire integrità legale GDPR
 revoke update, delete on public.security_logs from public, authenticated, anon;
@@ -316,20 +327,32 @@ create policy "Operatori gestiscono leads" on public.leads for all to authentica
 drop policy if exists "Inserimento lead aperto per kiosk" on public.leads;
 create policy "Inserimento lead aperto per kiosk" on public.leads for insert to anon, authenticated with check (true);
 
--- Policy Signature Logs: Immutabili (solo inserimento e lettura per operatori/clienti interessati)
+-- Policy Signature Logs: Immutabili (lettura per operatori o per il cliente intestatario del contratto)
 drop policy if exists "Visualizzazione log di firma" on public.signature_logs;
-create policy "Visualizzazione log di firma" on public.signature_logs for select to authenticated using (public.is_operator_or_admin());
+create policy "Visualizzazione log di firma" on public.signature_logs for select to authenticated 
+  using (public.is_operator_or_admin() or customer_id = auth.uid()::text);
 
 drop policy if exists "Inserimento log di firma" on public.signature_logs;
 create policy "Inserimento log di firma" on public.signature_logs for insert to authenticated with check (true);
 revoke update, delete on public.signature_logs from public, authenticated, anon;
 
--- Policy Notifiche
+-- Policy Notifiche: Accesso isolato per proprietario o per ruolo autorizzato (previene data leakage)
 drop policy if exists "Visualizzazione notifiche per ruolo" on public.notifications;
-create policy "Visualizzazione notifiche per ruolo" on public.notifications for select to authenticated using (true);
+drop policy if exists "Visualizzazione notifiche per ruolo o proprietario" on public.notifications;
+create policy "Visualizzazione notifiche per ruolo o proprietario" on public.notifications for select to authenticated 
+  using (
+    user_id = auth.uid()::text or 
+    target_role = 'all' or 
+    (target_role in ('admin', 'call_center', 'operator') and public.is_operator_or_admin())
+  );
 
 drop policy if exists "Aggiornamento stato lettura notifiche" on public.notifications;
-create policy "Aggiornamento stato lettura notifiche" on public.notifications for update to authenticated using (true);
+drop policy if exists "Aggiornamento stato lettura notifiche proprietario" on public.notifications;
+create policy "Aggiornamento stato lettura notifiche proprietario" on public.notifications for update to authenticated 
+  using (
+    user_id = auth.uid()::text or 
+    public.is_operator_or_admin()
+  );
 
 grant select, insert, update on public.leads to authenticated, anon;
 grant select, insert on public.signature_logs to authenticated;
@@ -461,5 +484,18 @@ create policy "Aggiornamento indici riservato a backoffice e cronjob"
 
 grant select on public.market_indices to anon, authenticated;
 grant insert, update on public.market_indices to authenticated;
+
+-- ==============================================================================
+-- 11. INDICI PER QUERY DI PERFORMANCE E FILTRI FREQUENTI
+-- ==============================================================================
+create index if not exists idx_utility_points_profile_id on public.utility_points (profile_id);
+create index if not exists idx_utility_points_pod_or_pdr on public.utility_points (pod_or_pdr);
+create index if not exists idx_bills_profile_id on public.bills (profile_id);
+create index if not exists idx_bills_status on public.bills (status);
+create index if not exists idx_leads_status on public.leads (status);
+create index if not exists idx_profiles_role on public.profiles (role);
+create index if not exists idx_profiles_fiscal_code on public.profiles (fiscal_code);
+create index if not exists idx_notifications_user_id on public.notifications (user_id);
+create index if not exists idx_notifications_target_role on public.notifications (target_role);
 
 
