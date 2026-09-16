@@ -31,13 +31,14 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen || !audit) return null;
-
   const today = useMemo(() => new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' }), []);
   const protocolNumber = useMemo(() => {
+    if (!audit) return '';
     const hashSeed = audit.id.split('-').pop() || '0000';
     return `VOLTA-${audit.customerId.slice(-4).toUpperCase()}-${hashSeed.slice(-4).toUpperCase()}`;
-  }, [audit.id, audit.customerId]);
+  }, [audit]);
+
+  if (!isOpen || !audit) return null;
 
   const handlePrint = () => {
     window.print();
