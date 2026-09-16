@@ -92,6 +92,16 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
     setError(null);
   }, [initialLead, isOpen]);
 
+  // Chiusura accessibile con tasto Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Generatore codici POD/PDR fittizi conformi per demo rapida
@@ -194,7 +204,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-6 md:p-10 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-6 md:p-10 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="add-customer-title">
       {/* Backdrop */}
       <div 
         onClick={onClose}
@@ -217,7 +227,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                 </span>
               )}
             </div>
-            <h2 className="text-lg sm:text-xl font-bold text-[#0a2540] tracking-tight mt-1">
+            <h2 id="add-customer-title" className="text-lg sm:text-xl font-bold text-[#0a2540] tracking-tight mt-1">
               Nuovo Cliente & Forniture Energetiche
             </h2>
             <p className="text-xs text-[#425466] mt-0.5">
@@ -229,13 +239,14 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
             type="button"
             onClick={onClose} 
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+            aria-label="Chiudi modale"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex border-b border-[#e3e8ee] px-3 sm:px-6 text-xs bg-slate-50/50 overflow-x-auto whitespace-nowrap">
+        <div className="flex border-b border-[#e3e8ee] px-3 sm:px-6 text-xs bg-slate-50/50 overflow-x-auto whitespace-nowrap" role="tablist">
           <button
             type="button"
             onClick={() => setActiveTab('anagrafica')}

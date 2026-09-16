@@ -460,6 +460,13 @@ function UnifiedApp() {
         />
       )}
 
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#635bff] focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold"
+      >
+        Vai al contenuto principale
+      </a>
+
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -478,7 +485,7 @@ function UnifiedApp() {
         isRefreshingMarketIndex={isRefreshingMarketIndex}
       />
 
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pb-24 sm:pb-8">
+      <main id="main-content" className="flex-1 max-w-[1400px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pb-24 sm:pb-8">
         {/* VISTA 1: PORTALE CLIENTE FINALE */}
         {currentUser.role === 'customer' ? (
           activeTab === 'customer_profile' ? (

@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { 
   Printer, 
   Send, 
@@ -38,6 +38,15 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
     return `VOLTA-${audit.customerId.slice(-4).toUpperCase()}-${hashSeed.slice(-4).toUpperCase()}`;
   }, [audit]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !audit) return null;
 
   const handlePrint = () => {
@@ -48,7 +57,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="pdf-modal-title">
       {/* Backdrop */}
       <div 
         onClick={onClose} 
@@ -65,7 +74,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
               <FileText className="h-4 w-4" />
             </div>
             <div>
-              <span className="font-bold text-xs text-[#0a2540]">Studio di Fattibilità Energetica</span>
+              <span id="pdf-modal-title" className="font-bold text-xs text-[#0a2540]">Studio di Fattibilità Energetica</span>
               <span className="text-[10px] text-[#425466] block">Pronto per la stampa A4 e l'invio al cliente</span>
             </div>
           </div>
