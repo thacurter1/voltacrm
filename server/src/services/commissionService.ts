@@ -270,6 +270,22 @@ export interface ContractCommissionInput {
  * Calcola e genera le provvigioni spettanti per un nuovo contratto stipulato
  */
 export function generateContractCommissions(input: ContractCommissionInput): { records: CommissionRecord[]; totalEur: number } {
+  // Idempotenza: verifica se le provvigioni per questo contratto sono già state contabilizzate
+  const contractRef = input.contractId || `${(input.customerName || '').trim().toLowerCase()}_${(input.podOrPdr || 'nd').trim()}_${input.utilityType}`;
+  
+  const existingRecords = COMMISSIONS.filter((c: CommissionRecord) => 
+    c.contractId === contractRef || (input.contractId && c.contractId === input.contractId)
+  );
+
+  if (existingRecords.length > 0) {
+    console.log(`[Commission Service] Idempotenza attiva: contratto ${contractRef} già contabilizzato. Restituzione record esistenti.`);
+    const existingTotal = existingRecords.reduce((sum: number, r: CommissionRecord) => sum + r.amountEur, 0);
+    return {
+      records: existingRecords,
+      totalEur: Number(existingTotal.toFixed(2))
+    };
+  }
+
   const isBusiness = input.customerType === 'business' || input.annualConsumption > 6000;
   const period = new Date().toISOString().slice(0, 7); // YYYY-MM
   const today = new Date().toISOString().split('T')[0];
@@ -395,6 +411,10 @@ export function settleCommissions(input: SettleCommissionInput): { batch: Settle
     }
     return c;
   });
+
+  if (updatedCount === 0) {
+    throw new Error('Nessuna provvigione valida da liquidare. I record potrebbero essere già stati liquidati o appartenere a un altro agente.');
+  }
 
   const batch: SettlementBatch = {
     id: `batch-${Date.now()}`,

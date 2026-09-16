@@ -111,7 +111,8 @@ export function calculateAnnualCost(
 
   if (utility.type === 'luce') {
     if (pricingType === 'indexed' || pricingType === 'indexed_pun') {
-      effectiveUnitCost = marketIndex.punEurKwh + unitPriceOrSpread;
+      // Allineamento ARERA: maggiorazione 10% perdite di rete sulla materia prima
+      effectiveUnitCost = (marketIndex.punEurKwh * 1.1) + unitPriceOrSpread;
     }
   } else {
     if (pricingType === 'indexed' || pricingType === 'indexed_psv') {
@@ -214,8 +215,8 @@ export function runQuarterlyAudit(
       const now = new Date().getTime();
       const daysActive = Math.floor((now - start) / (1000 * 60 * 60 * 24));
 
-      // Se il risparmio supera 70€/anno o il 10%, è raccomandato lo switch
-      const shouldSwitch = comparison.savings >= 70 && comparison.savingsPercent >= 8.0;
+      // Se il risparmio supera 70€/anno o l'8%, ed è trascorso il ciclo trimestrale/quadrimestrale di 120 giorni
+      const shouldSwitch = comparison.savings >= 70 && comparison.savingsPercent >= 8.0 && daysActive >= 120;
 
       audits.push({
         id: `audit-${customer.id}-${utility.id}`,

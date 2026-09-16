@@ -1,18 +1,27 @@
 import { Router, Request, Response } from 'express';
 import { getNotifications, addNotification } from '../services/dataStore.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { validate, triggerNotificationSchema } from '../middleware/validate.js';
 import { AppNotification } from '../types.js';
 
 export const notificationsRouter = Router();
 
-// GET /api/notifications
-notificationsRouter.get('/', (req: Request, res: Response): void => {
-  const role = req.query.role as string;
+// GET /api/notifications (Protetta: restituisce solo le notifiche consentite al ruolo utente)
+notificationsRouter.get('/', authenticateToken, (req: Request, res: Response): void => {
+  const authReq = req as AuthRequest;
+  const userRole = authReq.user?.role || 'customer';
   let filtered = getNotifications();
-  if (role) {
-    filtered = filtered.filter((n: AppNotification) => !n.targetRole || n.targetRole === 'all' || n.targetRole === role);
+
+  if (userRole === 'admin') {
+    const requestedRole = req.query.role as string;
+    if (requestedRole) {
+      filtered = filtered.filter((n: AppNotification) => !n.targetRole || n.targetRole === 'all' || n.targetRole === requestedRole);
+    }
+  } else {
+    // Utenti non-admin vedono esclusivamente notifiche globali 'all' o specifiche per il proprio ruolo
+    filtered = filtered.filter((n: AppNotification) => !n.targetRole || n.targetRole === 'all' || n.targetRole === userRole);
   }
+
   const unreadCount = filtered.filter((n: AppNotification) => !n.isRead).length;
 
   res.json({

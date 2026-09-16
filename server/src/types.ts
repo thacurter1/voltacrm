@@ -13,6 +13,7 @@ export interface UserProfile {
   assignedBrokerName?: string;
   avatar?: string;
   is2faEnabled?: boolean;
+  twoFactorSecret?: string;
   onboardingStatus?: 'active' | 'invited' | 'pending_verification';
   createdAt?: string;
 }

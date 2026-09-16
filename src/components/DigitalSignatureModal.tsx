@@ -18,6 +18,7 @@ interface DigitalSignatureModalProps {
   onClose: () => void;
   audit: SwitchAudit | null;
   customerPhone?: string;
+  customerFiscalCode?: string;
   onSigned: (auditId: string, signatureType: 'canvas' | 'otp', documentHash?: string) => void;
 }
 
@@ -26,6 +27,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
   onClose,
   audit,
   customerPhone = '+39 340 1234567',
+  customerFiscalCode,
   onSigned,
 }) => {
   const [signatureMode, setSignatureMode] = useState<'canvas' | 'otp'>('canvas');
@@ -52,6 +54,16 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     return () => clearInterval(interval);
   }, [otpTimer]);
 
+  // Chiusura accessibile con tasto Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !audit) return null;
 
   // Drawing Handlers
@@ -61,8 +73,6 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    setIsDrawing(true);
-    setHasDrawn(true);
     const rect = canvas.getBoundingClientRect();
     const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
     const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
@@ -71,7 +81,9 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     ctx.moveTo(x, y);
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#0a2540';
+    ctx.strokeStyle = '#0284c7'; // brand primary
+    setIsDrawing(true);
+    setHasDrawn(true);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -141,39 +153,75 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     setOtpError(null);
 
     try {
-      if (signatureMode === 'otp') {
-        const verifyRes = await api.messaging.verifyOtp({
+      let documentHash = '';
+      const realFiscalCode = customerFiscalCode || (audit as any).customerFiscalCode || 'CF-' + (audit.customerId || 'CLIENTE');
+
+      if (signatureMode === 'canvas') {
+        // Esportazione del tratto grafico della firma su schermo (Base64 PNG)
+        const canvas = canvasRef.current;
+        const canvasDataUrl = canvas ? canvas.toDataURL('image/png') : '';
+
+        const signRes = await api.switch.signContract({
+          customerId: audit.customerId,
+          customerName: audit.customerName,
+          signerFiscalCode: realFiscalCode,
           phone: customerPhone,
-          code: otpCode
+          signatureType: 'canvas',
+          canvasDataUrl,
+          offerId: audit.bestOffer?.id,
+          supplier: audit.bestOffer?.supplier
         });
 
-        if (!verifyRes.verified) {
-          setOtpError(verifyRes.message || 'Codice OTP non valido o scaduto.');
+        if (!signRes || !signRes.success || !signRes.signatureReceipt?.signatureHash) {
+          setOtpError('Firma su schermo respinta dal server.');
           setIsSubmitting(false);
           return;
         }
-      }
 
-      // Calcolo impronta crittografica SHA-256 (FEA Compliance eIDAS)
-      let documentHash = '';
-      try {
-        const docPayload = JSON.stringify({
-          auditId: audit.id,
+        documentHash = signRes.signatureReceipt.signatureHash;
+      } else {
+        // Firma attestata dal backend con verifica crittografica OTP e generazione marca temporale certa
+        const signRes = await api.switch.signContract({
           customerId: audit.customerId,
           customerName: audit.customerName,
-          podOrPdr: audit.podOrPdr,
-          offerName: audit.bestOffer?.name,
-          supplier: audit.bestOffer?.supplier,
-          annualSavings: audit.annualSavings,
-          signatureMode,
-          timestamp: new Date().toISOString()
+          signerFiscalCode: realFiscalCode,
+          phone: customerPhone,
+          signatureType: 'otp',
+          otpCode,
+          offerId: audit.bestOffer?.id,
+          supplier: audit.bestOffer?.supplier
         });
-        const encoder = new TextEncoder();
-        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(docPayload));
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        documentHash = 'SHA256:' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      } catch {
-        documentHash = `SHA256-FALLBACK-${Date.now()}`;
+
+        if (!signRes || !signRes.success || !signRes.signatureReceipt?.signatureHash) {
+          setOtpError('Firma respinta dal server o codice OTP non valido.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        documentHash = signRes.signatureReceipt.signatureHash;
+      }
+
+      // Se non ancora calcolato (es. canvas), calcola impronta crittografica client-side
+      if (!documentHash) {
+        try {
+          const docPayload = JSON.stringify({
+            auditId: audit.id,
+            customerId: audit.customerId,
+            customerName: audit.customerName,
+            podOrPdr: audit.podOrPdr,
+            offerName: audit.bestOffer?.name,
+            supplier: audit.bestOffer?.supplier,
+            annualSavings: audit.annualSavings,
+            signatureMode,
+            timestamp: new Date().toISOString()
+          });
+          const encoder = new TextEncoder();
+          const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(docPayload));
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          documentHash = 'SHA256:' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch {
+          documentHash = `SHA256-FALLBACK-${Date.now()}`;
+        }
       }
 
       onSigned(audit.id, signatureMode, documentHash);
@@ -187,7 +235,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="sig-modal-title">
       <div onClick={onClose} className="fixed inset-0 bg-[#0a2540]/60 backdrop-blur-xs" />
 
       <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#e3e8ee] shadow-2xl p-6 space-y-5 text-xs animate-in zoom-in-95 duration-150">
@@ -199,11 +247,11 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-[#0a2540]">Firma Digitale Mandato Switch</h3>
+              <h3 id="sig-modal-title" className="font-bold text-sm text-[#0a2540]">Firma Digitale Mandato Switch</h3>
               <p className="text-[11px] text-[#425466]">Perfezionamento a norma del Codice dell'Amministrazione Digitale</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer" aria-label="Chiudi finestra di firma">
             <X className="h-4 w-4" />
           </button>
         </div>

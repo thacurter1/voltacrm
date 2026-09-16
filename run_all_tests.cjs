@@ -1,4 +1,4 @@
-﻿const { spawn } = require('child_process');
+const { spawn } = require('child_process');
 const http = require('http');
 const path = require('path');
 
@@ -21,7 +21,8 @@ function runScript(scriptName) {
     console.log(`RUNNING TEST SUITE: ${scriptName}`);
     console.log(`========================================`);
     const proc = spawn(process.execPath, [path.join(__dirname, scriptName)], {
-      stdio: 'inherit'
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'test' }
     });
     proc.on('close', (code) => {
       if (code === 0) {
@@ -40,7 +41,8 @@ async function main() {
   if (!isRunning) {
     console.log('Backend server not running on port 5000. Starting server/dist/index.js...');
     serverProc = spawn(process.execPath, [path.join(__dirname, 'server', 'dist', 'index.js')], {
-      stdio: 'pipe'
+      stdio: 'pipe',
+      env: { ...process.env, NODE_ENV: 'test' }
     });
 
     let retries = 15;
@@ -62,6 +64,9 @@ async function main() {
   }
 
   const testSuites = [
+    'test_blocco1_security.cjs',
+    'test_blocco2_security.cjs',
+    'test_blocco3_persistence.cjs',
     'test_gme_feed.cjs',
     'test_messaging.cjs',
     'test_ocr.cjs',

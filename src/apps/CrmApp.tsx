@@ -588,6 +588,7 @@ export const CrmApp: React.FC = () => {
         onClose={() => setSignatureAudit(null)}
         audit={signatureAudit}
         customerPhone={customers.find(c => c.id === signatureAudit?.customerId)?.phone}
+        customerFiscalCode={customers.find(c => c.id === signatureAudit?.customerId)?.fiscalCode}
         onSigned={(auditId) => handleAuditSwitched(auditId)}
       />
 

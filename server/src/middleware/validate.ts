@@ -80,7 +80,9 @@ export const signContractSchema = z.object({
   customerName: z.string().min(1),
   signerFiscalCode: z.string().min(1),
   phone: z.string().min(1),
-  otpCode: z.string().min(1),
+  otpCode: z.string().optional(),
+  signatureType: z.enum(['otp', 'canvas']).optional(),
+  canvasDataUrl: z.string().optional(),
   offerId: z.string().optional(),
   supplier: z.string().optional(),
 }).strict();

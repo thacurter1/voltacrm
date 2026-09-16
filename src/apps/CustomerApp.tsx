@@ -178,6 +178,7 @@ export const CustomerApp: React.FC = () => {
           onClose={() => setSelectedAuditForSignature(null)}
           audit={selectedAuditForSignature}
           customerPhone={activeCustomer.phone}
+          customerFiscalCode={activeCustomer.fiscalCode}
           onSigned={(auditId) => handleSignatureCompleted(auditId)}
         />
       )}

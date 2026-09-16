@@ -6,8 +6,8 @@ import { Lead } from '../types.js';
 
 export const leadsRouter = Router();
 
-// GET /api/leads
-leadsRouter.get('/', authenticateToken, (_req: Request, res: Response) => {
+// GET /api/leads (Riservato a Call Center e Admin)
+leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center'), (_req: Request, res: Response) => {
   res.json({ success: true, leads: getLeads() });
 });
 

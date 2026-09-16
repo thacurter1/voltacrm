@@ -13,8 +13,6 @@ const getJwtSecret = (): string => {
   return secret;
 };
 
-const JWT_SECRET = getJwtSecret();
-
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
@@ -24,7 +22,7 @@ export interface AuthRequest extends Request {
 }
 
 export const generateToken = (payload: { userId: string; email: string; role: string }) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '8h' });
 };
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
@@ -36,7 +34,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     return;
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, getJwtSecret(), (err, user) => {
     if (err) {
       res.status(403).json({ success: false, message: 'Token non valido o scaduto.' });
       return;

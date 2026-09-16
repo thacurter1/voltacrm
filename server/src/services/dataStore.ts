@@ -1,16 +1,28 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import { Lead, Customer } from '../types.js';
+
+const isProd = process.env.NODE_ENV === 'production';
+const defaultAdminPass = process.env.ADMIN_INITIAL_PASSWORD || (isProd ? crypto.randomBytes(16).toString('hex') : 'admin123');
+const defaultOpPass = process.env.OPERATOR_INITIAL_PASSWORD || (isProd ? crypto.randomBytes(16).toString('hex') : 'operator123');
+const defaultCustPass = process.env.CUSTOMER_INITIAL_PASSWORD || (isProd ? crypto.randomBytes(16).toString('hex') : 'customer123');
+
+if (isProd && !process.env.ADMIN_INITIAL_PASSWORD) {
+  console.warn('[SECURITY WARNING] In ambiente di produzione ADMIN_INITIAL_PASSWORD non è impostata. Password di default neutralizzata.');
+}
 
 export const users = [
   {
     id: 'user-admin-1',
     name: 'Matteo Riva (Broker Owner)',
     email: 'm.riva@voltagroup.it',
-    password: bcrypt.hashSync('admin123', 10),
+    password: bcrypt.hashSync(defaultAdminPass, 10),
     role: 'admin',
     phone: '+39 347 1122334',
     whatsapp: '+393471122334',
     avatar: 'MR',
     is2faEnabled: true,
+    twoFactorSecret: process.env.ADMIN_2FA_SECRET || 'VOLTA_ADMIN_SECRET_KEY_2FA_2026',
     onboardingStatus: 'active',
     createdAt: '2026-01-15'
   },
@@ -18,12 +30,13 @@ export const users = [
     id: 'user-op-2',
     name: 'Chiara Bianchi (Consulente Senior)',
     email: 'c.bianchi@voltagroup.it',
-    password: bcrypt.hashSync('operator123', 10),
+    password: bcrypt.hashSync(defaultOpPass, 10),
     role: 'call_center',
     phone: '+39 338 5566778',
     whatsapp: '+393385566778',
     avatar: 'CB',
     is2faEnabled: true,
+    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026',
     onboardingStatus: 'active',
     createdAt: '2026-02-10'
   },
@@ -31,7 +44,7 @@ export const users = [
     id: 'user-cust-1',
     name: 'Andrea Moretti',
     email: 'andrea.moretti@email.it',
-    password: bcrypt.hashSync('customer123', 10),
+    password: bcrypt.hashSync(defaultCustPass, 10),
     role: 'customer',
     phone: '+39 340 1234567',
     whatsapp: '+393401234567',
@@ -237,7 +250,10 @@ import { supabase, isSupabaseConfigured } from './dbClient.js';
 
 export const getLeads = () => leads;
 
-export const addLead = (lead: any) => {
+export const addLead = (lead: Lead) => {
+  if (!lead || !lead.name || !lead.phone) {
+    throw new Error('Validazione lead fallita: name e phone sono campi obbligatori.');
+  }
   leads.unshift(lead);
   if (isSupabaseConfigured && supabase) {
     supabase.from('leads').insert([{
@@ -260,19 +276,27 @@ export const addLead = (lead: any) => {
 
 export const getCustomers = () => customers;
 
-export const addCustomer = (customer: any) => {
+export const addCustomer = (customer: Customer) => {
+  if (!customer || !customer.name || !customer.fiscalCode) {
+    throw new Error('Validazione cliente fallita: name e fiscalCode sono campi obbligatori.');
+  }
   customers.unshift(customer);
   if (isSupabaseConfigured && supabase) {
-    supabase.from('profiles').insert([{
+    supabase.from('customers').upsert([{
       id: customer.id,
-      email: customer.email || `${customer.id}@cliente.voltacrm.it`,
-      full_name: customer.name,
-      role: 'customer',
+      name: customer.name,
+      fiscal_code: customer.fiscalCode,
       phone: customer.phone,
-      fiscal_code: customer.fiscalCode
-    }]).then(({ error }) => {
-      if (error) console.warn('[Supabase Sync] Errore inserimento profilo cliente:', error.message);
-      else console.log(`[Supabase Sync] Cliente ${customer.id} persistito su PostgreSQL`);
+      email: customer.email || null,
+      city: customer.city || 'Milano',
+      contract_start_date: customer.contractStartDate || new Date().toISOString().split('T')[0],
+      has_brokerage_mandate: customer.hasBrokerageMandate ?? true,
+      account_manager: customer.accountManager || 'Matteo Riva',
+      notes: customer.notes || null,
+      utility_points: customer.utilityPoints || []
+    }], { onConflict: 'id' }).then(({ error }) => {
+      if (error) console.warn('[Supabase Sync] Errore inserimento cliente:', error.message);
+      else console.log(`[Supabase Sync] Cliente ${customer.id} persistito su PostgreSQL (tabella customers)`);
     });
   }
 };
@@ -310,7 +334,7 @@ export const addSignatureLog = (log: any) => {
       customer_name: log.customerName,
       signer_fiscal_code: log.signerFiscalCode,
       phone: log.phone,
-      otp_code: log.otpCode,
+      otp_code: log.otpCode || '******',
       offer_id: log.offerId,
       supplier: log.supplier,
       signature_hash: log.signatureHash
@@ -331,6 +355,7 @@ export async function initDataStore(): Promise<void> {
   }
 
   try {
+    // 1. Leads
     const { data: dbLeads, error: leadsErr } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
     if (!leadsErr && dbLeads && dbLeads.length > 0) {
       leads = [
@@ -346,10 +371,53 @@ export async function initDataStore(): Promise<void> {
           createdAt: l.created_at?.split('T')[0],
           estimatedConsumptionKwh: l.estimated_consumption_kwh,
           estimatedConsumptionSmc: l.estimated_consumption_smc
-        })),
-        ...leads
+        }))
       ];
       console.log(`📦 [Database Sync] Caricati ${dbLeads.length} lead storici da Supabase PostgreSQL.`);
+    }
+
+    // 2. Customers
+    const { data: dbCustomers, error: custErr } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+    if (!custErr && dbCustomers && dbCustomers.length > 0) {
+      customers = [
+        ...dbCustomers.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          fiscalCode: c.fiscal_code,
+          phone: c.phone,
+          email: c.email,
+          city: c.city,
+          contractStartDate: c.contract_start_date,
+          lastSwitchAuditDate: c.last_switch_audit_date,
+          nextSwitchAuditDate: c.next_switch_audit_date,
+          hasBrokerageMandate: c.has_brokerage_mandate,
+          accountManager: c.account_manager,
+          notes: c.notes,
+          utilityPoints: c.utility_points || []
+        }))
+      ];
+      console.log(`📦 [Database Sync] Caricati ${dbCustomers.length} clienti storici da Supabase PostgreSQL.`);
+    }
+
+    // 3. Signature Logs
+    const { data: dbSigs, error: sigsErr } = await supabase.from('signature_logs').select('*').order('created_at', { ascending: false });
+    if (!sigsErr && dbSigs && dbSigs.length > 0) {
+      signatureLogs = [
+        ...dbSigs.map((s: any) => ({
+          id: s.id,
+          customerId: s.customer_id,
+          customerName: s.customer_name,
+          signerFiscalCode: s.signer_fiscal_code,
+          phone: s.phone,
+          signatureType: s.signature_type || 'otp',
+          otpCode: s.otp_code,
+          offerId: s.offer_id,
+          supplier: s.supplier,
+          timestamp: s.created_at,
+          signatureHash: s.signature_hash
+        }))
+      ];
+      console.log(`📦 [Database Sync] Caricati ${dbSigs.length} log firme da Supabase PostgreSQL.`);
     }
   } catch (err: any) {
     console.warn('[Database Sync] Avviso durante idratazione iniziale:', err.message);

@@ -283,28 +283,33 @@ export const api = {
       customerName: string;
       signerFiscalCode: string;
       phone: string;
-      otpCode: string;
+      otpCode?: string;
+      signatureType?: 'otp' | 'canvas';
+      canvasDataUrl?: string;
       offerId?: string;
       supplier?: string;
     }) {
-      try {
+      if (API_BASE_URL) {
+        // Se il backend è attivo, invia la richiesta reale al server: propaga categoricamente gli errori (OTP errato, 400, 403)
         await api.auth.ensureToken();
         return await request<{ success: boolean; signatureReceipt: any }>('/switch/sign', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
-      } catch (err) {
-        console.warn('[API Client] Fallback locale per Firma Digitale:', err);
-        return {
-          success: true,
-          signatureReceipt: {
-            id: `sig-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            signatureHash: `SHA256-LOCAL-${Date.now()}`,
-            ...payload
-          }
-        };
       }
+
+      // Solo ed esclusivamente se nessun backend è raggiungibile/configurato (deploy demo statico client-only)
+      console.warn('[API Client] Backend remoto non configurato, modalità simulazione firma locale.');
+      return {
+        success: true,
+        isDemoFallback: true,
+        signatureReceipt: {
+          id: `sig-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          signatureHash: `SHA256-DEMO-${Date.now()}`,
+          ...payload
+        }
+      };
     }
   },
 

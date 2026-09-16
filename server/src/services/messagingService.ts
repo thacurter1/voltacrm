@@ -165,24 +165,28 @@ export async function sendOtp(
     }
   }
 
-  // 3. Dev Sandbox Fallback Mode
+  // 3. Fallback: in produzione è vietato simulare OTP in sandbox o esporre debugOtp
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Invio OTP non riuscito: provider SMS/WhatsApp non configurato o non raggiungibile.');
+  }
+
+  // Dev Sandbox Fallback Mode (solo sviluppo / test)
   console.log(`\n======================================================`);
   console.log(`📲 [DEV SANDBOX ${channel.toUpperCase()}] OTP Generato`);
   console.log(`Destinatario: ${cleanPhone}`);
-  console.log(`Codice OTP:   ${code}`);
   console.log(`Scadenza:     ${expiresAtIso} (5 minuti)`);
   console.log(`======================================================\n`);
 
-  // Notifica interna visibile nel Notification Center per facilitare i test dell'operatore
+  // Notifica interna generica: non contiene MAI il codice OTP in chiaro
   addNotification({
     id: `notif-otp-${Date.now()}`,
     type: 'signature_completed',
-    title: `Nuovo OTP Generato (${channel.toUpperCase()})`,
-    message: `Codice ${code} generato per ${cleanPhone}. Valido per 5 minuti.`,
+    title: `Nuovo OTP Richiesto (${channel.toUpperCase()})`,
+    message: `Richiesto codice OTP per ${cleanPhone}. Valido per 5 minuti.`,
     timestamp: new Date().toISOString(),
     isRead: false,
     priority: 'info',
-    targetRole: 'all',
+    targetRole: 'admin',
     actionTab: 'security'
   });
 

@@ -14,8 +14,9 @@ import { authenticateToken, requireRole } from '../middleware/auth.js';
 
 export const commissionRouter = Router();
 
-// Tutte le rotte provvigionali richiedono token JWT valido
+// Tutte le rotte provvigionali richiedono token JWT valido e ruolo staff autorizzato (vietato ai clienti)
 commissionRouter.use(authenticateToken);
+commissionRouter.use(requireRole('admin', 'call_center', 'operator'));
 
 // GET /api/commissions/summaries - Riepiloghi aggregati e KPI per agente
 commissionRouter.get('/summaries', (_req: Request, res: Response): void => {
@@ -53,8 +54,8 @@ commissionRouter.get('/', (req: Request, res: Response): void => {
   });
 });
 
-// POST /api/commissions/generate - Calcolo automatico provvigione su nuovo contratto
-commissionRouter.post('/generate', (req: Request, res: Response): void => {
+// POST /api/commissions/generate - Calcolo automatico provvigione su nuovo contratto (Admin / Call Center)
+commissionRouter.post('/generate', requireRole('admin', 'call_center'), (req: Request, res: Response): void => {
   const body = req.body as ContractCommissionInput;
 
   if (!body.agentId || !body.customerName || !body.utilityType) {

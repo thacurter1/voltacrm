@@ -5,10 +5,12 @@ import { generateToken, authenticateToken, requireRole } from '../middleware/aut
 import { loginLimiter } from '../middleware/rateLimiter.js';
 import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema } from '../middleware/validate.js';
 
+import { verifyTotp } from '../utils/totp.js';
+
 export const authRouter = Router();
 
 const toSafeProfile = (user: any) => {
-  const { password: _password, ...safeUser } = user;
+  const { password: _password, twoFactorSecret: _secret, ...safeUser } = user;
   return safeUser;
 };
 
@@ -29,26 +31,11 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
       return;
     }
 
-    const epochSeconds = Math.floor(Date.now() / 1000);
-    const windowStep = Math.floor(epochSeconds / 30);
-    const prevWindowStep = Math.floor((epochSeconds - 30) / 30);
-    const userId = user.email || user.id;
-
-    const calcCode = (step: number) => {
-      let hash = 0x811c9dc5;
-      const input = `${userId}:${step}:VOLTA_2FA_SALT_2026`;
-      for (let i = 0; i < input.length; i++) {
-        hash ^= input.charCodeAt(i);
-        hash = Math.imul(hash, 0x01000193);
-      }
-      return (Math.abs(hash) % 1000000).toString().padStart(6, '0');
-    };
-
-    const validCode = calcCode(windowStep);
-    const validPrevCode = calcCode(prevWindowStep);
+    const secret = user.twoFactorSecret || 'VOLTA_DEFAULT_2FA_FALLBACK_KEY';
+    const isTotpValid = verifyTotp(totpCode, secret, 1);
     const isDevMock = process.env.NODE_ENV !== 'production' && totpCode === '123456';
 
-    if (totpCode !== validCode && totpCode !== validPrevCode && !isDevMock) {
+    if (!isTotpValid && !isDevMock) {
       res.status(403).json({ success: false, message: 'Codice 2FA non valido o scaduto.' });
       return;
     }

@@ -13,7 +13,7 @@ function get(path) {
   });
 }
 
-function post(path, body = {}) {
+function post(path, body = {}, headers = {}) {
   return new Promise((resolve) => {
     const data = JSON.stringify(body);
     const req = http.request({
@@ -23,7 +23,8 @@ function post(path, body = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data)
+        'Content-Length': Buffer.byteLength(data),
+        ...headers
       }
     }, (res) => {
       let b = '';
@@ -40,7 +41,7 @@ function post(path, body = {}) {
 }
 
 async function run() {
-  console.log('--- TEST 1: GET /api/switch/market-indices arricchito ---');
+  console.log('--- TEST 1: GET /api/switch/market-indices arricchito (pubblico) ---');
   const t1 = await get('/api/switch/market-indices');
   console.log('T1 Status:', t1.status);
   const idx = t1.data?.marketIndex;
@@ -52,11 +53,31 @@ async function run() {
     process.exit(1);
   }
 
-  console.log('--- TEST 2: POST /api/switch/refresh-indices ---');
-  const t2 = await post('/api/switch/refresh-indices');
+  console.log('--- TEST 2: POST /api/switch/refresh-indices non autenticato (deve restituire 401) ---');
+  const unauth = await post('/api/switch/refresh-indices');
+  console.log('Unauth Status:', unauth.status);
+  if (unauth.status !== 401) {
+    console.error('FAIL: Endpoint doveva restituire 401 per richiesta non autenticata');
+    process.exit(1);
+  }
+
+  console.log('--- TEST 3: Login Admin per ottenere JWT ---');
+  const loginRes = await post('/api/auth/login-operator', {
+    email: 'm.riva@voltagroup.it',
+    password: 'admin123',
+    totpCode: '123456'
+  });
+  const token = loginRes.data?.token;
+  if (!token) {
+    console.error('FAIL: Login admin non riuscito');
+    process.exit(1);
+  }
+
+  console.log('--- TEST 4: POST /api/switch/refresh-indices autenticato con token Admin ---');
+  const t2 = await post('/api/switch/refresh-indices', {}, { Authorization: `Bearer ${token}` });
   console.log('T2 Status:', t2.status, t2.data?.message || t2.raw);
   if (t2.status !== 200 || !t2.data?.success) {
-    console.error('FAIL: Refresh endpoint non risponde con status 200');
+    console.error('FAIL: Refresh endpoint con token admin non risponde con status 200');
     process.exit(1);
   }
 

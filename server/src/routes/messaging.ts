@@ -1,11 +1,42 @@
-import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
+import { Router, Request, Response, NextFunction } from 'express';
 import { sendOtp, verifyOtp, sendOfferWhatsApp } from '../services/messagingService.js';
 import { otpLimiter } from '../middleware/rateLimiter.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 export const messagingRouter = Router();
 
-// POST /api/messaging/send-otp
-messagingRouter.post('/send-otp', otpLimiter, async (req: Request, res: Response): Promise<void> => {
+const EXPECTED_TOTEM_KEY = process.env.TOTEM_KIOSK_API_KEY || 'KIOSK-TOKEN-RETAIL-01';
+
+// Middleware per Totem Kiosk: ammesso SOLO per invio scheda offerta WhatsApp
+const authenticateOrValidTotem = (req: Request, res: Response, next: NextFunction): void => {
+  const totemToken = req.headers['x-totem-token'];
+  if (totemToken && typeof totemToken === 'string') {
+    const inputBuf = Buffer.from(totemToken);
+    const expectedBuf = Buffer.from(EXPECTED_TOTEM_KEY);
+    if (inputBuf.length === expectedBuf.length && crypto.timingSafeEqual(inputBuf, expectedBuf)) {
+      return next();
+    }
+    res.status(401).json({
+      success: false,
+      message: 'Token Totem Kiosk non valido o non autorizzato.'
+    });
+    return;
+  }
+
+  const authHeader = req.headers['authorization'];
+  if (authHeader) {
+    return authenticateToken(req as any, res, next);
+  }
+
+  res.status(401).json({
+    success: false,
+    message: 'Autenticazione operatore o token Totem certificato richiesto.'
+  });
+};
+
+// POST /api/messaging/send-otp (Rigorosamente riservato a utenti autenticati con JWT)
+messagingRouter.post('/send-otp', otpLimiter, authenticateToken, async (req: Request, res: Response): Promise<void> => {
   const { phone, channel, reason } = req.body;
 
   if (!phone || typeof phone !== 'string' || phone.trim().length < 8) {
@@ -25,8 +56,8 @@ messagingRouter.post('/send-otp', otpLimiter, async (req: Request, res: Response
   });
 });
 
-// POST /api/messaging/verify-otp
-messagingRouter.post('/verify-otp', (req: Request, res: Response): void => {
+// POST /api/messaging/verify-otp (Rigorosamente riservato a utenti autenticati con JWT)
+messagingRouter.post('/verify-otp', otpLimiter, authenticateToken, (req: Request, res: Response): void => {
   const { phone, code } = req.body;
 
   if (!phone || !code || typeof code !== 'string') {
@@ -47,8 +78,8 @@ messagingRouter.post('/verify-otp', (req: Request, res: Response): void => {
   res.status(200).json(result);
 });
 
-// POST /api/messaging/send-offer-whatsapp
-messagingRouter.post('/send-offer-whatsapp', otpLimiter, async (req: Request, res: Response): Promise<void> => {
+// POST /api/messaging/send-offer-whatsapp (Ammesso con JWT o con Token Totem Kiosk certificato)
+messagingRouter.post('/send-offer-whatsapp', otpLimiter, authenticateOrValidTotem, async (req: Request, res: Response): Promise<void> => {
   const { phone, customerName, savingsEur, utilityType, offerName } = req.body;
 
   if (!phone || !customerName || savingsEur === undefined || !utilityType) {

@@ -114,6 +114,25 @@ create table if not exists public.notifications (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 8. Tabella Clienti & Contratti CRM (Persistenza ID cust-* e Forniture UtilityPoints)
+create table if not exists public.customers (
+  id text primary key,
+  name text not null,
+  fiscal_code text not null,
+  phone text not null,
+  email text,
+  city text default 'Milano',
+  contract_start_date date default current_date,
+  last_switch_audit_date date default current_date,
+  next_switch_audit_date date default (current_date + interval '120 days'),
+  has_brokerage_mandate boolean default true not null,
+  account_manager text default 'Matteo Riva',
+  notes text,
+  utility_points jsonb default '[]'::jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- ==============================================================================
 -- FUNZIONI SICURE DI CONTROLLO RUOLI (SECURITY DEFINER CON SEARCH_PATH PROTETTO)
 -- ==============================================================================

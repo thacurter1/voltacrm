@@ -1,8 +1,8 @@
+import 'dotenv/config';
 import 'express-async-errors';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { authRouter } from './routes/auth.js';
 import { leadsRouter } from './routes/leads.js';
 import { customersRouter } from './routes/customers.js';
@@ -16,8 +16,6 @@ import { apiLimiter } from './middleware/rateLimiter.js';
 import { getCustomers, getLeads, getNotifications, initDataStore } from './services/dataStore.js';
 import { testDatabaseConnection } from './services/dbClient.js';
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -29,7 +27,8 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'http://localhost:5173'];
+const rawOrigins = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173';
+const allowedOrigins = rawOrigins.split(',').map(o => o.trim()).filter(Boolean);
 
 app.use(cors({
   origin: allowedOrigins,
@@ -39,24 +38,13 @@ app.use(cors({
 
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
-app.use(apiLimiter);
 
-// Request logger
-app.use((req: Request, _res: Response, next) => {
-  const start = Date.now();
-  const { method, url } = req;
-  _res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(`[${new Date().toISOString()}] ${method} ${url} ${_res.statusCode} - ${duration}ms`);
-  });
-  next();
-});
-
-// Root & Health check
+// Root & Health check (montato prima del rate limiter per monitor di uptime)
 app.get('/api/health', async (_req: Request, res: Response): Promise<void> => {
   const dbHealth = await testDatabaseConnection();
-  res.json({
-    status: 'healthy',
+  const isHealthy = !process.env.SUPABASE_URL || dbHealth.connected;
+  res.status(200).json({
+    status: isHealthy ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     service: 'VoltaCRM SaaS Standalone Backend API',
     version: '1.0.0',
@@ -75,6 +63,19 @@ app.get('/api/health', async (_req: Request, res: Response): Promise<void> => {
       }
     }
   });
+});
+
+app.use(apiLimiter);
+
+// Request logger
+app.use((req: Request, _res: Response, next) => {
+  const start = Date.now();
+  const { method, url } = req;
+  _res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${method} ${url} ${_res.statusCode} - ${duration}ms`);
+  });
+  next();
 });
 
 // Mount Routes
