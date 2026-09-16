@@ -8,7 +8,7 @@ export const validate = (schema: ZodSchema) => {
       next();
     } catch (error: any) {
       if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, message: 'Dati non validi.', errors: error.errors });
+        res.status(400).json({ success: false, message: 'Dati non validi.', errors: error.issues });
         return;
       }
       res.status(400).json({ success: false, message: 'Richiesta non valida.' });
@@ -55,11 +55,11 @@ export const loginCustomerSchema = z.object({
 }).strict();
 
 export const registerCustomerSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  fiscalCode: z.string().optional(),
-  password: z.string().optional()
+  name: z.string().trim().min(2).max(150),
+  email: z.string().trim().email().max(254),
+  phone: z.string().regex(/^\+?[0-9 ()-]{8,25}$/).refine(v=>v.replace(/\D/g,'').length>=8),
+  fiscalCode: z.string().trim().regex(/^(?:[A-Za-z0-9]{16}|[0-9]{11})$/),
+  password: z.string().min(12).max(72)
 }).strict();
 
 export const kioskLeadSchema = z.object({
@@ -76,15 +76,18 @@ export const kioskLeadSchema = z.object({
 }).strict();
 
 export const signContractSchema = z.object({
-  customerId: z.string().optional(),
-  customerName: z.string().min(1),
-  signerFiscalCode: z.string().min(1),
-  phone: z.string().min(1),
+  customerId: z.string().min(1).optional(),
+  utilityPointId: z.string().min(1).optional(),
+  podOrPdr: z.string().min(1).optional(),
+  customerName: z.string().min(1).optional(),
+  signerFiscalCode: z.string().min(1).optional(),
+  phone: z.string().min(1).optional(),
   otpCode: z.string().optional(),
-  signatureType: z.enum(['otp', 'canvas']).optional(),
-  canvasDataUrl: z.string().optional(),
-  offerId: z.string().optional(),
+  signatureType: z.enum(['otp', 'canvas']).default('otp'),
+  canvasDataUrl: z.string().max(3_000_000).optional(),
+  offerId: z.string().min(1),
   supplier: z.string().optional(),
+  consentVersion: z.string().min(1).default('1.0')
 }).strict();
 
 export const triggerNotificationSchema = z.object({

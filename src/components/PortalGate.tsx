@@ -9,7 +9,6 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
-import { profileService } from '../services/supabaseClient';
 import { api } from '../api/client';
 
 interface PortalGateProps {
@@ -51,6 +50,10 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regFiscalCode, setRegFiscalCode] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [operatorEmail, setOperatorEmail] = useState('');
+  const [operatorPassword, setOperatorPassword] = useState('');
+  const [operatorTotp, setOperatorTotp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Operator Auth State
@@ -64,7 +67,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = customerIdentifier.trim();
-    const pwd = customerPassword.trim();
+    const pwd = customerPassword;
 
     if (!query) {
       onToast('Dati Mancanti', 'Inserisci la tua email o Codice Fiscale.', 'warning');
@@ -85,43 +88,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         return;
       }
     } catch (err) {
-      console.warn('[PortalGate] Backend offline, verifica locale:', err);
+      onToast('Accesso Negato', err instanceof Error ? err.message : 'Accesso non riuscito.', 'warning');
     }
 
-    // 2. Verifica su profili locali/mock con controllo password
-    const queryLower = query.toLowerCase();
-    const matchedProfile = profiles.find(p => 
-      p.role === 'customer' && (
-        p.email.toLowerCase() === queryLower || 
-        p.fiscalCode?.toLowerCase() === queryLower
-      )
-    );
-
-    const matchedCustomer = customers.find(c => 
-      c.email.toLowerCase() === queryLower || 
-      c.fiscalCode.toLowerCase() === queryLower ||
-      c.id === query
-    );
-
-    // I profili demo/locali accettano la password 'customer123'
-    if ((matchedProfile || matchedCustomer) && pwd === 'customer123') {
-      const user: UserProfile = matchedProfile || {
-        id: `user-${matchedCustomer!.id}`,
-        name: matchedCustomer!.name,
-        email: matchedCustomer!.email,
-        role: 'customer',
-        customerId: matchedCustomer!.id,
-        phone: matchedCustomer!.phone,
-        fiscalCode: matchedCustomer!.fiscalCode,
-        avatar: matchedCustomer!.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
-        onboardingStatus: 'active',
-      };
-
-      onToast('Accesso Eseguito', `Benvenuto ${user.name}`, 'success');
-      onLoginCustomer(user);
-    } else {
-      onToast('Accesso Negato', 'Credenziali non valide. Verifica email/codice fiscale e password.', 'warning');
-    }
   };
 
   // Customer Registration Handler (Self-Service)
@@ -134,33 +103,32 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
     setIsSubmitting(true);
     try {
-      const newProfile = await profileService.registerCustomerSelfService({
+      const result = await api.auth.registerCustomer({
         name: regName,
         email: regEmail,
         phone: regPhone,
-        fiscalCode: regFiscalCode || 'CF' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+        fiscalCode: regFiscalCode,
+        password: regPassword,
       });
 
       onToast('Registrazione Completata!', 'Il tuo profilo cliente è attivo.', 'success');
-      onLoginCustomer(newProfile);
-    } catch {
-      onToast('Errore', 'Impossibile completare la registrazione.', 'warning');
+      onLoginCustomer(result.user);
+    } catch (err) {
+      onToast('Errore', err instanceof Error ? err.message : 'Impossibile completare la registrazione.', 'warning');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // Operator Login Handler
-  const handleOperatorLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const op = operators.find(o => o.id === selectedOpId) || operators[0];
-    if (op) {
-      if (op.is2faEnabled) {
-        onRequire2FA(op);
-      } else {
-        onLoginOperator(op);
-      }
-    }
+  const handleOperatorLogin = async (e: React.FormEvent) => {
+    e.preventDefault(); setIsSubmitting(true);
+    try {
+      const result=await api.auth.loginOperator(operatorEmail,operatorPassword,operatorTotp);
+      onLoginOperator(result.user);
+    } catch(err) {
+      onToast('Accesso Negato',err instanceof Error?err.message:'Credenziali non valide.','warning');
+    } finally {setIsSubmitting(false);}
   };
 
   return (
@@ -411,12 +379,16 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       <input
                         type="text"
                         placeholder="Es. RSSMRA80A01H501U"
+                        required
                         value={regFiscalCode}
                         onChange={e => setRegFiscalCode(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden uppercase font-mono"
                       />
                     </div>
 
+                    <label className="block font-semibold text-[#0a2540]">Password (almeno 12 caratteri)
+                      <input type="password" autoComplete="new-password" required minLength={12} maxLength={72} value={regPassword} onChange={e=>setRegPassword(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+                    </label>
                     <button
                       type="submit"
                       disabled={isSubmitting}
@@ -445,29 +417,23 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
                 <form onSubmit={handleOperatorLogin} className="space-y-4">
                   <div>
-                    <label className="block font-semibold text-[#0a2540] mb-1">Seleziona Profilo Operatore</label>
-                    <select
-                      value={selectedOpId}
-                      onChange={e => setSelectedOpId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden bg-white text-xs"
-                    >
-                      {operators.map(op => (
-                        <option key={op.id} value={op.id}>
-                          {op.name} ({op.role === 'admin' ? 'Super Admin' : 'Consulente Call Center'})
-                        </option>
-                      ))}
-                    </select>
+                    <label className="block font-semibold text-[#0a2540]">Email operatore
+                      <input type="email" autoComplete="username" required value={operatorEmail} onChange={e=>setOperatorEmail(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+                    </label>
                   </div>
 
                   <div>
                     <label className="block font-semibold text-[#0a2540] mb-1">Password Operatore</label>
                     <input
                       type="password"
-                      defaultValue="VoltaSecure2026!#"
+                      required autoComplete="current-password" value={operatorPassword} onChange={e=>setOperatorPassword(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden text-xs"
                     />
                   </div>
 
+                  <label className="block font-semibold text-[#0a2540]">Codice Authenticator
+                    <input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" required value={operatorTotp} onChange={e=>setOperatorTotp(e.target.value)} className="mt-1 w-full border rounded-xl px-3 py-2" />
+                  </label>
                   <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2.5 text-amber-800 text-[11px]">
                     <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0" />
                     <span>Richiede codice di sicurezza 2FA generato da Google Authenticator o Authy.</span>

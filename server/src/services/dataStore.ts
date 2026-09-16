@@ -11,7 +11,7 @@ if (isProd && !process.env.ADMIN_INITIAL_PASSWORD) {
   console.warn('[SECURITY WARNING] In ambiente di produzione ADMIN_INITIAL_PASSWORD non è impostata. Password di default neutralizzata.');
 }
 
-export const users = [
+export const users: any[] = [
   {
     id: 'user-admin-1',
     name: 'Matteo Riva (Broker Owner)',
@@ -22,7 +22,7 @@ export const users = [
     whatsapp: '+393471122334',
     avatar: 'MR',
     is2faEnabled: true,
-    twoFactorSecret: process.env.ADMIN_2FA_SECRET || 'VOLTA_ADMIN_SECRET_KEY_2FA_2026',
+    twoFactorSecret: process.env.ADMIN_2FA_SECRET || (isProd ? undefined : 'VOLTA_ADMIN_SECRET_KEY_2FA_2026'),
     onboardingStatus: 'active',
     createdAt: '2026-01-15'
   },
@@ -36,7 +36,7 @@ export const users = [
     whatsapp: '+393385566778',
     avatar: 'CB',
     is2faEnabled: true,
-    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026',
+    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isProd ? undefined : 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026'),
     onboardingStatus: 'active',
     createdAt: '2026-02-10'
   },
@@ -248,215 +248,139 @@ export let signatureLogs: any[] = [];
 
 import { supabase, isSupabaseConfigured } from './dbClient.js';
 
-export const getLeads = () => leads;
 
-export const addLead = (lead: Lead) => {
-  if (!lead || !lead.name || !lead.phone) {
-    throw new Error('Validazione lead fallita: name e phone sono campi obbligatori.');
-  }
-  leads.unshift(lead);
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('leads').insert([{
-      id: lead.id,
-      name: lead.name,
-      phone: lead.phone,
-      email: lead.email || null,
-      city: lead.city || 'Milano',
-      source: lead.source || 'totem_kiosk',
-      status: lead.status || 'new',
-      notes: lead.notes || null,
-      estimated_consumption_kwh: lead.estimatedConsumptionKwh || null,
-      estimated_consumption_smc: lead.estimatedConsumptionSmc || null,
-    }]).then(({ error }) => {
-      if (error) console.warn('[Supabase Sync] Errore inserimento lead:', error.message);
-      else console.log(`[Supabase Sync] Lead ${lead.id} persistito su PostgreSQL`);
-    });
-  }
-};
-
-export const getCustomers = () => customers;
-
-export const addCustomer = (customer: Customer) => {
-  if (!customer || !customer.name || !customer.fiscalCode) {
-    throw new Error('Validazione cliente fallita: name e fiscalCode sono campi obbligatori.');
-  }
-  customers.unshift(customer);
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('customers').upsert([{
-      id: customer.id,
-      name: customer.name,
-      fiscal_code: customer.fiscalCode,
-      phone: customer.phone,
-      email: customer.email || null,
-      city: customer.city || 'Milano',
-      contract_start_date: customer.contractStartDate || new Date().toISOString().split('T')[0],
-      last_switch_audit_date: customer.lastSwitchAuditDate || new Date().toISOString().split('T')[0],
-      next_switch_audit_date: customer.nextSwitchAuditDate || new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
-      has_brokerage_mandate: customer.hasBrokerageMandate ?? true,
-      account_manager: customer.accountManager || 'Matteo Riva',
-      notes: customer.notes || null,
-      utility_points: customer.utilityPoints || []
-    }], { onConflict: 'id' }).then(({ error }) => {
-      if (error) console.warn('[Supabase Sync] Errore inserimento cliente:', error.message);
-      else console.log(`[Supabase Sync] Cliente ${customer.id} persistito su PostgreSQL (tabella customers)`);
-    });
-  }
-};
-
-export const updateCustomer = (customer: Customer) => {
-  if (!customer || !customer.id) return;
-  const index = customers.findIndex(c => c.id === customer.id);
-  if (index !== -1) {
-    customers[index] = { ...customers[index], ...customer };
-  } else {
-    customers.unshift(customer);
-  }
-
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('customers').upsert([{
-      id: customer.id,
-      name: customer.name,
-      fiscal_code: customer.fiscalCode,
-      phone: customer.phone,
-      email: customer.email || null,
-      city: customer.city || 'Milano',
-      contract_start_date: customer.contractStartDate || new Date().toISOString().split('T')[0],
-      last_switch_audit_date: customer.lastSwitchAuditDate || new Date().toISOString().split('T')[0],
-      next_switch_audit_date: customer.nextSwitchAuditDate || new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
-      has_brokerage_mandate: customer.hasBrokerageMandate ?? true,
-      account_manager: customer.accountManager || 'Matteo Riva',
-      notes: customer.notes || null,
-      utility_points: customer.utilityPoints || []
-    }], { onConflict: 'id' }).then(({ error }) => {
-      if (error) console.warn('[Supabase Sync] Errore aggiornamento cliente:', error.message);
-      else console.log(`[Supabase Sync] Cliente ${customer.id} aggiornato su PostgreSQL (tabella customers)`);
-    });
-  }
-};
-
-export const getNotifications = () => notifications;
-
-export const addNotification = (notification: any) => {
-  notifications.unshift(notification);
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('notifications').insert([{
-      id: notification.id,
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      timestamp: notification.timestamp,
-      is_read: notification.isRead || false,
-      priority: notification.priority || 'normal',
-      target_role: notification.targetRole || 'all',
-      action_tab: notification.actionTab || null,
-      meta: notification.meta || null
-    }]).then(({ error }) => {
-      if (error) console.warn('[Supabase Sync] Errore salvataggio notifica:', error.message);
-    });
-  }
-};
-
-export const getSignatureLogs = () => signatureLogs;
-
-export const addSignatureLog = (log: any) => {
-  signatureLogs.push(log);
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('signature_logs').insert([{
-      id: log.id,
-      customer_id: log.customerId,
-      customer_name: log.customerName,
-      signer_fiscal_code: log.signerFiscalCode,
-      phone: log.phone,
-      signature_type: log.signatureType || 'otp',
-      otp_code: log.otpCode || '******',
-      canvas_hash: log.canvasHash || null,
-      offer_id: log.offerId,
-      supplier: log.supplier,
-      ip_address: log.ipAddress || null,
-      signature_hash: log.signatureHash
-    }]).then(({ error }) => {
-      if (error) console.warn('[Supabase Sync] Errore salvataggio log di firma:', error.message);
-      else console.log(`[Supabase Sync] Firma digitale ${log.id} registrata immutabilmente su DB`);
-    });
-  }
-};
-
-/**
- * Idratatore iniziale da Supabase su avvio server
- */
-export async function initDataStore(): Promise<void> {
-  if (!isSupabaseConfigured || !supabase) {
-    console.log('📦 [Database Mode] Modalità in-memory attiva con demo data.');
-    return;
-  }
-
-  try {
-    // 1. Leads
-    const { data: dbLeads, error: leadsErr } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
-    if (!leadsErr && dbLeads && dbLeads.length > 0) {
-      leads = [
-        ...dbLeads.map((l: any) => ({
-          id: l.id,
-          name: l.name,
-          phone: l.phone,
-          email: l.email,
-          city: l.city,
-          source: l.source,
-          status: l.status,
-          notes: l.notes,
-          createdAt: l.created_at?.split('T')[0],
-          estimatedConsumptionKwh: l.estimated_consumption_kwh,
-          estimatedConsumptionSmc: l.estimated_consumption_smc
-        }))
-      ];
-      console.log(`📦 [Database Sync] Caricati ${dbLeads.length} lead storici da Supabase PostgreSQL.`);
-    }
-
-    // 2. Customers
-    const { data: dbCustomers, error: custErr } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
-    if (!custErr && dbCustomers && dbCustomers.length > 0) {
-      customers = [
-        ...dbCustomers.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          fiscalCode: c.fiscal_code,
-          phone: c.phone,
-          email: c.email,
-          city: c.city,
-          contractStartDate: c.contract_start_date,
-          lastSwitchAuditDate: c.last_switch_audit_date,
-          nextSwitchAuditDate: c.next_switch_audit_date,
-          hasBrokerageMandate: c.has_brokerage_mandate,
-          accountManager: c.account_manager,
-          notes: c.notes,
-          utilityPoints: c.utility_points || []
-        }))
-      ];
-      console.log(`📦 [Database Sync] Caricati ${dbCustomers.length} clienti storici da Supabase PostgreSQL.`);
-    }
-
-    // 3. Signature Logs
-    const { data: dbSigs, error: sigsErr } = await supabase.from('signature_logs').select('*').order('created_at', { ascending: false });
-    if (!sigsErr && dbSigs && dbSigs.length > 0) {
-      signatureLogs = [
-        ...dbSigs.map((s: any) => ({
-          id: s.id,
-          customerId: s.customer_id,
-          customerName: s.customer_name,
-          signerFiscalCode: s.signer_fiscal_code,
-          phone: s.phone,
-          signatureType: s.signature_type || 'otp',
-          otpCode: s.otp_code,
-          offerId: s.offer_id,
-          supplier: s.supplier,
-          timestamp: s.created_at,
-          signatureHash: s.signature_hash
-        }))
-      ];
-      console.log(`📦 [Database Sync] Caricati ${dbSigs.length} log firme da Supabase PostgreSQL.`);
-    }
-  } catch (err: any) {
-    console.warn('[Database Sync] Avviso durante idratazione iniziale:', err.message);
+// In production the database is authoritative; caches publish only committed records.
+function requireStorage(): void {
+  if (process.env.NODE_ENV === 'production' && (!isSupabaseConfigured || !supabase)) {
+    throw new Error('Database persistente obbligatorio in produzione.');
   }
 }
+function check(error: any): void {
+  if (error) throw Object.assign(new Error(error.message || 'Errore database.'), { status: error.code === '23505' ? 409 : 503 });
+}
+export const getLeads = () => leads;
+export const getCustomers = () => customers;
+export const getNotifications = () => notifications;
+export const getSignatureLogs = () => signatureLogs;
 
+export const customerToRow = (c: Customer) => ({
+  id: c.id, name: c.name, fiscal_code: c.fiscalCode, phone: c.phone,
+  email: c.email || null, city: c.city || '', contract_start_date: c.contractStartDate,
+  last_switch_audit_date: c.lastSwitchAuditDate, next_switch_audit_date: c.nextSwitchAuditDate,
+  has_brokerage_mandate: c.hasBrokerageMandate, account_manager: c.accountManager || '',
+  notes: c.notes || null, utility_points: c.utilityPoints || []
+});
+const rowToCustomer = (c: any): Customer => ({
+  id:c.id,name:c.name,fiscalCode:c.fiscal_code,phone:c.phone,email:c.email||'',city:c.city||'',
+  contractStartDate:c.contract_start_date,lastSwitchAuditDate:c.last_switch_audit_date,
+  nextSwitchAuditDate:c.next_switch_audit_date,hasBrokerageMandate:c.has_brokerage_mandate,
+  accountManager:c.account_manager,notes:c.notes,utilityPoints:c.utility_points||[]
+});
+const leadToRow = (l: Lead) => ({id:l.id,name:l.name,phone:l.phone,email:l.email||null,
+  city:l.city,source:l.source,status:l.status,notes:l.notes,
+  estimated_consumption_kwh:l.estimatedConsumptionKwh??null,estimated_consumption_smc:l.estimatedConsumptionSmc??null,
+  assigned_call_center_agent:l.assignedCallCenterAgent||null,appointment_id:l.appointmentId||null});
+export async function addLead(lead: Lead): Promise<void> {
+  if (!lead?.name || !lead?.phone) throw new Error('Nome e telefono lead obbligatori.');
+  requireStorage();
+  if (isSupabaseConfigured && supabase) check((await supabase.from('leads').insert(leadToRow(lead))).error);
+  leads.unshift(structuredClone(lead));
+}
+export async function updateLead(lead: Lead): Promise<void> {
+  requireStorage();
+  if (isSupabaseConfigured && supabase) check((await supabase.from('leads').update(leadToRow(lead)).eq('id',lead.id)).error);
+  leads = leads.map(l=>l.id===lead.id?structuredClone(lead):l);
+}
+export async function addCustomer(customer: Customer): Promise<void> {
+  if (!customer?.name || !customer?.fiscalCode) throw new Error('Nome e codice fiscale obbligatori.');
+  requireStorage();
+  if (isSupabaseConfigured && supabase) check((await supabase.from('customers').upsert([customerToRow(customer)],{onConflict:'id'})).error);
+  customers = [structuredClone(customer), ...customers.filter(c=>c.id!==customer.id)];
+}
+export async function updateCustomer(customer: Customer): Promise<void> {
+  await addCustomer(customer);
+}
+export async function addNotification(notification: any): Promise<void> {
+  requireStorage();
+  if (isSupabaseConfigured && supabase) check((await supabase.from('notifications').insert({
+    id:notification.id,type:notification.type,title:notification.title,message:notification.message,
+    timestamp:notification.timestamp,is_read:notification.isRead||false,priority:notification.priority||'normal',
+    target_role:notification.targetRole||'all',action_tab:notification.actionTab||null,meta:notification.meta||null
+  })).error);
+  notifications.unshift(structuredClone(notification));
+}
+export async function markNotificationsRead(ids: string[]): Promise<void> {
+  requireStorage();
+  if (isSupabaseConfigured && supabase && ids.length) check((await supabase.from('notifications').update({is_read:true}).in('id',ids)).error);
+  notifications = notifications.map(n=>ids.includes(n.id)?{...n,isRead:true}:n);
+}
+
+export const signatureToRow = (l:any) => ({
+  id:l.id,customer_id:l.customerId,customer_name:l.customerName,signer_fiscal_code:l.signerFiscalCode,
+  phone:l.phone,signature_type:l.signatureType||'otp',otp_code:'******',canvas_hash:l.canvasHash||null,
+  canvas_data_url:l.canvasDataUrl||null,offer_id:l.offerId,supplier:l.supplier,ip_address:l.ipAddress||null,
+  signature_hash:l.signatureHash,document_hash:l.documentHash||null,utility_point_id:l.utilityPointId,
+  pod_or_pdr:l.podOrPdr,energy_type:l.energyType,offer_snapshot:l.offerSnapshot,original_point_snapshot:l.originalPointSnapshot,
+  consent_version:l.consentVersion,canonical_document:l.canonicalDocument,status:l.status||'signed',
+  activation_status:l.activationStatus||'pending_activation',activated_at:l.activatedAt||null,
+  activation_reference:l.activationReference||null,activation_date:l.activationDate||null,activated_by:l.activatedBy||null,created_at:l.timestamp
+});
+export async function addSignatureLog(log: any): Promise<void> {
+  requireStorage();
+  if (isSupabaseConfigured && supabase) check((await supabase.from('signature_logs').insert(signatureToRow(log))).error);
+  signatureLogs.push(structuredClone(log));
+}
+const rowToSignature = (s:any) => ({
+  id:s.id,customerId:s.customer_id,customerName:s.customer_name,signerFiscalCode:s.signer_fiscal_code,
+  phone:s.phone,signatureType:s.signature_type,otpCode:s.otp_code,canvasHash:s.canvas_hash,canvasDataUrl:s.canvas_data_url,
+  offerId:s.offer_id,supplier:s.supplier,timestamp:s.created_at,signatureHash:s.signature_hash,documentHash:s.document_hash,
+  utilityPointId:s.utility_point_id,podOrPdr:s.pod_or_pdr,energyType:s.energy_type,offerSnapshot:s.offer_snapshot,
+  originalPointSnapshot:s.original_point_snapshot,consentVersion:s.consent_version,canonicalDocument:s.canonical_document,
+  status:s.status,activationStatus:s.activation_status,activatedAt:s.activated_at,activationReference:s.activation_reference,
+  ipAddress:s.ip_address,activationDate:s.activation_date,activatedBy:s.activated_by
+});
+
+export async function registerAccount(profile:any, customer:Customer):Promise<void> {
+  requireStorage();
+  if(users.some(u=>u.email.trim().toLowerCase()===profile.email.trim().toLowerCase())) {
+    throw Object.assign(new Error('Email già registrata.'),{status:409});
+  }
+  if(isSupabaseConfigured && supabase) {
+    check((await supabase.rpc('register_customer_account',{p_profile:profile,p_customer:customerToRow(customer)})).error);
+  }
+  users.unshift(structuredClone(profile)); customers.unshift(structuredClone(customer));
+}
+
+export async function initDataStore(): Promise<void> {
+  requireStorage();
+  if(!isSupabaseConfigured || !supabase) return;
+  // Await every query and publish a complete snapshot only if all have succeeded.
+  const database = supabase;
+  const results = await Promise.all(['leads','customers','signature_logs','notifications','crm_accounts'].map(table=>database.from(table).select('*')));
+  for(const result of results) check(result.error);
+  const [ls,cs,ss,ns,us] = results.map(r=>r.data||[]);
+  leads = ls.map((l:any)=>({id:l.id,name:l.name,phone:l.phone,email:l.email||'',city:l.city,source:l.source,
+    status:l.status,notes:l.notes,createdAt:l.created_at?.split('T')[0],estimatedConsumptionKwh:l.estimated_consumption_kwh,
+    estimatedConsumptionSmc:l.estimated_consumption_smc,assignedCallCenterAgent:l.assigned_call_center_agent,appointmentId:l.appointment_id}));
+  customers = cs.map(rowToCustomer); signatureLogs = ss.map(rowToSignature);
+  notifications = ns.map((n:any)=>({id:n.id,type:n.type,title:n.title,message:n.message,timestamp:n.timestamp,
+    isRead:n.is_read,priority:n.priority,targetRole:n.target_role,actionTab:n.action_tab,meta:n.meta}));
+  users.splice(0, users.length, ...us.map((u:any)=>({...u.profile,id:u.id,email:u.email,password:u.password_hash,
+    role:u.role,customerId:u.customer_id,twoFactorSecret:u.two_factor_secret,is2faEnabled:u.is_2fa_enabled})));
+}
+export const refreshDataStore = initDataStore;
+
+// Explicit one-time bootstrap; never restore demo accounts over existing persisted accounts.
+export async function bootstrapAdmin(): Promise<void> {
+  if(!isSupabaseConfigured || !supabase) return;
+  if(users.some(u=>u.role==='admin')) return;
+  const password=process.env.ADMIN_INITIAL_PASSWORD;
+  const secret=process.env.ADMIN_2FA_SECRET;
+  if(!password || password.length<12 || !secret || secret.length<20 || secret.includes('VOLTA_')) {
+    throw new Error('Configurare ADMIN_INITIAL_PASSWORD (minimo 12 caratteri) e ADMIN_2FA_SECRET univoco per il primo avvio.');
+  }
+  const profile={id:crypto.randomUUID(),name:'Amministratore',email:(process.env.ADMIN_EMAIL||'m.riva@voltagroup.it').toLowerCase(),
+    password:await bcrypt.hash(password,12),role:'admin',is2faEnabled:true,twoFactorSecret:secret,createdAt:new Date().toISOString()};
+  check((await supabase.rpc('bootstrap_crm_admin',{p_profile:profile})).error);
+  await initDataStore();
+}

@@ -13,7 +13,9 @@ import { ocrRouter } from './routes/ocr.js';
 import { messagingRouter } from './routes/messaging.js';
 import { commissionRouter } from './routes/commissions.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
-import { getCustomers, getLeads, getNotifications, initDataStore } from './services/dataStore.js';
+import { getCustomers, getLeads, getNotifications, initDataStore, bootstrapAdmin, refreshDataStore } from './services/dataStore.js';
+import { portalRouter } from './routes/portal.js';
+import { validateProductionConfiguration } from './services/runtimeConfig.js';
 import { testDatabaseConnection } from './services/dbClient.js';
 
 const app = express();
@@ -78,7 +80,14 @@ app.use((req: Request, _res: Response, next) => {
   next();
 });
 
+// Refresh committed identity/customer state across workers before protected operations.
+app.use('/api', async (_req:Request, _res:Response, next:NextFunction) => {
+  await refreshDataStore();
+  next();
+});
+
 // Mount Routes
+app.use('/api/portal', portalRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/customers', customersRouter);
@@ -111,16 +120,17 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction): void => {
   res.status(err.status || 500).json({ success: false, message });
 });
 
-initDataStore().catch(err => console.warn('[Startup] Warning durante inizializzazione DB:', err.message));
+export async function startServer(port: number | string = PORT) {
+  validateProductionConfiguration();
+  await initDataStore();
+  await bootstrapAdmin();
+  return app.listen(port, () => console.log(`VoltaCRM API pronta sulla porta ${port}`));
+}
 
-app.listen(PORT, () => {
-  console.log(`=================================================`);
-  console.log(`🚀 VOLTACRM BACKEND API SERVER ATTIVO`);
-  console.log(`📡 URL Locale: http://localhost:${PORT}`);
-  console.log(`⚕️ Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`💼 CRM Broker: http://localhost:${PORT}/api/switch/audit`);
-  console.log(`🖥️ Totem Kiosk: http://localhost:${PORT}/api/kiosk/lead`);
-  console.log(`=================================================`);
-});
-
+if (require.main === module) {
+  startServer().catch(error => {
+    console.error('Avvio interrotto: configurazione o database non disponibili.', error.message);
+    process.exitCode = 1;
+  });
+}
 export default app;

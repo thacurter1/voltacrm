@@ -23,6 +23,7 @@ import { TeamProfilesManager } from '../components/TeamProfilesManager';
 import { CustomerProfileSection } from '../components/CustomerProfileSection';
 import { SavingsProposalPdfModal } from '../components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from '../components/DigitalSignatureModal';
+import { SignatureActivationPanel } from '../components/SignatureActivationPanel';
 import { CommissionManager } from '../components/CommissionManager';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 
@@ -61,7 +62,11 @@ export const CrmApp: React.FC = () => {
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(initialDb.marketIndex);
   const [isRefreshingMarketIndex, setIsRefreshingMarketIndex] = useState(false);
   const [securityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
-  const audits = React.useMemo(() => runQuarterlyAudit(customers, marketIndex), [customers, marketIndex]);
+  const [auditStatusOverrides, setAuditStatusOverrides] = useState<Record<string, SwitchAudit['status']>>({});
+  const audits = React.useMemo(() => runQuarterlyAudit(customers, marketIndex).map(audit => ({
+    ...audit,
+    status: auditStatusOverrides[audit.id] || audit.status
+  })), [customers, marketIndex, auditStatusOverrides]);
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
@@ -385,14 +390,21 @@ export const CrmApp: React.FC = () => {
         )}
 
         {activeTab === 'switch4m' && (
-          <QuarterlySwitchEngine
-            audits={audits}
-            onTriggerGlobalAudit={() => {
-              addToast('Audit Globale Completato', 'Tariffe e PUN/PSV ricalcolati su tutti i clienti.', 'success');
-            }}
-            onAuditSwitched={handleAuditSwitched}
-            onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
-          />
+          <>
+            <QuarterlySwitchEngine
+              audits={audits}
+              onTriggerGlobalAudit={() => {
+                addToast('Audit Globale Completato', 'Tariffe e PUN/PSV ricalcolati su tutti i clienti.', 'success');
+              }}
+              onAuditSwitched={handleAuditSwitched}
+              onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
+            />
+            <SignatureActivationPanel onActivated={(signature) => {
+              const activatedAudit = audits.find(a => a.customerId === signature.customerId && a.podOrPdr === signature.podOrPdr);
+              if (activatedAudit) setAuditStatusOverrides(current => ({ ...current, [activatedAudit.id]: 'switched' }));
+              addToast('Switch Attivato', `Confermata l’attivazione per ${signature.podOrPdr}.`, 'success');
+            }} />
+          </>
         )}
 
         {activeTab === 'tariffe' && (
@@ -589,7 +601,10 @@ export const CrmApp: React.FC = () => {
         audit={signatureAudit}
         customerPhone={customers.find(c => c.id === signatureAudit?.customerId)?.phone}
         customerFiscalCode={customers.find(c => c.id === signatureAudit?.customerId)?.fiscalCode}
-        onSigned={(auditId) => handleAuditSwitched(auditId)}
+        onSigned={(auditId) => {
+          setAuditStatusOverrides(current => ({ ...current, [auditId]: 'signed' }));
+          addToast('Firma Registrata', 'La richiesta è firmata e attende la conferma di attivazione dello staff.', 'success');
+        }}
       />
 
       <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />

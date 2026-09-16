@@ -27,6 +27,7 @@ import { CustomerProfileSection } from './components/CustomerProfileSection';
 import { PortalGate } from './components/PortalGate';
 import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
+import { SignatureActivationPanel } from './components/SignatureActivationPanel';
 import { CommissionManager } from './components/CommissionManager';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { TotemKioskMode } from './components/TotemKioskMode';
@@ -36,7 +37,8 @@ const CrmApp = React.lazy(() => import('./apps/CrmApp'));
 import { dbService, DEMO_USERS } from './services/db';
 import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
-import { api } from './api/client';
+import { api, DEMO_MODE } from './api/client';
+import { portalApi } from './api/portal';
 import { 
   Appointment, 
   Customer, 
@@ -57,18 +59,18 @@ function UnifiedApp() {
 
   // Auth & Session State
   const [currentUser, setCurrentUser] = useState<UserProfile>(initialDb.currentUser || INITIAL_PROFILES[0]);
-  const [isGateOpen, setIsGateOpen] = useState(false);
+  const [isGateOpen, setIsGateOpen] = useState(!DEMO_MODE);
   const [isTotemOpen, setIsTotemOpen] = useState(false);
-  const [profiles, setProfiles] = useState<UserProfile[]>(INITIAL_PROFILES);
+  const [profiles, setProfiles] = useState<UserProfile[]>(DEMO_MODE ? INITIAL_PROFILES : []);
 
   // Business Data State
-  const [customers, setCustomers] = useState<Customer[]>(initialDb.customers);
-  const [leads, setLeads] = useState<Lead[]>(initialDb.leads);
-  const [appointments, setAppointments] = useState<Appointment[]>(initialDb.appointments);
-  const [bills, setBills] = useState<CustomerBill[]>(initialDb.bills);
+  const [customers, setCustomers] = useState<Customer[]>(DEMO_MODE ? initialDb.customers : []);
+  const [leads, setLeads] = useState<Lead[]>(DEMO_MODE ? initialDb.leads : []);
+  const [appointments, setAppointments] = useState<Appointment[]>(DEMO_MODE ? initialDb.appointments : []);
+  const [bills, setBills] = useState<CustomerBill[]>(DEMO_MODE ? initialDb.bills : []);
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(initialDb.marketIndex);
-  const [securityLogs, setSecurityLogs] = useState<SecurityAuditLog[]>(initialDb.securityLogs);
-  const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(initialDb.customers));
+  const [securityLogs, setSecurityLogs] = useState<SecurityAuditLog[]>(DEMO_MODE ? initialDb.securityLogs : []);
+  const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(DEMO_MODE ? initialDb.customers : []));
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
@@ -93,17 +95,15 @@ function UnifiedApp() {
       });
   }, []);
 
-  // Carica i profili utente
+  // Restore only a backend-validated session, never a local role selection.
   useEffect(() => {
-    profileService.getProfiles().then(data => {
-      if (data && data.length > 0) {
-        setProfiles(data);
-      }
-    });
+    if (DEMO_MODE || !localStorage.getItem('VOLTA_AUTH_TOKEN')) return;
+    api.auth.me().then(({user})=>handleSelectUser(user)).catch(()=>{api.auth.logout();setIsGateOpen(true);});
   }, []);
 
-  // Persistenza automatica con debouncing nel database locale
+  // Demo persistence only. Server data is reloaded on authenticated access.
   useEffect(() => {
+    if (!DEMO_MODE) return;
     const timer = setTimeout(() => {
       dbService.save({
         customers,
@@ -194,17 +194,23 @@ function UnifiedApp() {
   const pendingBills = bills.filter(b => b.status === 'in_review');
 
   // Switch User Profile / Role
-  const handleSelectUser = (newUser: UserProfile) => {
-    setCurrentUser(newUser);
-    setIsGateOpen(false);
-    if (newUser.role === 'customer') {
-      setActiveTab('customer_overview');
-      addToast('Accesso Portale Cliente', `Benvenuto nella tua Area Risparmio, ${newUser.name}.`, 'success');
-      recordSecurityLog('gdpr_consent_logged', 'safe', `Accesso registrato al portale cliente per ${newUser.email}`);
-    } else {
-      setActiveTab('dashboard');
-      addToast('Accesso Backend Call Center', `Benvenuto nell'area operativa, ${newUser.name}.`, 'info');
-      recordSecurityLog('login_2fa_success', 'safe', `Accesso operatore call center autorizzato per ${newUser.email}`);
+  const handleSelectUser = async (_newUser: UserProfile) => {
+    try {
+      const { user } = await api.auth.me();
+      const isCustomer = user.role === 'customer';
+      const [customerRows, leadRows, profileRows, billRows] = await Promise.all([
+        isCustomer ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : api.customers.getAll(),
+        isCustomer ? Promise.resolve([]) : api.leads.getAll(),
+        isCustomer ? Promise.resolve([user]) : api.auth.profiles(),
+        portalApi.listBills(isCustomer ? user.customerId : undefined)
+      ]);
+      setCustomers(customerRows); setLeads(leadRows); setProfiles(profileRows); setBills(billRows);
+      setAudits(runQuarterlyAudit(customerRows, marketIndex));
+      setCurrentUser(user); setIsGateOpen(false);
+      setActiveTab(isCustomer ? 'customer_overview' : 'dashboard');
+    } catch(error) {
+      setIsGateOpen(true);
+      addToast('Accesso non completato',error instanceof Error?error.message:'Dati non disponibili.','warning');
     }
   };
 
@@ -220,21 +226,17 @@ function UnifiedApp() {
   };
 
   // Lead handlers
-  const handleAddLead = (newLead: Lead) => {
-    setLeads(prev => [newLead, ...prev]);
-    api.leads.create(newLead).catch(err => {
-      console.warn('[App] Sincronizzazione lead su backend REST:', err);
-    });
-    addToast('Nuovo Lead Registrato', `${newLead.name} è stato registrato nel database da ${newLead.source}.`, 'success');
+  const handleAddLead = async (newLead: Lead) => {
+    try {
+      const saved = await api.leads.create(newLead);
+      setLeads(prev=>[saved,...prev]);
+      addToast('Lead registrato',saved.name,'success');
+    } catch(error) {addToast('Salvataggio non riuscito',error instanceof Error?error.message:'Riprova.','warning');}
   };
 
-  const handleUpdateLeadStatus = (leadId: string, status: LeadStatus, note?: string) => {
-    setLeads(prev => prev.map(l => l.id === leadId ? { 
-      ...l, 
-      status, 
-      notes: note ? `${l.notes} | ${note}` : l.notes 
-    } : l));
-    addToast('Stato Lead Aggiornato', 'Il contatto è stato aggiornato in agenda call center.', 'info');
+  const handleUpdateLeadStatus = async (leadId:string,status:LeadStatus,note?:string) => {
+    try {const saved=await api.leads.updateStatus(leadId,status,note);if(saved)setLeads(prev=>prev.map(l=>l.id===saved.id?saved:l));}
+    catch(error){addToast('Aggiornamento non riuscito',error instanceof Error?error.message:'Riprova.','warning');}
   };
 
   const handleOpenScheduleModal = (lead: Lead) => {
@@ -315,52 +317,21 @@ function UnifiedApp() {
   // Aggiunta Nuovo Cliente (Manuale da CRM o da Conversione Lead)
   const handleAddCustomer = async (newCustomer: Customer) => {
     try {
-      await api.customers.create(newCustomer);
-    } catch (err) {
-      console.warn('[App] Fallback locale per creazione cliente:', err);
-    }
-
-    const updated = [newCustomer, ...customers];
-    setCustomers(updated);
-    setAudits(runQuarterlyAudit(updated, marketIndex));
-
-    // Se il cliente corrisponde a un lead attivo, aggiorna il lead a 'contract_signed'
-    const matchedLead = leads.find(l => l.phone === newCustomer.phone || l.name.toLowerCase() === newCustomer.name.toLowerCase());
-    if (matchedLead) {
-      handleUpdateLeadStatus(matchedLead.id, 'contract_signed', 'Convertito in cliente con successo');
-    }
-
-    addToast(
-      'Cliente Registrato con Successo',
-      `${newCustomer.name} è stato inserito a portafoglio (${newCustomer.utilityPoints.length} forniture). Audit ARERA attivato.`,
-      'success'
-    );
-    recordSecurityLog('gdpr_consent_logged', 'safe', `Nuovo cliente e mandato registrato per ${newCustomer.name}`);
+      const saved=await api.customers.create(newCustomer);
+      setCustomers(prev=>[saved,...prev]);
+      setAudits(prev=>[...runQuarterlyAudit([saved],marketIndex),...prev]);
+      addToast('Cliente registrato',saved.name,'success');
+    } catch(error) {addToast('Cliente non salvato',error instanceof Error?error.message:'Riprova.','warning');}
   };
 
   // Importazione Massiva Clienti (CSV / Excel)
-  const handleBatchAddCustomers = (newCustomers: Customer[]) => {
-    if (!newCustomers.length) return;
-    const updated = [...newCustomers, ...customers];
-    setCustomers(updated);
-    setAudits(runQuarterlyAudit(updated, marketIndex));
-
-    newCustomers.forEach(c => {
-      api.customers.create(c).catch(err => {
-        console.warn('[App] Fallback locale per cliente batch:', err);
-      });
-    });
-
-    addToast(
-      'Importazione Massiva Completata',
-      `${newCustomers.length} clienti importati con successo e inseriti nell'audit ARERA.`,
-      'success'
-    );
-    recordSecurityLog(
-      'gdpr_consent_logged',
-      'safe',
-      `Importati ${newCustomers.length} clienti da file CSV/Excel con consenso e mandato registrati.`
-    );
+  const handleBatchAddCustomers = async (newCustomers: Customer[]) => {
+    const results=await Promise.allSettled(newCustomers.map(c=>api.customers.create(c)));
+    const saved=results.flatMap(r=>r.status==='fulfilled'?[r.value]:[]);
+    setCustomers(prev=>[...saved,...prev]);
+    setAudits(prev=>[...runQuarterlyAudit(saved,marketIndex),...prev]);
+    const failed=results.length-saved.length;
+    addToast('Esito importazione',`${saved.length} salvati; ${failed} non salvati.`,failed?'warning':'success');
   };
 
   // Upload bolletta dal portale cliente
@@ -631,12 +602,20 @@ function UnifiedApp() {
             )}
 
             {activeTab === 'switch4m' && (
-              <QuarterlySwitchEngine
-                audits={audits}
-                onTriggerGlobalAudit={handleTriggerGlobalAudit}
-                onAuditSwitched={handleAuditSwitched}
-                onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
-              />
+              <>
+                <QuarterlySwitchEngine
+                  audits={audits}
+                  onTriggerGlobalAudit={handleTriggerGlobalAudit}
+                  onAuditSwitched={handleAuditSwitched}
+                  onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
+                />
+                <SignatureActivationPanel onActivated={(signature) => {
+                  setAudits(prev => prev.map(a => a.customerId === signature.customerId && a.podOrPdr === signature.podOrPdr
+                    ? { ...a, status: 'switched' as const }
+                    : a));
+                  addToast('Switch Attivato', `Confermata l’attivazione per ${signature.podOrPdr}.`, 'success');
+                }} />
+              </>
             )}
 
             {activeTab === 'security' && (
@@ -775,12 +754,13 @@ function UnifiedApp() {
         audit={signatureAudit}
         customerPhone={customers.find(c => c.id === signatureAudit?.customerId)?.phone}
         customerFiscalCode={customers.find(c => c.id === signatureAudit?.customerId)?.fiscalCode}
-        onSigned={(auditId, signatureType, documentHash) => {
-          handleAuditSwitched(auditId);
+        onSigned={(auditId, signatureType, receipt) => {
+          setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'signed' as const } : a));
+          addToast('Firma Registrata', 'La richiesta è firmata e attende la conferma di attivazione dello staff.', 'success');
           recordSecurityLog(
             'switch_signed_otp', 
             'safe', 
-            `Mandato di switch perfezionato digitalmente tramite ${signatureType === 'canvas' ? 'firma biometrica su schermo' : 'codice OTP SMS/WhatsApp'} per audit ${auditId} [Sigillo: ${documentHash || 'N/A'}]`
+            `Richiesta di switch firmata tramite ${signatureType === 'canvas' ? 'firma su schermo' : 'codice OTP'} per audit ${auditId}; attivazione in attesa [Sigillo: ${receipt.signatureHash}]`
           );
         }}
       />
@@ -825,10 +805,10 @@ export function App() {
   if (host.startsWith('totem.') || appParam === 'totem') {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
-  if (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer') {
+  if (DEMO_MODE && (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer')) {
     return <React.Suspense fallback={<Fallback />}><CustomerApp /></React.Suspense>;
   }
-  if (host.startsWith('crm.') || appParam === 'crm') {
+  if (DEMO_MODE && (host.startsWith('crm.') || appParam === 'crm')) {
     return <React.Suspense fallback={<Fallback />}><CrmApp /></React.Suspense>;
   }
 
@@ -836,4 +816,3 @@ export function App() {
 }
 
 export default App;
-

@@ -1,6 +1,7 @@
+import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { users } from '../services/dataStore.js';
+import { users, registerAccount } from '../services/dataStore.js';
 import { generateToken, authenticateToken, requireRole } from '../middleware/auth.js';
 import { loginLimiter } from '../middleware/rateLimiter.js';
 import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema } from '../middleware/validate.js';
@@ -31,7 +32,11 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
       return;
     }
 
-    const secret = user.twoFactorSecret || 'VOLTA_DEFAULT_2FA_FALLBACK_KEY';
+    const secret = user.twoFactorSecret;
+    if (!secret || (process.env.NODE_ENV === 'production' && secret.startsWith('VOLTA_'))) {
+      res.status(503).json({ success: false, message: 'Secondo fattore non configurato. Contattare un amministratore.' });
+      return;
+    }
     const isTotpValid = verifyTotp(totpCode, secret, 1);
     const isDevMock = process.env.NODE_ENV !== 'production' && totpCode === '123456';
 
@@ -77,41 +82,34 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
 });
 
 // POST /api/auth/register-customer
-authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSchema), (req: Request, res: Response): void => {
+authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSchema), async (req: Request, res: Response): Promise<void> => {
   const { name, email, phone, fiscalCode, password } = req.body;
-  
-  const hashedPassword = bcrypt.hashSync(password || 'customer123', 10);
-
-  const newProfile = {
-    id: `user-cust-${Date.now()}`,
-    name,
-    email,
-    password: hashedPassword,
-    role: 'customer',
-    phone: phone || '+39 340 0000000',
-    whatsapp: (phone || '+39340000000').replace(/[^0-9+]/g, ''),
-    fiscalCode: (fiscalCode || 'CF' + Math.random().toString(36).substring(2, 10)).toUpperCase(),
-    customerId: `cust-${Date.now()}`,
-    assignedBrokerId: 'user-admin-1',
-    assignedBrokerName: 'Matteo Riva (Broker Volta)',
-    avatar: name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase(),
-    is2faEnabled: false,
-    onboardingStatus: 'active',
-    createdAt: new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().split('T')[0];
+  const customerId = crypto.randomUUID();
+  const profile = {
+    id: crypto.randomUUID(), name: name.trim(), email: email.trim().toLowerCase(),
+    password: await bcrypt.hash(password, 12), role: 'customer', phone,
+    fiscalCode: fiscalCode.trim().toUpperCase(), customerId,
+    avatar: name.split(' ').map((n:string)=>n[0]).join('').slice(0,2).toUpperCase(),
+    is2faEnabled: false, onboardingStatus:'active', createdAt:today
   };
-
-  users.unshift(newProfile as any);
-
-  const token = generateToken({ userId: newProfile.id, email: newProfile.email, role: newProfile.role });
-
-  res.status(201).json({
-    success: true,
-    user: toSafeProfile(newProfile),
-    token
+  await registerAccount(profile, {
+    id:customerId,name:profile.name,email:profile.email,phone,fiscalCode:profile.fiscalCode,
+    city:'',utilityPoints:[],contractStartDate:today,lastSwitchAuditDate:today,
+    nextSwitchAuditDate:new Date(Date.now()+120*86400000).toISOString().split('T')[0],
+    accountManager:'',hasBrokerageMandate:false,notes:''
   });
+  const token=generateToken({userId:profile.id,email:profile.email,role:profile.role});
+  res.status(201).json({success:true,user:toSafeProfile(profile),token});
 });
 
 // GET /api/auth/profiles (Solo per operatori autorizzati)
+authRouter.get('/me', authenticateToken, (req: any, res: Response): void => {
+  const user = users.find(u => u.id === req.user?.userId && u.role === req.user?.role);
+  if (!user) { res.status(401).json({success:false,message:'Sessione non più valida.'}); return; }
+  res.json({success:true,user:toSafeProfile(user)});
+});
+
 authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center'), (_req: Request, res: Response) => {
   res.json({ success: true, profiles: users.map(toSafeProfile) });
 });

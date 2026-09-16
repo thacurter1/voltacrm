@@ -7,7 +7,7 @@ import { Lead } from '../types.js';
 export const kioskRouter = Router();
 
 // POST /api/kiosk/lead
-kioskRouter.post('/lead', kioskLimiter, validate(kioskLeadSchema), (req: Request, res: Response): void => {
+kioskRouter.post('/lead', kioskLimiter, validate(kioskLeadSchema), async (req: Request, res: Response): Promise<void> => {
   const { name, firstName, lastName, phone, email, supplyType, monthlyExpenseEur, totemId, mallLocation } = req.body;
 
   if (!phone || phone.replace(/\D/g, '').length < 8) {
@@ -37,7 +37,7 @@ kioskRouter.post('/lead', kioskLimiter, validate(kioskLeadSchema), (req: Request
     estimatedConsumptionSmc: supplyType === 'luce' ? 0 : Math.round((expense * 12 * 0.4) / 1.10),
   };
 
-  addLead(newLead);
+  await addLead(newLead);
 
   res.status(201).json({
     success: true,
@@ -50,7 +50,7 @@ kioskRouter.post('/lead', kioskLimiter, validate(kioskLeadSchema), (req: Request
 });
 
 // GET /api/kiosk/status
-kioskRouter.get('/status', (req: Request, res: Response): void => {
+kioskRouter.get('/status', async (req: Request, res: Response): Promise<void> => {
   res.json({
     success: true,
     kioskStatus: 'online',

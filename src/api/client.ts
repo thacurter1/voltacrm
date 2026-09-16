@@ -31,10 +31,11 @@ function resolveApiBaseUrl(): string | null {
 }
 
 const API_BASE_URL: string | null = resolveApiBaseUrl();
+export const DEMO_MODE = (import.meta as any).env?.VITE_DEMO_MODE === 'true';
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   if (!API_BASE_URL) {
-    throw new Error('Backend remoto non configurato su questo host, attivazione fallback locale integrato.');
+    throw new Error('Servizio non configurato. Contatta un amministratore.');
   }
 
   const url = `${API_BASE_URL}${endpoint}`;
@@ -78,6 +79,14 @@ export const api = {
       return data;
     },
 
+    async registerCustomer(payload:{name:string;email:string;phone:string;fiscalCode:string;password:string}) {
+      const data = await request<{success:boolean;token:string;user:any}>('/auth/register-customer',{method:'POST',body:JSON.stringify(payload)});
+      if(data.token) localStorage.setItem('VOLTA_AUTH_TOKEN',data.token);
+      return data;
+    },
+    async me() { return request<{success:boolean;user:any}>('/auth/me'); },
+    async profiles() { const data=await request<{success:boolean;profiles:any[]}>('/auth/profiles'); return data.profiles; },
+
     async ensureToken(): Promise<string | null> {
       if (typeof window === 'undefined') return null;
       return localStorage.getItem('VOLTA_AUTH_TOKEN');
@@ -94,7 +103,8 @@ export const api = {
   async getHealth() {
     try {
       return await request<{ status: string; version: string; service: string }>('/health');
-    } catch {
+    } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
       return { status: 'offline-fallback', version: '1.0.0', service: 'Volta Local Engine' };
     }
   },
@@ -107,6 +117,7 @@ export const api = {
         const data = await request<{ success: boolean; leads: Lead[] }>('/leads');
         return data.leads;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Backend offline, fallback a db locale per Leads:', err);
         return dbService.load().leads;
       }
@@ -116,10 +127,11 @@ export const api = {
       try {
         const data = await request<{ success: boolean; lead: Lead }>('/leads', {
           method: 'POST',
-          body: JSON.stringify(leadData)
+          body: JSON.stringify(Object.fromEntries(['name','phone','email','city','source','status','notes','assignedCallCenterAgent','appointmentId','estimatedConsumptionKwh','estimatedConsumptionSmc'].filter(k=>(leadData as any)[k]!==undefined).map(k=>[k,(leadData as any)[k]])))
         });
         return data.lead;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Fallback locale per creazione Lead:', err);
         const state = dbService.load();
         const newLead: Lead = {
@@ -148,6 +160,7 @@ export const api = {
         });
         return data.lead;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Fallback locale per updateStatus Lead:', err);
         const state = dbService.load();
         const updatedLeads = state.leads.map((l: Lead) => {
@@ -174,6 +187,7 @@ export const api = {
         const data = await request<{ success: boolean; customers: Customer[] }>('/customers');
         return data.customers;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Fallback a db locale per Clienti:', err);
         return dbService.load().customers;
       }
@@ -184,7 +198,8 @@ export const api = {
         await api.auth.ensureToken();
         const data = await request<{ success: boolean; customer: Customer }>(`/customers/${id}`);
         return data.customer;
-      } catch {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         return dbService.load().customers.find((c: Customer) => c.id === id);
       }
     },
@@ -194,10 +209,11 @@ export const api = {
         await api.auth.ensureToken();
         const data = await request<{ success: boolean; customer: Customer }>('/customers', {
           method: 'POST',
-          body: JSON.stringify(customerData)
+          body: JSON.stringify(Object.fromEntries(['name','fiscalCode','phone','email','city','utilityPoints','hasBrokerageMandate','accountManager','notes'].filter(k=>(customerData as any)[k]!==undefined).map(k=>[k,(customerData as any)[k]])))
         });
         return data.customer;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Fallback locale per aggiunta Cliente:', err);
         const state = dbService.load();
         const newCust: Customer = {
@@ -227,7 +243,8 @@ export const api = {
       try {
         const data = await request<{ success: boolean; marketIndex: MarketIndex }>('/switch/market-indices');
         return data.marketIndex;
-      } catch {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         return CURRENT_MARKET_INDEX;
       }
     },
@@ -238,7 +255,8 @@ export const api = {
           method: 'POST'
         });
         return data.marketIndex;
-      } catch {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         return CURRENT_MARKET_INDEX;
       }
     },
@@ -247,7 +265,8 @@ export const api = {
       try {
         const data = await request<{ success: boolean; offers: SupplierOffer[] }>('/switch/offers');
         return data.offers;
-      } catch {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         return MARKET_OFFERS;
       }
     },
@@ -258,43 +277,26 @@ export const api = {
         const data = await request<{ success: boolean; audits: SwitchAudit[] }>('/switch/audit');
         return data.audits;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Fallback locale per Switch Audit:', err);
         return runQuarterlyAudit(dbService.load().customers, CURRENT_MARKET_INDEX);
       }
     },
 
+    async getSignatures() {
+      const data = await request<{success:boolean;signatures:any[]}>('/switch/signatures');
+      return data.signatures;
+    },
+    async activateSignature(id:string, payload:{activationReference:string;activatedAt:string}) {
+      return request<{success:boolean;signatureReceipt:any;customer:Customer}>(`/switch/signatures/${encodeURIComponent(id)}/activate`,{method:'POST',body:JSON.stringify(payload)});
+    },
     async signContract(payload: {
-      customerId?: string;
-      customerName: string;
-      signerFiscalCode: string;
-      phone: string;
-      otpCode?: string;
-      signatureType?: 'otp' | 'canvas';
-      canvasDataUrl?: string;
-      offerId?: string;
-      supplier?: string;
+      customerId: string; customerName?: string; signerFiscalCode?: string; phone?: string;
+      utilityPointId: string; podOrPdr: string; consentVersion: string;
+      otpCode?: string; signatureType: 'otp'|'canvas'; canvasDataUrl?: string;
+      offerId: string; supplier?: string;
     }) {
-      if (API_BASE_URL) {
-        // Se il backend è attivo, invia la richiesta reale al server: propaga categoricamente gli errori (OTP errato, 400, 403)
-        await api.auth.ensureToken();
-        return await request<{ success: boolean; signatureReceipt: any }>('/switch/sign', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-      }
-
-      // Solo ed esclusivamente se nessun backend è raggiungibile/configurato (deploy demo statico client-only)
-      console.warn('[API Client] Backend remoto non configurato, modalità simulazione firma locale.');
-      return {
-        success: true,
-        isDemoFallback: true,
-        signatureReceipt: {
-          id: `sig-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          signatureHash: `SHA256-DEMO-${Date.now()}`,
-          ...payload
-        }
-      };
+      return request<{success:boolean;signatureReceipt:any}>('/switch/sign', {method:'POST',body:JSON.stringify(payload)});
     }
   },
 
@@ -321,6 +323,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Backend non raggiungibile, salvataggio locale Kiosk:', err);
         const estSavings = Math.round(payload.monthlyExpenseEur * 12 * 0.28);
         const state = dbService.load();
@@ -356,6 +359,7 @@ export const api = {
         const data = await request<{ success: boolean; notifications: any[]; unreadCount: number }>(`/notifications${query}`);
         return { notifications: data.notifications, unreadCount: data.unreadCount };
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Fallback locale per Notifiche:', err);
         return {
           notifications: [
@@ -391,7 +395,8 @@ export const api = {
       try {
         await request(`/notifications/${id}/read`, { method: 'PATCH' });
         return true;
-      } catch {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         return true;
       }
     },
@@ -400,7 +405,8 @@ export const api = {
       try {
         await request(`/notifications/mark-all-read`, { method: 'POST' });
         return true;
-      } catch {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         return true;
       }
     },
@@ -411,7 +417,8 @@ export const api = {
           method: 'POST',
           body: JSON.stringify(notificationData)
         });
-      } catch {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         return { success: true, notification: { id: `notif-${Date.now()}`, ...notificationData, isRead: false } };
       }
     }
@@ -427,6 +434,7 @@ export const api = {
         });
         return data.result;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore chiamata OCR backend, attivo fallback locale:', err);
         const isGas = payload.fileName.toLowerCase().includes('gas');
         return {
@@ -468,6 +476,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore sendOtp backend, attivo fallback locale:', err);
         const code = '849201';
         return {
@@ -487,7 +496,8 @@ export const api = {
           method: 'POST',
           body: JSON.stringify(payload)
         });
-      } catch (err: unknown) {
+      } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore verifyOtp backend:', err);
         return {
           success: false,
@@ -510,6 +520,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore sendOfferWhatsApp backend, fallback locale:', err);
         return {
           success: true,
@@ -528,6 +539,7 @@ export const api = {
         const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
         return data.summaries;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore getSummaries commissions, uso fallback locale:', err);
         return [
           {
@@ -573,6 +585,7 @@ export const api = {
         const data = await request<{ success: boolean; commissions: CommissionRecord[] }>(`/commissions${qs ? `?${qs}` : ''}`);
         return data.commissions;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore getAll commissions, uso fallback locale:', err);
         return [];
       }
@@ -585,6 +598,7 @@ export const api = {
         const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
         return data.batches;
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore getBatches commissions:', err);
         return [];
       }
@@ -593,7 +607,7 @@ export const api = {
     async generate(payload: {
       agentId: string;
       agentName: string;
-      contractId?: string;
+      contractId: string;
       customerName: string;
       podOrPdr: string;
       utilityType: 'luce' | 'gas';
@@ -609,6 +623,7 @@ export const api = {
         });
         return { records: data.records, totalEur: data.totalEur };
       } catch (err) {
+        if (API_BASE_URL || !DEMO_MODE) throw err;
         console.warn('[API Client] Errore generate commissions:', err);
         return { records: [], totalEur: 0 };
       }

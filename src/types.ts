@@ -108,6 +108,7 @@ export interface SupplierOffer {
 }
 
 export interface SwitchAudit {
+  utilityPointId?: string;
   id: string;
   customerId: string;
   customerName: string;
@@ -120,7 +121,7 @@ export interface SwitchAudit {
   annualSavings: number;
   savingsPercent: number;
   daysActive: number;
-  status: 'audit_ready' | 'switch_recommended' | 'already_optimal' | 'proposal_sent' | 'switched';
+  status: 'audit_ready' | 'switch_recommended' | 'already_optimal' | 'proposal_sent' | 'signed' | 'switched';
   scheduledAuditDate: string;
 }
 

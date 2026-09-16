@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getLeads, addLead } from '../services/dataStore.js';
+import { getLeads, addLead, updateLead } from '../services/dataStore.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, createLeadSchema } from '../middleware/validate.js';
 import { Lead } from '../types.js';
@@ -12,7 +12,7 @@ leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center'), (_r
 });
 
 // POST /api/leads
-leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center'), validate(createLeadSchema), (req: Request, res: Response): void => {
+leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center'), validate(createLeadSchema), async (req: Request, res: Response): Promise<void> => {
   const { name, phone, email, city, source, notes, estimatedConsumptionKwh, estimatedConsumptionSmc } = req.body;
 
   const newLead: Lead = {
@@ -29,12 +29,12 @@ leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center'), va
     estimatedConsumptionSmc,
   };
 
-  addLead(newLead);
+  await addLead(newLead);
   res.status(201).json({ success: true, lead: newLead });
 });
 
 // PATCH /api/leads/:id/status
-leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center'), (req: Request, res: Response): void => {
+leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center'), async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { status, note } = req.body;
 
@@ -45,10 +45,8 @@ leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_c
     return;
   }
 
-  lead.status = status;
-  if (note) {
-    lead.notes = `${lead.notes} | ${note}`;
-  }
+  const updated = { ...lead, status, notes: note ? `${lead.notes} | ${note}` : lead.notes };
+  await updateLead(updated);
 
-  res.json({ success: true, lead });
+  res.json({ success: true, lead: updated });
 });

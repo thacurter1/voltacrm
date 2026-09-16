@@ -182,6 +182,7 @@ export async function sendOtp(
 
   // 3. Fallback: in produzione è vietato simulare OTP in sandbox o esporre debugOtp
   if (process.env.NODE_ENV === 'production') {
+    pendingOtps.delete(cleanPhone);
     throw new Error('Invio OTP non riuscito: provider SMS/WhatsApp non configurato o non raggiungibile.');
   }
 
@@ -193,7 +194,7 @@ export async function sendOtp(
   console.log(`======================================================\n`);
 
   // Notifica interna generica: non contiene MAI il codice OTP in chiaro
-  addNotification({
+  await addNotification({
     id: `notif-otp-${Date.now()}`,
     type: 'signature_completed',
     title: `Nuovo OTP Richiesto (${channel.toUpperCase()})`,
@@ -317,6 +318,8 @@ Un nostro Energy Specialist dedicato resta a tua disposizione.`;
     }
   }
 
+  if (process.env.NODE_ENV === 'production') throw new Error('Invio WhatsApp non riuscito: provider non disponibile.');
+
   // Sandbox Mode
   console.log(`\n======================================================`);
   console.log(`💬 [DEV SANDBOX WHATSAPP] Preventivo Inviato`);
@@ -325,7 +328,7 @@ Un nostro Energy Specialist dedicato resta a tua disposizione.`;
   console.log(`Risparmio:    €${payload.savingsEur}/anno (${payload.utilityType})`);
   console.log(`======================================================\n`);
 
-  addNotification({
+  await addNotification({
     id: `notif-kiosk-wa-${Date.now()}`,
     type: 'totem_lead',
     title: `Preventivo WhatsApp Inviato (${payload.customerName})`,

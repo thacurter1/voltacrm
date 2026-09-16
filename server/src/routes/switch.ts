@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine.js';
 import { getCustomers, getSignatureLogs, addSignatureLog, updateCustomer, users } from '../services/dataStore.js';
 import { getLiveMarketIndices, refreshMarketIndices } from '../services/gmeFeedService.js';
@@ -7,8 +7,35 @@ import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, signContractSchema } from '../middleware/validate.js';
 import { verifyOtp } from '../services/messagingService.js';
 import { Customer, UtilityPoint } from '../types.js';
+import {
+  activateSignedSignature,
+  assertIdentityMatchesStored,
+  buildCanonicalSignatureDocument,
+  decodeAndValidateCanvasPng,
+  hashCanonicalDocument,
+  SignatureConflictError,
+  SignatureNotFoundError,
+  SignatureValidationError,
+  snapshotOffer,
+  snapshotUtilityPoint
+} from '../services/signatureService.js';
 
 export const switchRouter = Router();
+
+const enforceSignatureOwnership = (req: Request, res: Response, next: NextFunction): void => {
+  const authUser = (req as any).user;
+  const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator');
+  if (!isStaff) {
+    const userProfile = users.find(user => user.id === authUser?.userId);
+    const ownedCustomerId = userProfile?.customerId || authUser?.userId;
+    const requestedCustomerId = req.body?.customerId;
+    if (requestedCustomerId && requestedCustomerId !== ownedCustomerId && requestedCustomerId !== authUser?.userId) {
+      res.status(403).json({ success: false, message: 'Accesso negato. Non puoi firmare per un altro cliente.' });
+      return;
+    }
+  }
+  next();
+};
 
 // GET /api/switch/market-indices (Pubblico per comparatore tariffe con fasce F1/F2/F3 e trend)
 switchRouter.get('/market-indices', async (_req: Request, res: Response): Promise<void> => {
@@ -71,155 +98,167 @@ switchRouter.get('/offers', (_req: Request, res: Response): void => {
   });
 });
 
-// POST /api/switch/sign (Digital Signature & Mandato Brokeraggio con validazione crittografica OTP e binding cliente)
-switchRouter.post('/sign', authenticateToken, validate(signContractSchema), (req: Request, res: Response): void => {
-  const authUser = (req as any).user;
-  const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator');
+// POST /api/switch/sign (la firma crea una richiesta immutabile; l'attivazione resta separata)
+switchRouter.post('/sign', authenticateToken, enforceSignatureOwnership, validate(signContractSchema), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const authUser = (req as any).user;
+    const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator');
+    const {
+      customerId, customerName, signerFiscalCode, phone, otpCode,
+      signatureType = 'otp', canvasDataUrl, offerId, supplier,
+      utilityPointId, podOrPdr, consentVersion
+    } = req.body;
 
-  const { customerId, customerName, signerFiscalCode, phone, otpCode, signatureType = 'otp', canvasDataUrl, offerId, supplier } = req.body;
-
-  if (!customerName || !signerFiscalCode || !phone) {
-    res.status(400).json({ success: false, message: 'Dati di firma incompleti (richiesti customerName, signerFiscalCode, phone).' });
-    return;
-  }
-
-  // Prevenzione IDOR: se l'utente ha ruolo customer, è vincolato tassativamente alla propria anagrafica
-  let targetCustomerId = customerId;
-  if (!isStaff) {
-    const userProfile = users.find(u => u.id === authUser?.userId);
-    const userCustId = userProfile?.customerId || authUser?.userId;
-    if (customerId && customerId !== userCustId && customerId !== authUser?.userId) {
-      res.status(403).json({
-        success: false,
-        message: 'Accesso negato. Non sei autorizzato a firmare contratti per conto di un altro cliente.'
-      });
-      return;
+    let effectiveCustomerId = customerId;
+    if (!isStaff) {
+      const userProfile = users.find(user => user.id === authUser?.userId);
+      const ownedCustomerId = userProfile?.customerId || authUser?.userId;
+      if (customerId && customerId !== ownedCustomerId && customerId !== authUser?.userId) {
+        res.status(403).json({ success: false, message: 'Accesso negato. Non puoi firmare per un altro cliente.' });
+        return;
+      }
+      effectiveCustomerId = ownedCustomerId;
     }
-    // Forza tassativamente l'identità del cliente autenticato anche se omessa nel payload
-    targetCustomerId = userCustId;
-  }
 
-  // Verifica esistenza offerta nel catalogo MARKET_OFFERS
-  const targetOffer = MARKET_OFFERS.find(o => o.id === offerId || (o.supplier === supplier && offerId === o.id));
-  if (!targetOffer) {
-    if (offerId === 'off-custom' && isStaff) {
-      // Offerta personalizzata ammessa solo per operatori staff
+    const customer = getCustomers().find(item => item.id === effectiveCustomerId);
+    if (!customer) throw new SignatureValidationError('Anagrafica cliente non trovata.');
+    const identity = {
+      customerId: customer.id,
+      customerName: customer.name,
+      signerFiscalCode: customer.fiscalCode.toUpperCase(),
+      phone: customer.phone
+    };
+    assertIdentityMatchesStored(identity, { customerName, signerFiscalCode, phone });
+
+    const offer = MARKET_OFFERS.find(item => item.id === offerId);
+    if (!offer || (supplier && supplier !== offer.supplier)) {
+      throw new SignatureValidationError('Offerta selezionata non valida o non coerente con il catalogo.');
+    }
+
+    let point: UtilityPoint | undefined;
+    if (utilityPointId && podOrPdr) {
+      point = customer.utilityPoints?.find((item: UtilityPoint) => item.id === utilityPointId && item.podOrPdr === podOrPdr);
+      if (!point) throw new SignatureValidationError('Il punto di fornitura indicato non appartiene al cliente o non coincide con POD/PDR.');
     } else {
-      res.status(400).json({
-        success: false,
-        message: `Offerta selezionata non valida o non presente a catalogo (id: ${offerId || 'sconosciuto'}).`
-      });
+      const matchingPoints = customer.utilityPoints?.filter((item: UtilityPoint) => item.type === offer.energyType) || [];
+      if (matchingPoints.length === 1) {
+        point = matchingPoints[0];
+      } else if (matchingPoints.length === 0) {
+        throw new SignatureValidationError('Nessun punto di fornitura trovato per il tipo di energia dell\u2019offerta.');
+      } else {
+        throw new SignatureValidationError('Il cliente ha pi\u00F9 punti di fornitura per questa energia: specificare utilityPointId e podOrPdr.');
+      }
+    }
+
+    if (!point) {
+      throw new SignatureValidationError('Punto di fornitura non valido.');
+    }
+
+    if (offer.energyType !== point.type) {
+      throw new SignatureValidationError('Il tipo energia dell\u2019offerta non coincide con il punto di fornitura firmato.');
+    }
+
+    const signedAt = new Date().toISOString();
+    const signatureId = `sig-${crypto.randomUUID()}`;
+    let canvasHash: string | undefined;
+
+    if (signatureType === 'canvas') {
+      const pngBytes = decodeAndValidateCanvasPng(canvasDataUrl);
+      canvasHash = crypto.createHash('sha256').update(pngBytes).digest('hex');
+    } else {
+      if (!otpCode || typeof otpCode !== 'string') throw new SignatureValidationError('Codice OTP obbligatorio.');
+      const verification = verifyOtp(identity.phone, otpCode);
+      if (!verification.verified) throw new SignatureValidationError(verification.message || 'Codice OTP errato o scaduto.');
+    }
+
+    const offerSnapshot = snapshotOffer(offer);
+    const originalPointSnapshot = snapshotUtilityPoint(point);
+    const canonicalDocument = buildCanonicalSignatureDocument({
+      signatureId,
+      signedAt,
+      identity,
+      utilityPoint: originalPointSnapshot,
+      offer: offerSnapshot,
+      consentVersion,
+      signatureType,
+      artifactHash: canvasHash
+    });
+    const documentHash = hashCanonicalDocument(canonicalDocument);
+    const signatureHash = documentHash;
+    const log = {
+      id: signatureId,
+      ...identity,
+      signatureType,
+      otpCode: signatureType === 'otp' ? '******' : undefined,
+      canvasDataUrl: signatureType === 'canvas' ? canvasDataUrl : undefined,
+      canvasHash,
+      offerId: offer.id,
+      supplier: offer.supplier,
+      utilityPointId: point.id,
+      podOrPdr: point.podOrPdr,
+      energyType: point.type,
+      offerSnapshot,
+      originalPointSnapshot,
+      consentVersion,
+      canonicalDocument,
+      timestamp: signedAt,
+      ipAddress: req.ip || null,
+      status: 'signed',
+      activationStatus: 'pending_activation',
+      signatureHash,
+      documentHash
+    };
+
+    await addSignatureLog(log);
+    res.status(201).json({
+      success: true,
+      message: 'Firma registrata. La fornitura resta invariata fino alla conferma di attivazione dello staff.',
+      signatureReceipt: log
+    });
+  } catch (error: any) {
+    if (error instanceof SignatureValidationError) {
+      res.status(400).json({ success: false, message: error.message });
       return;
     }
+    throw error;
   }
-
-  const effectiveCustomerId = targetCustomerId || (customerId || `cust-${Date.now()}`);
-
-  // Se customerId è identificato, verifica coerenza con l'anagrafica
-  const existingCustomer = getCustomers().find(c => c.id === effectiveCustomerId);
-  if (existingCustomer && existingCustomer.phone) {
-    const cleanReqPhone = phone.replace(/[^\d]/g, '');
-    const cleanCustPhone = existingCustomer.phone.replace(/[^\d]/g, '');
-    if (!cleanReqPhone.endsWith(cleanCustPhone.slice(-8)) && !cleanCustPhone.endsWith(cleanReqPhone.slice(-8))) {
-      res.status(400).json({
-        success: false,
-        message: 'Il numero di telefono indicato non corrisponde ai dati registrati per questa anagrafica.'
-      });
-      return;
-    }
-  }
-
-  const effectiveFiscalCode = (signerFiscalCode || (existingCustomer ? existingCustomer.fiscalCode : 'CF-ND')).toUpperCase();
-  const effectiveSupplier = targetOffer ? targetOffer.supplier : (supplier || 'Octopus Energy');
-  const effectiveOfferName = targetOffer ? targetOffer.name : (offerId || 'Offerta Standard');
-  const timestamp = new Date().toISOString();
-
-  let rawDataToSeal = '';
-  let canvasHash: string | undefined = undefined;
-
-  if (signatureType === 'canvas') {
-    if (!canvasDataUrl || typeof canvasDataUrl !== 'string' || !canvasDataUrl.startsWith('data:image/')) {
-      res.status(400).json({
-        success: false,
-        message: 'Tratto grafico della firma su schermo (canvas) mancante o non valido.'
-      });
-      return;
-    }
-    canvasHash = crypto.createHash('sha256').update(canvasDataUrl).digest('hex');
-    rawDataToSeal = `MANDATO_BROKERAGGIO_CANVAS|${effectiveCustomerId}|${effectiveFiscalCode}|${phone}|${effectiveSupplier}|${effectiveOfferName}|${timestamp}|${canvasHash}`;
-  } else {
-    // Validazione OTP
-    if (!otpCode || typeof otpCode !== 'string') {
-      res.status(400).json({
-        success: false,
-        message: 'Codice OTP obbligatorio per la modalità di firma OTP.'
-      });
-      return;
-    }
-
-    const otpVerification = verifyOtp(phone, otpCode);
-    if (!otpVerification.verified) {
-      res.status(400).json({
-        success: false,
-        message: otpVerification.message || 'Codice OTP errato o scaduto. Firma non convalidata.'
-      });
-      return;
-    }
-    rawDataToSeal = `MANDATO_BROKERAGGIO_VOLTA|${effectiveCustomerId}|${effectiveFiscalCode}|${phone}|${effectiveSupplier}|${effectiveOfferName}|${timestamp}|${otpCode}`;
-  }
-
-  const signatureHash = `SHA256:${crypto.createHash('sha256').update(rawDataToSeal).digest('hex')}`;
-
-  const log = {
-    id: `sig-${Date.now()}`,
-    customerId: effectiveCustomerId,
-    customerName: customerName || (existingCustomer ? existingCustomer.name : 'Cliente Volta'),
-    signerFiscalCode: effectiveFiscalCode,
-    phone,
-    signatureType,
-    otpCode: signatureType === 'otp' ? '******' : undefined,
-    canvasHash,
-    offerId: offerId || (targetOffer ? targetOffer.id : 'off-default'),
-    supplier: effectiveSupplier,
-    timestamp,
-    ipAddress: req.ip || '127.0.0.1',
-    signatureHash
-  };
-
-  addSignatureLog(log);
-
-  // Aggiorna anagrafica cliente e utilityPoints associati con la nuova fornitura e scadenze switch a 120 giorni
-  if (existingCustomer) {
-    const today = timestamp.split('T')[0];
-    const next120Days = new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0];
-    existingCustomer.lastSwitchAuditDate = today;
-    existingCustomer.nextSwitchAuditDate = next120Days;
-    existingCustomer.hasBrokerageMandate = true;
-
-    if (targetOffer && Array.isArray(existingCustomer.utilityPoints)) {
-      existingCustomer.utilityPoints = existingCustomer.utilityPoints.map((point: UtilityPoint) => {
-        if (!targetOffer.energyType || point.type === targetOffer.energyType) {
-          return {
-            ...point,
-            currentSupplier: targetOffer.supplier,
-            currentOfferName: targetOffer.name,
-            currentUnitCost: typeof targetOffer.unitPriceOrSpread === 'number' ? targetOffer.unitPriceOrSpread : point.currentUnitCost,
-            currentFixedFeeYear: typeof targetOffer.fixedAnnualFee === 'number' ? targetOffer.fixedAnnualFee : point.currentFixedFeeYear,
-            currentTariffType: targetOffer.pricingType === 'fixed' ? 'fixed' : 'indexed'
-          };
-        }
-        return point;
-      });
-    }
-    updateCustomer(existingCustomer);
-  }
-
-  res.status(201).json({
-    success: true,
-    message: 'Contratto e Mandato di Brokeraggio firmati digitalmente con successo.',
-    signatureReceipt: log
-  });
 });
+
+switchRouter.post(
+  '/signatures/:id/activate',
+  authenticateToken,
+  requireRole('admin', 'call_center', 'operator'),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const confirmationReference = req.body?.confirmationReference ?? req.body?.activationReference;
+      const activationDate = req.body?.activationDate ?? req.body?.activatedAt;
+      if (typeof confirmationReference !== 'string' || !confirmationReference.trim() || typeof activationDate !== 'string') {
+        throw new SignatureValidationError('Riferimento di conferma e data di attivazione sono obbligatori.');
+      }
+      const signatureReceipt = await activateSignedSignature({
+        signatureId: req.params.id,
+        confirmationReference,
+        activationDate,
+        activatedBy: (req as any).user.userId
+      });
+      res.status(200).json({ success: true, signatureReceipt });
+    } catch (error: any) {
+      if (error instanceof SignatureValidationError) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+      if (error instanceof SignatureNotFoundError) {
+        res.status(404).json({ success: false, message: error.message });
+        return;
+      }
+      if (error instanceof SignatureConflictError) {
+        res.status(409).json({ success: false, message: error.message });
+        return;
+      }
+      throw error;
+    }
+  }
+);
 
 // GET /api/switch/signatures (Filtrato per ruolo: i clienti vedono solo le proprie firme)
 switchRouter.get('/signatures', authenticateToken, (req: Request, res: Response): void => {

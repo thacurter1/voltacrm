@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getNotifications, addNotification } from '../services/dataStore.js';
+import { getNotifications, addNotification, markNotificationsRead } from '../services/dataStore.js';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.js';
 import { validate, triggerNotificationSchema } from '../middleware/validate.js';
 import { AppNotification } from '../types.js';
@@ -7,7 +7,7 @@ import { AppNotification } from '../types.js';
 export const notificationsRouter = Router();
 
 // GET /api/notifications (Protetta: restituisce solo le notifiche consentite al ruolo utente)
-notificationsRouter.get('/', authenticateToken, (req: Request, res: Response): void => {
+notificationsRouter.get('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   const authReq = req as AuthRequest;
   const userRole = authReq.user?.role || 'customer';
   let filtered = getNotifications();
@@ -33,7 +33,7 @@ notificationsRouter.get('/', authenticateToken, (req: Request, res: Response): v
 });
 
 // PATCH /api/notifications/:id/read
-notificationsRouter.patch('/:id/read', authenticateToken, (req: Request, res: Response): void => {
+notificationsRouter.patch('/:id/read', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   const authReq = req as AuthRequest;
   const userRole = authReq.user?.role || 'customer';
   const { id } = req.params;
@@ -49,29 +49,25 @@ notificationsRouter.patch('/:id/read', authenticateToken, (req: Request, res: Re
     return;
   }
 
-  notif.isRead = true;
-  res.json({ success: true, notification: notif });
+  await markNotificationsRead([notif.id]);
+  res.json({ success: true, notification: { ...notif, isRead: true } });
 });
 
 // POST /api/notifications/mark-all-read
-notificationsRouter.post('/mark-all-read', authenticateToken, (req: Request, res: Response): void => {
+notificationsRouter.post('/mark-all-read', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   const authReq = req as AuthRequest;
   const userRole = authReq.user?.role || 'customer';
 
   // Solo l'admin può marcare tutte le notifiche del sistema; gli altri marcano solo le proprie
-  let count = 0;
-  getNotifications().forEach((n: AppNotification) => {
-    if (userRole === 'admin' || !n.targetRole || n.targetRole === 'all' || n.targetRole === userRole) {
-      n.isRead = true;
-      count++;
-    }
-  });
+  const ids = getNotifications().filter((n:AppNotification)=>userRole==='admin'||!n.targetRole||n.targetRole==='all'||n.targetRole===userRole).map(n=>n.id);
+  await markNotificationsRead(ids);
+  const count = ids.length;
 
   res.json({ success: true, message: `${count} notifiche contrassegnate come lette.` });
 });
 
 // POST /api/notifications/trigger
-notificationsRouter.post('/trigger', authenticateToken, requireRole('admin', 'call_center', 'operator'), validate(triggerNotificationSchema), (req: Request, res: Response): void => {
+notificationsRouter.post('/trigger', authenticateToken, requireRole('admin', 'call_center', 'operator'), validate(triggerNotificationSchema), async (req: Request, res: Response): Promise<void> => {
   const { type, title, message, priority, targetRole, actionTab, meta } = req.body;
 
   const newNotification: AppNotification = {
@@ -87,6 +83,6 @@ notificationsRouter.post('/trigger', authenticateToken, requireRole('admin', 'ca
     meta
   };
 
-  addNotification(newNotification);
+  await addNotification(newNotification);
   res.status(201).json({ success: true, notification: newNotification });
 });

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getCustomers, addCustomer, users } from '../services/dataStore.js';
+import { getCustomers, addCustomer, updateCustomer, users } from '../services/dataStore.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, createCustomerSchema, createUtilityPointSchema } from '../middleware/validate.js';
 import { Customer, UtilityPoint } from '../types.js';
@@ -35,7 +35,7 @@ customersRouter.get('/:id', authenticateToken, (req: any, res: Response): void =
 });
 
 // POST /api/customers
-customersRouter.post('/', authenticateToken, requireRole('admin', 'call_center'), validate(createCustomerSchema), (req: Request, res: Response): void => {
+customersRouter.post('/', authenticateToken, requireRole('admin', 'call_center'), validate(createCustomerSchema), async (req: Request, res: Response): Promise<void> => {
   const { name, fiscalCode, phone, email, city, utilityPoints, hasBrokerageMandate, accountManager, notes } = req.body;
 
   const newCustomer: Customer = {
@@ -54,12 +54,12 @@ customersRouter.post('/', authenticateToken, requireRole('admin', 'call_center')
     notes: notes || ''
   };
 
-  addCustomer(newCustomer);
+  await addCustomer(newCustomer);
   res.status(201).json({ success: true, customer: newCustomer });
 });
 
 // POST /api/customers/:id/utility-point
-customersRouter.post('/:id/utility-point', authenticateToken, requireRole('admin', 'call_center'), validate(createUtilityPointSchema), (req: Request, res: Response): void => {
+customersRouter.post('/:id/utility-point', authenticateToken, requireRole('admin', 'call_center'), validate(createUtilityPointSchema), async (req: Request, res: Response): Promise<void> => {
   const customer = getCustomers().find((c: Customer) => c.id === req.params.id);
   if (!customer) {
     res.status(404).json({ success: false, message: 'Cliente non trovato.' });
@@ -71,6 +71,7 @@ customersRouter.post('/:id/utility-point', authenticateToken, requireRole('admin
     ...req.body
   };
 
-  customer.utilityPoints.push(point);
-  res.status(201).json({ success: true, utilityPoint: point, customer });
+  const updated = { ...customer, utilityPoints: [...customer.utilityPoints, point] };
+  await updateCustomer(updated);
+  res.status(201).json({ success: true, utilityPoint: point, customer: updated });
 });

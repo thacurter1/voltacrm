@@ -221,6 +221,7 @@ export function runQuarterlyAudit(
       audits.push({
         id: `audit-${customer.id}-${utility.id}`,
         customerId: customer.id,
+        utilityPointId: utility.id,
         customerName: customer.name,
         utilityType: utility.type,
         podOrPdr: utility.podOrPdr,

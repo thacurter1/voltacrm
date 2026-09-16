@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Zap, 
   Flame, 
@@ -27,6 +27,7 @@ import {
 import { AuthUser, Customer, CustomerBill, SwitchAudit } from '../types';
 import { securityValidator } from '../services/securityValidator';
 import { cryptoService } from '../services/cryptoService';
+import { MeterReading, portalApi } from '../api/portal';
 
 interface CustomerPortalProps {
   customer: Customer;
@@ -59,6 +60,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [showPii, setShowPii] = useState(false);
+  const [customerBills, setCustomerBills] = useState<CustomerBill[]>([]);
+  const [meterReadings, setMeterReadings] = useState<MeterReading[]>([]);
+  const [isPortalLoading, setIsPortalLoading] = useState(true);
+  const [portalLoadError, setPortalLoadError] = useState('');
 
   // Referral Program State
   const [copiedReferral, setCopiedReferral] = useState(false);
@@ -69,28 +74,48 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
   const [readingF2, setReadingF2] = useState('');
   const [readingF3, setReadingF3] = useState('');
   const [readingGas, setReadingGas] = useState('');
+  const [readingUtilityPointId, setReadingUtilityPointId] = useState(customer.utilityPoints[0]?.id || '');
+  const [isSubmittingReading, setIsSubmittingReading] = useState(false);
   const [readingSubmitted, setReadingSubmitted] = useState(false);
-  const [lastReading, setLastReading] = useState<{
-    date: string;
-    f1?: string;
-    f2?: string;
-    f3?: string;
-    gas?: string;
-  } | null>(() => {
-    try {
-      const saved = localStorage.getItem(`VOLTA_READING_${customer.id}`);
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
+  const [readingError, setReadingError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    setIsPortalLoading(true);
+    setPortalLoadError('');
+    Promise.all([
+      portalApi.listBills(customer.id),
+      portalApi.listReadings(customer.id),
+    ])
+      .then(([loadedBills, loadedReadings]) => {
+        if (!active) return;
+        setCustomerBills(loadedBills);
+        setMeterReadings(loadedReadings);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setPortalLoadError(error instanceof Error ? error.message : 'Storico portale non disponibile.');
+      })
+      .finally(() => {
+        if (active) setIsPortalLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [customer.id]);
+
+  useEffect(() => {
+    if (!customer.utilityPoints.some(point => point.id === readingUtilityPointId)) {
+      setReadingUtilityPointId(customer.utilityPoints[0]?.id || '');
     }
-  });
+  }, [customer.utilityPoints, readingUtilityPointId]);
+
+  const selectedReadingPoint = customer.utilityPoints.find(point => point.id === readingUtilityPointId);
+  const lastReading = meterReadings[0];
 
   // Audits attivi per questo cliente
   const customerAudits = audits.filter(a => a.customerId === customer.id);
   const recommendedAudit = customerAudits.find(a => a.status === 'switch_recommended');
-
-  // Bollette per questo cliente
-  const customerBills = bills.filter(b => b.customerId === customer.id);
 
   // Calcolo giorni a prossimo audit
   const getDaysUntilAudit = (nextDateStr: string) => {
@@ -134,69 +159,83 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
     }
   };
 
-  const handleSubmitBill = (e: React.FormEvent) => {
+  const handleSubmitBill = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) return;
 
     setIsUploading(true);
-    setTimeout(() => {
-      const newBill: CustomerBill = {
-        id: `bill-${Date.now()}`,
+    setUploadError('');
+    try {
+      const newBill = await portalApi.uploadBill({
         customerId: customer.id,
-        customerName: customer.name,
+        file: selectedFile,
         fileName: sanitizedFileName || selectedFile.name,
-        uploadDate: new Date().toISOString().split('T')[0],
-        fileSizeKb: Math.round(selectedFile.size / 1024) || 1250,
         utilityType,
-        status: 'in_review',
         notes: notes || 'Caricata direttamente dal portale cliente (Integrità binaria verificata).',
-      };
-
+      });
+      setCustomerBills(current => [newBill, ...current.filter(item => item.id !== newBill.id)]);
       onUploadBill(newBill);
       setSelectedFile(null);
       setSanitizedFileName('');
       setNotes('');
+    } catch (error: unknown) {
+      setUploadError(error instanceof Error ? error.message : 'Caricamento della bolletta non riuscito.');
+    } finally {
       setIsUploading(false);
-    }, 600);
+    }
   };
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(`https://voltacrm.it/invito?ref=${referralCode}`);
     setCopiedReferral(true);
-    setTimeout(() => setCopiedReferral(false), 2500);
   };
 
-  const handleSubmitReading = (e: React.FormEvent) => {
+  const handleSubmitReading = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!readingF1 && !readingF2 && !readingF3 && !readingGas) return;
-
-    const readingData = {
-      date: new Date().toLocaleDateString('it-IT'),
-      f1: readingF1 || undefined,
-      f2: readingF2 || undefined,
-      f3: readingF3 || undefined,
-      gas: readingGas || undefined,
-    };
-
-    try {
-      localStorage.setItem(`VOLTA_READING_${customer.id}`, JSON.stringify(readingData));
-    } catch {
-      // ignore
+    if (!selectedReadingPoint) {
+      setReadingError('Seleziona un punto di fornitura.');
+      return;
+    }
+    const parseValue = (value: string) => value === '' ? undefined : Number(value);
+    const readings = selectedReadingPoint.type === 'gas'
+      ? { gas: parseValue(readingGas) }
+      : { f1: parseValue(readingF1), f2: parseValue(readingF2), f3: parseValue(readingF3) };
+    if (Object.values(readings).every(value => value === undefined)) {
+      setReadingError('Inserisci almeno un valore di lettura.');
+      return;
     }
 
-    setLastReading(readingData);
-    setReadingSubmitted(true);
-    setTimeout(() => {
-      setReadingSubmitted(false);
+    setIsSubmittingReading(true);
+    setReadingSubmitted(false);
+    setReadingError('');
+    try {
+      const saved = await portalApi.createReading({
+        customerId: customer.id,
+        utilityPointId: selectedReadingPoint.id,
+        utilityType: selectedReadingPoint.type,
+        readings,
+      });
+      setMeterReadings(current => [saved, ...current]);
       setReadingF1('');
       setReadingF2('');
       setReadingF3('');
       setReadingGas('');
-    }, 4000);
+      setReadingSubmitted(true);
+    } catch (error: unknown) {
+      setReadingError(error instanceof Error ? error.message : 'Invio dell’autolettura non riuscito.');
+    } finally {
+      setIsSubmittingReading(false);
+    }
   };
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-2 text-xs">
+      {portalLoadError && (
+        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>Impossibile caricare lo storico del portale: {portalLoadError}</span>
+        </div>
+      )}
       {/* STRIPE-STYLE WELCOME HEADER */}
       <div className="stripe-card p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
         {/* Subtle decorative background glow */}
@@ -593,7 +632,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
           </div>
           {lastReading && !readingSubmitted && (
             <span className="stripe-badge-neutral text-[11px] font-mono">
-              Ultima: {lastReading.date}
+              Ultima: {new Date(lastReading.recordedAt).toLocaleDateString('it-IT')}
             </span>
           )}
           <span className="stripe-badge-success">
@@ -605,28 +644,59 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
           <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-[#425466]">
             <span className="font-semibold text-[#0a2540] flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-              Ultima lettura inviata il {lastReading.date}:
+              Ultima lettura inviata il {new Date(lastReading.recordedAt).toLocaleDateString('it-IT')}:
             </span>
             <div className="flex flex-wrap items-center gap-3 font-mono font-bold text-[#0a2540]">
-              {lastReading.f1 && <span>F1: {lastReading.f1} kWh</span>}
-              {lastReading.f2 && <span>F2: {lastReading.f2} kWh</span>}
-              {lastReading.f3 && <span>F3: {lastReading.f3} kWh</span>}
-              {lastReading.gas && <span>Gas: {lastReading.gas} Smc</span>}
+              {lastReading.readings.f1 !== undefined && <span>F1: {lastReading.readings.f1} kWh</span>}
+              {lastReading.readings.f2 !== undefined && <span>F2: {lastReading.readings.f2} kWh</span>}
+              {lastReading.readings.f3 !== undefined && <span>F3: {lastReading.readings.f3} kWh</span>}
+              {lastReading.readings.gas !== undefined && <span>Gas: {lastReading.readings.gas} Smc</span>}
             </div>
           </div>
         )}
 
-        {readingSubmitted ? (
+        {readingSubmitted && (
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
             <div>
               <span className="font-bold block">Autolettura Registrata con Successo!</span>
-              <span className="text-[11px]">I tuoi dati sono stati memorizzati e trasmessi per la fatturazione a consumo reale.</span>
+              <span className="text-[11px]">La lettura è stata salvata nello storico del portale.</span>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmitReading} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        )}
+
+        {readingError && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{readingError}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmitReading} className="space-y-4">
+          <div>
+            <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
+              Punto di fornitura
+            </label>
+            <select
+              value={readingUtilityPointId}
+              onChange={(event) => {
+                setReadingUtilityPointId(event.target.value);
+                setReadingSubmitted(false);
+                setReadingError('');
+              }}
+              className="w-full px-3 py-2 rounded-xl bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:border-[#635bff] focus:outline-none shadow-2xs"
+            >
+              {customer.utilityPoints.map(point => (
+                <option key={point.id} value={point.id}>
+                  {point.type === 'luce' ? 'Luce' : 'Gas'} — {point.podOrPdr}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {selectedReadingPoint?.type === 'luce' ? (
+              <>
               <div>
                 <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
                   Luce F1 (Picco)
@@ -634,8 +704,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                 <input
                   type="number"
                   placeholder="es. 12450"
+                  min="0"
+                  step="any"
                   value={readingF1}
-                  onChange={(e) => setReadingF1(e.target.value)}
+                  onChange={(e) => { setReadingF1(e.target.value); setReadingSubmitted(false); }}
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
@@ -647,8 +719,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                 <input
                   type="number"
                   placeholder="es. 8320"
+                  min="0"
+                  step="any"
                   value={readingF2}
-                  onChange={(e) => setReadingF2(e.target.value)}
+                  onChange={(e) => { setReadingF2(e.target.value); setReadingSubmitted(false); }}
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
@@ -660,12 +734,15 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                 <input
                   type="number"
                   placeholder="es. 9810"
+                  min="0"
+                  step="any"
                   value={readingF3}
-                  onChange={(e) => setReadingF3(e.target.value)}
+                  onChange={(e) => { setReadingF3(e.target.value); setReadingSubmitted(false); }}
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
-
+              </>
+            ) : (
               <div>
                 <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
                   Gas (Smc)
@@ -673,23 +750,44 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                 <input
                   type="number"
                   placeholder="es. 4520"
+                  min="0"
+                  step="any"
                   value={readingGas}
-                  onChange={(e) => setReadingGas(e.target.value)}
+                  onChange={(e) => { setReadingGas(e.target.value); setReadingSubmitted(false); }}
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
-            </div>
+            )}
+          </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5"
-              >
-                <Send className="h-3.5 w-3.5" />
-                Invia Autolettura
-              </button>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={!selectedReadingPoint || isSubmittingReading}
+              className="px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" />
+              {isSubmittingReading ? 'Salvataggio...' : 'Invia Autolettura'}
+            </button>
+          </div>
+        </form>
+
+        {meterReadings.length > 1 && (
+          <div className="border-t border-[#e3e8ee] pt-3">
+            <h4 className="font-bold text-[#0a2540] mb-2">Storico autoletture</h4>
+            <div className="divide-y divide-[#e3e8ee]">
+              {meterReadings.slice(0, 6).map(reading => (
+                <div key={reading.id} className="py-2 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-slate-500">
+                    {new Date(reading.recordedAt).toLocaleString('it-IT')} · {reading.utilityType.toUpperCase()}
+                  </span>
+                  <span className="font-mono font-bold text-[#0a2540]">
+                    {Object.entries(reading.readings).map(([band, value]) => band.toUpperCase() + ': ' + value).join(' · ')}
+                  </span>
+                </div>
+              ))}
             </div>
-          </form>
+          </div>
         )}
       </div>
 
@@ -776,7 +874,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                   <span className="text-[#635bff] underline underline-offset-2">sfoglia dal computer</span>
                   <input
                     type="file"
-                    accept=".pdf,image/*"
+                    accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
                     onChange={handleFileSelect}
                     className="hidden"
                   />
@@ -834,7 +932,9 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
       <div className="stripe-card p-6 space-y-4">
         <h3 className="text-base font-bold text-[#0a2540]">Storico Documenti & Bollette Caricate</h3>
         
-        {customerBills.length === 0 ? (
+        {isPortalLoading ? (
+          <p className="text-xs text-slate-400 py-6 text-center">Caricamento storico documenti...</p>
+        ) : customerBills.length === 0 ? (
           <p className="text-xs text-slate-400 py-6 text-center">Nessun documento caricato finora.</p>
         ) : (
           <div className="divide-y divide-[#e3e8ee] text-xs">

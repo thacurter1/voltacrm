@@ -82,8 +82,8 @@ export const CustomerApp: React.FC = () => {
   };
 
   const handleSignatureCompleted = (auditId: string) => {
-    setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'switched' } : a));
-    addToast('Firma Accettata', 'Contratto e Mandato di Brokeraggio firmati digitalmente.', 'success');
+    setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'signed' } : a));
+    addToast('Firma Registrata', 'La richiesta è firmata e attende la conferma di attivazione dello staff.', 'success');
   };
 
   return (

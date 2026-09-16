@@ -230,8 +230,22 @@ async function runTests() {
     throw new Error(`Test 5.1 FALLITO: atteso 403 Forbidden per trigger da customer, ricevuto ${custTrigger.status}`);
   }
 
-  // TEST 8 (FASE 2): Transizione di stato cliente post-firma contratto (lastSwitchAuditDate, nextSwitchAuditDate, fornitore luce)
-  console.log('\n--- Test 6.1 (Fase 2): Verifica aggiornamento stato anagrafico e scadenze switch a 120gg per cust-1 ---');
+  // TEST 8 (FASE 2): Transizione di stato cliente post-attivazione contratto (lastSwitchAuditDate, nextSwitchAuditDate, fornitore luce)
+  console.log('\n--- Test 6.1 (Fase 2): Verifica attivazione staff e aggiornamento stato anagrafico a 120gg per cust-1 ---');
+  if (signNoCustId.data.signatureReceipt?.id) {
+    const actRes = await request(`${BASE_URL}/switch/signatures/${signNoCustId.data.signatureReceipt.id}/activate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: {
+        confirmationReference: 'DSO-OCTOPUS-ACT-001',
+        activationDate: new Date().toISOString().split('T')[0]
+      }
+    });
+    if (actRes.status !== 200) {
+      throw new Error(`Test 6.1 FALLITO: attivazione firma fallita con status ${actRes.status}`);
+    }
+  }
+
   const custStateRes = await request(`${BASE_URL}/customers/cust-1`, {
     headers: { Authorization: `Bearer ${custToken}` }
   });

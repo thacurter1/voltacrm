@@ -6,15 +6,15 @@ import { authenticateToken } from '../middleware/auth.js';
 
 export const messagingRouter = Router();
 
-const EXPECTED_TOTEM_KEY = process.env.TOTEM_KIOSK_API_KEY || 'KIOSK-TOKEN-RETAIL-01';
+const getTotemKey = () => process.env.TOTEM_KIOSK_API_KEY || (process.env.NODE_ENV === 'production' ? '' : 'KIOSK-TOKEN-RETAIL-01');
 
 // Middleware per Totem Kiosk: ammesso SOLO per invio scheda offerta WhatsApp
 const authenticateOrValidTotem = (req: Request, res: Response, next: NextFunction): void => {
   const totemToken = req.headers['x-totem-token'];
   if (totemToken && typeof totemToken === 'string') {
     const inputBuf = Buffer.from(totemToken);
-    const expectedBuf = Buffer.from(EXPECTED_TOTEM_KEY);
-    if (inputBuf.length === expectedBuf.length && crypto.timingSafeEqual(inputBuf, expectedBuf)) {
+    const expectedBuf = Buffer.from(getTotemKey());
+    if (expectedBuf.length > 0 && inputBuf.length === expectedBuf.length && crypto.timingSafeEqual(inputBuf, expectedBuf)) {
       return next();
     }
     res.status(401).json({

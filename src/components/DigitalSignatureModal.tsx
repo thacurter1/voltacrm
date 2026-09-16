@@ -19,8 +19,21 @@ interface DigitalSignatureModalProps {
   audit: SwitchAudit | null;
   customerPhone?: string;
   customerFiscalCode?: string;
-  onSigned: (auditId: string, signatureType: 'canvas' | 'otp', documentHash?: string) => void;
+  onSigned: (auditId: string, signatureType: 'canvas' | 'otp', receipt: SignatureReceipt) => void;
 }
+
+export interface SignatureReceipt {
+  id: string;
+  status: 'signed';
+  activationStatus: 'pending_activation';
+  signatureHash: string;
+  utilityPointId: string;
+  podOrPdr: string;
+  consentVersion: string;
+  [key: string]: unknown;
+}
+
+const SIGNATURE_CONSENT_VERSION = 'brokerage-and-switch-v1';
 
 export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
   isOpen,
@@ -174,78 +187,33 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     setOtpError(null);
 
     try {
-      let documentHash = '';
-      const realFiscalCode = customerFiscalCode || (audit as any).customerFiscalCode || 'CF-' + (audit.customerId || 'CLIENTE');
+      if (!audit.utilityPointId) {
+        throw new Error('Il punto di fornitura dell’audit non è identificato. Aggiorna l’audit prima di firmare.');
+      }
+      const canvasDataUrl = signatureMode === 'canvas'
+        ? canvasRef.current?.toDataURL('image/png')
+        : undefined;
+      const signRes = await api.switch.signContract({
+        customerId: audit.customerId,
+        customerName: audit.customerName,
+        signerFiscalCode: customerFiscalCode,
+        phone: customerPhone,
+        signatureType: signatureMode,
+        canvasDataUrl,
+        otpCode: signatureMode === 'otp' ? otpCode : undefined,
+        offerId: audit.bestOffer.id,
+        supplier: audit.bestOffer.supplier,
+        utilityPointId: audit.utilityPointId,
+        podOrPdr: audit.podOrPdr,
+        consentVersion: SIGNATURE_CONSENT_VERSION
+      });
 
-      if (signatureMode === 'canvas') {
-        // Esportazione del tratto grafico della firma su schermo (Base64 PNG)
-        const canvas = canvasRef.current;
-        const canvasDataUrl = canvas ? canvas.toDataURL('image/png') : '';
-
-        const signRes = await api.switch.signContract({
-          customerId: audit.customerId,
-          customerName: audit.customerName,
-          signerFiscalCode: realFiscalCode,
-          phone: customerPhone,
-          signatureType: 'canvas',
-          canvasDataUrl,
-          offerId: audit.bestOffer?.id,
-          supplier: audit.bestOffer?.supplier
-        });
-
-        if (!signRes || !signRes.success || !signRes.signatureReceipt?.signatureHash) {
-          setOtpError('Firma su schermo respinta dal server.');
-          setIsSubmitting(false);
-          return;
-        }
-
-        documentHash = signRes.signatureReceipt.signatureHash;
-      } else {
-        // Firma attestata dal backend con verifica crittografica OTP e generazione marca temporale certa
-        const signRes = await api.switch.signContract({
-          customerId: audit.customerId,
-          customerName: audit.customerName,
-          signerFiscalCode: realFiscalCode,
-          phone: customerPhone,
-          signatureType: 'otp',
-          otpCode,
-          offerId: audit.bestOffer?.id,
-          supplier: audit.bestOffer?.supplier
-        });
-
-        if (!signRes || !signRes.success || !signRes.signatureReceipt?.signatureHash) {
-          setOtpError('Firma respinta dal server o codice OTP non valido.');
-          setIsSubmitting(false);
-          return;
-        }
-
-        documentHash = signRes.signatureReceipt.signatureHash;
+      const receipt = signRes?.signatureReceipt as SignatureReceipt | undefined;
+      if (!signRes?.success || !receipt?.signatureHash || receipt.status !== 'signed' || receipt.activationStatus !== 'pending_activation') {
+        throw new Error('Il server non ha restituito una ricevuta di firma valida in attesa di attivazione.');
       }
 
-      // Se non ancora calcolato (es. canvas), calcola impronta crittografica client-side
-      if (!documentHash) {
-        try {
-          const docPayload = JSON.stringify({
-            auditId: audit.id,
-            customerId: audit.customerId,
-            customerName: audit.customerName,
-            podOrPdr: audit.podOrPdr,
-            offerName: audit.bestOffer?.name,
-            supplier: audit.bestOffer?.supplier,
-            annualSavings: audit.annualSavings,
-            signatureMode,
-            timestamp: new Date().toISOString()
-          });
-          const encoder = new TextEncoder();
-          const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(docPayload));
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          documentHash = 'SHA256:' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        } catch {
-          documentHash = `SHA256-FALLBACK-${Date.now()}`;
-        }
-      }
-
-      onSigned(audit.id, signatureMode, documentHash);
+      onSigned(audit.id, signatureMode, receipt);
       setIsSubmitting(false);
       onClose();
     } catch (err: unknown) {
@@ -490,7 +458,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
             ) : (
               <>
                 <Check className="h-4 w-4" />
-                <span>Firma e Attiva Switch</span>
+                <span>Firma Richiesta Switch</span>
               </>
             )}
           </button>

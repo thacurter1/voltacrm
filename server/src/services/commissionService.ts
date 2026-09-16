@@ -1,258 +1,53 @@
+import { createHash } from 'node:crypto';
 import { CommissionRecord, AgentCommissionSummary, SettlementBatch, CommissionType, CommissionStatus } from '../types.js';
 import { supabase, isSupabaseConfigured } from './dbClient.js';
 
-// Dati in-memory per provvigioni e distinte
-let COMMISSIONS: CommissionRecord[] = [
-  // Chiara Bianchi (user-op-2)
-  {
-    id: 'comm-cb-101',
-    agentId: 'user-op-2',
-    agentName: 'Chiara Bianchi (Consulente Senior)',
-    contractId: 'cnt-2026-8801',
-    customerName: 'Giuseppe Verdi',
-    podOrPdr: 'IT001E83748291',
-    utilityType: 'luce',
-    customerType: 'residential',
-    annualConsumption: 3400,
-    type: 'upfront',
-    amountEur: 45.00,
-    status: 'accrued',
-    period: '2026-09',
-    accrualDate: '2026-09-02',
-    notes: 'Switch Octopus Fissa 12M'
-  },
-  {
-    id: 'comm-cb-102',
-    agentId: 'user-op-2',
-    agentName: 'Chiara Bianchi (Consulente Senior)',
-    contractId: 'cnt-2026-8801',
-    customerName: 'Giuseppe Verdi',
-    podOrPdr: 'IT001E83748291',
-    utilityType: 'luce',
-    customerType: 'residential',
-    annualConsumption: 3400,
-    type: 'recurring',
-    amountEur: 8.50,
-    status: 'accrued',
-    period: '2026-09',
-    accrualDate: '2026-09-02',
-    notes: 'Canone mantenimento mensile (3400 kWh * 0.0025€)'
-  },
-  {
-    id: 'comm-cb-103',
-    agentId: 'user-op-2',
-    agentName: 'Chiara Bianchi (Consulente Senior)',
-    contractId: 'cnt-2026-8802',
-    customerName: 'Studio Legale Rossi & Partners',
-    podOrPdr: 'IT001E99441122',
-    utilityType: 'luce',
-    customerType: 'business',
-    annualConsumption: 18000,
-    type: 'upfront',
-    amountEur: 95.00,
-    status: 'accrued',
-    period: '2026-09',
-    accrualDate: '2026-09-05',
-    notes: 'Contratto Business A2A Easy Luce'
-  },
-  {
-    id: 'comm-cb-104',
-    agentId: 'user-op-2',
-    agentName: 'Chiara Bianchi (Consulente Senior)',
-    contractId: 'cnt-2026-8803',
-    customerName: 'Marco Bellini',
-    podOrPdr: '00882736192837',
-    utilityType: 'gas',
-    customerType: 'residential',
-    annualConsumption: 1200,
-    type: 'upfront',
-    amountEur: 40.00,
-    status: 'pending',
-    period: '2026-09',
-    accrualDate: '2026-09-08',
-    notes: 'In attivazione presso distributore locale (Italgas)'
-  },
-  {
-    id: 'comm-cb-100',
-    agentId: 'user-op-2',
-    agentName: 'Chiara Bianchi (Consulente Senior)',
-    contractId: 'cnt-2026-7701',
-    customerName: 'Laura Gatti',
-    podOrPdr: 'IT001E77221199',
-    utilityType: 'luce',
-    customerType: 'residential',
-    annualConsumption: 2800,
-    type: 'upfront',
-    amountEur: 45.00,
-    status: 'settled',
-    period: '2026-08',
-    accrualDate: '2026-08-10',
-    settlementDate: '2026-08-31',
-    paymentReference: 'DIST-2026-08-CB-0042',
-    notes: 'Liquidata con bonifico fine mese'
-  },
-
-  // Matteo Riva (user-admin-1)
-  {
-    id: 'comm-mr-201',
-    agentId: 'user-admin-1',
-    agentName: 'Matteo Riva (Broker Owner)',
-    contractId: 'cnt-2026-9001',
-    customerName: 'Officine Meccaniche Briantee SpA',
-    podOrPdr: 'IT001E55443322',
-    utilityType: 'luce',
-    customerType: 'business',
-    annualConsumption: 65000,
-    type: 'upfront',
-    amountEur: 150.00,
-    status: 'accrued',
-    period: '2026-09',
-    accrualDate: '2026-09-03',
-    notes: 'Grande Utenza Media Tensione'
-  },
-  {
-    id: 'comm-mr-202',
-    agentId: 'user-admin-1',
-    agentName: 'Matteo Riva (Broker Owner)',
-    contractId: 'cnt-2026-9001',
-    customerName: 'Officine Meccaniche Briantee SpA',
-    podOrPdr: 'IT001E55443322',
-    utilityType: 'luce',
-    customerType: 'business',
-    annualConsumption: 65000,
-    type: 'recurring',
-    amountEur: 16.25,
-    status: 'accrued',
-    period: '2026-09',
-    accrualDate: '2026-09-03',
-    notes: 'Mantenimento portafoglio PMI (65.000 kWh * 0.003€ / 12)'
-  },
-  {
-    id: 'comm-mr-200',
-    agentId: 'user-admin-1',
-    agentName: 'Matteo Riva (Broker Owner)',
-    contractId: 'cnt-2026-7901',
-    customerName: 'Pasticceria Duomo',
-    podOrPdr: 'IT001E66112233',
-    utilityType: 'luce',
-    customerType: 'business',
-    annualConsumption: 22000,
-    type: 'upfront',
-    amountEur: 95.00,
-    status: 'settled',
-    period: '2026-08',
-    accrualDate: '2026-08-15',
-    settlementDate: '2026-08-31',
-    paymentReference: 'DIST-2026-08-MR-0041',
-    notes: 'Liquidata con bonifico'
-  }
+const DEMO_COMMISSIONS: CommissionRecord[] = [
+  { id: 'comm-cb-101', agentId: 'user-op-2', agentName: 'Chiara Bianchi (Consulente Senior)', contractId: 'cnt-2026-8801', customerName: 'Giuseppe Verdi', podOrPdr: 'IT001E83748291', utilityType: 'luce', customerType: 'residential', annualConsumption: 3400, type: 'upfront', amountEur: 45, status: 'accrued', period: '2026-09', accrualDate: '2026-09-02', notes: 'Switch Octopus Fissa 12M' },
+  { id: 'comm-cb-102', agentId: 'user-op-2', agentName: 'Chiara Bianchi (Consulente Senior)', contractId: 'cnt-2026-8801', customerName: 'Giuseppe Verdi', podOrPdr: 'IT001E83748291', utilityType: 'luce', customerType: 'residential', annualConsumption: 3400, type: 'recurring', amountEur: 8.5, status: 'accrued', period: '2026-09', accrualDate: '2026-09-02', notes: 'Canone mantenimento mensile' },
+  { id: 'comm-cb-103', agentId: 'user-op-2', agentName: 'Chiara Bianchi (Consulente Senior)', contractId: 'cnt-2026-8802', customerName: 'Studio Legale Rossi & Partners', podOrPdr: 'IT001E99441122', utilityType: 'luce', customerType: 'business', annualConsumption: 18000, type: 'upfront', amountEur: 95, status: 'accrued', period: '2026-09', accrualDate: '2026-09-05', notes: 'Contratto Business A2A Easy Luce' },
+  { id: 'comm-cb-104', agentId: 'user-op-2', agentName: 'Chiara Bianchi (Consulente Senior)', contractId: 'cnt-2026-8803', customerName: 'Marco Bellini', podOrPdr: '00882736192837', utilityType: 'gas', customerType: 'residential', annualConsumption: 1200, type: 'upfront', amountEur: 40, status: 'pending', period: '2026-09', accrualDate: '2026-09-08', notes: 'In attivazione presso distributore locale (Italgas)' },
+  { id: 'comm-cb-100', agentId: 'user-op-2', agentName: 'Chiara Bianchi (Consulente Senior)', contractId: 'cnt-2026-7701', customerName: 'Laura Gatti', podOrPdr: 'IT001E77221199', utilityType: 'luce', customerType: 'residential', annualConsumption: 2800, type: 'upfront', amountEur: 45, status: 'settled', period: '2026-08', accrualDate: '2026-08-10', settlementDate: '2026-08-31', paymentReference: 'DIST-2026-08-CB-0042', notes: 'Liquidata con bonifico fine mese' },
+  { id: 'comm-mr-201', agentId: 'user-admin-1', agentName: 'Matteo Riva (Broker Owner)', contractId: 'cnt-2026-9001', customerName: 'Officine Meccaniche Briantee SpA', podOrPdr: 'IT001E55443322', utilityType: 'luce', customerType: 'business', annualConsumption: 65000, type: 'upfront', amountEur: 150, status: 'accrued', period: '2026-09', accrualDate: '2026-09-03', notes: 'Grande Utenza Media Tensione' },
+  { id: 'comm-mr-202', agentId: 'user-admin-1', agentName: 'Matteo Riva (Broker Owner)', contractId: 'cnt-2026-9001', customerName: 'Officine Meccaniche Briantee SpA', podOrPdr: 'IT001E55443322', utilityType: 'luce', customerType: 'business', annualConsumption: 65000, type: 'recurring', amountEur: 16.25, status: 'accrued', period: '2026-09', accrualDate: '2026-09-03', notes: 'Mantenimento portafoglio PMI' },
+  { id: 'comm-mr-200', agentId: 'user-admin-1', agentName: 'Matteo Riva (Broker Owner)', contractId: 'cnt-2026-7901', customerName: 'Pasticceria Duomo', podOrPdr: 'IT001E66112233', utilityType: 'luce', customerType: 'business', annualConsumption: 22000, type: 'upfront', amountEur: 95, status: 'settled', period: '2026-08', accrualDate: '2026-08-15', settlementDate: '2026-08-31', paymentReference: 'DIST-2026-08-MR-0041', notes: 'Liquidata con bonifico' }
 ];
 
-let SETTLEMENT_BATCHES: SettlementBatch[] = [
-  {
-    id: 'batch-2026-08-cb',
-    agentId: 'user-op-2',
-    agentName: 'Chiara Bianchi (Consulente Senior)',
-    settlementDate: '2026-08-31',
-    paymentReference: 'DIST-2026-08-CB-0042',
-    period: '2026-08',
-    totalAmountEur: 45.00,
-    commissionCount: 1,
-    notes: 'Liquidazione competenze Agosto 2026'
-  },
-  {
-    id: 'batch-2026-08-mr',
-    agentId: 'user-admin-1',
-    agentName: 'Matteo Riva (Broker Owner)',
-    settlementDate: '2026-08-31',
-    paymentReference: 'DIST-2026-08-MR-0041',
-    period: '2026-08',
-    totalAmountEur: 95.00,
-    commissionCount: 1,
-    notes: 'Liquidazione competenze Agosto 2026'
-  }
+const DEMO_BATCHES: SettlementBatch[] = [
+  { id: 'batch-2026-08-cb', agentId: 'user-op-2', agentName: 'Chiara Bianchi (Consulente Senior)', settlementDate: '2026-08-31', paymentReference: 'DIST-2026-08-CB-0042', period: '2026-08', totalAmountEur: 45, commissionCount: 1, notes: 'Liquidazione competenze Agosto 2026' },
+  { id: 'batch-2026-08-mr', agentId: 'user-admin-1', agentName: 'Matteo Riva (Broker Owner)', settlementDate: '2026-08-31', paymentReference: 'DIST-2026-08-MR-0041', period: '2026-08', totalAmountEur: 95, commissionCount: 1, notes: 'Liquidazione competenze Agosto 2026' }
 ];
+
+let commissions = DEMO_COMMISSIONS.map(record => ({ ...record }));
+let settlementBatches = DEMO_BATCHES.map(batch => ({ ...batch }));
+
+interface MemoryGeneration {
+  agentId: string;
+  fingerprint: string;
+  recordIds: string[];
+}
+
+interface MemorySettlement {
+  agentId: string;
+  commissionIds: string[];
+  batchId: string;
+}
+
+const memoryGenerations = new Map<string, MemoryGeneration>();
+const memorySettlements = new Map<string, MemorySettlement>();
+
+export class CommissionInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CommissionInputError';
+  }
+}
 
 export interface CommissionFilters {
   agentId?: string;
   status?: CommissionStatus;
   period?: string;
   type?: CommissionType;
-}
-
-/**
- * Ottiene l'elenco delle provvigioni filtrate
- */
-export function getCommissions(filters?: CommissionFilters): CommissionRecord[] {
-  let result = [...COMMISSIONS];
-
-  if (filters?.agentId) {
-    result = result.filter(c => c.agentId === filters.agentId);
-  }
-  if (filters?.status) {
-    result = result.filter(c => c.status === filters.status);
-  }
-  if (filters?.period) {
-    result = result.filter(c => c.period === filters.period);
-  }
-  if (filters?.type) {
-    result = result.filter(c => c.type === filters.type);
-  }
-
-  // Ordina per data decrescente
-  return result.sort((a, b) => new Date(b.accrualDate).getTime() - new Date(a.accrualDate).getTime());
-}
-
-/**
- * Calcola i riepiloghi e KPI per agente
- */
-export function getAgentSummaries(): AgentCommissionSummary[] {
-  const agentsMap = new Map<string, { agentName: string; role: string }>();
-
-  // Raccogli gli agenti noti
-  agentsMap.set('user-admin-1', { agentName: 'Matteo Riva (Broker Owner)', role: 'admin' });
-  agentsMap.set('user-op-2', { agentName: 'Chiara Bianchi (Consulente Senior)', role: 'call_center' });
-  agentsMap.set('user-op-3', { agentName: 'Marco Rossi (Junior Sales)', role: 'call_center' });
-
-  // Raccogli anche agenti presenti nei record
-  for (const c of COMMISSIONS) {
-    if (!agentsMap.has(c.agentId)) {
-      agentsMap.set(c.agentId, { agentName: c.agentName, role: 'call_center' });
-    }
-  }
-
-  const summaries: AgentCommissionSummary[] = [];
-
-  for (const [agentId, info] of agentsMap.entries()) {
-    const agentRecords = COMMISSIONS.filter(c => c.agentId === agentId);
-    
-    const pendingRecords = agentRecords.filter(c => c.status === 'pending');
-    const accruedRecords = agentRecords.filter(c => c.status === 'accrued');
-    const settledRecords = agentRecords.filter(c => c.status === 'settled');
-
-    const pendingAmountEur = pendingRecords.reduce((sum, r) => sum + r.amountEur, 0);
-    const accruedAmountEur = accruedRecords.reduce((sum, r) => sum + r.amountEur, 0);
-    const settledAmountEur = settledRecords.reduce((sum, r) => sum + r.amountEur, 0);
-
-    // Contratti unici gestiti
-    const contractsSet = new Set(agentRecords.map(r => r.contractId));
-
-    summaries.push({
-      agentId,
-      agentName: info.agentName,
-      role: info.role,
-      pendingCount: pendingRecords.length,
-      pendingAmountEur: Number(pendingAmountEur.toFixed(2)),
-      accruedCount: accruedRecords.length,
-      accruedAmountEur: Number(accruedAmountEur.toFixed(2)),
-      settledCount: settledRecords.length,
-      settledAmountEur: Number(settledAmountEur.toFixed(2)),
-      totalEarnedEur: Number((accruedAmountEur + settledAmountEur).toFixed(2)),
-      contractsCount: contractsSet.size
-    });
-  }
-
-  return summaries.sort((a, b) => b.totalEarnedEur - a.totalEarnedEur);
 }
 
 export interface ContractCommissionInput {
@@ -267,144 +62,6 @@ export interface ContractCommissionInput {
   isDualFuel?: boolean;
 }
 
-/**
- * Calcola e genera le provvigioni spettanti per un nuovo contratto stipulato
- */
-export function generateContractCommissions(input: ContractCommissionInput): { records: CommissionRecord[]; totalEur: number } {
-  // Idempotenza: verifica se le provvigioni per questa specifica fornitura/contratto sono già state contabilizzate
-  const contractRef = input.contractId || `${(input.customerName || '').trim().toLowerCase()}_${(input.podOrPdr || 'nd').trim()}_${input.utilityType}`;
-  
-  // Per supportare Dual Fuel (stesso contratto, ma POD per luce e PDR per gas) verifichiamo la presenza di provvigione 'upfront' per il POD/PDR
-  const hasUpfront = COMMISSIONS.some((c: CommissionRecord) => 
-    c.contractId === contractRef && 
-    (!input.podOrPdr || c.podOrPdr === input.podOrPdr) &&
-    c.type === 'upfront'
-  );
-
-  if (hasUpfront) {
-    const existingRecords = COMMISSIONS.filter((c: CommissionRecord) =>
-      c.contractId === contractRef &&
-      (!input.podOrPdr || c.podOrPdr === input.podOrPdr)
-    );
-    console.log(`[Commission Service] Idempotenza attiva: fornitura ${input.podOrPdr || contractRef} già contabilizzata. Restituzione record esistenti (${existingRecords.length}).`);
-    const existingTotal = existingRecords.reduce((sum: number, r: CommissionRecord) => sum + r.amountEur, 0);
-    return {
-      records: existingRecords,
-      totalEur: Number(existingTotal.toFixed(2))
-    };
-  }
-
-  const isBusiness = input.customerType === 'business' || input.annualConsumption > 6000;
-  const period = new Date().toISOString().slice(0, 7); // YYYY-MM
-  const today = new Date().toISOString().split('T')[0];
-
-  const generated: CommissionRecord[] = [];
-
-  // 1. Gettone Upfront di Attivazione
-  let upfrontAmount = 0;
-  if (input.utilityType === 'luce') {
-    upfrontAmount = isBusiness ? 95.00 : 45.00;
-  } else {
-    upfrontAmount = isBusiness ? 85.00 : 40.00;
-  }
-
-  const upfrontRecord: CommissionRecord = {
-    id: `comm-${Date.now()}-upfront`,
-    agentId: input.agentId,
-    agentName: input.agentName,
-    contractId: input.contractId,
-    customerName: input.customerName,
-    podOrPdr: input.podOrPdr,
-    utilityType: input.utilityType,
-    customerType: isBusiness ? 'business' : 'residential',
-    annualConsumption: input.annualConsumption,
-    type: 'upfront',
-    amountEur: upfrontAmount,
-    status: 'accrued',
-    period,
-    accrualDate: today,
-    notes: `Gettone attivazione ${input.utilityType.toUpperCase()} (${isBusiness ? 'Business' : 'Residenziale'})`
-  };
-  generated.push(upfrontRecord);
-
-  // 2. Bonus Dual Fuel se congiunto
-  if (input.isDualFuel) {
-    const bonusRecord: CommissionRecord = {
-      id: `comm-${Date.now()}-bonus`,
-      agentId: input.agentId,
-      agentName: input.agentName,
-      contractId: input.contractId,
-      customerName: input.customerName,
-      podOrPdr: input.podOrPdr,
-      utilityType: input.utilityType,
-      customerType: isBusiness ? 'business' : 'residential',
-      annualConsumption: input.annualConsumption,
-      type: 'bonus',
-      amountEur: 25.00,
-      status: 'accrued',
-      period,
-      accrualDate: today,
-      notes: 'Bonus promozionale Dual Fuel (Luce + Gas)'
-    };
-    generated.push(bonusRecord);
-  }
-
-  // 3. Quota Ricorrente Mese 1 (Portfolio Trail Margin)
-  const monthlyRecurringRate = input.utilityType === 'luce' ? 0.0025 : 0.0150;
-  const monthlyRecurring = Number(((input.annualConsumption * monthlyRecurringRate) / 12).toFixed(2));
-  
-  if (monthlyRecurring > 0) {
-    const recurringRecord: CommissionRecord = {
-      id: `comm-${Date.now()}-rec`,
-      agentId: input.agentId,
-      agentName: input.agentName,
-      contractId: input.contractId,
-      customerName: input.customerName,
-      podOrPdr: input.podOrPdr,
-      utilityType: input.utilityType,
-      customerType: isBusiness ? 'business' : 'residential',
-      annualConsumption: input.annualConsumption,
-      type: 'recurring',
-      amountEur: Math.max(1.00, monthlyRecurring),
-      status: 'accrued',
-      period,
-      accrualDate: today,
-      notes: `Mantenimento portafoglio mese (${input.annualConsumption} ${input.utilityType === 'luce' ? 'kWh' : 'Smc'}/anno)`
-    };
-    generated.push(recurringRecord);
-  }
-
-  // Aggiungi a COMMISSIONS
-  COMMISSIONS.push(...generated);
-
-  // Sincronizzazione asincrona su Supabase se configurato
-  if (isSupabaseConfigured && supabase) {
-    const dbPayload = generated.map(r => ({
-      id: r.id,
-      agent_id: r.agentId,
-      agent_name: r.agentName,
-      contract_id: r.contractId,
-      customer_name: r.customerName,
-      pod_or_pdr: r.podOrPdr,
-      utility_type: r.utilityType,
-      customer_type: r.customerType || 'residential',
-      annual_consumption: r.annualConsumption,
-      type: r.type,
-      amount_eur: r.amountEur,
-      status: r.status,
-      period: r.period,
-      accrual_date: r.accrualDate,
-      notes: r.notes || null
-    }));
-    supabase.from('commissions').upsert(dbPayload, { onConflict: 'id' }).then(({ error }: any) => {
-      if (error) console.warn('[Supabase Sync Failure] Salvataggio provvigioni fallito:', error.message);
-    });
-  }
-
-  const totalEur = Number(generated.reduce((s, r) => s + r.amountEur, 0).toFixed(2));
-  return { records: generated, totalEur };
-}
-
 export interface SettleCommissionInput {
   agentId: string;
   commissionIds: string[];
@@ -412,89 +69,271 @@ export interface SettleCommissionInput {
   notes?: string;
 }
 
-/**
- * Liquida le provvigioni selezionate per un agente, emettendo la distinta contabile
- */
-export function settleCommissions(input: SettleCommissionInput): { batch: SettlementBatch; updatedCount: number } {
-  const today = new Date().toISOString().split('T')[0];
-  const period = new Date().toISOString().slice(0, 7);
-  
-  // Trova nome agente
-  const sample = COMMISSIONS.find(c => c.agentId === input.agentId);
-  const agentName = sample?.agentName || 'Agente Commerciale';
-
-  // Genera protocollo distinta se non specificato (es. DIST-2026-09-CB-9821)
-  const suffix = Math.floor(1000 + Math.random() * 9000);
-  const refCode = input.paymentReference || `DIST-${period}-${input.agentId.slice(-4).toUpperCase()}-${suffix}`;
-
-  let totalAmount = 0;
-  let updatedCount = 0;
-
-  COMMISSIONS = COMMISSIONS.map(c => {
-    if (input.commissionIds.includes(c.id) && c.agentId === input.agentId && c.status !== 'settled') {
-      totalAmount += c.amountEur;
-      updatedCount++;
-      return {
-        ...c,
-        status: 'settled' as CommissionStatus,
-        settlementDate: today,
-        paymentReference: refCode
-      };
-    }
-    return c;
-  });
-
-  if (updatedCount === 0) {
-    throw new Error('Nessuna provvigione valida da liquidare. I record potrebbero essere già stati liquidati o appartenere a un altro agente.');
-  }
-
-  const batch: SettlementBatch = {
-    id: `batch-${Date.now()}`,
-    agentId: input.agentId,
-    agentName,
-    settlementDate: today,
-    paymentReference: refCode,
-    period,
-    totalAmountEur: Number(totalAmount.toFixed(2)),
-    commissionCount: updatedCount,
-    notes: input.notes || `Liquidazione saldo provvigionale del ${today}`
-  };
-
-  SETTLEMENT_BATCHES.unshift(batch);
-
-  // Sincronizzazione asincrona su Supabase
-  if (isSupabaseConfigured && supabase) {
-    supabase.from('commissions')
-      .update({ status: 'settled', settlement_date: today, payment_reference: refCode })
-      .in('id', input.commissionIds)
-      .then(({ error }: any) => {
-        if (error) console.warn('[Supabase Sync Failure] Aggiornamento provvigioni settled fallito:', error.message);
-      });
-
-    supabase.from('settlement_batches').insert([{
-      id: batch.id,
-      agent_id: batch.agentId,
-      agent_name: batch.agentName,
-      settlement_date: batch.settlementDate,
-      payment_reference: batch.paymentReference,
-      period: batch.period,
-      total_amount_eur: batch.totalAmountEur,
-      commission_count: batch.commissionCount,
-      notes: batch.notes || null
-    }]).then(({ error }: any) => {
-      if (error) console.warn('[Supabase Sync Failure] Salvataggio settlement_batch fallito:', error.message);
-    });
-  }
-
-  return { batch, updatedCount };
+interface GenerationResult {
+  records: CommissionRecord[];
+  totalEur: number;
 }
 
-/**
- * Restituisce l'elenco delle distinte di liquidazione emesse
- */
-export function getSettlementBatches(agentId?: string): SettlementBatch[] {
-  if (agentId) {
-    return SETTLEMENT_BATCHES.filter(b => b.agentId === agentId);
+interface SettlementResult {
+  batch: SettlementBatch;
+  updatedCount: number;
+}
+
+function requiredText(value: unknown, field: string): string {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new CommissionInputError(`${field} is required.`);
   }
-  return [...SETTLEMENT_BATCHES];
+  return value.trim();
+}
+
+function optionalText(value: unknown): string | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value !== 'string') throw new CommissionInputError('Optional text values must be strings.');
+  const normalized = value.trim();
+  return normalized || undefined;
+}
+
+function stableHash(...values: string[]): string {
+  return createHash('sha256').update(values.join('\u001f')).digest('hex');
+}
+
+function normalizeGenerationInput(input: ContractCommissionInput): Required<ContractCommissionInput> {
+  const utilityType = requiredText(input.utilityType, 'utilityType');
+  if (utilityType !== 'luce' && utilityType !== 'gas') {
+    throw new CommissionInputError('utilityType must be either luce or gas.');
+  }
+  const customerType = input.customerType ?? 'residential';
+  if (customerType !== 'residential' && customerType !== 'business') {
+    throw new CommissionInputError('customerType must be either residential or business.');
+  }
+  const annualConsumption = input.annualConsumption;
+  if (typeof annualConsumption !== 'number' || !Number.isFinite(annualConsumption) || annualConsumption < 0) {
+    throw new CommissionInputError('annualConsumption must be a finite non-negative number.');
+  }
+  if (input.isDualFuel !== undefined && typeof input.isDualFuel !== 'boolean') {
+    throw new CommissionInputError('isDualFuel must be a boolean.');
+  }
+  return {
+    agentId: requiredText(input.agentId, 'agentId'),
+    agentName: requiredText(input.agentName, 'agentName'),
+    contractId: requiredText(input.contractId, 'contractId'),
+    customerName: requiredText(input.customerName, 'customerName'),
+    podOrPdr: requiredText(input.podOrPdr, 'podOrPdr'),
+    utilityType,
+    customerType,
+    annualConsumption,
+    isDualFuel: input.isDualFuel ?? false
+  };
+}
+
+function normalizeSettlementInput(input: SettleCommissionInput): Required<SettleCommissionInput> {
+  if (!Array.isArray(input.commissionIds)) throw new CommissionInputError('commissionIds must be an array.');
+  const commissionIds = [...new Set(input.commissionIds.map(id => requiredText(id, 'commissionIds')))].sort();
+  if (commissionIds.length === 0) throw new CommissionInputError('At least one commissionId is required.');
+  return {
+    agentId: requiredText(input.agentId, 'agentId'),
+    commissionIds,
+    paymentReference: optionalText(input.paymentReference) ?? '',
+    notes: optionalText(input.notes) ?? ''
+  };
+}
+
+function mapCommission(row: any): CommissionRecord {
+  return {
+    id: String(row.id), agentId: String(row.agent_id), agentName: String(row.agent_name),
+    contractId: String(row.contract_id), customerName: String(row.customer_name),
+    podOrPdr: String(row.pod_or_pdr), utilityType: row.utility_type,
+    customerType: row.customer_type ?? undefined, annualConsumption: Number(row.annual_consumption),
+    type: row.type, amountEur: Number(row.amount_eur), status: row.status, period: String(row.period),
+    accrualDate: String(row.accrual_date), settlementDate: row.settlement_date ?? undefined,
+    paymentReference: row.payment_reference ?? undefined, notes: row.notes ?? undefined
+  };
+}
+
+function mapBatch(row: any): SettlementBatch {
+  return {
+    id: String(row.id), agentId: String(row.agent_id), agentName: String(row.agent_name),
+    settlementDate: String(row.settlement_date), paymentReference: String(row.payment_reference),
+    period: String(row.period), totalAmountEur: Number(row.total_amount_eur),
+    commissionCount: Number(row.commission_count), notes: row.notes ?? undefined
+  };
+}
+
+function throwDatabaseError(operation: string, error: any): never {
+  const message = error?.message || 'Unknown database error';
+  if (error?.code === 'P0001' || error?.code === '23505') throw new CommissionInputError(message);
+  throw new Error(`${operation}: ${message}`);
+}
+
+function unwrapRpcPayload(data: any): any {
+  return Array.isArray(data) && data.length === 1 ? data[0] : data;
+}
+
+export async function getCommissions(filters?: CommissionFilters): Promise<CommissionRecord[]> {
+  if (isSupabaseConfigured && supabase) {
+    let query = supabase.from('commissions').select('*').order('accrual_date', { ascending: false });
+    if (filters?.agentId) query = query.eq('agent_id', filters.agentId);
+    if (filters?.status) query = query.eq('status', filters.status);
+    if (filters?.period) query = query.eq('period', filters.period);
+    if (filters?.type) query = query.eq('type', filters.type);
+    const { data, error } = await query;
+    if (error) throwDatabaseError('Unable to read commissions', error);
+    return (data ?? []).map(mapCommission);
+  }
+  let result = [...commissions];
+  if (filters?.agentId) result = result.filter(record => record.agentId === filters.agentId);
+  if (filters?.status) result = result.filter(record => record.status === filters.status);
+  if (filters?.period) result = result.filter(record => record.period === filters.period);
+  if (filters?.type) result = result.filter(record => record.type === filters.type);
+  return result.sort((a, b) => b.accrualDate.localeCompare(a.accrualDate));
+}
+
+export async function getAgentSummaries(agentId?: string): Promise<AgentCommissionSummary[]> {
+  const records = await getCommissions(agentId ? { agentId } : undefined);
+  const agents = new Map<string, { agentName: string; role: string }>();
+  if (!isSupabaseConfigured) {
+    agents.set('user-admin-1', { agentName: 'Matteo Riva (Broker Owner)', role: 'admin' });
+    agents.set('user-op-2', { agentName: 'Chiara Bianchi (Consulente Senior)', role: 'call_center' });
+    agents.set('user-op-3', { agentName: 'Marco Rossi (Junior Sales)', role: 'call_center' });
+  }
+  for (const record of records) {
+    if (!agents.has(record.agentId)) agents.set(record.agentId, { agentName: record.agentName, role: 'call_center' });
+  }
+  const summaries: AgentCommissionSummary[] = [];
+  for (const [currentAgentId, info] of agents.entries()) {
+    if (agentId && currentAgentId !== agentId) continue;
+    const agentRecords = records.filter(record => record.agentId === currentAgentId);
+    const pending = agentRecords.filter(record => record.status === 'pending');
+    const accrued = agentRecords.filter(record => record.status === 'accrued');
+    const settled = agentRecords.filter(record => record.status === 'settled');
+    const amount = (items: CommissionRecord[]) => Number(items.reduce((sum, record) => sum + record.amountEur, 0).toFixed(2));
+    const accruedAmountEur = amount(accrued);
+    const settledAmountEur = amount(settled);
+    summaries.push({
+      agentId: currentAgentId, agentName: info.agentName, role: info.role,
+      pendingCount: pending.length, pendingAmountEur: amount(pending),
+      accruedCount: accrued.length, accruedAmountEur,
+      settledCount: settled.length, settledAmountEur,
+      totalEarnedEur: Number((accruedAmountEur + settledAmountEur).toFixed(2)),
+      contractsCount: new Set(agentRecords.map(record => record.contractId)).size
+    });
+  }
+  return summaries.sort((a, b) => b.totalEarnedEur - a.totalEarnedEur);
+}
+
+function buildMemoryRecords(input: Required<ContractCommissionInput>, period: string, today: string): CommissionRecord[] {
+  const isBusiness = input.customerType === 'business' || input.annualConsumption > 6000;
+  const common = {
+    agentId: input.agentId, agentName: input.agentName, contractId: input.contractId,
+    customerName: input.customerName, podOrPdr: input.podOrPdr, utilityType: input.utilityType,
+    customerType: isBusiness ? 'business' as const : 'residential' as const,
+    annualConsumption: input.annualConsumption, status: 'accrued' as const, period, accrualDate: today
+  };
+  const records: CommissionRecord[] = [];
+  const add = (type: CommissionType, amountEur: number, notes: string) => records.push({
+    ...common, id: `comm-${stableHash(input.contractId, input.podOrPdr, type, period).slice(0, 32)}`,
+    type, amountEur, notes
+  });
+  const upfrontAmount = input.utilityType === 'luce' ? (isBusiness ? 95 : 45) : (isBusiness ? 85 : 40);
+  add('upfront', upfrontAmount, `Gettone attivazione ${input.utilityType.toUpperCase()} (${isBusiness ? 'Business' : 'Residenziale'})`);
+  if (input.isDualFuel) add('bonus', 25, 'Bonus promozionale Dual Fuel (Luce + Gas)');
+  const rate = input.utilityType === 'luce' ? 0.0025 : 0.015;
+  const monthlyRecurring = Number(((input.annualConsumption * rate) / 12).toFixed(2));
+  if (monthlyRecurring > 0) add('recurring', Math.max(1, monthlyRecurring), `Mantenimento portafoglio mese (${input.annualConsumption} ${input.utilityType === 'luce' ? 'kWh' : 'Smc'}/anno)`);
+  return records;
+}
+
+export async function generateContractCommissions(input: ContractCommissionInput): Promise<GenerationResult> {
+  const normalized = normalizeGenerationInput(input);
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.rpc('generate_contract_commissions', {
+      p_agent_id: normalized.agentId, p_agent_name: normalized.agentName,
+      p_contract_id: normalized.contractId, p_customer_name: normalized.customerName,
+      p_pod_or_pdr: normalized.podOrPdr, p_utility_type: normalized.utilityType,
+      p_customer_type: normalized.customerType, p_annual_consumption: normalized.annualConsumption,
+      p_is_dual_fuel: normalized.isDualFuel
+    });
+    if (error) throwDatabaseError('Unable to generate commissions', error);
+    const payload = unwrapRpcPayload(data);
+    if (!payload || !Array.isArray(payload.records)) throw new Error('Database returned an invalid commission generation result.');
+    const records = payload.records.map(mapCommission);
+    return { records, totalEur: Number(payload.totalEur ?? payload.total_eur ?? 0) };
+  }
+
+  const key = `${normalized.contractId}\u001f${normalized.podOrPdr}`;
+  const fingerprint = stableHash(normalized.agentName, normalized.customerName, normalized.utilityType, normalized.customerType, String(normalized.annualConsumption), String(normalized.isDualFuel));
+  const registered = memoryGenerations.get(key);
+  if (registered) {
+    if (registered.agentId !== normalized.agentId) throw new CommissionInputError('This contract and POD/PDR generation belongs to another agent.');
+    if (registered.fingerprint !== fingerprint) throw new CommissionInputError('This generation retry does not match the original request.');
+    const records = registered.recordIds.map(id => commissions.find(record => record.id === id)).filter(Boolean) as CommissionRecord[];
+    return { records, totalEur: Number(records.reduce((sum, record) => sum + record.amountEur, 0).toFixed(2)) };
+  }
+  const existing = commissions.filter(record => record.contractId === normalized.contractId && record.podOrPdr === normalized.podOrPdr);
+  if (existing.length > 0) {
+    if (existing.some(record => record.agentId !== normalized.agentId)) throw new CommissionInputError('This contract and POD/PDR generation belongs to another agent.');
+    memoryGenerations.set(key, { agentId: normalized.agentId, fingerprint, recordIds: existing.map(record => record.id) });
+    return { records: existing, totalEur: Number(existing.reduce((sum, record) => sum + record.amountEur, 0).toFixed(2)) };
+  }
+  const now = new Date().toISOString();
+  const generated = buildMemoryRecords(normalized, now.slice(0, 7), now.slice(0, 10));
+  commissions = [...commissions, ...generated];
+  memoryGenerations.set(key, { agentId: normalized.agentId, fingerprint, recordIds: generated.map(record => record.id) });
+  return { records: generated, totalEur: Number(generated.reduce((sum, record) => sum + record.amountEur, 0).toFixed(2)) };
+}
+
+export async function settleCommissions(input: SettleCommissionInput): Promise<SettlementResult> {
+  const normalized = normalizeSettlementInput(input);
+  const now = new Date().toISOString();
+  const today = now.slice(0, 10);
+  const period = now.slice(0, 7);
+  const batchId = `batch-${stableHash(normalized.agentId, ...normalized.commissionIds).slice(0, 32)}`;
+  const paymentReference = normalized.paymentReference || `DIST-${stableHash(normalized.agentId, ...normalized.commissionIds).slice(0, 16).toUpperCase()}`;
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.rpc('settle_commissions', {
+      p_agent_id: normalized.agentId, p_commission_ids: normalized.commissionIds,
+      p_batch_id: batchId, p_payment_reference: paymentReference, p_notes: normalized.notes || null
+    });
+    if (error) throwDatabaseError('Unable to settle commissions', error);
+    const payload = unwrapRpcPayload(data);
+    if (!payload?.batch) throw new Error('Database returned an invalid settlement result.');
+    return { batch: mapBatch(payload.batch), updatedCount: Number(payload.updatedCount ?? payload.updated_count ?? 0) };
+  }
+
+  const prior = memorySettlements.get(batchId);
+  if (prior) {
+    const batch = settlementBatches.find(item => item.id === prior.batchId);
+    if (!batch || prior.agentId !== normalized.agentId || prior.commissionIds.join('\u001f') !== normalized.commissionIds.join('\u001f')) throw new CommissionInputError('Settlement retry does not match the original batch.');
+    if (normalized.paymentReference && normalized.paymentReference !== batch.paymentReference) throw new CommissionInputError('Settlement retry uses a different payment reference.');
+    return { batch, updatedCount: batch.commissionCount };
+  }
+  if (settlementBatches.some(batch => batch.paymentReference === paymentReference)) throw new CommissionInputError('paymentReference is already used by another settlement batch.');
+  const selected = normalized.commissionIds.map(id => commissions.find(record => record.id === id));
+  if (selected.some(record => !record) || selected.some(record => record?.agentId !== normalized.agentId || record.status !== 'accrued')) {
+    throw new CommissionInputError('All selected commissions must exist, belong to the agent, and be eligible accrued records.');
+  }
+  const eligible = selected as CommissionRecord[];
+  const agentName = eligible[0].agentName;
+  const totalAmountEur = Number(eligible.reduce((sum, record) => sum + record.amountEur, 0).toFixed(2));
+  const batch: SettlementBatch = {
+    id: batchId, agentId: normalized.agentId, agentName, settlementDate: today,
+    paymentReference, period, totalAmountEur, commissionCount: eligible.length,
+    notes: normalized.notes || `Liquidazione saldo provvigionale del ${today}`
+  };
+  const selectedSet = new Set(normalized.commissionIds);
+  commissions = commissions.map(record => selectedSet.has(record.id) ? { ...record, status: 'settled', settlementDate: today, paymentReference } : record);
+  settlementBatches = [batch, ...settlementBatches];
+  memorySettlements.set(batchId, { agentId: normalized.agentId, commissionIds: normalized.commissionIds, batchId });
+  return { batch, updatedCount: eligible.length };
+}
+
+export async function getSettlementBatches(agentId?: string): Promise<SettlementBatch[]> {
+  if (isSupabaseConfigured && supabase) {
+    let query = supabase.from('settlement_batches').select('*').order('settlement_date', { ascending: false });
+    if (agentId) query = query.eq('agent_id', agentId);
+    const { data, error } = await query;
+    if (error) throwDatabaseError('Unable to read settlement batches', error);
+    return (data ?? []).map(mapBatch);
+  }
+  return settlementBatches.filter(batch => !agentId || batch.agentId === agentId).map(batch => ({ ...batch }));
 }

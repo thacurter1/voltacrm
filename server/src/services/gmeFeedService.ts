@@ -80,7 +80,7 @@ export async function refreshMarketIndices(forced = true): Promise<MarketIndex> 
     lastCacheTime = Date.now();
 
     if (forced) {
-      addNotification({
+      await addNotification({
         id: `notif-gme-${Date.now()}`,
         type: 'market_trend',
         title: 'Indici GME Aggiornati in Tempo Reale',
