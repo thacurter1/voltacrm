@@ -92,6 +92,9 @@ create table if not exists public.signature_logs (
   signer_fiscal_code text not null,
   phone text not null,
   otp_code text not null,
+  signature_type text default 'otp' check (signature_type in ('otp', 'canvas')),
+  canvas_hash text,
+  ip_address text,
   offer_id text,
   supplier text,
   signature_hash text not null,
@@ -377,6 +380,20 @@ grant select, insert, update on public.leads to authenticated, anon;
 grant select, insert on public.signature_logs to authenticated;
 grant select, insert, update on public.notifications to authenticated;
 
+-- Policy Customers: Operatori e Admin gestiscono tutte le anagrafiche, il cliente legge solo la propria
+alter table public.customers enable row level security;
+drop policy if exists "Operatori gestiscono customers o cliente legge proprio" on public.customers;
+create policy "Operatori gestiscono customers o cliente legge proprio"
+  on public.customers for all to authenticated
+  using (
+    public.is_operator_or_admin() or 
+    id in (select customer_id from public.profiles where id = auth.uid()) or
+    phone = (select phone from public.profiles where id = auth.uid())
+  )
+  with check (public.is_operator_or_admin());
+
+grant select, insert, update on public.customers to authenticated;
+
 -- ==============================================================================
 -- 8. TABELLA PROVVIGIONI AGENTI & GETTONI COMMERCIALI
 -- ==============================================================================
@@ -516,5 +533,9 @@ create index if not exists idx_profiles_role on public.profiles (role);
 create index if not exists idx_profiles_fiscal_code on public.profiles (fiscal_code);
 create index if not exists idx_notifications_user_id on public.notifications (user_id);
 create index if not exists idx_notifications_target_role on public.notifications (target_role);
+create index if not exists idx_customers_fiscal_code on public.customers (fiscal_code);
+create index if not exists idx_customers_next_audit on public.customers (next_switch_audit_date);
+create index if not exists idx_commissions_contract_id on public.commissions (contract_id);
+create unique index if not exists uq_commissions_idempotency on public.commissions (contract_id, pod_or_pdr, type, period);
 
 

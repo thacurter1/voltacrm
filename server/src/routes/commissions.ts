@@ -39,8 +39,15 @@ commissionRouter.get('/batches', (req: Request, res: Response): void => {
 
 // GET /api/commissions - Elenco completo provvigioni con filtri
 commissionRouter.get('/', (req: Request, res: Response): void => {
+  const authUser = (req as any).user;
+  const isBrokerAdmin = authUser?.role === 'admin';
+
+  // Prevenzione BOLA: solo l'admin può ispezionare qualsiasi agente; operatori e call center vedono solo le proprie
+  const requestedAgentId = req.query.agentId as string | undefined;
+  const targetAgentId = isBrokerAdmin ? requestedAgentId : authUser?.userId;
+
   const filters: CommissionFilters = {
-    agentId: req.query.agentId as string | undefined,
+    agentId: targetAgentId,
     status: req.query.status as CommissionStatus | undefined,
     period: req.query.period as string | undefined,
     type: req.query.type as CommissionType | undefined,
@@ -98,17 +105,24 @@ commissionRouter.post('/settle', requireRole('admin'), (req: Request, res: Respo
     return;
   }
 
-  const result = settleCommissions({
-    agentId: body.agentId,
-    commissionIds: body.commissionIds,
-    paymentReference: body.paymentReference,
-    notes: body.notes
-  });
+  try {
+    const result = settleCommissions({
+      agentId: body.agentId,
+      commissionIds: body.commissionIds,
+      paymentReference: body.paymentReference,
+      notes: body.notes
+    });
 
-  res.status(200).json({
-    success: true,
-    message: `Distinta di liquidazione generata con successo per ${result.updatedCount} record.`,
-    batch: result.batch,
-    updatedCount: result.updatedCount
-  });
+    res.status(200).json({
+      success: true,
+      message: `Distinta di liquidazione generata con successo per ${result.updatedCount} record.`,
+      batch: result.batch,
+      updatedCount: result.updatedCount
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      message: err.message || 'Errore durante la liquidazione delle provvigioni.'
+    });
+  }
 });

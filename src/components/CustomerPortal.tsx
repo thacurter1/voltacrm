@@ -452,7 +452,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
               <ShieldCheck className="h-4 w-4 text-emerald-600" /> Nessun costo di recesso e zero interruzioni di luce/gas.
             </span>
             <button
-              onClick={() => onApproveSwitch(recommendedAudit.id)}
+              onClick={() => onOpenSignature ? onOpenSignature(recommendedAudit) : onApproveSwitch(recommendedAudit.id)}
               className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-700/20 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-2"
             >
               <CheckCircle2 className="h-4 w-4" />

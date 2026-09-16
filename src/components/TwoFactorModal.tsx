@@ -25,6 +25,8 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
     if (!isOpen) return;
     setCode(['', '', '', '', '', '']);
     setError('');
+    // Genera immediatamente il token TOTP corrente per evitare stato obsoleto (stale)
+    setDynamicTotp(securityValidator.generateCurrentTotp(userIdentifier));
 
     const interval = setInterval(() => {
       setDynamicTotp(securityValidator.generateCurrentTotp(userIdentifier));

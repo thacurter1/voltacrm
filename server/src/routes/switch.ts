@@ -1,12 +1,12 @@
 import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
 import { MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine.js';
-import { getCustomers, getSignatureLogs, addSignatureLog, users } from '../services/dataStore.js';
+import { getCustomers, getSignatureLogs, addSignatureLog, updateCustomer, users } from '../services/dataStore.js';
 import { getLiveMarketIndices, refreshMarketIndices } from '../services/gmeFeedService.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, signContractSchema } from '../middleware/validate.js';
 import { verifyOtp } from '../services/messagingService.js';
-import { Customer } from '../types.js';
+import { Customer, UtilityPoint } from '../types.js';
 
 export const switchRouter = Router();
 
@@ -62,6 +62,15 @@ switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response
   }
 });
 
+// GET /api/switch/offers (Catalogo offerte del mercato libero verificate da VoltaCRM)
+switchRouter.get('/offers', (_req: Request, res: Response): void => {
+  res.json({
+    success: true,
+    count: MARKET_OFFERS.length,
+    offers: MARKET_OFFERS
+  });
+});
+
 // POST /api/switch/sign (Digital Signature & Mandato Brokeraggio con validazione crittografica OTP e binding cliente)
 switchRouter.post('/sign', authenticateToken, validate(signContractSchema), (req: Request, res: Response): void => {
   const authUser = (req as any).user;
@@ -74,10 +83,11 @@ switchRouter.post('/sign', authenticateToken, validate(signContractSchema), (req
     return;
   }
 
-  // Prevenzione IDOR: se l'utente ha ruolo customer, può firmare esclusivamente per la propria anagrafica
+  // Prevenzione IDOR: se l'utente ha ruolo customer, è vincolato tassativamente alla propria anagrafica
+  let targetCustomerId = customerId;
   if (!isStaff) {
     const userProfile = users.find(u => u.id === authUser?.userId);
-    const userCustId = userProfile?.customerId;
+    const userCustId = userProfile?.customerId || authUser?.userId;
     if (customerId && customerId !== userCustId && customerId !== authUser?.userId) {
       res.status(403).json({
         success: false,
@@ -85,20 +95,28 @@ switchRouter.post('/sign', authenticateToken, validate(signContractSchema), (req
       });
       return;
     }
+    // Forza tassativamente l'identità del cliente autenticato anche se omessa nel payload
+    targetCustomerId = userCustId;
   }
 
   // Verifica esistenza offerta nel catalogo MARKET_OFFERS
   const targetOffer = MARKET_OFFERS.find(o => o.id === offerId || (o.supplier === supplier && offerId === o.id));
-  if (!targetOffer && offerId !== 'off-custom') {
-    res.status(400).json({
-      success: false,
-      message: `Offerta selezionata non valida o non presente a catalogo (id: ${offerId || 'sconosciuto'}).`
-    });
-    return;
+  if (!targetOffer) {
+    if (offerId === 'off-custom' && isStaff) {
+      // Offerta personalizzata ammessa solo per operatori staff
+    } else {
+      res.status(400).json({
+        success: false,
+        message: `Offerta selezionata non valida o non presente a catalogo (id: ${offerId || 'sconosciuto'}).`
+      });
+      return;
+    }
   }
 
-  // Se customerId è fornito, verifica coerenza con l'anagrafica
-  const existingCustomer = customerId ? getCustomers().find(c => c.id === customerId) : undefined;
+  const effectiveCustomerId = targetCustomerId || (customerId || `cust-${Date.now()}`);
+
+  // Se customerId è identificato, verifica coerenza con l'anagrafica
+  const existingCustomer = getCustomers().find(c => c.id === effectiveCustomerId);
   if (existingCustomer && existingCustomer.phone) {
     const cleanReqPhone = phone.replace(/[^\d]/g, '');
     const cleanCustPhone = existingCustomer.phone.replace(/[^\d]/g, '');
@@ -111,7 +129,6 @@ switchRouter.post('/sign', authenticateToken, validate(signContractSchema), (req
     }
   }
 
-  const effectiveCustomerId = customerId || (existingCustomer ? existingCustomer.id : `cust-${Date.now()}`);
   const effectiveFiscalCode = (signerFiscalCode || (existingCustomer ? existingCustomer.fiscalCode : 'CF-ND')).toUpperCase();
   const effectiveSupplier = targetOffer ? targetOffer.supplier : (supplier || 'Octopus Energy');
   const effectiveOfferName = targetOffer ? targetOffer.name : (offerId || 'Offerta Standard');
@@ -170,6 +187,32 @@ switchRouter.post('/sign', authenticateToken, validate(signContractSchema), (req
   };
 
   addSignatureLog(log);
+
+  // Aggiorna anagrafica cliente e utilityPoints associati con la nuova fornitura e scadenze switch a 120 giorni
+  if (existingCustomer) {
+    const today = timestamp.split('T')[0];
+    const next120Days = new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0];
+    existingCustomer.lastSwitchAuditDate = today;
+    existingCustomer.nextSwitchAuditDate = next120Days;
+    existingCustomer.hasBrokerageMandate = true;
+
+    if (targetOffer && Array.isArray(existingCustomer.utilityPoints)) {
+      existingCustomer.utilityPoints = existingCustomer.utilityPoints.map((point: UtilityPoint) => {
+        if (!targetOffer.energyType || point.type === targetOffer.energyType) {
+          return {
+            ...point,
+            currentSupplier: targetOffer.supplier,
+            currentOfferName: targetOffer.name,
+            currentUnitCost: typeof targetOffer.unitPriceOrSpread === 'number' ? targetOffer.unitPriceOrSpread : point.currentUnitCost,
+            currentFixedFeeYear: typeof targetOffer.fixedAnnualFee === 'number' ? targetOffer.fixedAnnualFee : point.currentFixedFeeYear,
+            currentTariffType: targetOffer.pricingType === 'fixed' ? 'fixed' : 'indexed'
+          };
+        }
+        return point;
+      });
+    }
+    updateCustomer(existingCustomer);
+  }
 
   res.status(201).json({
     success: true,

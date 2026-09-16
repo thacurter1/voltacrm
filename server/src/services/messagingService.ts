@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import { addNotification } from './dataStore.js';
 
 dotenv.config();
@@ -37,6 +38,18 @@ export interface SendOfferPayload {
 // Map per memorizzare gli OTP in attesa (TTL 5 minuti)
 const pendingOtps = new Map<string, PendingOtp>();
 
+/**
+ * Pulisce i codici OTP scaduti dalla memoria per evitare accumulation/memory leaks
+ */
+function cleanupExpiredOtps(): void {
+  const now = Date.now();
+  for (const [phone, item] of pendingOtps.entries()) {
+    if (now > item.expiresAt) {
+      pendingOtps.delete(phone);
+    }
+  }
+}
+
 function sanitizePhone(rawPhone: string): string {
   let cleaned = rawPhone.replace(/[^\d+]/g, '');
   if (!cleaned.startsWith('+')) {
@@ -58,8 +71,10 @@ export async function sendOtp(
   channel: 'sms' | 'whatsapp' = 'sms',
   reason = 'digital_signature'
 ): Promise<SendOtpResult> {
+  cleanupExpiredOtps();
   const cleanPhone = sanitizePhone(phone);
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // Generazione crittograficamente sicura con crypto.randomInt (CSPRNG)
+  const code = crypto.randomInt(100000, 1000000).toString();
   const ttlMs = 5 * 60 * 1000; // 5 minuti
   const expiresAtMs = Date.now() + ttlMs;
   const expiresAtIso = new Date(expiresAtMs).toISOString();
@@ -195,7 +210,7 @@ export async function sendOtp(
     messageId: `sandbox-${Date.now()}`,
     expiresAt: expiresAtIso,
     channel,
-    debugOtp: code,
+    debugOtp: process.env.NODE_ENV === 'production' ? undefined : code,
     sandboxMode: true
   };
 }

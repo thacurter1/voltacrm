@@ -290,6 +290,8 @@ export const addCustomer = (customer: Customer) => {
       email: customer.email || null,
       city: customer.city || 'Milano',
       contract_start_date: customer.contractStartDate || new Date().toISOString().split('T')[0],
+      last_switch_audit_date: customer.lastSwitchAuditDate || new Date().toISOString().split('T')[0],
+      next_switch_audit_date: customer.nextSwitchAuditDate || new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
       has_brokerage_mandate: customer.hasBrokerageMandate ?? true,
       account_manager: customer.accountManager || 'Matteo Riva',
       notes: customer.notes || null,
@@ -297,6 +299,37 @@ export const addCustomer = (customer: Customer) => {
     }], { onConflict: 'id' }).then(({ error }) => {
       if (error) console.warn('[Supabase Sync] Errore inserimento cliente:', error.message);
       else console.log(`[Supabase Sync] Cliente ${customer.id} persistito su PostgreSQL (tabella customers)`);
+    });
+  }
+};
+
+export const updateCustomer = (customer: Customer) => {
+  if (!customer || !customer.id) return;
+  const index = customers.findIndex(c => c.id === customer.id);
+  if (index !== -1) {
+    customers[index] = { ...customers[index], ...customer };
+  } else {
+    customers.unshift(customer);
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    supabase.from('customers').upsert([{
+      id: customer.id,
+      name: customer.name,
+      fiscal_code: customer.fiscalCode,
+      phone: customer.phone,
+      email: customer.email || null,
+      city: customer.city || 'Milano',
+      contract_start_date: customer.contractStartDate || new Date().toISOString().split('T')[0],
+      last_switch_audit_date: customer.lastSwitchAuditDate || new Date().toISOString().split('T')[0],
+      next_switch_audit_date: customer.nextSwitchAuditDate || new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
+      has_brokerage_mandate: customer.hasBrokerageMandate ?? true,
+      account_manager: customer.accountManager || 'Matteo Riva',
+      notes: customer.notes || null,
+      utility_points: customer.utilityPoints || []
+    }], { onConflict: 'id' }).then(({ error }) => {
+      if (error) console.warn('[Supabase Sync] Errore aggiornamento cliente:', error.message);
+      else console.log(`[Supabase Sync] Cliente ${customer.id} aggiornato su PostgreSQL (tabella customers)`);
     });
   }
 };
@@ -334,9 +367,12 @@ export const addSignatureLog = (log: any) => {
       customer_name: log.customerName,
       signer_fiscal_code: log.signerFiscalCode,
       phone: log.phone,
+      signature_type: log.signatureType || 'otp',
       otp_code: log.otpCode || '******',
+      canvas_hash: log.canvasHash || null,
       offer_id: log.offerId,
       supplier: log.supplier,
+      ip_address: log.ipAddress || null,
       signature_hash: log.signatureHash
     }]).then(({ error }) => {
       if (error) console.warn('[Supabase Sync] Errore salvataggio log di firma:', error.message);

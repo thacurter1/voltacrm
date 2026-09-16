@@ -54,6 +54,18 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     return () => clearInterval(interval);
   }, [otpTimer]);
 
+  // Reset state on open
+  useEffect(() => {
+    if (isOpen) {
+      setHasDrawn(false);
+      setConsentChecked(false);
+      setOtpCode('');
+      setOtpSent(false);
+      setOtpError(null);
+      setOtpNotice(null);
+    }
+  }, [isOpen, audit?.id]);
+
   // Chiusura accessibile con tasto Escape
   useEffect(() => {
     if (!isOpen) return;
@@ -66,6 +78,19 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
 
   if (!isOpen || !audit) return null;
 
+  // Coordinate normalizzate per schermi touch / desktop
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? (e.touches[0] ? e.touches[0].clientX : 0) : e.clientX;
+    const clientY = 'touches' in e ? (e.touches[0] ? e.touches[0].clientY : 0) : e.clientY;
+    const scaleX = rect.width ? canvas.width / rect.width : 1;
+    const scaleY = rect.height ? canvas.height / rect.height : 1;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
+
   // Drawing Handlers
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -73,9 +98,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const { x, y } = getCoordinates(e, canvas);
 
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -93,9 +116,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const { x, y } = getCoordinates(e, canvas);
 
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -399,21 +420,6 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
               </button>
             </div>
 
-            {/* Error or Notice Alert */}
-            {otpError && (
-              <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2 text-[11px]">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
-                <span>{otpError}</span>
-              </div>
-            )}
-
-            {otpNotice && (
-              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2 text-[11px]">
-                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                <span className="font-medium">{otpNotice}</span>
-              </div>
-            )}
-
             {otpSent && (
               <div className="pt-1">
                 <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">
@@ -429,6 +435,21 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {/* Error or Notice Alert (Visibile per qualsiasi modalità di firma) */}
+        {otpError && (
+          <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2 text-[11px]" role="alert">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
+            <span>{otpError}</span>
+          </div>
+        )}
+
+        {otpNotice && (
+          <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2 text-[11px]" role="status">
+            <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+            <span className="font-medium">{otpNotice}</span>
           </div>
         )}
 

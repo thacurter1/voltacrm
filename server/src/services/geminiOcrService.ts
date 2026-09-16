@@ -59,11 +59,12 @@ Analizza questa bolletta o fattura ed estrai rigorosamente in formato JSON i dat
 }
 Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(20000),
         body: JSON.stringify({
           contents: [
             {
@@ -109,7 +110,7 @@ Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
             estimatedSavingEur: Number(parsed.estimatedSavingEur) || 185.0,
             confidenceScore: Number(parsed.confidenceScore) || 98.8,
             period: parsed.period || 'Periodo corrente',
-            notes: 'Analizzato con successo tramite Google Gemini 2.5 Flash Vision.'
+            notes: 'Analizzato con successo tramite Google Gemini 2.0 Flash Vision.'
           };
         }
       } else {
@@ -161,6 +162,13 @@ function heuristicBillParser(fileName: string, base64Data: string): ExtractedBil
   const cfMatch = decodedText.match(/[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]/i);
   const fiscalCode = cfMatch ? cfMatch[0].toUpperCase() : 'MRTNDR85M01H501Z';
 
+  const hasMatchedPod = Boolean(podMatch || pdrMatch);
+  const hasMatchedCf = Boolean(cfMatch);
+  const confidenceScore = (hasMatchedPod && hasMatchedCf) ? 97.5 : (hasMatchedPod || hasMatchedCf ? 75.0 : 40.0);
+  const notes = (hasMatchedPod && hasMatchedCf)
+    ? 'Estratto con motore euristico ARERA di fallback da testo.'
+    : 'Dati stimati con motore euristico di fallback (dati completi non rilevabili dal file binario).';
+
   // Calcolo consumi coerenti
   const annualConsumption = utilityType === 'luce' ? 3200 : 1150;
   const rawCostTotal = utilityType === 'luce' ? 142.50 : 165.20;
@@ -182,8 +190,8 @@ function heuristicBillParser(fileName: string, base64Data: string): ExtractedBil
     currentUnitCost: utilityType === 'luce' ? 0.168 : 0.54,
     currentFixedFeeYear: 144.0,
     estimatedSavingEur,
-    confidenceScore: 97.5,
+    confidenceScore,
     period: 'Bimestre Recente',
-    notes: 'Estratto con motore euristico ARERA di fallback.'
+    notes
   };
 }

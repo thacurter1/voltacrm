@@ -1,4 +1,5 @@
 import { CommissionRecord, AgentCommissionSummary, SettlementBatch, CommissionType, CommissionStatus } from '../types.js';
+import { supabase, isSupabaseConfigured } from './dbClient.js';
 
 // Dati in-memory per provvigioni e distinte
 let COMMISSIONS: CommissionRecord[] = [
@@ -270,15 +271,22 @@ export interface ContractCommissionInput {
  * Calcola e genera le provvigioni spettanti per un nuovo contratto stipulato
  */
 export function generateContractCommissions(input: ContractCommissionInput): { records: CommissionRecord[]; totalEur: number } {
-  // Idempotenza: verifica se le provvigioni per questo contratto sono già state contabilizzate
+  // Idempotenza: verifica se le provvigioni per questa specifica fornitura/contratto sono già state contabilizzate
   const contractRef = input.contractId || `${(input.customerName || '').trim().toLowerCase()}_${(input.podOrPdr || 'nd').trim()}_${input.utilityType}`;
   
-  const existingRecords = COMMISSIONS.filter((c: CommissionRecord) => 
-    c.contractId === contractRef || (input.contractId && c.contractId === input.contractId)
+  // Per supportare Dual Fuel (stesso contratto, ma POD per luce e PDR per gas) verifichiamo la presenza di provvigione 'upfront' per il POD/PDR
+  const hasUpfront = COMMISSIONS.some((c: CommissionRecord) => 
+    c.contractId === contractRef && 
+    (!input.podOrPdr || c.podOrPdr === input.podOrPdr) &&
+    c.type === 'upfront'
   );
 
-  if (existingRecords.length > 0) {
-    console.log(`[Commission Service] Idempotenza attiva: contratto ${contractRef} già contabilizzato. Restituzione record esistenti.`);
+  if (hasUpfront) {
+    const existingRecords = COMMISSIONS.filter((c: CommissionRecord) =>
+      c.contractId === contractRef &&
+      (!input.podOrPdr || c.podOrPdr === input.podOrPdr)
+    );
+    console.log(`[Commission Service] Idempotenza attiva: fornitura ${input.podOrPdr || contractRef} già contabilizzata. Restituzione record esistenti (${existingRecords.length}).`);
     const existingTotal = existingRecords.reduce((sum: number, r: CommissionRecord) => sum + r.amountEur, 0);
     return {
       records: existingRecords,
@@ -369,6 +377,30 @@ export function generateContractCommissions(input: ContractCommissionInput): { r
   // Aggiungi a COMMISSIONS
   COMMISSIONS.push(...generated);
 
+  // Sincronizzazione asincrona su Supabase se configurato
+  if (isSupabaseConfigured && supabase) {
+    const dbPayload = generated.map(r => ({
+      id: r.id,
+      agent_id: r.agentId,
+      agent_name: r.agentName,
+      contract_id: r.contractId,
+      customer_name: r.customerName,
+      pod_or_pdr: r.podOrPdr,
+      utility_type: r.utilityType,
+      customer_type: r.customerType || 'residential',
+      annual_consumption: r.annualConsumption,
+      type: r.type,
+      amount_eur: r.amountEur,
+      status: r.status,
+      period: r.period,
+      accrual_date: r.accrualDate,
+      notes: r.notes || null
+    }));
+    supabase.from('commissions').upsert(dbPayload, { onConflict: 'id' }).then(({ error }: any) => {
+      if (error) console.warn('[Supabase Sync Failure] Salvataggio provvigioni fallito:', error.message);
+    });
+  }
+
   const totalEur = Number(generated.reduce((s, r) => s + r.amountEur, 0).toFixed(2));
   return { records: generated, totalEur };
 }
@@ -429,6 +461,30 @@ export function settleCommissions(input: SettleCommissionInput): { batch: Settle
   };
 
   SETTLEMENT_BATCHES.unshift(batch);
+
+  // Sincronizzazione asincrona su Supabase
+  if (isSupabaseConfigured && supabase) {
+    supabase.from('commissions')
+      .update({ status: 'settled', settlement_date: today, payment_reference: refCode })
+      .in('id', input.commissionIds)
+      .then(({ error }: any) => {
+        if (error) console.warn('[Supabase Sync Failure] Aggiornamento provvigioni settled fallito:', error.message);
+      });
+
+    supabase.from('settlement_batches').insert([{
+      id: batch.id,
+      agent_id: batch.agentId,
+      agent_name: batch.agentName,
+      settlement_date: batch.settlementDate,
+      payment_reference: batch.paymentReference,
+      period: batch.period,
+      total_amount_eur: batch.totalAmountEur,
+      commission_count: batch.commissionCount,
+      notes: batch.notes || null
+    }]).then(({ error }: any) => {
+      if (error) console.warn('[Supabase Sync Failure] Salvataggio settlement_batch fallito:', error.message);
+    });
+  }
 
   return { batch, updatedCount };
 }

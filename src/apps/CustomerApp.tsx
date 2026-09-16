@@ -75,8 +75,10 @@ export const CustomerApp: React.FC = () => {
   };
 
   const handleApproveSwitch = (auditId: string) => {
-    setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'switched' } : a));
-    addToast('Switch Confermato', 'Pratica di attivazione inviata al gestore.', 'success');
+    const auditToSign = audits.find(a => a.id === auditId);
+    if (auditToSign) {
+      setSelectedAuditForSignature(auditToSign);
+    }
   };
 
   const handleSignatureCompleted = (auditId: string) => {

@@ -56,46 +56,31 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 export const api = {
   // --- AUTHENTICATION ---
   auth: {
-    async loginOperator(email = 'm.riva@voltagroup.it', password = 'admin123', totpCode = '123456') {
-      try {
-        const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-operator', {
-          method: 'POST',
-          body: JSON.stringify({ email, password, totpCode })
-        });
-        if (data.token && typeof window !== 'undefined') {
-          localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
-        }
-        return data;
-      } catch (err) {
-        console.warn('[API Client] Login operatore non riuscito, fallback locale:', err);
-        return null;
+    async loginOperator(email: string, password: string, totpCode?: string) {
+      const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-operator', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, totpCode })
+      });
+      if (data.token && typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
       }
+      return data;
     },
 
     async loginCustomer(identifier: string, password: string) {
-      try {
-        const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-customer', {
-          method: 'POST',
-          body: JSON.stringify({ identifier, password })
-        });
-        if (data.token && typeof window !== 'undefined') {
-          localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
-        }
-        return data;
-      } catch (err) {
-        console.warn('[API Client] Login cliente non riuscito, fallback locale:', err);
-        return null;
+      const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-customer', {
+        method: 'POST',
+        body: JSON.stringify({ identifier, password })
+      });
+      if (data.token && typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
       }
+      return data;
     },
 
     async ensureToken(): Promise<string | null> {
       if (typeof window === 'undefined') return null;
-      let token = localStorage.getItem('VOLTA_AUTH_TOKEN');
-      if (!token) {
-        const res = await api.auth.loginOperator();
-        token = res?.token || null;
-      }
-      return token;
+      return localStorage.getItem('VOLTA_AUTH_TOKEN');
     },
 
     logout() {
