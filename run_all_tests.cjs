@@ -4,14 +4,21 @@ const path = require('path');
 
 function checkServer() {
   return new Promise((resolve) => {
-    const req = http.get('http://localhost:5000/api/health', (res) => {
-      resolve(res.statusCode === 200);
-    });
-    req.on('error', () => resolve(false));
-    req.setTimeout(800, () => {
-      req.destroy();
-      resolve(false);
-    });
+    const tryUrl = (url, fallback) => {
+      const req = http.get(url, (res) => {
+        resolve(res.statusCode === 200);
+      });
+      req.on('error', () => {
+        if (fallback) tryUrl(fallback, null);
+        else resolve(false);
+      });
+      req.setTimeout(800, () => {
+        req.destroy();
+        if (fallback) tryUrl(fallback, null);
+        else resolve(false);
+      });
+    };
+    tryUrl('http://127.0.0.1:5000/api/health', 'http://localhost:5000/api/health');
   });
 }
 
@@ -40,14 +47,17 @@ async function main() {
 
   if (!isRunning) {
     console.log('Backend server not running on port 5000. Starting server/dist/index.js...');
+    let serverOutput = '';
     serverProc = spawn(process.execPath, [path.join(__dirname, 'server', 'dist', 'index.js')], {
       stdio: 'pipe',
       env: { ...process.env, NODE_ENV: 'test' }
     });
+    serverProc.stdout.on('data', chunk => { serverOutput += chunk; });
+    serverProc.stderr.on('data', chunk => { serverOutput += chunk; });
 
-    let retries = 15;
+    let retries = 25;
     while (retries > 0) {
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 400));
       isRunning = await checkServer();
       if (isRunning) break;
       retries--;
@@ -56,11 +66,12 @@ async function main() {
     if (!isRunning) {
       if (serverProc) serverProc.kill();
       console.error('Failed to start backend server for tests.');
+      if (serverOutput) console.error('Server output:\n' + serverOutput);
       process.exit(1);
     }
-    console.log('Backend server started and healthy on http://localhost:5000\n');
+    console.log('Backend server started and healthy on http://127.0.0.1:5000\n');
   } else {
-    console.log('Backend server is already running on http://localhost:5000\n');
+    console.log('Backend server is already running on port 5000\n');
   }
 
   const testSuites = [
