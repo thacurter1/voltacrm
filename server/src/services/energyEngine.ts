@@ -111,7 +111,7 @@ export const MARKET_OFFERS: SupplierOffer[] = [
 ];
 
 export function calculateAnnualCost(
-  utility: Pick<UtilityPoint, 'type' | 'annualConsumption'>,
+  utility: { type: 'luce' | 'gas'; annualConsumption?: number; powerKw?: number } | UtilityPoint,
   pricingType: 'fixed' | 'indexed' | 'indexed_pun' | 'indexed_psv',
   unitPriceOrSpread: number,
   fixedAnnualFee: number,
@@ -131,9 +131,10 @@ export function calculateAnnualCost(
   }
 
   const safeConsumption = Math.max(0, utility.annualConsumption || 0);
+  const powerCost = utility.type === 'luce' ? ((utility as any).powerKw || 3) * 23.50 : 0;
   const rawCost = (safeConsumption * effectiveUnitCost) + fixedAnnualFee;
   const estimatedTaxesAndNetwork = utility.type === 'luce' 
-    ? (safeConsumption * 0.075) + 60 
+    ? (safeConsumption * 0.075) + 60 + powerCost
     : (safeConsumption * 0.22) + 75;
 
   return Math.round((rawCost + estimatedTaxesAndNetwork) * 100) / 100;

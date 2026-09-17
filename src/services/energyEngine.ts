@@ -2,7 +2,7 @@ import { Customer, MarketIndex, SupplierOffer, SwitchAudit, UtilityPoint } from 
 
 export const CURRENT_MARKET_INDEX: MarketIndex = {
   punEurKwh: 0.1145, // PUN medio all'ingrosso
-  psvEurSmc: 0.3820, // PSV medio gas all'ingrosso
+  psvEurSmc: 0.3850, // PSV medio gas all'ingrosso
   lastUpdated: 'Oggi (GME / Mercato Elettrico Italiano)',
   punTrend: 'down',
   psvTrend: 'stable',
@@ -59,6 +59,19 @@ export const MARKET_OFFERS: SupplierOffer[] = [
     greenCertified: true,
     tag: '100% Green',
   },
+  {
+    id: 'off-luce-dolomiti',
+    supplier: 'Dolomiti Energia',
+    name: 'Dolomiti Mitica Web Luce',
+    energyType: 'luce',
+    pricingType: 'indexed_pun',
+    unitPriceOrSpread: 0.0120,
+    fixedAnnualFee: 114.0,
+    durationMonths: 12,
+    greenCertified: true,
+    tag: 'Broker Choice',
+  },
+
 
   // --- GAS ---
   {
@@ -101,8 +114,8 @@ export const MARKET_OFFERS: SupplierOffer[] = [
 
 // Calcolo spesa annuale per offerta / utenza
 export function calculateAnnualCost(
-  utility: Pick<UtilityPoint, 'type' | 'annualConsumption'>,
-  pricingType: 'fixed' | 'indexed' | 'indexed_pun' | 'indexed_psv',
+  utility: { type: 'luce' | 'gas'; annualConsumption?: number; powerKw?: number } | UtilityPoint,
+  pricingType: string,
   unitPriceOrSpread: number,
   fixedAnnualFee: number,
   marketIndex = CURRENT_MARKET_INDEX
@@ -121,19 +134,19 @@ export function calculateAnnualCost(
   }
 
   const safeConsumption = Math.max(0, utility.annualConsumption || 0);
+  const powerCost = utility.type === 'luce' ? ((utility as any).powerKw || 3) * 23.50 : 0;
 
   // Costo materia prima + quota fissa di commercializzazione (CCV)
   const rawCost = (safeConsumption * effectiveUnitCost) + fixedAnnualFee;
   
   // Stima oneri di sistema, trasporto e imposte (circa 35% del totale spesa nel mercato italiano)
   const estimatedTaxesAndNetwork = utility.type === 'luce' 
-    ? (safeConsumption * 0.075) + 60 
+    ? (safeConsumption * 0.075) + 60 + powerCost 
     : (safeConsumption * 0.22) + 75;
 
   return Math.max(0, Math.round((rawCost + estimatedTaxesAndNetwork) * 100) / 100);
 }
 
-// Analisi comparativa per un punto fornitura rispetto al mercato
 export function findBestMarketOffer(
   utility: UtilityPoint, 
   offers: SupplierOffer[] = MARKET_OFFERS,

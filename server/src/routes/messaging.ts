@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { Router, Request, Response, NextFunction } from 'express';
 import { sendOtp, verifyOtp, sendOfferWhatsApp } from '../services/messagingService.js';
+import { users } from '../services/dataStore.js';
 import { otpLimiter } from '../middleware/rateLimiter.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -45,6 +46,21 @@ messagingRouter.post('/send-otp', otpLimiter, authenticateToken, async (req: Req
       message: 'Numero di telefono non valido o mancante.'
     });
     return;
+  }
+
+  // Se l'utente è un customer, può inviare OTP SOLO al proprio numero di telefono registrato
+  const authUser = (req as any).user;
+  if (authUser?.role === 'customer') {
+    const userProfile = users.find(u => u.id === authUser.userId);
+    const cleanReqPhone = phone.replace(/[\s+-]/g, '');
+    const cleanUserPhone = (userProfile?.phone || '').replace(/[\s+-]/g, '');
+    if (!cleanUserPhone || cleanReqPhone !== cleanUserPhone) {
+      res.status(403).json({
+        success: false,
+        message: 'Non autorizzato a inviare OTP a un recapito telefonico differente da quello registrato.'
+      });
+      return;
+    }
   }
 
   const selectedChannel = channel === 'whatsapp' ? 'whatsapp' : 'sms';

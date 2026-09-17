@@ -84,12 +84,24 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
 // POST /api/auth/register-customer
 authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSchema), async (req: Request, res: Response): Promise<void> => {
   const { name, email, phone, fiscalCode, password } = req.body;
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedFiscalCode = fiscalCode.trim().toUpperCase();
+
+  const existingUser = users.find(u => 
+    u.email.toLowerCase() === normalizedEmail || 
+    (u.fiscalCode && u.fiscalCode.toUpperCase() === normalizedFiscalCode)
+  );
+  if (existingUser) {
+    res.status(409).json({ success: false, message: 'Email o Codice Fiscale già registrato nel sistema.' });
+    return;
+  }
+
   const today = new Date().toISOString().split('T')[0];
   const customerId = crypto.randomUUID();
   const profile = {
-    id: crypto.randomUUID(), name: name.trim(), email: email.trim().toLowerCase(),
+    id: crypto.randomUUID(), name: name.trim(), email: normalizedEmail,
     password: await bcrypt.hash(password, 12), role: 'customer', phone,
-    fiscalCode: fiscalCode.trim().toUpperCase(), customerId,
+    fiscalCode: normalizedFiscalCode, customerId,
     avatar: name.split(' ').map((n:string)=>n[0]).join('').slice(0,2).toUpperCase(),
     is2faEnabled: false, onboardingStatus:'active', createdAt:today
   };

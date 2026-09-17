@@ -292,6 +292,7 @@ export async function activateSignedSignature(input: {
     ...customer,
     lastSwitchAuditDate: input.activationDate,
     nextSwitchAuditDate: next120Days,
+    contractStartDate: input.activationDate,
     hasBrokerageMandate: true,
     utilityPoints: customer.utilityPoints.map((point: UtilityPoint, index: number) => index === pointIndex ? updatedPoint : point)
   };

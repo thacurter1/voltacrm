@@ -75,24 +75,28 @@ export const CrmApp: React.FC = () => {
 
   // Load GME live feed on startup
   useEffect(() => {
+    let isMounted = true;
     api.switch.getMarketIndices()
       .then(liveIndex => {
-        if (liveIndex && liveIndex.punEurKwh) {
+        if (isMounted && liveIndex && liveIndex.punEurKwh) {
           setMarketIndex(liveIndex);
         }
       })
       .catch(err => {
-        console.warn('[VoltaCRM] Impossibile caricare feed GME live in CrmApp:', err);
+        if (isMounted) console.warn('[VoltaCRM] Impossibile caricare feed GME live in CrmApp:', err);
       });
+    return () => { isMounted = false; };
   }, []);
 
   // Load cloud profiles
   useEffect(() => {
+    let isMounted = true;
     profileService.getProfiles().then(data => {
-      if (data && data.length > 0) {
+      if (isMounted && data && data.length > 0) {
         setProfiles(data);
       }
     });
+    return () => { isMounted = false; };
   }, []);
 
   // Sync with DB (debounced to avoid blocking I/O on rapid state mutations)

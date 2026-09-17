@@ -147,16 +147,22 @@ function UnifiedApp() {
 
   // Carica indici di mercato live dal feed GME all'avvio
   useEffect(() => {
+    let isMounted = true;
     api.switch.getMarketIndices()
       .then(liveIndex => {
-        if (liveIndex && liveIndex.punEurKwh) {
+        if (isMounted && liveIndex && liveIndex.punEurKwh) {
           setMarketIndex(liveIndex);
           setAudits(() => runQuarterlyAudit(customers.length > 0 ? customers : initialDb.customers, liveIndex));
         }
       })
       .catch(err => {
-        console.warn('[VoltaCRM] Impossibile caricare feed GME live all\'avvio, uso cache locale:', err);
+        if (isMounted) {
+          console.warn('[VoltaCRM] Impossibile caricare feed GME live all\'avvio, uso cache locale:', err);
+        }
       });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Restore only a backend-validated session, never a local role selection.

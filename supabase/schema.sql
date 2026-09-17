@@ -538,4 +538,39 @@ create index if not exists idx_customers_next_audit on public.customers (next_sw
 create index if not exists idx_commissions_contract_id on public.commissions (contract_id);
 create unique index if not exists uq_commissions_idempotency on public.commissions (contract_id, pod_or_pdr, type, period);
 
+-- ==============================================================================
+-- 12. TABELLA AGENDA APPUNTAMENTI CONSULENTI / OPERATORI
+-- ==============================================================================
+create table if not exists public.appointments (
+  id uuid default gen_random_uuid() primary key,
+  lead_id text references public.leads(id) on delete set null,
+  customer_id text references public.customers(id) on delete set null,
+  agent_id uuid references public.profiles(id) on delete cascade,
+  title text not null,
+  type text not null check (type in ('call', 'in_person', 'video', 'consultation')),
+  status text not null default 'scheduled' check (status in ('scheduled', 'confirmed', 'completed', 'cancelled', 'rescheduled')),
+  scheduled_at timestamp with time zone not null,
+  duration_minutes integer default 30 check (duration_minutes > 0),
+  location text,
+  notes text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
+alter table public.appointments enable row level security;
+
+drop policy if exists "Operatori e staff gestiscono agenda appuntamenti" on public.appointments;
+create policy "Operatori e staff gestiscono agenda appuntamenti"
+  on public.appointments for all
+  to authenticated
+  using (public.is_operator_or_admin())
+  with check (public.is_operator_or_admin());
+
+grant select, insert, update, delete on public.appointments to authenticated;
+
+create index if not exists idx_appointments_agent on public.appointments (agent_id);
+create index if not exists idx_appointments_scheduled_at on public.appointments (scheduled_at);
+create index if not exists idx_appointments_status on public.appointments (status);
+
+-- Indice GIN per ricerche ad alte prestazioni sui codici POD e PDR all'interno del JSONB utility_points
+create index if not exists idx_cust_utility_points_gin on public.customers using gin (utility_points);

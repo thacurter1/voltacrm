@@ -78,6 +78,7 @@ export const api = {
           }
           return data;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per loginOperator:', err);
         }
@@ -116,6 +117,7 @@ export const api = {
           }
           return data;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per loginCustomer:', err);
         }
@@ -179,6 +181,7 @@ export const api = {
           }
           return data;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per registerCustomer:', err);
         }
@@ -228,6 +231,7 @@ export const api = {
         try {
           return await request<{ success: boolean; user: any }>('/auth/me');
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per me():', err);
         }
@@ -249,6 +253,7 @@ export const api = {
           const data = await request<{ success: boolean; profiles: any[] }>('/auth/profiles');
           return data.profiles;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per profiles():', err);
         }
@@ -273,6 +278,7 @@ export const api = {
     try {
       return await request<{ status: string; version: string; service: string }>('/health');
     } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
       return { status: 'offline-fallback', version: '1.0.0', service: 'Volta Local Engine' };
     }
@@ -286,6 +292,7 @@ export const api = {
         const data = await request<{ success: boolean; leads: Lead[] }>('/leads');
         return data.leads;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Backend offline, fallback a db locale per Leads:', err);
         return dbService.load().leads;
@@ -300,6 +307,7 @@ export const api = {
         });
         return data.lead;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per creazione Lead:', err);
         const state = dbService.load();
@@ -329,6 +337,7 @@ export const api = {
         });
         return data.lead;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per updateStatus Lead:', err);
         const state = dbService.load();
@@ -356,6 +365,7 @@ export const api = {
         const data = await request<{ success: boolean; customers: Customer[] }>('/customers');
         return data.customers;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback a db locale per Clienti:', err);
         return dbService.load().customers;
@@ -368,6 +378,7 @@ export const api = {
         const data = await request<{ success: boolean; customer: Customer }>(`/customers/${id}`);
         return data.customer;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         return dbService.load().customers.find((c: Customer) => c.id === id);
       }
@@ -382,6 +393,7 @@ export const api = {
         });
         return data.customer;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per aggiunta Cliente:', err);
         const state = dbService.load();
@@ -414,6 +426,7 @@ export const api = {
           if(data.token && typeof window !== 'undefined') localStorage.setItem('VOLTA_AUTH_TOKEN',data.token);
           return data.customer;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per updateContact:', err);
         }
@@ -442,6 +455,7 @@ export const api = {
         const data = await request<{ success: boolean; marketIndex: MarketIndex }>('/switch/market-indices');
         return data.marketIndex;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         return CURRENT_MARKET_INDEX;
       }
@@ -454,6 +468,7 @@ export const api = {
         });
         return data.marketIndex;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         return CURRENT_MARKET_INDEX;
       }
@@ -464,6 +479,7 @@ export const api = {
         const data = await request<{ success: boolean; offers: SupplierOffer[] }>('/switch/offers');
         return data.offers;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         return MARKET_OFFERS;
       }
@@ -475,6 +491,7 @@ export const api = {
         const data = await request<{ success: boolean; audits: SwitchAudit[] }>('/switch/audit');
         return data.audits;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per Switch Audit:', err);
         return runQuarterlyAudit(dbService.load().customers, CURRENT_MARKET_INDEX);
@@ -487,6 +504,7 @@ export const api = {
           const data = await request<{success:boolean;signatures:any[]}>('/switch/signatures');
           return data.signatures;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per getSignatures:', err);
         }
@@ -503,6 +521,7 @@ export const api = {
         try {
           return await request<{success:boolean;signatureReceipt:any;customer?:Customer;commissions?:any}>(`/switch/signatures/${encodeURIComponent(id)}/activate`,{method:'POST',body:JSON.stringify(payload)});
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per activateSignature:', err);
         }
@@ -531,6 +550,7 @@ export const api = {
         try {
           return await request<{success:boolean;signatureReceipt:any}>('/switch/sign', {method:'POST',body:JSON.stringify(payload)});
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per signContract:', err);
         }
@@ -583,6 +603,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Backend non raggiungibile, salvataggio locale Kiosk:', err);
         const estSavings = Math.round(payload.monthlyExpenseEur * 12 * 0.28);
@@ -619,6 +640,7 @@ export const api = {
         const data = await request<{ success: boolean; notifications: any[]; unreadCount: number }>(`/notifications${query}`);
         return { notifications: data.notifications, unreadCount: data.unreadCount };
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per Notifiche:', err);
         return {
@@ -656,6 +678,7 @@ export const api = {
         await request(`/notifications/${id}/read`, { method: 'PATCH' });
         return true;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         return true;
       }
@@ -666,6 +689,7 @@ export const api = {
         await request(`/notifications/mark-all-read`, { method: 'POST' });
         return true;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         return true;
       }
@@ -678,6 +702,7 @@ export const api = {
           body: JSON.stringify(notificationData)
         });
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         return { success: true, notification: { id: `notif-${Date.now()}`, ...notificationData, isRead: false } };
       }
@@ -694,6 +719,7 @@ export const api = {
         });
         return data.result;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore chiamata OCR backend, attivo fallback locale:', err);
         const isGas = payload.fileName.toLowerCase().includes('gas');
@@ -736,6 +762,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore sendOtp backend, attivo fallback locale:', err);
         const code = '849201';
@@ -757,6 +784,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore verifyOtp backend:', err);
         return {
@@ -780,6 +808,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore sendOfferWhatsApp backend, fallback locale:', err);
         return {
@@ -799,6 +828,7 @@ export const api = {
           const data = await request<{ success: boolean; appointments: Appointment[] }>('/operations/appointments');
           return data.appointments;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per listAppointments:', err);
         }
@@ -814,6 +844,7 @@ export const api = {
           });
           return data.appointment;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per saveAppointment:', err);
         }
@@ -835,6 +866,7 @@ export const api = {
           });
           return data.appointment;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per updateAppointmentStatus:', err);
         }
@@ -861,6 +893,7 @@ export const api = {
           const data = await request<{ success: boolean; logs: SecurityAuditLog[] }>('/operations/security-logs');
           return data.logs;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per listSecurityLogs:', err);
         }
@@ -876,6 +909,7 @@ export const api = {
           });
           return data.log;
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per addSecurityLog:', err);
         }
@@ -904,6 +938,7 @@ export const api = {
         const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
         return data.summaries;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore getSummaries commissions, uso fallback locale:', err);
         return [
@@ -950,6 +985,7 @@ export const api = {
         const data = await request<{ success: boolean; commissions: CommissionRecord[] }>(`/commissions${qs ? `?${qs}` : ''}`);
         return data.commissions;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore getAll commissions, uso fallback locale:', err);
         return [];
@@ -963,6 +999,7 @@ export const api = {
         const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
         return data.batches;
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore getBatches commissions:', err);
         return [];
@@ -988,6 +1025,7 @@ export const api = {
         });
         return { records: data.records, totalEur: data.totalEur };
       } catch (err) {
+        if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore generate commissions:', err);
         return { records: [], totalEur: 0 };
@@ -1009,6 +1047,7 @@ export const api = {
           });
           return { batch: data.batch, updatedCount: data.updatedCount };
         } catch (err) {
+          if (API_BASE_URL) throw err;
           if (!isStandaloneDemo) throw err;
           console.warn('[API Client] Fallback locale per settle commissions:', err);
         }
