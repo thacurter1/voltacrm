@@ -2,13 +2,13 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Lead, Customer } from '../types.js';
 
-const isProd = process.env.NODE_ENV === 'production';
-const defaultAdminPass = process.env.ADMIN_INITIAL_PASSWORD || (isProd ? crypto.randomBytes(16).toString('hex') : 'admin123');
-const defaultOpPass = process.env.OPERATOR_INITIAL_PASSWORD || (isProd ? crypto.randomBytes(16).toString('hex') : 'operator123');
-const defaultCustPass = process.env.CUSTOMER_INITIAL_PASSWORD || (isProd ? crypto.randomBytes(16).toString('hex') : 'customer123');
+const isDemo = process.env.VOLTA_DEMO_MODE === 'true';
+const defaultAdminPass = process.env.ADMIN_INITIAL_PASSWORD || (isDemo ? 'admin123' : crypto.randomBytes(32).toString('hex'));
+const defaultOpPass = process.env.OPERATOR_INITIAL_PASSWORD || (isDemo ? 'operator123' : crypto.randomBytes(32).toString('hex'));
+const defaultCustPass = process.env.CUSTOMER_INITIAL_PASSWORD || (isDemo ? 'customer123' : crypto.randomBytes(32).toString('hex'));
 
-if (isProd && !process.env.ADMIN_INITIAL_PASSWORD) {
-  console.warn('[SECURITY WARNING] In ambiente di produzione ADMIN_INITIAL_PASSWORD non è impostata. Password di default neutralizzata.');
+if (!isDemo && !process.env.ADMIN_INITIAL_PASSWORD) {
+  console.warn('[SECURITY] Account seed neutralizzati: VOLTA_DEMO_MODE non è attiva.');
 }
 
 export const users: any[] = [
@@ -22,7 +22,7 @@ export const users: any[] = [
     whatsapp: '+393471122334',
     avatar: 'MR',
     is2faEnabled: true,
-    twoFactorSecret: process.env.ADMIN_2FA_SECRET || (isProd ? undefined : 'VOLTA_ADMIN_SECRET_KEY_2FA_2026'),
+    twoFactorSecret: process.env.ADMIN_2FA_SECRET || (isDemo ? 'VOLTA_ADMIN_SECRET_KEY_2FA_2026' : undefined),
     onboardingStatus: 'active',
     createdAt: '2026-01-15'
   },
@@ -36,7 +36,7 @@ export const users: any[] = [
     whatsapp: '+393385566778',
     avatar: 'CB',
     is2faEnabled: true,
-    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isProd ? undefined : 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026'),
+    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isDemo ? 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026' : undefined),
     onboardingStatus: 'active',
     createdAt: '2026-02-10'
   },
@@ -50,7 +50,7 @@ export const users: any[] = [
     whatsapp: '+393341122990',
     avatar: 'VN',
     is2faEnabled: true,
-    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isProd ? undefined : 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026'),
+    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isDemo ? 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026' : undefined),
     onboardingStatus: 'active',
     createdAt: '2026-02-15'
   },
@@ -299,8 +299,8 @@ import { supabase, isSupabaseConfigured } from './dbClient.js';
 
 // In production the database is authoritative; caches publish only committed records.
 function requireStorage(): void {
-  if (process.env.NODE_ENV === 'production' && (!isSupabaseConfigured || !supabase)) {
-    throw new Error('Database persistente obbligatorio in produzione.');
+  if (process.env.VOLTA_DEMO_MODE !== 'true' && (!isSupabaseConfigured || !supabase)) {
+    throw new Error('Database persistente obbligatorio fuori dalla modalità demo.');
   }
 }
 function check(error: any): void {
@@ -347,6 +347,24 @@ export async function addCustomer(customer: Customer): Promise<void> {
 }
 export async function updateCustomer(customer: Customer): Promise<void> {
   await addCustomer(customer);
+}
+export async function updateCustomerContact(customerId:string, actorId:string, contact:{phone:string;email:string;city:string}):Promise<Customer> {
+  requireStorage();
+  if(isSupabaseConfigured && supabase) {
+    check((await supabase.rpc('update_customer_contact',{p_actor_id:actorId,p_customer_id:customerId,p_contact:contact})).error);
+    await initDataStore();
+    const persisted=customers.find(customer=>customer.id===customerId);
+    if(!persisted) throw Object.assign(new Error('Cliente aggiornato non trovato.'),{status:503});
+    return persisted;
+  }
+  const current=customers.find(customer=>customer.id===customerId);
+  if(!current) throw Object.assign(new Error('Cliente non trovato.'),{status:404});
+  const updated={...current,...contact,email:contact.email.trim().toLowerCase()};
+  customers=customers.map(customer=>customer.id===customerId?updated:customer);
+  for(const account of users.filter(user=>user.customerId===customerId)) {
+    account.email=updated.email; account.phone=updated.phone;
+  }
+  return structuredClone(updated);
 }
 export async function addNotification(notification: any): Promise<void> {
   requireStorage();

@@ -257,7 +257,7 @@ export async function activateSignedSignature(input: {
     return getSignatureLogs().find((item: any) => item.id === input.signatureId) || data;
   }
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.VOLTA_DEMO_MODE !== 'true') {
     throw new Error('Attivazione non disponibile senza database persistente configurato.');
   }
 
@@ -304,6 +304,60 @@ export async function activateSignedSignature(input: {
   signature.activatedBy = input.activatedBy;
   signature.activatedAt = new Date().toISOString();
   return signature;
+}
+
+export async function activateSignedSignatureWithCommissions(input: {
+  signatureId: string;
+  confirmationReference: string;
+  activationDate: string;
+  activatedBy: string;
+  agentId: string;
+  agentName: string;
+  customerName: string;
+  podOrPdr: string;
+  utilityType: 'luce' | 'gas';
+  customerType: 'residential' | 'business';
+  annualConsumption: number;
+  isDualFuel: boolean;
+}): Promise<{ signatureReceipt: any; commissions: any }> {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.rpc('activate_signature_with_commissions', {
+      p_signature_id: input.signatureId,
+      p_confirmation_reference: input.confirmationReference.trim(),
+      p_activation_date: input.activationDate,
+      p_activated_by: input.activatedBy,
+      p_agent_id: input.agentId,
+      p_agent_name: input.agentName,
+      p_customer_name: input.customerName,
+      p_pod_or_pdr: input.podOrPdr,
+      p_utility_type: input.utilityType,
+      p_customer_type: input.customerType,
+      p_annual_consumption: input.annualConsumption,
+      p_is_dual_fuel: input.isDualFuel
+    });
+    if (error) {
+      if (/not found/i.test(error.message)) throw new SignatureNotFoundError('Richiesta di firma non trovata.');
+      if (/already|stale|conflict|pending/i.test(error.message)) throw new SignatureConflictError(error.message);
+      throw new Error(`Attivazione e provvigioni non riuscite: ${error.message}`);
+    }
+    if (!data?.signatureReceipt || !data?.commissions) throw new Error('Risposta transazionale non valida.');
+    return data;
+  }
+
+  const signatureReceipt = await activateSignedSignature(input);
+  const { generateContractCommissions } = await import('./commissionService.js');
+  const commissions = await generateContractCommissions({
+    agentId: input.agentId,
+    agentName: input.agentName,
+    contractId: input.signatureId,
+    customerName: input.customerName,
+    podOrPdr: input.podOrPdr,
+    utilityType: input.utilityType,
+    customerType: input.customerType,
+    annualConsumption: input.annualConsumption,
+    isDualFuel: input.isDualFuel
+  });
+  return { signatureReceipt, commissions };
 }
 
 export function hashCanonicalDocument(document: unknown): string {

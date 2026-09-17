@@ -12,7 +12,7 @@ import {
   ChevronLeft 
 } from 'lucide-react';
 import { Lead } from '../types';
-import { api } from '../api/client';
+import { api, DEMO_MODE } from '../api/client';
 
 interface TotemKioskModeProps {
   isOpen: boolean;
@@ -147,9 +147,9 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
     }
 
     const trimmed = enteredPin.trim();
-    // Accetta la password dell'amministratore (admin123) o il master PIN sicuro di agenzia
     const configuredPin = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_KIOSK_MASTER_PIN') : null;
-    const isMasterMatch = trimmed === (configuredPin || '8492') || trimmed === 'admin123';
+    const expectedPin = configuredPin || (DEMO_MODE ? '8492' : null);
+    const isMasterMatch = expectedPin !== null && trimmed === expectedPin;
 
     if (isMasterMatch) {
       setIsPinModalOpen(false);

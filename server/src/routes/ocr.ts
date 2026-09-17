@@ -30,7 +30,7 @@ ocrRouter.post('/analyze-bill', apiLimiter, authenticateToken, async (req: Reque
       result
     });
   } catch (error: any) {
-    res.status(500).json({
+    res.status(error.status || 500).json({
       success: false,
       message: error.message || 'Errore durante l’analisi del documento.'
     });

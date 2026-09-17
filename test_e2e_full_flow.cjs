@@ -291,6 +291,7 @@ async function main() {
       env: {
         ...process.env,
         NODE_ENV: 'test',
+        VOLTA_DEMO_MODE: 'true',
         PORT: String(activePort),
         JWT_SECRET: 'astra-e2e-test-secret-with-adequate-length-32char',
         ADMIN_INITIAL_PASSWORD: 'admin123',

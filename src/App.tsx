@@ -288,7 +288,7 @@ function UnifiedApp() {
   };
 
   // Importazione da OCR Bolletta
-  const handleImportFromOcr = (customerData: Partial<Customer>) => {
+  const handleImportFromOcr = async (customerData: Partial<Customer>) => {
     const today = new Date();
     const nextAudit = new Date();
     nextAudit.setDate(today.getDate() + 120);
@@ -308,10 +308,7 @@ function UnifiedApp() {
       utilityPoints: customerData.utilityPoints || []
     };
 
-    const updated = [newCustomer, ...customers];
-    setCustomers(updated);
-    setAudits(runQuarterlyAudit(updated));
-    addToast('Bolletta Importata con Successo', `${newCustomer.name} aggiunto al portafoglio clienti con audit attivo.`, 'success');
+    await handleAddCustomer(newCustomer);
   };
 
   // Aggiunta Nuovo Cliente (Manuale da CRM o da Conversione Lead)
@@ -344,6 +341,16 @@ function UnifiedApp() {
   const handleMarkBillAnalyzed = (billId: string) => {
     setBills(prev => prev.map(b => b.id === billId ? { ...b, status: 'analyzed' as const, extractedSavingsEur: 180.0 } : b));
     addToast('Bolletta Lavorata', 'Analisi completata e caricata nel portale del cliente.', 'success');
+  };
+
+  const handleAnalyzeStoredBill = async (bill: CustomerBill) => {
+    try {
+      const analysis = await portalApi.analyzeBill(bill.id);
+      setBills(prev => prev.map(item => item.id === bill.id ? analysis.bill : item));
+      addToast('Bolletta Analizzata', `Analisi OCR salvata per ${bill.customerName}.`, 'success');
+    } catch (error) {
+      addToast('Analisi non completata', error instanceof Error ? error.message : 'Provider OCR non disponibile.', 'warning');
+    }
   };
 
   // Switch approval
@@ -563,7 +570,7 @@ function UnifiedApp() {
             {activeTab === 'inbox_bills' && (
               <ClientBillsInbox
                 bills={bills}
-                onOpenOcrForBill={(_bill) => setIsBillOcrOpen(true)}
+                onOpenOcrForBill={handleAnalyzeStoredBill}
                 onMarkAnalyzed={handleMarkBillAnalyzed}
               />
             )}

@@ -72,8 +72,8 @@ async function runOcrTests() {
 
   console.log('STATUS:', authRes.status);
   console.log('BODY:', JSON.stringify(authRes.data, null, 2));
-  if (authRes.status !== 200) {
-    console.error('❌ Test OCR autenticato fallito con status:', authRes.status);
+  if (authRes.status !== 503 || authRes.data?.result) {
+    console.error('❌ OCR senza provider deve fallire senza generare dati:', authRes.status);
     process.exit(1);
   }
   console.log('>>> ALL OCR TESTS PASSED! <<<');

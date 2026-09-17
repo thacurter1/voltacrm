@@ -8,7 +8,7 @@ import {
   Save 
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
-import { profileService } from '../services/supabaseClient';
+import { api } from '../api/client';
 
 interface CustomerProfileSectionProps {
   customer: Customer;
@@ -34,17 +34,7 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
     setIsSaving(true);
 
     try {
-      await profileService.updateProfile(currentUser.id, {
-        phone,
-        email,
-      });
-
-      const updatedCustomer: Customer = {
-        ...customer,
-        phone,
-        email,
-        city,
-      };
+      const updatedCustomer = await api.customers.updateContact(customer.id, { phone, email, city });
 
       onUpdateCustomer(updatedCustomer);
       setSavedSuccess(true);

@@ -180,8 +180,8 @@ export async function sendOtp(
     }
   }
 
-  // 3. Fallback: in produzione è vietato simulare OTP in sandbox o esporre debugOtp
-  if (process.env.NODE_ENV === 'production') {
+  // 3. Il sandbox OTP esiste esclusivamente nella modalità demo esplicita.
+  if (process.env.VOLTA_DEMO_MODE !== 'true') {
     pendingOtps.delete(cleanPhone);
     throw new Error('Invio OTP non riuscito: provider SMS/WhatsApp non configurato o non raggiungibile.');
   }
@@ -211,7 +211,7 @@ export async function sendOtp(
     messageId: `sandbox-${Date.now()}`,
     expiresAt: expiresAtIso,
     channel,
-    debugOtp: process.env.NODE_ENV === 'production' ? undefined : code,
+    debugOtp: code,
     sandboxMode: true
   };
 }
@@ -318,7 +318,7 @@ Un nostro Energy Specialist dedicato resta a tua disposizione.`;
     }
   }
 
-  if (process.env.NODE_ENV === 'production') throw new Error('Invio WhatsApp non riuscito: provider non disponibile.');
+  if (process.env.VOLTA_DEMO_MODE !== 'true') throw new Error('Invio WhatsApp non riuscito: provider non disponibile.');
 
   // Sandbox Mode
   console.log(`\n======================================================`);

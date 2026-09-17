@@ -144,9 +144,9 @@ async function main() {
   const api = http.createServer(app);
   await new Promise(resolve => api.listen(0, '127.0.0.1', resolve));
   try {
-    const token = generateToken({ userId: 'admin-1', email: 'admin@example.test', role: 'admin' });
+    const token = generateToken({ userId: 'user-admin-1', email: 'm.riva@voltagroup.it', role: 'admin' });
     const invalidResponse = await requestJson(api, 'POST', '/api/commissions/generate', {
-      agentId: 'admin-1',
+      agentId: 'user-admin-1',
       customerName: 'Missing Stable Identifiers',
       utilityType: 'luce',
       annualConsumption: 1000

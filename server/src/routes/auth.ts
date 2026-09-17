@@ -38,7 +38,7 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
       return;
     }
     const isTotpValid = verifyTotp(totpCode, secret, 1);
-    const isDevMock = process.env.NODE_ENV !== 'production' && totpCode === '123456';
+    const isDevMock = process.env.VOLTA_DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && totpCode === '123456';
 
     if (!isTotpValid && !isDevMock) {
       res.status(403).json({ success: false, message: 'Codice 2FA non valido o scaduto.' });
@@ -110,6 +110,6 @@ authRouter.get('/me', authenticateToken, (req: any, res: Response): void => {
   res.json({success:true,user:toSafeProfile(user)});
 });
 
-authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center'), (_req: Request, res: Response) => {
+authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center', 'operator'), (_req: Request, res: Response) => {
   res.json({ success: true, profiles: users.map(toSafeProfile) });
 });

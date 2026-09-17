@@ -234,6 +234,14 @@ export const api = {
         dbService.save({ ...state, customers: [newCust, ...state.customers] });
         return newCust;
       }
+    },
+
+    async updateContact(id:string, contact:{phone:string;email:string;city:string}):Promise<Customer> {
+      const data=await request<{success:boolean;customer:Customer;token?:string}>(`/customers/${id}`,{
+        method:'PATCH',body:JSON.stringify(contact)
+      });
+      if(data.token) localStorage.setItem('VOLTA_AUTH_TOKEN',data.token);
+      return data.customer;
     }
   },
 

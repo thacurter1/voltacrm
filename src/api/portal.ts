@@ -56,6 +56,13 @@ export const portalApi = {
     return response.bill;
   },
 
+  async analyzeBill(id: string): Promise<{ bill: CustomerBill; result: Record<string, unknown> }> {
+    return request<{ success: true; bill: CustomerBill; result: Record<string, unknown> }>(
+      '/portal/bills/' + encodeURIComponent(id) + '/analyze',
+      { method: 'POST' },
+    );
+  },
+
   async listReadings(customerId?: string): Promise<MeterReading[]> {
     const query = customerId ? '?customerId=' + encodeURIComponent(customerId) : '';
     const response = await request<{ success: true; readings: MeterReading[] }>('/portal/readings' + query);

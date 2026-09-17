@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { isSupabaseConfigured, supabase } from './dbClient.js';
+import { analyzeBillWithGemini, ExtractedBillData } from './geminiOcrService.js';
 
 export const PORTAL_BILL_BUCKET = 'customer-bills';
 export const MAX_BILL_BYTES = 10 * 1024 * 1024;
@@ -22,6 +23,7 @@ export interface PortalBillRecord {
   extractedSavingsEur?: number;
   uploadDate: string;
   createdAt: string;
+  ocrResult?: ExtractedBillData;
 }
 
 export interface MeterReadingValues {
@@ -52,6 +54,8 @@ export interface PortalBackend {
   listBills(customerId?: string): Promise<PortalBillRecord[]>;
   getBill(id: string): Promise<PortalBillRecord | null>;
   getBillDownload(record: PortalBillRecord): Promise<BillDownload>;
+  getBillBytes(record: PortalBillRecord): Promise<{ bytes: Buffer; mimeType: string }>;
+  updateBillAnalysis(id: string, analysis: { status: 'analyzed'; extractedSavingsEur: number; ocrResult: ExtractedBillData }): Promise<PortalBillRecord>;
   insertReading(record: MeterReadingRecord): Promise<MeterReadingRecord>;
   listReadings(customerId?: string): Promise<MeterReadingRecord[]>;
 }
@@ -167,6 +171,7 @@ function mapBill(row: any): PortalBillRecord {
     extractedSavingsEur: row.extracted_savings_eur == null ? undefined : Number(row.extracted_savings_eur),
     uploadDate: String(row.created_at).slice(0, 10),
     createdAt: row.created_at,
+    ocrResult: row.ocr_result || undefined,
   };
 }
 
@@ -234,6 +239,20 @@ function createSupabaseBackend(): PortalBackend {
       if (error || !data?.signedUrl) throw new Error('Download non disponibile: ' + (error?.message || 'URL non generato'));
       return { kind: 'signed-url', url: data.signedUrl };
     },
+    async getBillBytes(record) {
+      const { data, error } = await client.storage.from(PORTAL_BILL_BUCKET).download(record.storagePath);
+      if (error || !data) throw new Error('File della bolletta non disponibile: ' + (error?.message || 'download vuoto'));
+      return { bytes: Buffer.from(await data.arrayBuffer()), mimeType: record.mimeType };
+    },
+    async updateBillAnalysis(id, analysis) {
+      const { data, error } = await client.from('portal_bills').update({
+        status: analysis.status,
+        extracted_savings_eur: analysis.extractedSavingsEur,
+        ocr_result: analysis.ocrResult,
+      }).eq('id', id).select('*').single();
+      if (error) throw new Error('Esito OCR non salvato: ' + error.message);
+      return mapBill(data);
+    },
     async insertReading(record) {
       const { data, error } = await client.from('meter_readings').insert({
         id: record.id,
@@ -283,6 +302,17 @@ function createMemoryBackend(): PortalBackend {
       if (!file) throw portalError('File della bolletta non trovato.', 404);
       return { kind: 'bytes', bytes: Buffer.from(file.bytes), mimeType: file.mimeType };
     },
+    async getBillBytes(record) {
+      const file = files.get(record.storagePath);
+      if (!file) throw portalError('File della bolletta non trovato.', 404);
+      return { bytes: Buffer.from(file.bytes), mimeType: file.mimeType };
+    },
+    async updateBillAnalysis(id, analysis) {
+      const index = bills.findIndex(record => record.id === id);
+      if (index < 0) throw portalError('Bolletta non trovata.', 404);
+      bills[index] = { ...bills[index], ...analysis };
+      return bills[index];
+    },
     async insertReading(record) {
       readings.unshift(record);
       return record;
@@ -293,7 +323,11 @@ function createMemoryBackend(): PortalBackend {
   };
 }
 
-export function createPortalService(backend: PortalBackend, now = () => new Date()) {
+export function createPortalService(
+  backend: PortalBackend,
+  now = () => new Date(),
+  analyze = analyzeBillWithGemini,
+) {
   return {
     async uploadBill(input: UploadBillInput): Promise<PortalBillRecord> {
       const { mimeType } = validateBillFile(input.bytes, input.mimeType);
@@ -345,6 +379,21 @@ export function createPortalService(backend: PortalBackend, now = () => new Date
       if (!record) throw portalError('Bolletta non trovata.', 404);
       return backend.getBillDownload(record);
     },
+    async analyzeBill(id: string): Promise<{ bill: PortalBillRecord; result: ExtractedBillData }> {
+      const record = await backend.getBill(id);
+      if (!record) throw portalError('Bolletta non trovata.', 404);
+      const file = await backend.getBillBytes(record);
+      const result = await analyze(record.fileName, file.mimeType, file.bytes.toString('base64'));
+      if (result.utilityType !== record.utilityType) {
+        throw portalError('Il tipo di fornitura rilevato non coincide con quello dichiarato.', 409);
+      }
+      const bill = await backend.updateBillAnalysis(record.id, {
+        status: 'analyzed',
+        extractedSavingsEur: result.estimatedSavingEur,
+        ocrResult: result,
+      });
+      return { bill, result };
+    },
     async createReading(customerId: string, input: MeterReadingInput): Promise<MeterReadingRecord> {
       const valid = validateMeterReadingInput(input);
       const createdAt = now().toISOString();
@@ -366,7 +415,7 @@ export function createPortalService(backend: PortalBackend, now = () => new Date
 
 function createDefaultPortalService() {
   if (isSupabaseConfigured && supabase) return createPortalService(createSupabaseBackend());
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.VOLTA_DEMO_MODE !== 'true') {
     const unavailable = (): never => {
       throw Object.assign(new Error('Persistenza portale non configurata in produzione.'), { status: 503 });
     };
@@ -377,6 +426,8 @@ function createDefaultPortalService() {
       listBills: async () => unavailable(),
       getBill: async () => unavailable(),
       getBillDownload: async () => unavailable(),
+      getBillBytes: async () => unavailable(),
+      updateBillAnalysis: async () => unavailable(),
       insertReading: async () => unavailable(),
       listReadings: async () => unavailable(),
     });

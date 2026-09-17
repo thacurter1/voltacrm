@@ -111,6 +111,13 @@ portalRouter.get('/bills/:id/download', async (req: AuthRequest, res: Response):
   res.status(200).send(download.bytes);
 });
 
+portalRouter.post('/bills/:id/analyze', async (req: AuthRequest, res: Response): Promise<void> => {
+  const actor = resolveActor(req);
+  if (!actor.isStaff) throw httpError('Solo lo staff può analizzare le bollette.', 403);
+  const analysis = await portalService.analyzeBill(req.params.id);
+  res.status(200).json({ success: true, ...analysis });
+});
+
 portalRouter.get('/readings', async (req: AuthRequest, res: Response): Promise<void> => {
   const actor = resolveActor(req);
   const requested = typeof req.query.customerId === 'string' ? req.query.customerId.trim() : undefined;

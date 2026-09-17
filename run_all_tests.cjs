@@ -29,7 +29,7 @@ function runScript(scriptName) {
     console.log(`========================================`);
     const proc = spawn(process.execPath, [path.join(__dirname, scriptName)], {
       stdio: 'inherit',
-      env: { ...process.env, NODE_ENV: 'test' }
+      env: { ...process.env, NODE_ENV: 'test', VOLTA_DEMO_MODE: 'true' }
     });
     proc.on('close', (code) => {
       if (code === 0) {
@@ -50,7 +50,7 @@ async function main() {
     let serverOutput = '';
     serverProc = spawn(process.execPath, [path.join(__dirname, 'server', 'dist', 'index.js')], {
       stdio: 'pipe',
-      env: { ...process.env, NODE_ENV: 'test' }
+      env: { ...process.env, NODE_ENV: 'test', VOLTA_DEMO_MODE: 'true' }
     });
     serverProc.stdout.on('data', chunk => { serverOutput += chunk; });
     serverProc.stderr.on('data', chunk => { serverOutput += chunk; });
@@ -87,6 +87,8 @@ async function main() {
     'test_core_regression.cjs',
     'test_portal_regression.cjs',
     'test_signature_regression.cjs',
+    'test_p0_regression.cjs',
+    'test_p0_frontend_build.cjs',
     'test_e2e_full_flow.cjs'
   ];
 

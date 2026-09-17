@@ -42,6 +42,7 @@ async function run() {
     env: {
       ...process.env,
       NODE_ENV: 'test',
+      VOLTA_DEMO_MODE: 'true',
       PORT: String(PORT),
       JWT_SECRET: 'signature-regression-secret-with-adequate-length',
       SUPABASE_URL: '',

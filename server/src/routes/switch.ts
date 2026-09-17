@@ -9,6 +9,7 @@ import { verifyOtp } from '../services/messagingService.js';
 import { Customer, UtilityPoint } from '../types.js';
 import {
   activateSignedSignature,
+  activateSignedSignatureWithCommissions,
   assertIdentityMatchesStored,
   buildCanonicalSignatureDocument,
   decodeAndValidateCanvasPng,
@@ -19,7 +20,6 @@ import {
   snapshotOffer,
   snapshotUtilityPoint
 } from '../services/signatureService.js';
-import { generateContractCommissions } from '../services/commissionService.js';
 
 export const switchRouter = Router();
 
@@ -236,33 +236,44 @@ switchRouter.post(
       if (typeof confirmationReference !== 'string' || !confirmationReference.trim() || typeof activationDate !== 'string') {
         throw new SignatureValidationError('Riferimento di conferma e data di attivazione sono obbligatori.');
       }
-      const signatureReceipt = await activateSignedSignature({
+      const authUser = (req as any).user;
+      const activationInput = {
         signatureId: req.params.id,
         confirmationReference,
         activationDate,
-        activatedBy: (req as any).user.userId
-      });
-
+        activatedBy: authUser.userId
+      };
+      let signatureReceipt: any;
       let commissions: any = undefined;
       if (req.body?.generateCommission === true) {
-        const agentId = req.body?.agentId || (req as any).user.userId;
+        const pendingSignature = getSignatureLogs().find(item => item.id === req.params.id);
+        if (!pendingSignature) throw new SignatureNotFoundError('Richiesta di firma non trovata.');
+        const requestedAgentId = req.body?.agentId || authUser.userId;
+        if (authUser.role === 'operator' && requestedAgentId !== authUser.userId) {
+          res.status(403).json({ success: false, message: 'Non puoi attribuire provvigioni a un altro agente.' });
+          return;
+        }
+        const agentId = requestedAgentId;
         const agentUser = users.find(u => u.id === agentId);
         const agentName = agentUser?.name || 'Agente Commerciale';
-        const customer = getCustomers().find(c => c.id === signatureReceipt.customerId);
+        const customer = getCustomers().find(c => c.id === pendingSignature.customerId);
         const isDualFuel = customer ? customer.utilityPoints.length > 1 : false;
-        const annualConsumption = signatureReceipt.originalPointSnapshot?.annualConsumption || 2700;
-
-        commissions = await generateContractCommissions({
+        const annualConsumption = pendingSignature.originalPointSnapshot?.annualConsumption || 2700;
+        const transaction = await activateSignedSignatureWithCommissions({
+          ...activationInput,
           agentId,
           agentName,
-          contractId: signatureReceipt.id,
-          customerName: signatureReceipt.customerName,
-          podOrPdr: signatureReceipt.podOrPdr,
-          utilityType: signatureReceipt.energyType,
+          customerName: pendingSignature.customerName,
+          podOrPdr: pendingSignature.podOrPdr,
+          utilityType: pendingSignature.energyType,
           customerType: 'residential',
           annualConsumption,
           isDualFuel
         });
+        signatureReceipt = transaction.signatureReceipt;
+        commissions = transaction.commissions;
+      } else {
+        signatureReceipt = await activateSignedSignature(activationInput);
       }
 
       res.status(200).json({

@@ -9,7 +9,7 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
-import { api } from '../api/client';
+import { api, DEMO_MODE } from '../api/client';
 
 interface PortalGateProps {
   onLoginOperator: (user: UserProfile) => void;
@@ -305,8 +305,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    {/* Quick Demo Selector */}
-                    <div className="pt-2 border-t border-[#e3e8ee]">
+                    {DEMO_MODE && <div className="pt-2 border-t border-[#e3e8ee]">
                       <span className="text-[10px] text-slate-400 block mb-1.5 uppercase font-bold">Oppure accedi con un account demo:</span>
                       <div className="grid grid-cols-3 gap-1.5">
                         {customers.slice(0, 3).map(c => (
@@ -333,7 +332,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                           </button>
                         ))}
                       </div>
-                    </div>
+                    </div>}
                   </form>
                 ) : (
                   <form onSubmit={handleCustomerRegister} className="space-y-3.5">
@@ -415,8 +414,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   </p>
                 </div>
 
-                {/* Quick Operator Demo Selector */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                {DEMO_MODE && <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="text-[10px] text-slate-500 block mb-1.5 uppercase font-bold">Compila rapido con account demo:</span>
                   <div className="grid grid-cols-3 gap-1.5">
                     <button
@@ -453,7 +451,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       💼 Consulente (Neri)
                     </button>
                   </div>
-                </div>
+                </div>}
 
                 <form onSubmit={handleOperatorLogin} className="space-y-4">
                   <div>

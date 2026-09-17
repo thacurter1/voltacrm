@@ -43,6 +43,12 @@ export const createCustomerSchema = z.object({
   notes: z.string().optional(),
 }).strict();
 
+export const updateCustomerContactSchema = z.object({
+  phone: z.string().regex(/^\+?[0-9 ()-]{8,25}$/),
+  email: z.string().trim().email().max(254),
+  city: z.string().trim().max(150),
+}).strict();
+
 export const loginOperatorSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),

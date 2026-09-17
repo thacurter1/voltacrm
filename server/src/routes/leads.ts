@@ -7,12 +7,12 @@ import { Lead } from '../types.js';
 export const leadsRouter = Router();
 
 // GET /api/leads (Riservato a Call Center e Admin)
-leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center'), (_req: Request, res: Response) => {
+leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center', 'operator'), (_req: Request, res: Response) => {
   res.json({ success: true, leads: getLeads() });
 });
 
 // POST /api/leads
-leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center'), validate(createLeadSchema), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'operator'), validate(createLeadSchema), async (req: Request, res: Response): Promise<void> => {
   const { name, phone, email, city, source, notes, estimatedConsumptionKwh, estimatedConsumptionSmc } = req.body;
 
   const newLead: Lead = {
@@ -34,7 +34,7 @@ leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center'), va
 });
 
 // PATCH /api/leads/:id/status
-leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center'), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center', 'operator'), async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { status, note } = req.body;
 

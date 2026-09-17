@@ -6,7 +6,7 @@ import { authenticateToken } from '../middleware/auth.js';
 
 export const messagingRouter = Router();
 
-const getTotemKey = () => process.env.TOTEM_KIOSK_API_KEY || (process.env.NODE_ENV === 'production' ? '' : 'KIOSK-TOKEN-RETAIL-01');
+const getTotemKey = () => process.env.TOTEM_KIOSK_API_KEY || (process.env.VOLTA_DEMO_MODE === 'true' ? 'KIOSK-TOKEN-RETAIL-01' : '');
 
 // Middleware per Totem Kiosk: ammesso SOLO per invio scheda offerta WhatsApp
 const authenticateOrValidTotem = (req: Request, res: Response, next: NextFunction): void => {

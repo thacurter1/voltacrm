@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { z } from 'zod';
 dotenv.config();
 
 export interface ExtractedBillData {
@@ -22,9 +23,28 @@ export interface ExtractedBillData {
   notes?: string;
 }
 
+const extractedBillSchema = z.object({
+  utilityType: z.enum(['luce', 'gas']),
+  podOrPdr: z.string().trim().min(8).max(24),
+  supplier: z.string().trim().min(2).max(200),
+  customerName: z.string().trim().min(2).max(200),
+  fiscalCode: z.string().trim().regex(/^(?:[A-Za-z0-9]{16}|[0-9]{11})$/),
+  annualConsumption: z.number().finite().positive(),
+  f1Kwh: z.number().finite().nonnegative().nullable().optional(),
+  f2Kwh: z.number().finite().nonnegative().nullable().optional(),
+  f3Kwh: z.number().finite().nonnegative().nullable().optional(),
+  powerKw: z.number().finite().positive().nullable().optional(),
+  rawCostTotal: z.number().finite().nonnegative(),
+  currentUnitCost: z.number().finite().nonnegative(),
+  currentFixedFeeYear: z.number().finite().nonnegative(),
+  estimatedSavingEur: z.number().finite().nonnegative(),
+  confidenceScore: z.number().finite().min(0).max(100),
+  period: z.string().trim().min(1).max(120).optional(),
+});
+
 /**
- * Analizza una bolletta (PDF o Immagine) usando Google Gemini 2.5 Flash Vision,
- * con fallback euristico locale anti-crash se la chiave API non e configurata.
+ * Analizza una bolletta (PDF o Immagine) usando Google Gemini Vision.
+ * Fallisce senza produrre dati quando il provider non è disponibile.
  */
 export async function analyzeBillWithGemini(
   fileName: string,
@@ -33,8 +53,11 @@ export async function analyzeBillWithGemini(
 ): Promise<ExtractedBillData> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
-  if (apiKey) {
-    try {
+  if (!apiKey) {
+    throw Object.assign(new Error('OCR Gemini non configurato: GEMINI_API_KEY obbligatoria.'), { status: 503 });
+  }
+
+  try {
       console.log(`[Gemini OCR] Invio documento a Gemini 2.5 Flash (${fileName}, ${mimeType})...`);
       
       const prompt = `Sei l'assistente AI di VoltaCRM, esperto certificato ARERA nel mercato energetico italiano (luce e gas).
@@ -86,112 +109,41 @@ Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
         })
       });
 
-      if (res.ok) {
-        const data: any = await res.json();
-        const textContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (textContent) {
-          const parsed = JSON.parse(textContent);
-          console.log(`[Gemini OCR] Estrazione completata con successo per ${fileName}: POD/PDR ${parsed.podOrPdr}`);
-          return {
-            fileName,
-            utilityType: parsed.utilityType === 'gas' ? 'gas' : 'luce',
-            podOrPdr: parsed.podOrPdr || 'IT001E' + Math.floor(10000000 + Math.random() * 90000000),
-            supplier: parsed.supplier || 'Fornitore Rilevato',
-            customerName: parsed.customerName || 'Cliente Finale',
-            fiscalCode: (parsed.fiscalCode || 'CF' + Math.random().toString(36).substring(2, 10)).toUpperCase(),
-            annualConsumption: Number(parsed.annualConsumption) || (parsed.utilityType === 'gas' ? 1100 : 2900),
-            f1Kwh: parsed.f1Kwh ? Number(parsed.f1Kwh) : undefined,
-            f2Kwh: parsed.f2Kwh ? Number(parsed.f2Kwh) : undefined,
-            f3Kwh: parsed.f3Kwh ? Number(parsed.f3Kwh) : undefined,
-            powerKw: parsed.powerKw ? Number(parsed.powerKw) : (parsed.utilityType === 'gas' ? undefined : 3.0),
-            rawCostTotal: Number(parsed.rawCostTotal) || 125.0,
-            currentUnitCost: Number(parsed.currentUnitCost) || (parsed.utilityType === 'gas' ? 0.48 : 0.155),
-            currentFixedFeeYear: Number(parsed.currentFixedFeeYear) || 120.0,
-            estimatedSavingEur: Number(parsed.estimatedSavingEur) || 185.0,
-            confidenceScore: Number(parsed.confidenceScore) || 98.8,
-            period: parsed.period || 'Periodo corrente',
-            notes: 'Analizzato con successo tramite Google Gemini 2.0 Flash Vision.'
-          };
-        }
-      } else {
+      if (!res.ok) {
         const errText = await res.text();
-        console.warn(`[Gemini OCR] Chiamata API fallita (Status ${res.status}): ${errText}. Attivazione fallback euristico.`);
+        throw new Error(`Provider Gemini HTTP ${res.status}: ${errText.slice(0, 300)}`);
       }
+      const data: any = await res.json();
+      const textContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!textContent) throw new Error('Il provider non ha restituito dati OCR.');
+      const parsed = JSON.parse(textContent);
+      const validated = extractedBillSchema.safeParse(parsed);
+      if (!validated.success) {
+        throw new Error('Dati OCR incompleti o non validi: ' + validated.error.issues.map(issue => issue.path.join('.')).join(', '));
+      }
+      const bill = validated.data;
+      console.log(`[Gemini OCR] Estrazione completata con successo per ${fileName}: POD/PDR ${bill.podOrPdr}`);
+      return {
+        fileName,
+        utilityType: bill.utilityType,
+        podOrPdr: bill.podOrPdr,
+        supplier: bill.supplier,
+        customerName: bill.customerName,
+        fiscalCode: bill.fiscalCode.toUpperCase(),
+        annualConsumption: bill.annualConsumption,
+        f1Kwh: bill.f1Kwh ?? undefined,
+        f2Kwh: bill.f2Kwh ?? undefined,
+        f3Kwh: bill.f3Kwh ?? undefined,
+        powerKw: bill.powerKw ?? undefined,
+        rawCostTotal: bill.rawCostTotal,
+        currentUnitCost: bill.currentUnitCost,
+        currentFixedFeeYear: bill.currentFixedFeeYear,
+        estimatedSavingEur: bill.estimatedSavingEur,
+        confidenceScore: bill.confidenceScore,
+        period: bill.period,
+        notes: 'Analizzato con successo tramite Google Gemini 2.0 Flash Vision.'
+      };
     } catch (err: any) {
-      console.warn(`[Gemini OCR] Errore di rete o parsing: ${err.message}. Attivazione fallback euristico.`);
+      throw Object.assign(new Error(`OCR Gemini non disponibile: ${err.message}`), { status: 503 });
     }
-  } else {
-    console.log(`[Gemini OCR] GEMINI_API_KEY non configurata. Utilizzo motore OCR euristico ad alta precisione.`);
-  }
-
-  // --- FALLBACK EURISTICO AD ALTA FEDELTA ---
-  return heuristicBillParser(fileName, base64Data);
-}
-
-/**
- * Parser euristico locale per simulare e garantire funzionamento anche offline o senza API Key
- */
-function heuristicBillParser(fileName: string, base64Data: string): ExtractedBillData {
-  let decodedText = '';
-  try {
-    decodedText = Buffer.from(base64Data, 'base64').toString('utf-8');
-  } catch {
-    decodedText = fileName;
-  }
-
-  const isGas = /gas|smc|pdr|riscaldamento/i.test(fileName) || /smc|pdr|gas naturale/i.test(decodedText);
-  const utilityType: 'luce' | 'gas' = isGas ? 'gas' : 'luce';
-
-  // Rilevamento fornitore da testo o nome file
-  let supplier = 'Enel Energia Mercato Libero';
-  if (/eni|plenitude/i.test(fileName) || /eni|plenitude/i.test(decodedText)) supplier = 'Eni Plenitude';
-  else if (/acea/i.test(fileName) || /acea/i.test(decodedText)) supplier = 'Acea Energia';
-  else if (/a2a/i.test(fileName) || /a2a/i.test(decodedText)) supplier = 'A2A Energia';
-  else if (/octopus/i.test(fileName) || /octopus/i.test(decodedText)) supplier = 'Octopus Energy';
-  else if (/edison/i.test(fileName) || /edison/i.test(decodedText)) supplier = 'Edison Next';
-  else if (/hera/i.test(fileName) || /hera/i.test(decodedText)) supplier = 'Hera Comm';
-
-  // Rilevamento POD / PDR con regex
-  const podMatch = decodedText.match(/IT\d{3}[A-Z]\d{8}/i);
-  const pdrMatch = decodedText.match(/\b\d{14}\b/);
-  const podOrPdr = utilityType === 'luce' 
-    ? (podMatch ? podMatch[0].toUpperCase() : 'IT001E' + Math.floor(10000000 + Math.random() * 90000000))
-    : (pdrMatch ? pdrMatch[0] : '0258' + Math.floor(1000000000 + Math.random() * 9000000000));
-
-  // Rilevamento Codice Fiscale
-  const cfMatch = decodedText.match(/[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]/i);
-  const fiscalCode = cfMatch ? cfMatch[0].toUpperCase() : 'MRTNDR85M01H501Z';
-
-  const hasMatchedPod = Boolean(podMatch || pdrMatch);
-  const hasMatchedCf = Boolean(cfMatch);
-  const confidenceScore = (hasMatchedPod && hasMatchedCf) ? 97.5 : (hasMatchedPod || hasMatchedCf ? 75.0 : 40.0);
-  const notes = (hasMatchedPod && hasMatchedCf)
-    ? 'Estratto con motore euristico ARERA di fallback da testo.'
-    : 'Dati stimati con motore euristico di fallback (dati completi non rilevabili dal file binario).';
-
-  // Calcolo consumi coerenti
-  const annualConsumption = utilityType === 'luce' ? 3200 : 1150;
-  const rawCostTotal = utilityType === 'luce' ? 142.50 : 165.20;
-  const estimatedSavingEur = Math.round(annualConsumption * (utilityType === 'luce' ? 0.055 : 0.12));
-
-  return {
-    fileName,
-    utilityType,
-    podOrPdr,
-    supplier,
-    customerName: 'Cliente Rilevato da Documento',
-    fiscalCode,
-    annualConsumption,
-    f1Kwh: utilityType === 'luce' ? 1200 : undefined,
-    f2Kwh: utilityType === 'luce' ? 1100 : undefined,
-    f3Kwh: utilityType === 'luce' ? 900 : undefined,
-    powerKw: utilityType === 'luce' ? 3.0 : undefined,
-    rawCostTotal,
-    currentUnitCost: utilityType === 'luce' ? 0.168 : 0.54,
-    currentFixedFeeYear: 144.0,
-    estimatedSavingEur,
-    confidenceScore,
-    period: 'Bimestre Recente',
-    notes
-  };
 }

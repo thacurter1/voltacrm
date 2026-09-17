@@ -6,6 +6,7 @@ req('dotenv').config = () => ({});
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'isolated-regression-secret-not-for-deployment';
 for (const key of Object.keys(process.env)) if (/^(SUPABASE_|TWILIO_|WHATSAPP_|ADMIN_|OPERATOR_|CUSTOMER_|TOTEM_)/.test(key)) delete process.env[key];
+process.env.VOLTA_DEMO_MODE = 'true';
 req('express-async-errors');
 const express = req('express');
 const store = require('./server/dist/services/dataStore.js');
@@ -45,8 +46,9 @@ test('core persistence and identity regressions', async t => {
   });
   await t.test('default Totem key is rejected in production',async()=> {
    process.env.NODE_ENV='production';
+   delete process.env.VOLTA_DEMO_MODE;
    try {assert.equal((await post('/messaging/send-offer-whatsapp',{phone:'+390000000001',customerName:'Audit',savingsEur:10,utilityType:'luce'},{'x-totem-token':'KIOSK-TOKEN-RETAIL-01'})).status,401);}
-   finally {process.env.NODE_ENV='test';}
+   finally {process.env.NODE_ENV='test';process.env.VOLTA_DEMO_MODE='true';}
   });
  } finally {server.close();}
 });
