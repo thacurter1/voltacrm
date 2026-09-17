@@ -86,6 +86,15 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
   const [scanResult, setScanResult] = useState<BillOcrResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleFileProcess = async (file: File) => {
@@ -230,7 +239,12 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
         className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity" 
       />
 
-      <div className="relative w-full max-w-2xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6">
+      <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bill-ocr-title"
+        className="relative w-full max-w-2xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6"
+      >
         {/* Header */}
         <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
           <div>
@@ -238,7 +252,7 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
               <Sparkles className="h-3.5 w-3.5" />
               Gemini Vision AI • ARERA Parser
             </span>
-            <h3 className="text-lg font-bold text-[#0a2540] mt-0.5">
+            <h3 id="bill-ocr-title" className="text-lg font-bold text-[#0a2540] mt-0.5">
               Analisi & Estrazione Automatica Bolletta
             </h3>
             <p className="text-xs text-[#425466]">

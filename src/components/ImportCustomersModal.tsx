@@ -49,6 +49,15 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
   const [importSuccess, setImportSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Template CSV da scaricare
@@ -231,22 +240,27 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+      <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-customers-title"
+        className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]"
+      >
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-[#e3e8ee] bg-gradient-to-r from-slate-50 via-white to-indigo-50/40 flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#635bff] uppercase tracking-wider">
                 <FileSpreadsheet className="h-4 w-4" />
-                Importazione Massiva Portafoglio
+                Importazione Massiva
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">
-                CSV / Excel Ready
+              <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-[#635bff] font-bold text-[10px]">
+                CSV / Excel
               </span>
             </div>
-            <h2 className="text-lg sm:text-xl font-bold text-[#0a2540] tracking-tight mt-1">
+            <h3 id="import-customers-title" className="text-lg sm:text-xl font-bold text-[#0a2540] tracking-tight mt-1">
               Importa Clienti & Punti POD/PDR
-            </h2>
+            </h3>
             <p className="text-xs text-[#425466] mt-0.5">
               Carica una lista anagrafiche in formato CSV. I clienti verranno registrati con mandato attivo e audit a 120 giorni immediato.
             </p>

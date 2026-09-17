@@ -137,9 +137,6 @@ export const CrmApp: React.FC = () => {
       timestamp: Date.now(),
     };
     setToasts(prev => [...prev, newToast]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== newToast.id));
-    }, 4500);
   };
 
   // Handlers

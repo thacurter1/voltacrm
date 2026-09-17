@@ -28,11 +28,19 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
     // Genera immediatamente il token TOTP corrente per evitare stato obsoleto (stale)
     setDynamicTotp(securityValidator.generateCurrentTotp(userIdentifier));
 
+    const handleKeyDownGlobal = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDownGlobal);
+
     const interval = setInterval(() => {
       setDynamicTotp(securityValidator.generateCurrentTotp(userIdentifier));
     }, 1000);
-    return () => clearInterval(interval);
-  }, [isOpen, userIdentifier]);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('keydown', handleKeyDownGlobal);
+    };
+  }, [isOpen, userIdentifier, onClose]);
 
   if (!isOpen || !user) return null;
 
@@ -95,7 +103,12 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
         className="fixed inset-0 bg-[#0a2540]/60 backdrop-blur-xs transition-opacity" 
       />
 
-      <div className="relative w-full max-w-md bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.22)] p-4 sm:p-6 space-y-5 sm:space-y-6 animate-in zoom-in-95 duration-150 text-xs">
+      <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="two-factor-title"
+        className="relative w-full max-w-md bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.22)] p-4 sm:p-6 space-y-5 sm:space-y-6 animate-in zoom-in-95 duration-150 text-xs"
+      >
         {/* Header */}
         <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
           <div className="flex items-center gap-3">
@@ -106,7 +119,7 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
               <span className="text-[10px] font-bold text-[#635bff] uppercase tracking-wider block">
                 Sicurezza & Protezione Account
               </span>
-              <h3 className="text-sm sm:text-base font-bold text-[#0a2540]">
+              <h3 id="two-factor-title" className="text-sm sm:text-base font-bold text-[#0a2540]">
                 Verifica a Due Fattori (2FA)
               </h3>
             </div>

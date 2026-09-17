@@ -29,6 +29,15 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
     setPsv(currentIndex.psvEurSmc);
   }
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Calcolo dinamico fasce ARERA F1, F2, F3 (o dai valori ufficiali ricevuti dal feed GME)
@@ -69,7 +78,12 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
         className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity" 
       />
 
-      <div className="relative w-full max-w-xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6 text-xs max-h-[90vh] overflow-y-auto">
+      <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="market-simulator-title"
+        className="relative w-full max-w-xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6 text-xs max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
           <div>
@@ -82,7 +96,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
                 GME Live
               </span>
             </div>
-            <h3 className="text-lg font-bold text-[#0a2540] mt-0.5">
+            <h3 id="market-simulator-title" className="text-lg font-bold text-[#0a2540] mt-0.5">
               Simula Scenari PUN & PSV con Fasce F1/F2/F3
             </h3>
             <p className="text-xs text-[#425466]">
