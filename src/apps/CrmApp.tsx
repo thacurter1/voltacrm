@@ -399,10 +399,11 @@ export const CrmApp: React.FC = () => {
               onAuditSwitched={handleAuditSwitched}
               onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
             />
-            <SignatureActivationPanel onActivated={(signature) => {
+            <SignatureActivationPanel onActivated={(signature, commissions) => {
               const activatedAudit = audits.find(a => a.customerId === signature.customerId && a.podOrPdr === signature.podOrPdr);
               if (activatedAudit) setAuditStatusOverrides(current => ({ ...current, [activatedAudit.id]: 'switched' }));
-              addToast('Switch Attivato', `Confermata l’attivazione per ${signature.podOrPdr}.`, 'success');
+              const commMsg = commissions?.totalEur ? ` Provvigioni maturate: €${commissions.totalEur}.` : '';
+              addToast('Switch Attivato', `Confermata l’attivazione per ${signature.podOrPdr}.${commMsg}`, 'success');
             }} />
           </>
         )}

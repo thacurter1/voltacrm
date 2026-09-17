@@ -82,7 +82,12 @@ async function main() {
     'test_gme_feed.cjs',
     'test_messaging.cjs',
     'test_ocr.cjs',
-    'test_commissions.cjs'
+    'test_commissions.cjs',
+    'test_accounting_regression.cjs',
+    'test_core_regression.cjs',
+    'test_portal_regression.cjs',
+    'test_signature_regression.cjs',
+    'test_e2e_full_flow.cjs'
   ];
 
   let passed = 0;

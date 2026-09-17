@@ -15,7 +15,7 @@ interface PendingSignature {
 }
 
 interface SignatureActivationPanelProps {
-  onActivated?: (signature: PendingSignature) => void;
+  onActivated?: (signature: PendingSignature, commissions?: any) => void;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -56,10 +56,14 @@ export const SignatureActivationPanel: React.FC<SignatureActivationPanelProps> =
     setBusyId(signature.id);
     setError(null);
     try {
-      const result = await api.switch.activateSignature(signature.id, { activationReference, activatedAt });
+      const result = await api.switch.activateSignature(signature.id, {
+        activationReference,
+        activatedAt,
+        generateCommission: true
+      });
       const activated = result.signatureReceipt as PendingSignature;
       setSignatures(current => current.filter(item => item.id !== signature.id));
-      onActivated?.(activated);
+      onActivated?.(activated, result.commissions);
     } catch (activationError) {
       setError(activationError instanceof Error ? activationError.message : 'Attivazione non riuscita.');
     } finally {

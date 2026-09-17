@@ -287,8 +287,8 @@ export const api = {
       const data = await request<{success:boolean;signatures:any[]}>('/switch/signatures');
       return data.signatures;
     },
-    async activateSignature(id:string, payload:{activationReference:string;activatedAt:string}) {
-      return request<{success:boolean;signatureReceipt:any;customer:Customer}>(`/switch/signatures/${encodeURIComponent(id)}/activate`,{method:'POST',body:JSON.stringify(payload)});
+    async activateSignature(id:string, payload:{activationReference:string;activatedAt:string;generateCommission?:boolean;agentId?:string}) {
+      return request<{success:boolean;signatureReceipt:any;customer?:Customer;commissions?:any}>(`/switch/signatures/${encodeURIComponent(id)}/activate`,{method:'POST',body:JSON.stringify(payload)});
     },
     async signContract(payload: {
       customerId: string; customerName?: string; signerFiscalCode?: string; phone?: string;

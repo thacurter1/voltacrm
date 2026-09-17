@@ -616,11 +616,12 @@ function UnifiedApp() {
                   onAuditSwitched={handleAuditSwitched}
                   onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
                 />
-                <SignatureActivationPanel onActivated={(signature) => {
+                <SignatureActivationPanel onActivated={(signature, commissions) => {
                   setAudits(prev => prev.map(a => a.customerId === signature.customerId && a.podOrPdr === signature.podOrPdr
                     ? { ...a, status: 'switched' as const }
                     : a));
-                  addToast('Switch Attivato', `Confermata l’attivazione per ${signature.podOrPdr}.`, 'success');
+                  const commMsg = commissions?.totalEur ? ` Provvigioni maturate: €${commissions.totalEur}.` : '';
+                  addToast('Switch Attivato', `Confermata l’attivazione per ${signature.podOrPdr}.${commMsg}`, 'success');
                 }} />
               </>
             )}

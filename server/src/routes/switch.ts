@@ -19,6 +19,7 @@ import {
   snapshotOffer,
   snapshotUtilityPoint
 } from '../services/signatureService.js';
+import { generateContractCommissions } from '../services/commissionService.js';
 
 export const switchRouter = Router();
 
@@ -241,7 +242,34 @@ switchRouter.post(
         activationDate,
         activatedBy: (req as any).user.userId
       });
-      res.status(200).json({ success: true, signatureReceipt });
+
+      let commissions: any = undefined;
+      if (req.body?.generateCommission === true) {
+        const agentId = req.body?.agentId || (req as any).user.userId;
+        const agentUser = users.find(u => u.id === agentId);
+        const agentName = agentUser?.name || 'Agente Commerciale';
+        const customer = getCustomers().find(c => c.id === signatureReceipt.customerId);
+        const isDualFuel = customer ? customer.utilityPoints.length > 1 : false;
+        const annualConsumption = signatureReceipt.originalPointSnapshot?.annualConsumption || 2700;
+
+        commissions = await generateContractCommissions({
+          agentId,
+          agentName,
+          contractId: signatureReceipt.id,
+          customerName: signatureReceipt.customerName,
+          podOrPdr: signatureReceipt.podOrPdr,
+          utilityType: signatureReceipt.energyType,
+          customerType: 'residential',
+          annualConsumption,
+          isDualFuel
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        signatureReceipt,
+        ...(commissions ? { commissions } : {})
+      });
     } catch (error: any) {
       if (error instanceof SignatureValidationError) {
         res.status(400).json({ success: false, message: error.message });
