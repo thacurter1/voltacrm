@@ -277,7 +277,54 @@ function createSupabaseBackend(): PortalBackend {
 }
 
 function createMemoryBackend(): PortalBackend {
-  const bills: PortalBillRecord[] = [];
+  const bills: PortalBillRecord[] = [
+    {
+      id: 'bill-1',
+      customerId: 'cust-1',
+      customerName: 'Andrea Moretti',
+      fileName: 'Fattura_Enel_Luce_Maggio2026.pdf',
+      storagePath: 'cust-1/bill-1-Fattura_Enel_Luce_Maggio2026.pdf',
+      mimeType: 'application/pdf',
+      fileSizeBytes: 1420 * 1024,
+      fileSizeKb: 1420,
+      utilityType: 'luce',
+      status: 'analyzed',
+      notes: 'Tariffa precedente cara (0.178 €/kWh). Proposta Octopus pronta.',
+      extractedSavingsEur: 204.0,
+      uploadDate: '2026-05-10',
+      createdAt: '2026-05-10T10:00:00.000Z'
+    },
+    {
+      id: 'bill-2',
+      customerId: 'cust-2',
+      customerName: 'Ristorante La Terrazza Srl',
+      fileName: 'Bolletta_Acea_Business_Aprile2026.pdf',
+      storagePath: 'cust-2/bill-2-Bolletta_Acea_Business_Aprile2026.pdf',
+      mimeType: 'application/pdf',
+      fileSizeBytes: 2850 * 1024,
+      fileSizeKb: 2850,
+      utilityType: 'luce',
+      status: 'in_review',
+      notes: 'Consumi elevati cucina e forni (18.500 kWh/anno).',
+      uploadDate: '2026-05-15',
+      createdAt: '2026-05-15T14:30:00.000Z'
+    },
+    {
+      id: 'bill-3',
+      customerId: 'cust-1',
+      customerName: 'Andrea Moretti',
+      fileName: 'Fattura_Gas_EniPlenitude_Giugno2026.pdf',
+      storagePath: 'cust-1/bill-3-Fattura_Gas_EniPlenitude_Giugno2026.pdf',
+      mimeType: 'application/pdf',
+      fileSizeBytes: 1890 * 1024,
+      fileSizeKb: 1890,
+      utilityType: 'gas',
+      status: 'in_review',
+      notes: 'Nuova bolletta caricata per verifica offerta gas estiva.',
+      uploadDate: '2026-06-02',
+      createdAt: '2026-06-02T09:15:00.000Z'
+    }
+  ];
   const readings: MeterReadingRecord[] = [];
   const files = new Map<string, { bytes: Buffer; mimeType: string }>();
   return {

@@ -5,8 +5,8 @@ import { users } from '../services/dataStore.js';
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    if (process.env.VOLTA_DEMO_MODE !== 'true') {
-      throw new Error('FATAL SECURITY ERROR: JWT_SECRET è obbligatoria fuori dalla modalità demo.');
+    if (process.env.NODE_ENV === 'production' || process.env.VOLTA_DEMO_MODE !== 'true') {
+      throw new Error('FATAL SECURITY ERROR: JWT_SECRET è obbligatoria in produzione o fuori dalla modalità demo.');
     }
     console.warn('⚠️ [SECURITY WARNING] JWT_SECRET non impostato! Utilizzo di fallback temporaneo per sviluppo locale.');
     return 'volta-dev-secret-change-in-production';

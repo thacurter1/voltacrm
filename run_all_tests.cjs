@@ -80,6 +80,7 @@ async function main() {
     'test_blocco3_persistence.cjs',
     'test_fase1_audit.cjs',
     'test_fase3_audit.cjs',
+    'test_fase4_audit_p2.cjs',
     'test_gme_feed.cjs',
     'test_messaging.cjs',
     'test_ocr.cjs',
