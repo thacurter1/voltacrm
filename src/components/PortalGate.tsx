@@ -24,9 +24,9 @@ interface PortalGateProps {
 export const PortalGate: React.FC<PortalGateProps> = ({
   onLoginOperator,
   onLoginCustomer,
-  onRequire2FA,
+  onRequire2FA: _onRequire2FA,
   customers,
-  profiles,
+  profiles: _profiles,
   onToast,
   onOpenTotem,
 }) => {
@@ -56,12 +56,6 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const [operatorTotp, setOperatorTotp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Operator Auth State
-  const [selectedOpId, setSelectedOpId] = useState<string>(
-    profiles.find(p => p.role === 'admin')?.id || 'user-admin-1'
-  );
-
-  const operators = profiles.filter(p => p.role === 'admin' || p.role === 'call_center');
 
   // Customer Login Handler
   const handleCustomerLogin = async (e: React.FormEvent) => {
@@ -124,11 +118,17 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const handleOperatorLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setIsSubmitting(true);
     try {
-      const result=await api.auth.loginOperator(operatorEmail,operatorPassword,operatorTotp);
-      onLoginOperator(result.user);
-    } catch(err) {
-      onToast('Accesso Negato',err instanceof Error?err.message:'Credenziali non valide.','warning');
-    } finally {setIsSubmitting(false);}
+      const result = await api.auth.loginOperator(operatorEmail, operatorPassword, operatorTotp);
+      if (result.user) {
+        onLoginOperator(result.user);
+      } else if (result.require2FA) {
+        onToast('Richiesta 2FA', result.message || 'Inserisci il codice TOTP a 6 cifre.', 'info');
+      }
+    } catch (err) {
+      onToast('Accesso Negato', err instanceof Error ? err.message : 'Credenziali non valide.', 'warning');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -308,7 +308,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                     {DEMO_MODE && <div className="pt-2 border-t border-[#e3e8ee]">
                       <span className="text-[10px] text-slate-400 block mb-1.5 uppercase font-bold">Oppure accedi con un account demo:</span>
                       <div className="grid grid-cols-3 gap-1.5">
-                        {customers.slice(0, 3).map(c => (
+                        {customers.slice(0, 3).map((c: Customer) => (
                           <button
                             key={c.id}
                             type="button"
@@ -321,7 +321,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                                 customerId: c.id,
                                 phone: c.phone,
                                 fiscalCode: c.fiscalCode,
-                                avatar: c.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+                                avatar: c.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase(),
                                 onboardingStatus: 'active',
                               };
                               onLoginCustomer(user);

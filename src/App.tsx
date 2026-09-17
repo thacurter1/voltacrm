@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { DashboardOverview } from './components/DashboardOverview';
 import { LeadsManager } from './components/LeadsManager';
@@ -54,6 +54,28 @@ import {
   SecurityAuditLog
 } from './types';
 
+function createCustomerFromOcr(customerData: Partial<Customer>, accountManager: string): Customer {
+  const today = new Date();
+  const nextAudit = new Date();
+  nextAudit.setDate(today.getDate() + 120);
+  const randomSuffix = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+  return {
+    id: `cust-${Date.now()}`,
+    name: customerData.name || 'Nuovo Cliente da Bolletta',
+    fiscalCode: customerData.fiscalCode || `CF${randomSuffix}`,
+    phone: customerData.phone || '+39 347 0000000',
+    email: customerData.email || 'cliente.ocr@email.it',
+    city: customerData.city || 'Milano',
+    contractStartDate: today.toISOString().split('T')[0],
+    lastSwitchAuditDate: today.toISOString().split('T')[0],
+    nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
+    accountManager,
+    hasBrokerageMandate: true,
+    utilityPoints: customerData.utilityPoints || []
+  };
+}
+
 function UnifiedApp() {
   const initialDb = dbService.load();
 
@@ -81,6 +103,48 @@ function UnifiedApp() {
 
   const [isRefreshingMarketIndex, setIsRefreshingMarketIndex] = useState(false);
 
+  // Toasts
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+
+  const addToast = useCallback((title: string, message: string, type: 'success' | 'info' | 'warning' = 'success') => {
+    const newToast: ToastNotification = {
+      id: `toast-${Date.now()}-${Math.random()}`,
+      title,
+      message,
+      type,
+      timestamp: Date.now(),
+    };
+    setToasts(prev => [newToast, ...prev]);
+  }, []);
+
+  const handleDismissToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // Switch User Profile / Role
+  const handleSelectUser = useCallback(async (_newUser?: UserProfile) => {
+    try {
+      const { user } = await api.auth.me();
+      const isCustomer = user.role === 'customer';
+      const [customerRows, leadRows, profileRows, billRows, appointmentRows, securityRows] = await Promise.all([
+        isCustomer ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : api.customers.getAll(),
+        isCustomer ? Promise.resolve([]) : api.leads.getAll(),
+        isCustomer ? Promise.resolve([user]) : api.auth.profiles(),
+        portalApi.listBills(isCustomer ? user.customerId : undefined),
+        isCustomer ? Promise.resolve([]) : api.operations.listAppointments(),
+        isCustomer ? Promise.resolve([]) : api.operations.listSecurityLogs(),
+      ]);
+      setCustomers(customerRows); setLeads(leadRows); setProfiles(profileRows); setBills(billRows);
+      setAppointments(appointmentRows); setSecurityLogs(securityRows);
+      setAudits(runQuarterlyAudit(customerRows, marketIndex));
+      setCurrentUser(user); setIsGateOpen(false);
+      setActiveTab(isCustomer ? 'customer_overview' : 'dashboard');
+    } catch(error) {
+      setIsGateOpen(true);
+      addToast('Accesso non completato',error instanceof Error?error.message:'Dati non disponibili.','warning');
+    }
+  }, [marketIndex, addToast]);
+
   // Carica indici di mercato live dal feed GME all'avvio
   useEffect(() => {
     api.switch.getMarketIndices()
@@ -99,7 +163,7 @@ function UnifiedApp() {
   useEffect(() => {
     if (DEMO_MODE || !localStorage.getItem('VOLTA_AUTH_TOKEN')) return;
     api.auth.me().then(({user})=>handleSelectUser(user)).catch(()=>{api.auth.logout();setIsGateOpen(true);});
-  }, []);
+  }, [handleSelectUser]);
 
   // Demo persistence only. Server data is reloaded on authenticated access.
   useEffect(() => {
@@ -119,23 +183,6 @@ function UnifiedApp() {
     return () => clearTimeout(timer);
   }, [customers, leads, appointments, bills, marketIndex, currentUser, securityLogs]);
 
-  // Toasts
-  const [toasts, setToasts] = useState<ToastNotification[]>([]);
-
-  const addToast = (title: string, message: string, type: 'success' | 'info' | 'warning' = 'success') => {
-    const newToast: ToastNotification = {
-      id: `toast-${Date.now()}-${Math.random()}`,
-      title,
-      message,
-      type,
-      timestamp: Date.now(),
-    };
-    setToasts(prev => [newToast, ...prev]);
-  };
-
-  const handleDismissToast = (id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
 
   // Helper per logging sicurezza
   const recordSecurityLog = async (
@@ -189,29 +236,6 @@ function UnifiedApp() {
   const pendingSwitches = audits.filter(a => a.status === 'switch_recommended');
   const pendingBills = bills.filter(b => b.status === 'in_review');
 
-  // Switch User Profile / Role
-  const handleSelectUser = async (_newUser: UserProfile) => {
-    try {
-      const { user } = await api.auth.me();
-      const isCustomer = user.role === 'customer';
-      const [customerRows, leadRows, profileRows, billRows, appointmentRows, securityRows] = await Promise.all([
-        isCustomer ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : api.customers.getAll(),
-        isCustomer ? Promise.resolve([]) : api.leads.getAll(),
-        isCustomer ? Promise.resolve([user]) : api.auth.profiles(),
-        portalApi.listBills(isCustomer ? user.customerId : undefined),
-        isCustomer ? Promise.resolve([]) : api.operations.listAppointments(),
-        isCustomer ? Promise.resolve([]) : api.operations.listSecurityLogs(),
-      ]);
-      setCustomers(customerRows); setLeads(leadRows); setProfiles(profileRows); setBills(billRows);
-      setAppointments(appointmentRows); setSecurityLogs(securityRows);
-      setAudits(runQuarterlyAudit(customerRows, marketIndex));
-      setCurrentUser(user); setIsGateOpen(false);
-      setActiveTab(isCustomer ? 'customer_overview' : 'dashboard');
-    } catch(error) {
-      setIsGateOpen(true);
-      addToast('Accesso non completato',error instanceof Error?error.message:'Dati non disponibili.','warning');
-    }
-  };
 
   // 2FA Trigger and Verification
   const handleRequire2FA = (user: UserProfile) => {
@@ -298,25 +322,7 @@ function UnifiedApp() {
 
   // Importazione da OCR Bolletta
   const handleImportFromOcr = async (customerData: Partial<Customer>) => {
-    const today = new Date();
-    const nextAudit = new Date();
-    nextAudit.setDate(today.getDate() + 120);
-
-    const newCustomer: Customer = {
-      id: `cust-${Date.now()}`,
-      name: customerData.name || 'Nuovo Cliente da Bolletta',
-      fiscalCode: customerData.fiscalCode || 'CF' + Math.random().toString(36).substring(2, 10).toUpperCase(),
-      phone: customerData.phone || '+39 347 0000000',
-      email: customerData.email || 'cliente.ocr@email.it',
-      city: customerData.city || 'Milano',
-      contractStartDate: today.toISOString().split('T')[0],
-      lastSwitchAuditDate: today.toISOString().split('T')[0],
-      nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
-      accountManager: currentUser.name,
-      hasBrokerageMandate: true,
-      utilityPoints: customerData.utilityPoints || []
-    };
-
+    const newCustomer = createCustomerFromOcr(customerData, currentUser.name);
     await handleAddCustomer(newCustomer);
   };
 

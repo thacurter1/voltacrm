@@ -19,7 +19,7 @@ interface CustomerProfileSectionProps {
 
 export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
   customer,
-  currentUser,
+  currentUser: _currentUser,
   onUpdateCustomer,
   onToast,
 }) => {

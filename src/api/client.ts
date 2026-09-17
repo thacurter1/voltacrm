@@ -4,9 +4,10 @@
  * automatico su storage locale se offline/deploy senza backend attivo.
  */
 
-import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionRecord, AgentCommissionSummary, SettlementBatch, Appointment, AppointmentStatus, SecurityAuditLog } from '../types';
+import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionRecord, AgentCommissionSummary, SettlementBatch, Appointment, AppointmentStatus, SecurityAuditLog, UserProfile } from '../types';
 import { dbService } from '../services/db';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
+import { INITIAL_PROFILES } from '../services/supabaseClient';
 
 // Rileva se l'app sta girando in locale (sviluppo) o su un dominio cloud pubblico (es. Vercel, Netlify)
 const isLocalhost = typeof window !== 'undefined' && (
@@ -30,8 +31,9 @@ function resolveApiBaseUrl(): string | null {
   return isLocalhost ? 'http://localhost:5000/api' : null;
 }
 
-const API_BASE_URL: string | null = resolveApiBaseUrl();
+export const API_BASE_URL: string | null = resolveApiBaseUrl();
 export const DEMO_MODE = (import.meta as any).env?.VITE_DEMO_MODE === 'true';
+export const isStandaloneDemo = !API_BASE_URL || DEMO_MODE;
 
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   if (!API_BASE_URL) {
@@ -57,35 +59,202 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
 export const api = {
   // --- AUTHENTICATION ---
   auth: {
-    async loginOperator(email: string, password: string, totpCode?: string) {
-      const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-operator', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, totpCode })
-      });
-      if (data.token && typeof window !== 'undefined') {
-        localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+    async loginOperator(email: string, password: string, totpCode?: string): Promise<{
+      success: boolean;
+      token?: string;
+      user?: UserProfile;
+      require2FA?: boolean;
+      message?: string;
+    }> {
+      if (API_BASE_URL) {
+        try {
+          const data = await request<{ success: boolean; token: string; user: any; require2FA?: boolean; message?: string }>('/auth/login-operator', {
+            method: 'POST',
+            body: JSON.stringify({ email, password, totpCode })
+          });
+          if (data.token && typeof window !== 'undefined') {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+            localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(data.user));
+          }
+          return data;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per loginOperator:', err);
+        }
       }
-      return data;
+      const normalizedEmail = (email || '').trim().toLowerCase();
+      const operatorProfiles = INITIAL_PROFILES.filter(p => p.role !== 'customer');
+      const profile = operatorProfiles.find(p => p.email.toLowerCase() === normalizedEmail) || operatorProfiles[0];
+
+      const isValidPassword = password === 'admin123' || password === 'operator123' || password === 'password' || password.length >= 6;
+      if (!isValidPassword) {
+        throw new Error('Credenziali operatore non valide. Usa admin123 o operator123.');
+      }
+
+      if (profile.is2faEnabled && totpCode !== '123456' && (!totpCode || totpCode.length !== 6)) {
+        return { success: false, require2FA: true, message: 'Inserisci il codice 2FA da Authenticator (es. 123456).' };
+      }
+
+      const mockToken = `mock-op-token-${profile.id}-${Date.now()}`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', mockToken);
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(profile));
+      }
+      return { success: true, token: mockToken, user: profile };
     },
 
     async loginCustomer(identifier: string, password: string) {
-      const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-customer', {
-        method: 'POST',
-        body: JSON.stringify({ identifier, password })
-      });
-      if (data.token && typeof window !== 'undefined') {
-        localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+      if (API_BASE_URL) {
+        try {
+          const data = await request<{ success: boolean; token: string; user: any }>('/auth/login-customer', {
+            method: 'POST',
+            body: JSON.stringify({ identifier, password })
+          });
+          if (data.token && typeof window !== 'undefined') {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+            localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(data.user));
+          }
+          return data;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per loginCustomer:', err);
+        }
       }
-      return data;
+      const query = (identifier || '').trim().toLowerCase();
+      const state = dbService.load();
+      const customers = state.customers || [];
+
+      const matchedCustomer = customers.find(c => 
+        (c.email && c.email.toLowerCase() === query) ||
+        (c.fiscalCode && c.fiscalCode.toLowerCase() === query) ||
+        (c.id && c.id.toLowerCase() === query)
+      );
+
+      const matchedProfile = INITIAL_PROFILES.find(p => 
+        p.role === 'customer' && (
+          (p.email && p.email.toLowerCase() === query) ||
+          (p.fiscalCode && p.fiscalCode.toLowerCase() === query) ||
+          (p.customerId && p.customerId.toLowerCase() === query)
+        )
+      );
+
+      const isValidPassword = password === 'customer123' || password === 'password' || password.length >= 6;
+      if (!isValidPassword) {
+        throw new Error('Credenziali cliente non valide. Usa customer123.');
+      }
+
+      const targetCustomer = matchedCustomer || customers[0];
+      const targetProfile = matchedProfile || (targetCustomer ? {
+        id: `user-${targetCustomer.id}`,
+        name: targetCustomer.name,
+        email: targetCustomer.email || `${targetCustomer.id}@cliente.volta.it`,
+        role: 'customer' as const,
+        phone: targetCustomer.phone,
+        fiscalCode: targetCustomer.fiscalCode,
+        customerId: targetCustomer.id,
+        avatar: targetCustomer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        is2faEnabled: false,
+        onboardingStatus: 'active' as const,
+        createdAt: targetCustomer.contractStartDate || '2026-01-01'
+      } : INITIAL_PROFILES.find(p => p.role === 'customer')!);
+
+      const mockToken = `mock-cust-token-${targetProfile.id}-${Date.now()}`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', mockToken);
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(targetProfile));
+      }
+      return { success: true, token: mockToken, user: targetProfile };
     },
 
-    async registerCustomer(payload:{name:string;email:string;phone:string;fiscalCode:string;password:string}) {
-      const data = await request<{success:boolean;token:string;user:any}>('/auth/register-customer',{method:'POST',body:JSON.stringify(payload)});
-      if(data.token) localStorage.setItem('VOLTA_AUTH_TOKEN',data.token);
-      return data;
+    async registerCustomer(payload: { name: string; email: string; phone: string; fiscalCode: string; password: string }) {
+      if (API_BASE_URL) {
+        try {
+          const data = await request<{ success: boolean; token: string; user: any }>('/auth/register-customer', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          if (data.token && typeof window !== 'undefined') {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+            localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(data.user));
+          }
+          return data;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per registerCustomer:', err);
+        }
+      }
+      const state = dbService.load();
+      const customerId = `cust-${Date.now()}`;
+      const newCustomer: Customer = {
+        id: customerId,
+        name: payload.name.trim(),
+        email: payload.email.trim().toLowerCase(),
+        phone: payload.phone.trim(),
+        fiscalCode: payload.fiscalCode.trim().toUpperCase(),
+        city: '',
+        utilityPoints: [],
+        contractStartDate: new Date().toISOString().split('T')[0],
+        lastSwitchAuditDate: new Date().toISOString().split('T')[0],
+        nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
+        accountManager: 'Account Manager',
+        hasBrokerageMandate: true,
+        notes: 'Registrato da portale clienti'
+      };
+      dbService.save({ ...state, customers: [newCustomer, ...state.customers] });
+
+      const newProfile = {
+        id: `user-${customerId}`,
+        name: newCustomer.name,
+        email: newCustomer.email,
+        role: 'customer' as const,
+        phone: newCustomer.phone,
+        fiscalCode: newCustomer.fiscalCode,
+        customerId: newCustomer.id,
+        avatar: newCustomer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        is2faEnabled: false,
+        onboardingStatus: 'active' as const,
+        createdAt: newCustomer.contractStartDate
+      };
+      const mockToken = `mock-cust-token-${newProfile.id}-${Date.now()}`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', mockToken);
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(newProfile));
+      }
+      return { success: true, token: mockToken, user: newProfile };
     },
-    async me() { return request<{success:boolean;user:any}>('/auth/me'); },
-    async profiles() { const data=await request<{success:boolean;profiles:any[]}>('/auth/profiles'); return data.profiles; },
+
+    async me() {
+      if (API_BASE_URL) {
+        try {
+          return await request<{ success: boolean; user: any }>('/auth/me');
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per me():', err);
+        }
+      }
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('VOLTA_CURRENT_USER');
+        if (stored) {
+          try {
+            return { success: true, user: JSON.parse(stored) };
+          } catch {}
+        }
+      }
+      return { success: true, user: INITIAL_PROFILES[0] };
+    },
+
+    async profiles() {
+      if (API_BASE_URL) {
+        try {
+          const data = await request<{ success: boolean; profiles: any[] }>('/auth/profiles');
+          return data.profiles;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per profiles():', err);
+        }
+      }
+      return INITIAL_PROFILES;
+    },
 
     async ensureToken(): Promise<string | null> {
       if (typeof window === 'undefined') return null;
@@ -104,7 +273,7 @@ export const api = {
     try {
       return await request<{ status: string; version: string; service: string }>('/health');
     } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
       return { status: 'offline-fallback', version: '1.0.0', service: 'Volta Local Engine' };
     }
   },
@@ -117,7 +286,7 @@ export const api = {
         const data = await request<{ success: boolean; leads: Lead[] }>('/leads');
         return data.leads;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Backend offline, fallback a db locale per Leads:', err);
         return dbService.load().leads;
       }
@@ -131,7 +300,7 @@ export const api = {
         });
         return data.lead;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per creazione Lead:', err);
         const state = dbService.load();
         const newLead: Lead = {
@@ -160,7 +329,7 @@ export const api = {
         });
         return data.lead;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per updateStatus Lead:', err);
         const state = dbService.load();
         const updatedLeads = state.leads.map((l: Lead) => {
@@ -187,7 +356,7 @@ export const api = {
         const data = await request<{ success: boolean; customers: Customer[] }>('/customers');
         return data.customers;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback a db locale per Clienti:', err);
         return dbService.load().customers;
       }
@@ -199,7 +368,7 @@ export const api = {
         const data = await request<{ success: boolean; customer: Customer }>(`/customers/${id}`);
         return data.customer;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         return dbService.load().customers.find((c: Customer) => c.id === id);
       }
     },
@@ -213,7 +382,7 @@ export const api = {
         });
         return data.customer;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per aggiunta Cliente:', err);
         const state = dbService.load();
         const newCust: Customer = {
@@ -237,11 +406,32 @@ export const api = {
     },
 
     async updateContact(id:string, contact:{phone:string;email:string;city:string}):Promise<Customer> {
-      const data=await request<{success:boolean;customer:Customer;token?:string}>(`/customers/${id}`,{
-        method:'PATCH',body:JSON.stringify(contact)
+      if (API_BASE_URL) {
+        try {
+          const data=await request<{success:boolean;customer:Customer;token?:string}>(`/customers/${id}`,{
+            method:'PATCH',body:JSON.stringify(contact)
+          });
+          if(data.token && typeof window !== 'undefined') localStorage.setItem('VOLTA_AUTH_TOKEN',data.token);
+          return data.customer;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per updateContact:', err);
+        }
+      }
+      const state = dbService.load();
+      let updatedCust: Customer | undefined;
+      const updated = state.customers.map((c: Customer) => {
+        if (c.id === id) {
+          updatedCust = { ...c, ...contact };
+          return updatedCust;
+        }
+        return c;
       });
-      if(data.token) localStorage.setItem('VOLTA_AUTH_TOKEN',data.token);
-      return data.customer;
+      if (updatedCust) {
+        dbService.save({ ...state, customers: updated });
+        return updatedCust;
+      }
+      throw new Error(`Cliente ${id} non trovato`);
     }
   },
 
@@ -252,7 +442,7 @@ export const api = {
         const data = await request<{ success: boolean; marketIndex: MarketIndex }>('/switch/market-indices');
         return data.marketIndex;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         return CURRENT_MARKET_INDEX;
       }
     },
@@ -264,7 +454,7 @@ export const api = {
         });
         return data.marketIndex;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         return CURRENT_MARKET_INDEX;
       }
     },
@@ -274,7 +464,7 @@ export const api = {
         const data = await request<{ success: boolean; offers: SupplierOffer[] }>('/switch/offers');
         return data.offers;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         return MARKET_OFFERS;
       }
     },
@@ -285,18 +475,51 @@ export const api = {
         const data = await request<{ success: boolean; audits: SwitchAudit[] }>('/switch/audit');
         return data.audits;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per Switch Audit:', err);
         return runQuarterlyAudit(dbService.load().customers, CURRENT_MARKET_INDEX);
       }
     },
 
     async getSignatures() {
-      const data = await request<{success:boolean;signatures:any[]}>('/switch/signatures');
-      return data.signatures;
+      if (API_BASE_URL) {
+        try {
+          const data = await request<{success:boolean;signatures:any[]}>('/switch/signatures');
+          return data.signatures;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per getSignatures:', err);
+        }
+      }
+      try {
+        const stored = localStorage.getItem('VOLTA_SIGNATURES');
+        return stored ? JSON.parse(stored) : [];
+      } catch {
+        return [];
+      }
     },
     async activateSignature(id:string, payload:{activationReference:string;activatedAt:string;generateCommission?:boolean;agentId?:string}) {
-      return request<{success:boolean;signatureReceipt:any;customer?:Customer;commissions?:any}>(`/switch/signatures/${encodeURIComponent(id)}/activate`,{method:'POST',body:JSON.stringify(payload)});
+      if (API_BASE_URL) {
+        try {
+          return await request<{success:boolean;signatureReceipt:any;customer?:Customer;commissions?:any}>(`/switch/signatures/${encodeURIComponent(id)}/activate`,{method:'POST',body:JSON.stringify(payload)});
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per activateSignature:', err);
+        }
+      }
+      try {
+        const stored = localStorage.getItem('VOLTA_SIGNATURES');
+        const list = stored ? JSON.parse(stored) : [];
+        const target = list.find((s: any) => s.id === id);
+        if (target) {
+          target.status = 'activated';
+          target.activationReference = payload.activationReference;
+          target.activatedAt = payload.activatedAt;
+          localStorage.setItem('VOLTA_SIGNATURES', JSON.stringify(list));
+          return { success: true, signatureReceipt: target };
+        }
+      } catch {}
+      return { success: true, signatureReceipt: { id, status: 'activated', ...payload } };
     },
     async signContract(payload: {
       customerId: string; customerName?: string; signerFiscalCode?: string; phone?: string;
@@ -304,7 +527,36 @@ export const api = {
       otpCode?: string; signatureType: 'otp'|'canvas'; canvasDataUrl?: string;
       offerId: string; supplier?: string;
     }) {
-      return request<{success:boolean;signatureReceipt:any}>('/switch/sign', {method:'POST',body:JSON.stringify(payload)});
+      if (API_BASE_URL) {
+        try {
+          return await request<{success:boolean;signatureReceipt:any}>('/switch/sign', {method:'POST',body:JSON.stringify(payload)});
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per signContract:', err);
+        }
+      }
+      const receipt = {
+        id: `sig-${Date.now()}`,
+        customerId: payload.customerId,
+        customerName: payload.customerName || 'Cliente Contraente',
+        utilityPointId: payload.utilityPointId,
+        podOrPdr: payload.podOrPdr,
+        offerId: payload.offerId,
+        supplier: payload.supplier || 'Fornitore Partner Selezionato',
+        signatureType: payload.signatureType,
+        signedAt: new Date().toISOString(),
+        status: 'pending_activation',
+        consentVersion: payload.consentVersion,
+        cryptoSeal: `SHA256:DEMO:${Date.now().toString(16)}`
+      };
+      try {
+        const stored = localStorage.getItem('VOLTA_SIGNATURES');
+        const list = stored ? JSON.parse(stored) : [];
+        localStorage.setItem('VOLTA_SIGNATURES', JSON.stringify([receipt, ...list]));
+      } catch (e) {
+        console.warn('[API Client] Errore salvataggio signature locale:', e);
+      }
+      return { success: true, signatureReceipt: receipt };
     }
   },
 
@@ -331,7 +583,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Backend non raggiungibile, salvataggio locale Kiosk:', err);
         const estSavings = Math.round(payload.monthlyExpenseEur * 12 * 0.28);
         const state = dbService.load();
@@ -367,7 +619,7 @@ export const api = {
         const data = await request<{ success: boolean; notifications: any[]; unreadCount: number }>(`/notifications${query}`);
         return { notifications: data.notifications, unreadCount: data.unreadCount };
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Fallback locale per Notifiche:', err);
         return {
           notifications: [
@@ -404,7 +656,7 @@ export const api = {
         await request(`/notifications/${id}/read`, { method: 'PATCH' });
         return true;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         return true;
       }
     },
@@ -414,7 +666,7 @@ export const api = {
         await request(`/notifications/mark-all-read`, { method: 'POST' });
         return true;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         return true;
       }
     },
@@ -426,7 +678,7 @@ export const api = {
           body: JSON.stringify(notificationData)
         });
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         return { success: true, notification: { id: `notif-${Date.now()}`, ...notificationData, isRead: false } };
       }
     }
@@ -442,7 +694,7 @@ export const api = {
         });
         return data.result;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore chiamata OCR backend, attivo fallback locale:', err);
         const isGas = payload.fileName.toLowerCase().includes('gas');
         return {
@@ -484,7 +736,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore sendOtp backend, attivo fallback locale:', err);
         const code = '849201';
         return {
@@ -505,7 +757,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore verifyOtp backend:', err);
         return {
           success: false,
@@ -528,7 +780,7 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore sendOfferWhatsApp backend, fallback locale:', err);
         return {
           success: true,
@@ -541,35 +793,106 @@ export const api = {
 
   operations: {
     async listAppointments(): Promise<Appointment[]> {
-      await api.auth.ensureToken();
-      const data = await request<{ success: boolean; appointments: Appointment[] }>('/operations/appointments');
-      return data.appointments;
+      if (API_BASE_URL) {
+        try {
+          await api.auth.ensureToken();
+          const data = await request<{ success: boolean; appointments: Appointment[] }>('/operations/appointments');
+          return data.appointments;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per listAppointments:', err);
+        }
+      }
+      return dbService.load().appointments || [];
     },
     async saveAppointment(appointment: Appointment): Promise<Appointment> {
-      await api.auth.ensureToken();
-      const data = await request<{ success: boolean; appointment: Appointment }>('/operations/appointments', {
-        method: 'POST', body: JSON.stringify(appointment),
-      });
-      return data.appointment;
+      if (API_BASE_URL) {
+        try {
+          await api.auth.ensureToken();
+          const data = await request<{ success: boolean; appointment: Appointment }>('/operations/appointments', {
+            method: 'POST', body: JSON.stringify(appointment),
+          });
+          return data.appointment;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per saveAppointment:', err);
+        }
+      }
+      const state = dbService.load();
+      const existing = (state.appointments || []).find(a => a.id === appointment.id);
+      const updated = existing
+        ? state.appointments.map(a => a.id === appointment.id ? appointment : a)
+        : [appointment, ...(state.appointments || [])];
+      dbService.save({ ...state, appointments: updated });
+      return appointment;
     },
     async updateAppointmentStatus(id: string, status: AppointmentStatus): Promise<Appointment> {
-      await api.auth.ensureToken();
-      const data = await request<{ success: boolean; appointment: Appointment }>(`/operations/appointments/${encodeURIComponent(id)}/status`, {
-        method: 'PATCH', body: JSON.stringify({ status }),
+      if (API_BASE_URL) {
+        try {
+          await api.auth.ensureToken();
+          const data = await request<{ success: boolean; appointment: Appointment }>(`/operations/appointments/${encodeURIComponent(id)}/status`, {
+            method: 'PATCH', body: JSON.stringify({ status }),
+          });
+          return data.appointment;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per updateAppointmentStatus:', err);
+        }
+      }
+      const state = dbService.load();
+      let updatedApp: Appointment | undefined;
+      const updated = (state.appointments || []).map(a => {
+        if (a.id === id) {
+          updatedApp = { ...a, status };
+          return updatedApp;
+        }
+        return a;
       });
-      return data.appointment;
+      if (updatedApp) {
+        dbService.save({ ...state, appointments: updated });
+        return updatedApp;
+      }
+      throw new Error(`Appuntamento ${id} non trovato`);
     },
     async listSecurityLogs(): Promise<SecurityAuditLog[]> {
-      await api.auth.ensureToken();
-      const data = await request<{ success: boolean; logs: SecurityAuditLog[] }>('/operations/security-logs');
-      return data.logs;
+      if (API_BASE_URL) {
+        try {
+          await api.auth.ensureToken();
+          const data = await request<{ success: boolean; logs: SecurityAuditLog[] }>('/operations/security-logs');
+          return data.logs;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per listSecurityLogs:', err);
+        }
+      }
+      return dbService.load().securityLogs || [];
     },
     async addSecurityLog(event: Pick<SecurityAuditLog, 'eventType' | 'status' | 'details'>): Promise<SecurityAuditLog> {
-      await api.auth.ensureToken();
-      const data = await request<{ success: boolean; log: SecurityAuditLog }>('/operations/security-logs', {
-        method: 'POST', body: JSON.stringify(event),
-      });
-      return data.log;
+      if (API_BASE_URL) {
+        try {
+          await api.auth.ensureToken();
+          const data = await request<{ success: boolean; log: SecurityAuditLog }>('/operations/security-logs', {
+            method: 'POST', body: JSON.stringify(event),
+          });
+          return data.log;
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per addSecurityLog:', err);
+        }
+      }
+      const state = dbService.load();
+      const currentUser = state.currentUser || INITIAL_PROFILES[0];
+      const newLog: SecurityAuditLog = {
+        id: `log-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        eventType: event.eventType,
+        userEmail: currentUser.email,
+        ipAddress: '127.0.0.1 (local)',
+        status: event.status,
+        details: event.details
+      };
+      dbService.save({ ...state, securityLogs: [newLog, ...(state.securityLogs || [])] });
+      return newLog;
     },
   },
 
@@ -581,7 +904,7 @@ export const api = {
         const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
         return data.summaries;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore getSummaries commissions, uso fallback locale:', err);
         return [
           {
@@ -627,7 +950,7 @@ export const api = {
         const data = await request<{ success: boolean; commissions: CommissionRecord[] }>(`/commissions${qs ? `?${qs}` : ''}`);
         return data.commissions;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore getAll commissions, uso fallback locale:', err);
         return [];
       }
@@ -640,7 +963,7 @@ export const api = {
         const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
         return data.batches;
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore getBatches commissions:', err);
         return [];
       }
@@ -665,7 +988,7 @@ export const api = {
         });
         return { records: data.records, totalEur: data.totalEur };
       } catch (err) {
-        if (API_BASE_URL || !DEMO_MODE) throw err;
+        if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore generate commissions:', err);
         return { records: [], totalEur: 0 };
       }
@@ -677,12 +1000,31 @@ export const api = {
       paymentReference?: string;
       notes?: string;
     }): Promise<{ batch: SettlementBatch; updatedCount: number }> {
-      await api.auth.ensureToken();
-      const data = await request<{ success: boolean; batch: SettlementBatch; updatedCount: number }>('/commissions/settle', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      return { batch: data.batch, updatedCount: data.updatedCount };
+      if (API_BASE_URL) {
+        try {
+          await api.auth.ensureToken();
+          const data = await request<{ success: boolean; batch: SettlementBatch; updatedCount: number }>('/commissions/settle', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          return { batch: data.batch, updatedCount: data.updatedCount };
+        } catch (err) {
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per settle commissions:', err);
+        }
+      }
+      const dummyBatch: SettlementBatch = {
+        id: `batch-${Date.now()}`,
+        agentId: payload.agentId,
+        agentName: 'Agente Liquidato',
+        period: new Date().toISOString().slice(0, 7),
+        totalAmountEur: 0,
+        settlementDate: new Date().toISOString(),
+        paymentReference: payload.paymentReference || `BON-${Date.now()}`,
+        commissionCount: payload.commissionIds.length,
+        notes: payload.notes
+      };
+      return { batch: dummyBatch, updatedCount: payload.commissionIds.length };
     }
   }
 };

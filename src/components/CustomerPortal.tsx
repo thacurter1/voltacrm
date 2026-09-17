@@ -33,7 +33,7 @@ interface CustomerPortalProps {
   customer: Customer;
   currentUser: AuthUser;
   audits: SwitchAudit[];
-  bills: CustomerBill[];
+  bills?: CustomerBill[];
   onUploadBill: (bill: CustomerBill) => void;
   onApproveSwitch: (auditId: string) => void;
   onSwitchUser: () => void;
@@ -45,7 +45,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
   customer,
   currentUser: _currentUser,
   audits,
-  bills,
+  bills: _bills,
   onUploadBill,
   onApproveSwitch,
   onSwitchUser,
@@ -81,8 +81,6 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
   useEffect(() => {
     let active = true;
-    setIsPortalLoading(true);
-    setPortalLoadError('');
     Promise.all([
       portalApi.listBills(customer.id),
       portalApi.listReadings(customer.id),
@@ -104,13 +102,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
     };
   }, [customer.id]);
 
-  useEffect(() => {
-    if (!customer.utilityPoints.some(point => point.id === readingUtilityPointId)) {
-      setReadingUtilityPointId(customer.utilityPoints[0]?.id || '');
-    }
-  }, [customer.utilityPoints, readingUtilityPointId]);
+  const effectiveUtilityPointId = customer.utilityPoints.some(point => point.id === readingUtilityPointId)
+    ? readingUtilityPointId
+    : (customer.utilityPoints[0]?.id || '');
 
-  const selectedReadingPoint = customer.utilityPoints.find(point => point.id === readingUtilityPointId);
+  const selectedReadingPoint = customer.utilityPoints.find(point => point.id === effectiveUtilityPointId);
   const lastReading = meterReadings[0];
 
   // Audits attivi per questo cliente
