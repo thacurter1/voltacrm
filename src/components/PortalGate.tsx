@@ -307,9 +307,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
                     {/* Quick Demo Selector */}
                     <div className="pt-2 border-t border-[#e3e8ee]">
-                      <span className="text-[10px] text-slate-400 block mb-1.5 uppercase font-bold">Oppure prova con un account demo:</span>
-                      <div className="flex gap-2">
-                        {customers.slice(0, 2).map(c => (
+                      <span className="text-[10px] text-slate-400 block mb-1.5 uppercase font-bold">Oppure accedi con un account demo:</span>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {customers.slice(0, 3).map(c => (
                           <button
                             key={c.id}
                             type="button"
@@ -327,9 +327,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                               };
                               onLoginCustomer(user);
                             }}
-                            className="flex-1 py-1.5 px-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[11px] font-medium text-[#0a2540] truncate cursor-pointer transition-colors"
+                            className="py-1.5 px-2 rounded-lg border border-[#e3e8ee] hover:bg-emerald-50/50 hover:border-emerald-300 text-[10px] font-medium text-[#0a2540] truncate cursor-pointer transition-colors text-center"
                           >
-                            {c.name.split(' ')[0]} ({c.utilityPoints.length} utenze)
+                            👤 {c.name.split(' ')[0]} ({c.utilityPoints.length} utenze)
                           </button>
                         ))}
                       </div>
@@ -413,6 +413,46 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   <p className="text-[#425466] text-[11px]">
                     Accesso protetto con autenticazione a due fattori TOTP (RFC 6238).
                   </p>
+                </div>
+
+                {/* Quick Operator Demo Selector */}
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[10px] text-slate-500 block mb-1.5 uppercase font-bold">Compila rapido con account demo:</span>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOperatorEmail('m.riva@voltagroup.it');
+                        setOperatorPassword('admin123');
+                        setOperatorTotp('123456');
+                      }}
+                      className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-[10px] font-semibold text-slate-800 text-center transition-all cursor-pointer shadow-2xs"
+                    >
+                      👑 Admin (Riva)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOperatorEmail('c.bianchi@voltagroup.it');
+                        setOperatorPassword('operator123');
+                        setOperatorTotp('123456');
+                      }}
+                      className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-[10px] font-semibold text-slate-800 text-center transition-all cursor-pointer shadow-2xs"
+                    >
+                      🎧 Operatore (Bianchi)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOperatorEmail('v.neri@voltagroup.it');
+                        setOperatorPassword('operator123');
+                        setOperatorTotp('123456');
+                      }}
+                      className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-[10px] font-semibold text-slate-800 text-center transition-all cursor-pointer shadow-2xs"
+                    >
+                      💼 Consulente (Neri)
+                    </button>
+                  </div>
                 </div>
 
                 <form onSubmit={handleOperatorLogin} className="space-y-4">

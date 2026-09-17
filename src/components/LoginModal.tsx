@@ -25,6 +25,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'call_center' | 'customer'>('call_center');
   const [selectedCustomerId, setSelectedCustomerId] = useState(customers[0]?.id || 'cust-1');
+  const [selectedOperatorId, setSelectedOperatorId] = useState(DEMO_USERS[0]?.id || 'user-admin-1');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -56,7 +57,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   const handleCallCenterLogin = () => {
-    const user = DEMO_USERS[0];
+    const user = DEMO_USERS.find(u => u.id === selectedOperatorId) || DEMO_USERS[0];
     if (user.is2faEnabled) {
       onClose();
       onRequire2FA(user);
@@ -130,12 +131,28 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             <div className="space-y-3">
               <div>
+                <label htmlFor="operator-select-input" className="text-[#425466] font-medium block mb-1">Seleziona Operatore / Consulente</label>
+                <select
+                  id="operator-select-input"
+                  value={selectedOperatorId}
+                  onChange={(e) => setSelectedOperatorId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] font-medium"
+                >
+                  {DEMO_USERS.filter(u => u.role !== 'customer').map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role === 'admin' ? 'Broker Owner' : 'Consulente'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label htmlFor="operator-email-input" className="text-[#425466] font-medium block mb-1">Email Aziendale</label>
                 <input
                   id="operator-email-input"
                   type="email"
                   readOnly
-                  value="m.riva@voltagroup.it"
+                  value={DEMO_USERS.find(u => u.id === selectedOperatorId)?.email || 'm.riva@voltagroup.it'}
                   className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono"
                 />
               </div>

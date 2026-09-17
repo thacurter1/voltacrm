@@ -7,11 +7,27 @@ const STORAGE_KEY = 'VOLTA_ENERGY_CRM_DB_V3';
 
 export const DEMO_USERS: AuthUser[] = [
   {
-    id: 'user-cc-1',
-    name: 'Matteo Riva (Call Center & Admin)',
+    id: 'user-admin-1',
+    name: 'Matteo Riva (Broker Owner & Admin)',
     email: 'm.riva@voltagroup.it',
-    role: 'call_center',
+    role: 'admin',
     avatar: 'MR',
+    is2faEnabled: true
+  },
+  {
+    id: 'user-op-2',
+    name: 'Chiara Bianchi (Consulente Senior)',
+    email: 'c.bianchi@voltagroup.it',
+    role: 'call_center',
+    avatar: 'CB',
+    is2faEnabled: true
+  },
+  {
+    id: 'user-op-3',
+    name: 'Valentina Neri (Consulente Energetico)',
+    email: 'v.neri@voltagroup.it',
+    role: 'call_center',
+    avatar: 'VN',
     is2faEnabled: true
   },
   {
@@ -30,7 +46,16 @@ export const DEMO_USERS: AuthUser[] = [
     role: 'customer',
     customerId: 'cust-2',
     avatar: 'LT',
-    is2faEnabled: true
+    is2faEnabled: false
+  },
+  {
+    id: 'user-cust-3',
+    name: 'Elena Fontana (Cliente Privato)',
+    email: 'elena.fontana@libero.it',
+    role: 'customer',
+    customerId: 'cust-3',
+    avatar: 'EF',
+    is2faEnabled: false
   }
 ];
 

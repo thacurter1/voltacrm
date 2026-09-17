@@ -41,6 +41,20 @@ export const users: any[] = [
     createdAt: '2026-02-10'
   },
   {
+    id: 'user-op-3',
+    name: 'Valentina Neri (Consulente Energetico)',
+    email: 'v.neri@voltagroup.it',
+    password: bcrypt.hashSync(defaultOpPass, 10),
+    role: 'call_center',
+    phone: '+39 334 1122990',
+    whatsapp: '+393341122990',
+    avatar: 'VN',
+    is2faEnabled: true,
+    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isProd ? undefined : 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026'),
+    onboardingStatus: 'active',
+    createdAt: '2026-02-15'
+  },
+  {
     id: 'user-cust-1',
     name: 'Andrea Moretti',
     email: 'andrea.moretti@email.it',
@@ -48,7 +62,7 @@ export const users: any[] = [
     role: 'customer',
     phone: '+39 340 1234567',
     whatsapp: '+393401234567',
-    fiscalCode: 'MRTNDR85M01H501Z',
+    fiscalCode: 'MRTNRA82M15F205X',
     customerId: 'cust-1',
     assignedBrokerId: 'user-admin-1',
     assignedBrokerName: 'Matteo Riva',
@@ -56,6 +70,40 @@ export const users: any[] = [
     is2faEnabled: false,
     onboardingStatus: 'active',
     createdAt: '2026-03-01'
+  },
+  {
+    id: 'user-cust-2',
+    name: 'Ristorante La Terrazza Srl',
+    email: 'amministrazione@laterrazzaroma.it',
+    password: bcrypt.hashSync(defaultCustPass, 10),
+    role: 'customer',
+    phone: '+39 06 6543210',
+    whatsapp: '+39066543210',
+    fiscalCode: '09876540152',
+    customerId: 'cust-2',
+    assignedBrokerId: 'user-admin-1',
+    assignedBrokerName: 'Matteo Riva',
+    avatar: 'LT',
+    is2faEnabled: false,
+    onboardingStatus: 'active',
+    createdAt: '2026-03-05'
+  },
+  {
+    id: 'user-cust-3',
+    name: 'Elena Fontana',
+    email: 'elena.fontana@libero.it',
+    password: bcrypt.hashSync(defaultCustPass, 10),
+    role: 'customer',
+    phone: '+39 340 7788990',
+    whatsapp: '+393407788990',
+    fiscalCode: 'FNTLNE88A41L219Z',
+    customerId: 'cust-3',
+    assignedBrokerId: 'user-op-3',
+    assignedBrokerName: 'Valentina Neri',
+    avatar: 'EF',
+    is2faEnabled: false,
+    onboardingStatus: 'active',
+    createdAt: '2026-03-10'
   }
 ];
 
