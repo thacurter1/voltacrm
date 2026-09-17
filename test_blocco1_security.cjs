@@ -167,13 +167,14 @@ async function run() {
 
   // TEST 7: Login 2FA con TOTP RFC 6238 calcolato da secret
   console.log('--- Test 4.1: Login 2FA con codice TOTP RFC 6238 valido deve restituire 200 ---');
-  const validTotp = computeTotp('VOLTA_ADMIN_SECRET_KEY_2FA_2026');
+  const adminTotpSecret = process.env.ADMIN_2FA_SECRET || 'VOLTA_ADMIN_SECRET_KEY_2FA_2026';
+  const validTotp = computeTotp(adminTotpSecret);
   const r4_1 = await request({
     path: '/api/auth/login-operator',
     method: 'POST'
   }, {
     email: 'm.riva@voltagroup.it',
-    password: 'admin123',
+    password: process.env.ADMIN_INITIAL_PASSWORD || 'admin123',
     totpCode: validTotp
   });
   console.log('Status:', r4_1.status, 'Token ricevuto:', !!r4_1.data?.token);
