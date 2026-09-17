@@ -4,7 +4,7 @@
  * automatico su storage locale se offline/deploy senza backend attivo.
  */
 
-import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionRecord, AgentCommissionSummary, SettlementBatch } from '../types';
+import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionRecord, AgentCommissionSummary, SettlementBatch, Appointment, AppointmentStatus, SecurityAuditLog } from '../types';
 import { dbService } from '../services/db';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
 
@@ -537,6 +537,40 @@ export const api = {
         };
       }
     }
+  },
+
+  operations: {
+    async listAppointments(): Promise<Appointment[]> {
+      await api.auth.ensureToken();
+      const data = await request<{ success: boolean; appointments: Appointment[] }>('/operations/appointments');
+      return data.appointments;
+    },
+    async saveAppointment(appointment: Appointment): Promise<Appointment> {
+      await api.auth.ensureToken();
+      const data = await request<{ success: boolean; appointment: Appointment }>('/operations/appointments', {
+        method: 'POST', body: JSON.stringify(appointment),
+      });
+      return data.appointment;
+    },
+    async updateAppointmentStatus(id: string, status: AppointmentStatus): Promise<Appointment> {
+      await api.auth.ensureToken();
+      const data = await request<{ success: boolean; appointment: Appointment }>(`/operations/appointments/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH', body: JSON.stringify({ status }),
+      });
+      return data.appointment;
+    },
+    async listSecurityLogs(): Promise<SecurityAuditLog[]> {
+      await api.auth.ensureToken();
+      const data = await request<{ success: boolean; logs: SecurityAuditLog[] }>('/operations/security-logs');
+      return data.logs;
+    },
+    async addSecurityLog(event: Pick<SecurityAuditLog, 'eventType' | 'status' | 'details'>): Promise<SecurityAuditLog> {
+      await api.auth.ensureToken();
+      const data = await request<{ success: boolean; log: SecurityAuditLog }>('/operations/security-logs', {
+        method: 'POST', body: JSON.stringify(event),
+      });
+      return data.log;
+    },
   },
 
   // --- COMMISSIONS & SETTLEMENTS ---

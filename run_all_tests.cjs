@@ -89,6 +89,10 @@ async function main() {
     'test_signature_regression.cjs',
     'test_p0_regression.cjs',
     'test_p0_frontend_build.cjs',
+    'test_p1_auth_regression.cjs',
+    'test_p1_atomic_regression.cjs',
+    'test_p1_portal_analysis.cjs',
+    'test_p1_operations_regression.cjs',
     'test_e2e_full_flow.cjs'
   ];
 

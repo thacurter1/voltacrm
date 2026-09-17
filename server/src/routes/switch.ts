@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Router, Request, Response, NextFunction } from 'express';
 import { MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine.js';
-import { getCustomers, getSignatureLogs, addSignatureLog, updateCustomer, users } from '../services/dataStore.js';
+import { getCustomers, getSignatureLogs, addSignatureLog, users } from '../services/dataStore.js';
 import { getLiveMarketIndices, refreshMarketIndices } from '../services/gmeFeedService.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, signContractSchema } from '../middleware/validate.js';

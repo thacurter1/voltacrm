@@ -154,7 +154,7 @@ export interface BillOcrResult {
   notes?: string;
 }
 
-export type UserRole = 'call_center' | 'customer' | 'admin';
+export type UserRole = 'call_center' | 'operator' | 'customer' | 'admin';
 
 export interface UserProfile {
   id: string;

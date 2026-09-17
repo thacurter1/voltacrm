@@ -17,6 +17,7 @@ import { getCustomers, getLeads, getNotifications, initDataStore, bootstrapAdmin
 import { portalRouter } from './routes/portal.js';
 import { validateProductionConfiguration } from './services/runtimeConfig.js';
 import { testDatabaseConnection } from './services/dbClient.js';
+import { operationsRouter } from './routes/operations.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -97,6 +98,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/ocr', ocrRouter);
 app.use('/api/messaging', messagingRouter);
 app.use('/api/commissions', commissionRouter);
+app.use('/api/operations', operationsRouter);
 
 // 404 handler
 app.use((req: Request, res: Response): void => {

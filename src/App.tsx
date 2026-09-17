@@ -35,7 +35,7 @@ const TotemApp = React.lazy(() => import('./apps/TotemApp'));
 const CustomerApp = React.lazy(() => import('./apps/CustomerApp'));
 const CrmApp = React.lazy(() => import('./apps/CrmApp'));
 import { dbService, DEMO_USERS } from './services/db';
-import { profileService, INITIAL_PROFILES } from './services/supabaseClient';
+import { INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
 import { api, DEMO_MODE } from './api/client';
 import { portalApi } from './api/portal';
@@ -138,22 +138,18 @@ function UnifiedApp() {
   };
 
   // Helper per logging sicurezza
-  const recordSecurityLog = (
+  const recordSecurityLog = async (
     eventType: SecurityAuditLog['eventType'], 
     status: SecurityAuditLog['status'], 
     details: string,
-    email: string = currentUser.email
+    _email: string = currentUser.email
   ) => {
-    const newLog: SecurityAuditLog = {
-      id: `sec-${Date.now()}`,
-      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      eventType,
-      userEmail: email,
-      ipAddress: '151.48.22.91 (Milano, IT)',
-      status,
-      details,
-    };
-    setSecurityLogs(prev => [newLog, ...prev]);
+    try {
+      const saved = await api.operations.addSecurityLog({ eventType, status, details });
+      setSecurityLogs(prev => [saved, ...prev.filter(item => item.id !== saved.id)]);
+    } catch (error) {
+      console.error('Registrazione evento di sicurezza non riuscita:', error);
+    }
   };
 
   // Modals & Drawers
@@ -198,13 +194,16 @@ function UnifiedApp() {
     try {
       const { user } = await api.auth.me();
       const isCustomer = user.role === 'customer';
-      const [customerRows, leadRows, profileRows, billRows] = await Promise.all([
+      const [customerRows, leadRows, profileRows, billRows, appointmentRows, securityRows] = await Promise.all([
         isCustomer ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : api.customers.getAll(),
         isCustomer ? Promise.resolve([]) : api.leads.getAll(),
         isCustomer ? Promise.resolve([user]) : api.auth.profiles(),
-        portalApi.listBills(isCustomer ? user.customerId : undefined)
+        portalApi.listBills(isCustomer ? user.customerId : undefined),
+        isCustomer ? Promise.resolve([]) : api.operations.listAppointments(),
+        isCustomer ? Promise.resolve([]) : api.operations.listSecurityLogs(),
       ]);
       setCustomers(customerRows); setLeads(leadRows); setProfiles(profileRows); setBills(billRows);
+      setAppointments(appointmentRows); setSecurityLogs(securityRows);
       setAudits(runQuarterlyAudit(customerRows, marketIndex));
       setCurrentUser(user); setIsGateOpen(false);
       setActiveTab(isCustomer ? 'customer_overview' : 'dashboard');
@@ -243,28 +242,38 @@ function UnifiedApp() {
     setSchedulingLead(lead);
   };
 
-  const handleScheduleAppointment = (newApp: Appointment) => {
-    setAppointments(prev => [newApp, ...prev]);
+  const handleScheduleAppointment = async (newApp: Appointment) => {
+    try {
+      const saved = await api.operations.saveAppointment(newApp);
+      setAppointments(prev => [saved, ...prev.filter(item => item.id !== saved.id)]);
     setLeads(prev => prev.map(l => {
-      if (l.id === newApp.leadId) {
+      if (l.id === saved.leadId) {
         return {
           ...l,
           status: 'appointment_booked' as LeadStatus,
-          appointmentId: newApp.id,
-          assignedCallCenterAgent: newApp.agentName,
+          appointmentId: saved.id,
+          assignedCallCenterAgent: saved.agentName,
         };
       }
       return l;
     }));
-    addToast('Appuntamento Confermato', `Fissato incontro con ${newApp.customerName} per il ${new Date(newApp.scheduledAt).toLocaleDateString('it-IT')}.`, 'success');
+      addToast('Appuntamento Confermato', `Fissato incontro con ${saved.customerName} per il ${new Date(saved.scheduledAt).toLocaleDateString('it-IT')}.`, 'success');
+    } catch (error) {
+      addToast('Appuntamento non salvato', error instanceof Error ? error.message : 'Riprova.', 'warning');
+    }
   };
 
-  const handleUpdateAppointmentStatus = (appId: string, status: AppointmentStatus) => {
-    setAppointments(prev => prev.map(a => a.id === appId ? { ...a, status } : a));
+  const handleUpdateAppointmentStatus = async (appId: string, status: AppointmentStatus) => {
+    try {
+      const saved = await api.operations.updateAppointmentStatus(appId, status);
+      setAppointments(prev => prev.map(a => a.id === saved.id ? saved : a));
+    } catch (error) {
+      addToast('Stato non aggiornato', error instanceof Error ? error.message : 'Riprova.', 'warning');
+    }
   };
 
   // Conversione vendite in Cliente CRM attivo (richiede dati anagrafici e POD/PDR reali)
-  const handleConvertToCustomer = (app: Appointment) => {
+  const handleConvertToCustomer = async (app: Appointment) => {
     const lead = leads.find(l => l.id === app.leadId);
     if (lead) {
       setConvertingLead(lead);
@@ -283,7 +292,7 @@ function UnifiedApp() {
       setConvertingLead(tempLead);
     }
 
-    setAppointments(prev => prev.map(a => a.id === app.id ? { ...a, status: 'completed' as AppointmentStatus } : a));
+    await handleUpdateAppointmentStatus(app.id, 'completed');
     addToast('Perfeziona Anagrafica', `Compila i dati fiscali e POD/PDR effettivi per ${app.customerName}.`, 'info');
   };
 
