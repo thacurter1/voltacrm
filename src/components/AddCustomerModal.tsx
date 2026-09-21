@@ -213,9 +213,11 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
         </div>
 
         {/* Tab Controls */}
-        <div className="flex border-b border-[#e3e8ee] px-3 sm:px-6 text-xs bg-slate-50/50 overflow-x-auto whitespace-nowrap" role="tablist">
+        <div className="flex border-b border-[#e3e8ee] px-3 sm:px-6 text-xs bg-slate-50/50 overflow-x-auto whitespace-nowrap" role="tablist" aria-label="Sezioni nuovo cliente">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'anagrafica'}
             onClick={() => setActiveTab('anagrafica')}
             className={`py-3 px-3 sm:px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
               activeTab === 'anagrafica'
@@ -229,6 +231,8 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'forniture'}
             onClick={() => setActiveTab('forniture')}
             className={`py-3 px-3 sm:px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
               activeTab === 'forniture'

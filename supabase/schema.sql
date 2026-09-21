@@ -84,6 +84,7 @@ create table if not exists public.leads (
   notes text,
   estimated_consumption_kwh numeric default 2800,
   estimated_consumption_smc numeric default 1000,
+  deleted_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -135,9 +136,41 @@ create table if not exists public.customers (
   account_manager text default 'Matteo Riva',
   notes text,
   utility_points jsonb default '[]'::jsonb,
+  deleted_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- 9. Tabella Appuntamenti Call Center & Consulenze
+create table if not exists public.appointments (
+  id text primary key,
+  lead_id text references public.leads(id) on delete set null,
+  customer_name text not null,
+  phone text not null,
+  city text default 'Milano',
+  agent_name text not null,
+  scheduled_at timestamp with time zone not null,
+  duration_minutes integer default 30 check (duration_minutes > 0),
+  type text not null check (type in ('phone_consultation', 'field_visit', 'video_call')) default 'phone_consultation',
+  status text not null check (status in ('scheduled', 'completed', 'cancelled', 'no_show')) default 'scheduled',
+  notes text,
+  deleted_at timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Indici di performance per appuntamenti e soft-delete
+create index if not exists idx_appointments_agent_name on public.appointments (agent_name);
+create index if not exists idx_appointments_scheduled_at on public.appointments (scheduled_at);
+create index if not exists idx_appointments_status on public.appointments (status);
+create index if not exists idx_customers_deleted_at on public.customers (deleted_at) where deleted_at is null;
+create index if not exists idx_leads_deleted_at on public.leads (deleted_at) where deleted_at is null;
+
+-- RLS Appuntamenti
+alter table public.appointments enable row level security;
+drop policy if exists "Operatori gestiscono appuntamenti" on public.appointments;
+create policy "Operatori gestiscono appuntamenti" on public.appointments for all to authenticated using (public.is_operator_or_admin());
+grant select, insert, update, delete on public.appointments to authenticated;
 
 -- ==============================================================================
 -- FUNZIONI SICURE DI CONTROLLO RUOLI (SECURITY DEFINER CON SEARCH_PATH PROTETTO)

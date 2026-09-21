@@ -252,9 +252,11 @@ const DigitalSignatureDialog: React.FC<{
         </div>
 
         {/* Mode Selector */}
-        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 border border-[#e3e8ee]">
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 border border-[#e3e8ee]" role="tablist" aria-label="Modalità di firma">
           <button
             type="button"
+            role="tab"
+            aria-selected={signatureMode === 'canvas'}
             onClick={() => setSignatureMode('canvas')}
             className={`py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               signatureMode === 'canvas'
@@ -268,6 +270,8 @@ const DigitalSignatureDialog: React.FC<{
 
           <button
             type="button"
+            role="tab"
+            aria-selected={signatureMode === 'otp'}
             onClick={() => setSignatureMode('otp')}
             className={`py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               signatureMode === 'otp'

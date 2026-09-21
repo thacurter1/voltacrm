@@ -320,7 +320,7 @@ export const CrmApp: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 py-4 sm:p-6 lg:p-8 pb-24 sm:pb-8">
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-3 py-4 sm:p-6 lg:p-8 pb-24 sm:pb-8">
         {activeTab === 'dashboard' && (
           <DashboardOverview
             leads={leads}

@@ -115,6 +115,14 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="border-b border-[#e3e8ee] bg-white sticky top-0 z-40">
+      {/* Skip to Main Content Link (WCAG 2.2 AA SC 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#635bff] focus:text-white focus:font-bold focus:rounded-lg focus:shadow-lg focus:outline-none"
+      >
+        Salta al contenuto principale
+      </a>
+
       {/* Top Level: Workspace, Search, Market Indicators & User */}
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Organization switcher */}

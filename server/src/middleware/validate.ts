@@ -31,6 +31,24 @@ export const createLeadSchema = z.object({
   estimatedConsumptionSmc: z.number().optional(),
 }).strict();
 
+export const bulkImportLeadItemSchema = z.object({
+  name: z.string().min(1),
+  phone: z.string().min(1),
+  email: z.string().optional(),
+  city: z.string().optional(),
+  source: z.string().optional(),
+  status: z.string().optional(),
+  notes: z.string().optional(),
+  assignedCallCenterAgent: z.string().optional(),
+  appointmentId: z.string().optional(),
+  estimatedConsumptionKwh: z.union([z.number(), z.string()]).optional(),
+  estimatedConsumptionSmc: z.union([z.number(), z.string()]).optional(),
+});
+
+export const bulkImportLeadsSchema = z.object({
+  leads: z.array(bulkImportLeadItemSchema).min(1),
+}).strict();
+
 export const createUtilityPointSchema = z.object({
   id: z.string().optional(),
   type: z.enum(['luce', 'gas']),

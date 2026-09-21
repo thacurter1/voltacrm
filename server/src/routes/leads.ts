@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getLeads, addLead, updateLead } from '../services/dataStore.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
-import { validate, createLeadSchema } from '../middleware/validate.js';
+import { validate, createLeadSchema, bulkImportLeadsSchema } from '../middleware/validate.js';
 import { Lead } from '../types.js';
 
 export const leadsRouter = Router();
@@ -13,8 +13,8 @@ function parseSafeNumber(val: any): number | undefined {
   return Number.isFinite(num) && num > 0 ? num : undefined;
 }
 
-// POST /api/leads/bulk-import (Import massivo da CSV per campagne marketing)
-leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator'), async (req: Request, res: Response): Promise<void> => {
+// POST /api/leads/bulk-import (Import massivo da CSV per campagne marketing con validazione Zod)
+leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator'), validate(bulkImportLeadsSchema), async (req: Request, res: Response): Promise<void> => {
   const { leads: importedLeads } = req.body;
   if (!Array.isArray(importedLeads) || importedLeads.length === 0) {
     res.status(400).json({ success: false, message: 'Array di lead vuoto o non valido.' });
