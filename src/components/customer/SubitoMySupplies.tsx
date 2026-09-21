@@ -175,10 +175,11 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
           ) : (
             <div className="divide-y divide-slate-100">
               {bills.map((bill: CustomerBill) => (
-                <div
+                <button
                   key={bill.id}
+                  type="button"
                   onClick={() => onOpenBillDetails?.(bill)}
-                  className="p-4 hover:bg-slate-50 flex items-center justify-between gap-4 transition-colors cursor-pointer"
+                  className="w-full text-left p-4 hover:bg-slate-50 flex items-center justify-between gap-4 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-red-50 text-[#e02424] flex items-center justify-center shrink-0">
@@ -206,7 +207,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                     )}
                     <ArrowUpRight className="w-4 h-4 text-slate-400" />
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}

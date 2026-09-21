@@ -76,10 +76,26 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
             </button>
           </div>
 
-          <NotificationCenter userRole="customer" onToast={onToast} />
+          <NotificationCenter
+            userRole="customer"
+            onToast={onToast}
+            onNavigateTab={(tab) => onSelectView(tab === 'supplies' || tab === 'inbox_bills' ? 'supplies' : 'marketplace')}
+          />
+
+          {/* Mobile CTA (Carica bolletta) */}
+          <button
+            type="button"
+            onClick={onUploadBill}
+            className="sm:hidden p-2 rounded-xl bg-[#e02424] hover:bg-[#c81e1e] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+            title="Carica la tua bolletta"
+            aria-label="Carica la tua bolletta"
+          >
+            <Upload className="w-4 h-4" />
+          </button>
 
           {/* Primary CTA (Inserisci / Carica bolletta) */}
           <button
+            type="button"
             onClick={onUploadBill}
             className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-[#e02424] hover:bg-[#c81e1e] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
           >

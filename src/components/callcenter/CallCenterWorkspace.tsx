@@ -20,6 +20,7 @@ interface CallCenterWorkspaceProps {
   onUpdateLeadStatus: (leadId: string, status: LeadStatus, note?: string) => Promise<void> | void;
   onScheduleAppointment: (data: Omit<Appointment, 'id'> & { id?: string }) => Promise<void> | void;
   onUpdateAppointmentStatus: (id: string, status: AppointmentStatus) => Promise<void> | void;
+  onConvertToCustomer?: (app: Appointment) => Promise<void> | void;
   onBulkImportSuccess?: () => void;
 }
 
@@ -30,6 +31,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
   onUpdateLeadStatus,
   onScheduleAppointment,
   onUpdateAppointmentStatus,
+  onConvertToCustomer,
   onBulkImportSuccess,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'queue' | 'calendar'>('queue');
@@ -183,6 +185,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
           consultants={consultants}
           onScheduleAppointment={onScheduleAppointment}
           onUpdateStatus={onUpdateAppointmentStatus}
+          onConvertToCustomer={onConvertToCustomer}
         />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -380,7 +383,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                       1. Attenzione (Hook 10s)
                     </span>
                     <p className="bg-slate-950/60 p-2.5 rounded border border-slate-800 text-slate-300 leading-relaxed text-[11px]">
-                      "Buongiorno Sig./Sig.ra <strong className="text-white">{selectedLeadForCall.name.split(' ')[0]}</strong>, la contatto da <strong>VoltaCRM Energy</strong> per una verifica gratuita dell'adeguamento tariffario luce e gas previsto dalle delibere ARERA per i residenti di <strong className="text-white">{selectedLeadForCall.city}</strong>."
+                      "Buongiorno Sig./Sig.ra <strong className="text-white">{selectedLeadForCall.name.split(' ')[0]}</strong>, la contatto da <strong>Volta Energia</strong> per una verifica gratuita dell'adeguamento tariffario luce e gas previsto dalle delibere ARERA per i residenti di <strong className="text-white">{selectedLeadForCall.city}</strong>."
                     </p>
                   </div>
 

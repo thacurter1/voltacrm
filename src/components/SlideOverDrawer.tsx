@@ -314,9 +314,19 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             )}
 
             <button
-              onClick={() => alert(`Apertura WhatsApp Web per invio messaggio a ${customer?.phone || lead?.phone}`)}
-              className="min-h-[44px] min-w-[44px] p-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-emerald-600 font-medium text-xs flex items-center justify-center cursor-pointer transition-colors"
-              title="Invia WhatsApp"
+              type="button"
+              onClick={() => {
+                const phone = customer?.phone || lead?.phone;
+                const name = customer?.name || lead?.name || 'Cliente';
+                if (phone) {
+                  const cleanPhone = phone.replace(/[^0-9]/g, '');
+                  const text = encodeURIComponent(`Buongiorno ${name}, la contatto da Volta Energia per il monitoraggio della sua fornitura energetica.`);
+                  window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              className="min-h-[44px] min-w-[44px] p-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-emerald-600 font-medium text-xs flex items-center justify-center cursor-pointer transition-colors shadow-2xs active:scale-[0.98]"
+              title="Apri chat WhatsApp"
+              aria-label="Apri chat WhatsApp con il contatto"
             >
               <MessageSquare className="h-5 w-5" />
             </button>

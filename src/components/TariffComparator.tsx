@@ -3,16 +3,18 @@ import {
   Zap, 
   Flame, 
   Calculator, 
-  Check
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { MARKET_OFFERS, calculateAnnualCost } from '../services/energyEngine';
-import { MarketIndex } from '../types';
+import { MarketIndex, SupplierOffer } from '../types';
 
 interface TariffComparatorProps {
   marketIndex: MarketIndex;
+  onSelectOffer?: (offer: SupplierOffer) => void;
 }
 
-export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex }) => {
+export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex, onSelectOffer }) => {
   const [activeType, setActiveType] = useState<'luce' | 'gas'>('luce');
   const [filterPricing] = useState<'all' | 'fixed' | 'indexed'>('all');
   
@@ -208,6 +210,18 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex 
                   </div>
                 )}
               </div>
+
+              {/* Action Button */}
+              {onSelectOffer && (
+                <button
+                  type="button"
+                  onClick={() => onSelectOffer(offer)}
+                  className="w-full mt-2 py-2 px-3 bg-[#635bff] hover:bg-[#0a2540] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.99]"
+                >
+                  <span>Seleziona per Contratto</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           );
         })}

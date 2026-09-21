@@ -187,6 +187,16 @@ export const CustomerApp: React.FC = () => {
             customer={activeCustomer}
             bills={bills.filter((b) => b.customerId === activeCustomer?.id)}
             onUploadBill={() => setIsUploadModalOpen(true)}
+            onOpenBillDetails={(bill) => {
+              const savingsText = bill.extractedSavingsEur
+                ? ` • Risparmio certificato: €${Math.round(bill.extractedSavingsEur)}/anno`
+                : '';
+              addToast(
+                'Dettaglio Bolletta',
+                `${bill.fileName} (${bill.utilityType.toUpperCase()}) caricata il ${bill.uploadDate}${savingsText}. I parametri contrattuali sono costantemente monitorati.`,
+                'info'
+              );
+            }}
           />
         )}
       </main>

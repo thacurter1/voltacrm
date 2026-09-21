@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { DashboardOverview } from './components/DashboardOverview';
 import { LeadsManager } from './components/LeadsManager';
-import { CallCenterAgenda } from './components/CallCenterAgenda';
+import { CallCenterWorkspace } from './components/callcenter/CallCenterWorkspace';
+import { PortfolioManager } from './components/portfolio/PortfolioManager';
 import { CustomerCrm } from './components/CustomerCrm';
 import { OnboardingManager } from './components/OnboardingManager';
 import { TariffComparator } from './components/TariffComparator';
@@ -550,12 +551,30 @@ function UnifiedApp() {
             )}
 
             {activeTab === 'callcenter' && (
-              <CallCenterAgenda
-                appointments={appointments}
+              <CallCenterWorkspace
                 leads={leads}
-                onAddAppointment={handleScheduleAppointment}
-                onUpdateStatus={handleUpdateAppointmentStatus}
+                consultants={profiles}
+                appointments={appointments}
+                onUpdateLeadStatus={handleUpdateLeadStatus}
+                onScheduleAppointment={(data) => {
+                  const fullApp: Appointment = {
+                    ...data,
+                    id: data.id || `app-${Date.now()}`
+                  } as Appointment;
+                  handleScheduleAppointment(fullApp);
+                  api.operations.saveAppointment(fullApp).catch(e => console.warn(e));
+                }}
+                onUpdateAppointmentStatus={(id, st) => {
+                  handleUpdateAppointmentStatus(id, st);
+                  api.operations.updateAppointmentStatus(id, st).catch(e => console.warn(e));
+                }}
                 onConvertToCustomer={handleConvertToCustomer}
+                onBulkImportSuccess={() => {
+                  api.leads.getAll().then((updatedLeads: Lead[]) => {
+                    if (updatedLeads && updatedLeads.length > 0) setLeads(updatedLeads);
+                  });
+                  addToast('Import Massivo Completato', 'I lead sono stati inseriti nella coda di chiamata.', 'success');
+                }}
               />
             )}
 
@@ -582,6 +601,15 @@ function UnifiedApp() {
               />
             )}
 
+            {activeTab === 'portfolio' && (
+              <PortfolioManager
+                customers={customers}
+                profiles={profiles}
+                onSelectCustomer={(customer) => setDrawerState({ isOpen: true, customer, lead: null })}
+                onTriggerSwitchAudit={(_cId) => setActiveTab('switch4m')}
+              />
+            )}
+
             {activeTab === 'team_profiles' && (
               <TeamProfilesManager
                 currentUser={currentUser}
@@ -604,7 +632,17 @@ function UnifiedApp() {
             )}
 
             {activeTab === 'tariffe' && (
-              <TariffComparator marketIndex={marketIndex} />
+              <TariffComparator
+                marketIndex={marketIndex}
+                onSelectOffer={(offer) => {
+                  setActiveTab('onboarding');
+                  addToast(
+                    'Tariffa Selezionata',
+                    `Offerta ${offer.name} (${offer.supplier}) pronta per essere associata al nuovo contratto.`,
+                    'success'
+                  );
+                }}
+              />
             )}
 
             {activeTab === 'switch4m' && (
@@ -614,6 +652,7 @@ function UnifiedApp() {
                   onTriggerGlobalAudit={handleTriggerGlobalAudit}
                   onAuditSwitched={handleAuditSwitched}
                   onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
+                  onToast={addToast}
                 />
                 <SignatureActivationPanel onActivated={(signature, commissions) => {
                   setAudits(prev => prev.map(a => a.customerId === signature.customerId && a.podOrPdr === signature.podOrPdr

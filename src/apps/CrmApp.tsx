@@ -429,6 +429,7 @@ export const CrmApp: React.FC = () => {
               }}
               onAuditSwitched={handleAuditSwitched}
               onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
+              onToast={addToast}
             />
             <SignatureActivationPanel onActivated={(signature, commissions) => {
               const activatedAudit = audits.find(a => a.customerId === signature.customerId && a.podOrPdr === signature.podOrPdr);
@@ -440,7 +441,17 @@ export const CrmApp: React.FC = () => {
         )}
 
         {activeTab === 'tariffe' && (
-          <TariffComparator marketIndex={marketIndex} />
+          <TariffComparator
+            marketIndex={marketIndex}
+            onSelectOffer={(offer) => {
+              setActiveTab('onboarding');
+              addToast(
+                'Tariffa Selezionata',
+                `Offerta ${offer.name} (${offer.supplier}) pronta per essere associata al nuovo contratto.`,
+                'success'
+              );
+            }}
+          />
         )}
 
         {activeTab === 'inbox_bills' && (

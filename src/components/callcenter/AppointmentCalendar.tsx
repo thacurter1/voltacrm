@@ -23,6 +23,7 @@ interface AppointmentCalendarProps {
   consultants: UserProfile[];
   onScheduleAppointment: (data: Omit<Appointment, 'id'> & { id?: string }) => Promise<void> | void;
   onUpdateStatus?: (appointmentId: string, status: AppointmentStatus) => Promise<void> | void;
+  onConvertToCustomer?: (appointment: Appointment) => Promise<void> | void;
   onClose?: () => void;
 }
 
@@ -31,6 +32,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
   consultants,
   onScheduleAppointment,
   onUpdateStatus,
+  onConvertToCustomer,
   onClose
 }) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -691,6 +693,21 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                     Chiama Subito
                   </a>
                 </div>
+
+                {onConvertToCustomer && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const app = selectedAppointment;
+                      setSelectedAppointment(null);
+                      await onConvertToCustomer(app);
+                    }}
+                    className="w-full mt-2 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold cursor-pointer transition shadow-xs"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Perfeziona Contratto & Converti in Cliente CRM</span>
+                  </button>
+                )}
               </div>
             )}
           </div>

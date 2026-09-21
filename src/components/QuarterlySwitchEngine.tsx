@@ -16,6 +16,7 @@ interface QuarterlySwitchEngineProps {
   onTriggerGlobalAudit: () => void;
   onAuditSwitched: (auditId: string) => void;
   onOpenProposalPdf?: (audit: SwitchAudit) => void;
+  onToast?: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
 }
 
 export const QuarterlySwitchEngine: React.FC<QuarterlySwitchEngineProps> = ({
@@ -23,6 +24,7 @@ export const QuarterlySwitchEngine: React.FC<QuarterlySwitchEngineProps> = ({
   onTriggerGlobalAudit,
   onAuditSwitched,
   onOpenProposalPdf,
+  onToast,
 }) => {
   const [filterStatus, setFilterStatus] = useState<'all' | 'switch_recommended' | 'already_optimal'>('all');
   const [activeModalAudit, setActiveModalAudit] = useState<SwitchAudit | null>(null);
@@ -226,8 +228,14 @@ export const QuarterlySwitchEngine: React.FC<QuarterlySwitchEngineProps> = ({
                         </div>
                       ) : (
                         <button
-                          onClick={() => alert(`Notifica automatica inviata a ${audit.customerName}: 'Gentile cliente, la tua tariffa luce/gas è monitorata ed è tuttora la più conveniente sul mercato.'`)}
-                          className="px-2.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-600 text-xs font-medium cursor-pointer transition-colors"
+                          type="button"
+                          onClick={() => {
+                            const msg = `Notifica inviata a ${audit.customerName}: La fornitura ${audit.utilityType.toUpperCase()} (${audit.podOrPdr}) è monitorata ed è tuttora la più conveniente sul mercato.`;
+                            if (onToast) {
+                              onToast('Rassicurazione Inviata', msg, 'success');
+                            }
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-600 text-xs font-medium cursor-pointer transition-colors shadow-2xs active:scale-[0.99]"
                         >
                           Invia Rassicurazione
                         </button>
