@@ -85,7 +85,8 @@ async function main() {
     'test_messaging.cjs',
     'test_ocr.cjs',
     'test_commissions.cjs',
-    'test_e2e_full_flow.cjs'
+    'test_e2e_full_flow.cjs',
+    'test_fase5_subito_callcenter_portfolio.cjs'
   ];
 
   let passed = 0;

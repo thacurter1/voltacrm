@@ -329,6 +329,36 @@ export const api = {
       }
     },
 
+    async bulkImport(importedLeads: any[]): Promise<Lead[]> {
+      try {
+        const data = await request<{ success: boolean; count: number; leads: Lead[] }>('/leads/bulk-import', {
+          method: 'POST',
+          body: JSON.stringify({ leads: importedLeads })
+        });
+        return data.leads || [];
+      } catch (err) {
+        if (API_BASE_URL) throw err;
+        if (!isStandaloneDemo) throw err;
+        console.warn('[API Client] Fallback locale per bulkImport Leads:', err);
+        const state = dbService.load();
+        const created: Lead[] = importedLeads.map((item, idx) => ({
+          id: `lead-bulk-${Date.now()}-${idx}`,
+          name: item.name || 'Lead',
+          phone: item.phone || '',
+          email: item.email || '',
+          city: item.city || 'Italia',
+          source: item.source || 'Import CSV Marketing',
+          status: 'new',
+          notes: item.notes || 'Importato massivamente da lista marketing.',
+          createdAt: new Date().toISOString().split('T')[0],
+          estimatedConsumptionKwh: item.estimatedConsumptionKwh,
+          estimatedConsumptionSmc: item.estimatedConsumptionSmc,
+        }));
+        dbService.save({ ...state, leads: [...created, ...state.leads] });
+        return created;
+      }
+    },
+
     async updateStatus(id: string, status: Lead['status'], note?: string): Promise<Lead | undefined> {
       try {
         const data = await request<{ success: boolean; lead: Lead }>(`/leads/${id}/status`, {

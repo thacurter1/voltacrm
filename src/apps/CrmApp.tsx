@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
 import { DashboardOverview } from '../components/DashboardOverview';
 import { LeadsManager } from '../components/LeadsManager';
-import { CallCenterAgenda } from '../components/CallCenterAgenda';
+import { CallCenterWorkspace } from '../components/callcenter/CallCenterWorkspace';
+import { PortfolioManager } from '../components/portfolio/PortfolioManager';
 import { CustomerCrm } from '../components/CustomerCrm';
 import { OnboardingManager } from '../components/OnboardingManager';
 import { TariffComparator } from '../components/TariffComparator';
@@ -365,12 +366,41 @@ export const CrmApp: React.FC = () => {
         )}
 
         {activeTab === 'callcenter' && (
-          <CallCenterAgenda
-            appointments={appointments}
+          <CallCenterWorkspace
             leads={leads}
-            onAddAppointment={handleScheduleAppointment}
-            onUpdateStatus={handleUpdateAppointmentStatus}
-            onConvertToCustomer={handleConvertToCustomer}
+            consultants={profiles}
+            appointments={appointments}
+            onUpdateLeadStatus={handleUpdateLeadStatus}
+            onScheduleAppointment={(data) => {
+              const fullApp: Appointment = {
+                ...data,
+                id: data.id || `app-${Date.now()}`
+              } as Appointment;
+              handleScheduleAppointment(fullApp);
+              api.operations.saveAppointment(fullApp).catch(e => console.warn(e));
+            }}
+            onUpdateAppointmentStatus={(id, st) => {
+              handleUpdateAppointmentStatus(id, st);
+              api.operations.updateAppointmentStatus(id, st).catch(e => console.warn(e));
+            }}
+            onBulkImportSuccess={() => {
+              api.leads.getAll().then((updatedLeads: Lead[]) => {
+                if (updatedLeads && updatedLeads.length > 0) setLeads(updatedLeads);
+              });
+              addToast('Import Massivo Completato', 'I lead sono stati inseriti nella coda di chiamata.', 'success');
+            }}
+          />
+        )}
+
+        {activeTab === 'portfolio' && (
+          <PortfolioManager
+            customers={customers}
+            profiles={profiles}
+            onSelectCustomer={(customer) => {
+              setDrawerCustomer(customer);
+              setDrawerLead(null);
+            }}
+            onTriggerSwitchAudit={(_cId) => setActiveTab('switch4m')}
           />
         )}
 

@@ -5,6 +5,43 @@ import { validate, createLeadSchema } from '../middleware/validate.js';
 import { Lead } from '../types.js';
 
 export const leadsRouter = Router();
+// POST /api/leads/bulk-import (Import massivo da CSV per campagne marketing)
+leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator'), async (req: Request, res: Response): Promise<void> => {
+  const { leads: importedLeads } = req.body;
+  if (!Array.isArray(importedLeads) || importedLeads.length === 0) {
+    res.status(400).json({ success: false, message: 'Array di lead vuoto o non valido.' });
+    return;
+  }
+
+  const addedLeads: Lead[] = [];
+  for (let i = 0; i < importedLeads.length; i++) {
+    const item = importedLeads[i];
+    if (!item.name || !item.phone) continue;
+    const newLead: Lead = {
+      id: `lead-bulk-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+      name: item.name.trim(),
+      phone: item.phone.trim(),
+      email: item.email?.trim() || '',
+      city: item.city?.trim() || 'Italia',
+      source: item.source || 'Import CSV Marketing',
+      status: 'new',
+      notes: item.notes || 'Importato massivamente da lista marketing.',
+      createdAt: new Date().toISOString().split('T')[0],
+      estimatedConsumptionKwh: item.estimatedConsumptionKwh ? Number(item.estimatedConsumptionKwh) : undefined,
+      estimatedConsumptionSmc: item.estimatedConsumptionSmc ? Number(item.estimatedConsumptionSmc) : undefined,
+    };
+    await addLead(newLead);
+    addedLeads.push(newLead);
+  }
+
+  res.status(201).json({
+    success: true,
+    message: `${addedLeads.length} lead importati con successo nella coda Call Center.`,
+    count: addedLeads.length,
+    leads: addedLeads
+  });
+});
+
 
 // GET /api/leads (Riservato a Call Center e Admin)
 leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center', 'operator'), (_req: Request, res: Response) => {

@@ -82,6 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
       badge: pendingBillsCount > 0 ? pendingBillsCount : undefined
     },
     { id: 'crm', label: 'Clienti (POD/PDR)', icon: ShieldCheck },
+    { id: 'portfolio', label: 'Portafoglio Guadagni', icon: TrendingUp },
     { id: 'team_profiles', label: 'Team & Profili', icon: Users },
     { 
       id: 'commissions', 

@@ -1,58 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { CustomerPortal } from '../components/CustomerPortal';
-import { SavingsProposalPdfModal } from '../components/SavingsProposalPdfModal';
+import React, { useState, useEffect, useMemo } from 'react';
+import { SubitoHeader } from '../components/customer/SubitoHeader';
+import { SubitoOfferCard } from '../components/customer/SubitoOfferCard';
+import { SubitoMySupplies } from '../components/customer/SubitoMySupplies';
+import { BillOcrModal } from '../components/BillOcrModal';
 import { DigitalSignatureModal } from '../components/DigitalSignatureModal';
+import { SavingsProposalPdfModal } from '../components/SavingsProposalPdfModal';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 import { ToastContainer } from '../components/ToastContainer';
 import { dbService } from '../services/db';
-import { runQuarterlyAudit } from '../services/energyEngine';
+import { MARKET_OFFERS, calculateAnnualCost } from '../services/energyEngine';
 import { api } from '../api/client';
-import { Customer, CustomerBill, SwitchAudit, ToastNotification, UserProfile } from '../types';
-import { ShieldCheck, Zap, ArrowLeft } from 'lucide-react';
-import { NotificationCenter } from '../components/NotificationCenter';
+import { Customer, CustomerBill, SupplierOffer, SwitchAudit, ToastNotification, UserProfile } from '../types';
+import { ShieldCheck, Filter, AlertCircle } from 'lucide-react';
 
 export const CustomerApp: React.FC = () => {
   const initialDb = dbService.load();
-  const [customers] = useState<Customer[]>(initialDb.customers);
+  const [customers, setCustomers] = useState<Customer[]>(initialDb.customers);
   const [bills, setBills] = useState<CustomerBill[]>(initialDb.bills);
-  const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(initialDb.customers));
 
-  // Sincronizzazione automatica indici PUN/PSV live GME all'avvio
-  useEffect(() => {
-    let isMounted = true;
-    api.switch.getMarketIndices().then((liveIndex) => {
-      if (isMounted && liveIndex) {
-        setAudits(runQuarterlyAudit(customers, liveIndex));
-      }
-    }).catch((err) => {
-      console.warn('[CustomerApp] Sincronizzazione indici GME fallback locale:', err);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [customers]);
-
-  // Current customer selection
+  // Active customer selection
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
     initialDb.customers[0]?.id || 'cust-1'
   );
+  const activeCustomer = useMemo(
+    () => customers.find((c) => c.id === selectedCustomerId) || customers[0] || initialDb.customers[0],
+    [customers, selectedCustomerId, initialDb.customers]
+  );
 
-  const activeCustomer = customers.find(c => c.id === selectedCustomerId) || customers[0];
+  // Subito UI states
+  const [activeView, setActiveView] = useState<'marketplace' | 'supplies'>('marketplace');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const currentUser = React.useMemo<UserProfile>(() => ({
-    id: activeCustomer.id,
-    name: activeCustomer.name,
-    email: activeCustomer.email,
-    role: 'customer',
-    customerId: activeCustomer.id,
-    phone: activeCustomer.phone,
-    is2faEnabled: false
-  }), [activeCustomer]);
-
-  // Modal states
-  const [selectedAuditForPdf, setSelectedAuditForPdf] = useState<SwitchAudit | null>(null);
-  const [selectedAuditForSignature, setSelectedAuditForSignature] = useState<SwitchAudit | null>(null);
+  // Modals
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
+  const [selectedOfferForSign, setSelectedOfferForSign] = useState<SupplierOffer | null>(null);
+  const [activeAuditForSignature, setActiveAuditForSignature] = useState<SwitchAudit | null>(null);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
   const addToast = (title: string, message: string, type: 'success' | 'info' | 'warning' = 'info') => {
@@ -63,126 +46,193 @@ export const CustomerApp: React.FC = () => {
       type,
       timestamp: Date.now(),
     };
-    setToasts(prev => [...prev, newToast]);
+    setToasts((prev) => [...prev, newToast]);
   };
 
-  const handleUploadBill = (newBill: CustomerBill) => {
-    setBills(prev => [newBill, ...prev]);
-    addToast('Bolletta Caricata', 'La tua bolletta è in fase di scansione e certificazione.', 'success');
+  const handleUploadBillSuccess = (importedCustomer: Customer) => {
+    setIsUploadModalOpen(false);
+    setCustomers((prev) => [importedCustomer, ...prev.filter((c) => c.id !== importedCustomer.id)]);
+    setSelectedCustomerId(importedCustomer.id);
+    addToast('Bolletta Caricata con Successo', 'Abbiamo analizzato i tuoi consumi e aggiornato le stime di risparmio.', 'success');
   };
 
-  const handleApproveSwitch = (auditId: string) => {
-    const auditToSign = audits.find(a => a.id === auditId);
-    if (auditToSign) {
-      setSelectedAuditForSignature(auditToSign);
+  // Filtered market offers
+  const filteredOffers = useMemo(() => {
+    return MARKET_OFFERS.filter((offer) => {
+      // Category filter
+      if (selectedCategory === 'luce' && offer.energyType !== 'luce') return false;
+      if (selectedCategory === 'gas' && offer.energyType !== 'gas') return false;
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchName = offer.name.toLowerCase().includes(q);
+        const matchSupplier = offer.supplier.toLowerCase().includes(q);
+        const matchTag = offer.tag?.toLowerCase().includes(q);
+        if (!matchName && !matchSupplier && !matchTag) return false;
+      }
+      return true;
+    });
+  }, [selectedCategory, searchQuery]);
+
+  // Handle offer selection
+  const handleSelectOffer = (offer: SupplierOffer) => {
+    setSelectedOfferForSign(offer);
+    // Find matching utility point
+    const matchingPoint = activeCustomer?.utilityPoints?.find((p) => p.type === offer.energyType) || activeCustomer?.utilityPoints?.[0];
+    if (matchingPoint) {
+      const currentCost = calculateAnnualCost(matchingPoint, matchingPoint.currentTariffType, matchingPoint.currentUnitCost, matchingPoint.currentFixedFeeYear);
+      const proposedCost = calculateAnnualCost(matchingPoint, offer.pricingType, offer.unitPriceOrSpread, offer.fixedAnnualFee);
+      const annualSavings = Math.max(120, Math.round(currentCost - proposedCost));
+      const syntheticAudit: SwitchAudit = {
+        id: `audit-subito-${Date.now()}`,
+        customerId: activeCustomer.id,
+        customerName: activeCustomer.name,
+        utilityType: offer.energyType,
+        podOrPdr: matchingPoint.podOrPdr,
+        currentSupplier: matchingPoint.currentSupplier,
+        currentAnnualCost: currentCost,
+        bestOffer: offer,
+        bestOfferAnnualCost: proposedCost,
+        annualSavings: annualSavings,
+        savingsPercent: currentCost > 0 ? Math.round((annualSavings / currentCost) * 100) : 15,
+        daysActive: 30,
+        status: 'proposal_sent',
+        scheduledAuditDate: new Date().toISOString().split('T')[0],
+      };
+      setActiveAuditForSignature(syntheticAudit);
+    } else {
+      addToast('Attenzione', 'Nessuna fornitura associata a questa tipologia energetica.', 'warning');
     }
   };
 
-  const handleSignatureCompleted = (auditId: string) => {
-    setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'signed' } : a));
-    addToast('Firma Registrata', 'La richiesta è firmata e attende la conferma di attivazione dello staff.', 'success');
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#f7f7f8] text-slate-900 flex flex-col font-sans">
       <InstallAppBanner />
 
-      {/* Customer Header */}
-      <header className="bg-slate-900 border-b border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base tracking-tight text-white">Volta</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-400 font-semibold">
-                Portale Risparmio Cliente
-              </span>
+      {/* Subito-style Header */}
+      <SubitoHeader
+        category={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onUploadBill={() => setIsUploadModalOpen(true)}
+        customerName={activeCustomer?.name || 'Cliente'}
+        customers={customers}
+        selectedCustomerId={selectedCustomerId}
+        onSelectCustomer={setSelectedCustomerId}
+        activeView={activeView}
+        onSelectView={setActiveView}
+        onToast={addToast}
+      />
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {activeView === 'marketplace' ? (
+          <div className="space-y-6">
+            {/* Marketplace Banner */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#e02424] bg-red-50 px-2.5 py-1 rounded-md">
+                  Offerte Certificate dal Broker
+                </span>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                  Risparmia subito sulle tue bollette luce e gas
+                </h1>
+                <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+                  Tariffe trasparenti a prezzo fisso o indicizzato PUN/PSV senza costi nascosti. Scegli l'offerta ideale e attiva in 2 minuti.
+                </p>
+              </div>
+
+              <div className="text-right shrink-0">
+                <span className="text-xs font-bold text-slate-400 block">Trovate</span>
+                <span className="text-2xl font-black text-slate-900">{filteredOffers.length}</span>
+                <span className="text-xs font-medium text-slate-500"> tariffe attive</span>
+              </div>
             </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
-              Monitoraggio Continuo Utenze & Rinegoziazione Automatica 120 Giorni
-            </p>
+
+            {/* Offer Listing Cards (Subito classifieds style) */}
+            <div className="space-y-3">
+              {filteredOffers.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 space-y-2">
+                  <Filter className="w-8 h-8 mx-auto text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-600">Nessuna offerta corrisponde ai filtri impostati</p>
+                  <button
+                    onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}
+                    className="text-xs text-[#e02424] font-bold hover:underline"
+                  >
+                    Reimposta filtri di ricerca
+                  </button>
+                </div>
+              ) : (
+                filteredOffers.map((offer) => {
+                  // Calculate customized savings for this customer
+                  const matchingPoint = activeCustomer?.utilityPoints?.find((p) => p.type === offer.energyType);
+                  let customSavings: number | undefined = undefined;
+                  if (matchingPoint) {
+                    const currentCost = calculateAnnualCost(matchingPoint, matchingPoint.currentTariffType, matchingPoint.currentUnitCost, matchingPoint.currentFixedFeeYear);
+                    const proposedCost = calculateAnnualCost(matchingPoint, offer.pricingType, offer.unitPriceOrSpread, offer.fixedAnnualFee);
+                    customSavings = Math.max(80, Math.round(currentCost - proposedCost));
+                  }
+                  return (
+                    <SubitoOfferCard
+                      key={offer.id}
+                      offer={offer}
+                      estimatedSavingsEur={customSavings}
+                      onSelectOffer={handleSelectOffer}
+                    />
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <NotificationCenter userRole="customer" onToast={addToast} />
-
-          {/* Customer Switcher for multi-account demo */}
-          <select 
-            value={selectedCustomerId}
-            onChange={(e) => setSelectedCustomerId(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-          >
-            {customers.map(c => (
-              <option key={c.id} value={c.id}>{c.name} ({c.city})</option>
-            ))}
-          </select>
-
-          <a 
-            href="/"
-            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 transition"
-            title="Torna all'Hub Volta"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Hub</span>
-          </a>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <CustomerPortal
-          customer={activeCustomer}
-          currentUser={currentUser}
-          audits={audits.filter(a => a.customerId === activeCustomer.id)}
-          bills={bills.filter(b => b.customerId === activeCustomer.id)}
-          onUploadBill={handleUploadBill}
-          onApproveSwitch={handleApproveSwitch}
-          onSwitchUser={() => {}}
-          onOpenPdfProposal={(audit) => setSelectedAuditForPdf(audit)}
-          onOpenSignature={(audit) => setSelectedAuditForSignature(audit)}
-        />
+        ) : (
+          /* "Le mie forniture" View */
+          <SubitoMySupplies
+            customer={activeCustomer}
+            bills={bills.filter((b) => b.customerId === activeCustomer.id)}
+            onUploadBill={() => setIsUploadModalOpen(true)}
+          />
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          <span>Area Clienti Protetta con Crittografia Zero-Trust SHA-256 e Dati Ospitati in Conformità GDPR</span>
+      <footer className="bg-white border-t border-slate-200 py-6 px-6 text-center text-xs text-slate-500 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-black text-[#e02424]">subito energia</span>
+            <span>• Portale Trasparenza Tariffe & Risparmio Certificato</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Crittografia di grado bancario SHA-256 e conformità GDPR</span>
+          </div>
         </div>
-        <p>© 2026 Volta Energy S.p.A. • cliente.voltacrm.it</p>
       </footer>
 
       {/* Modals */}
-      {selectedAuditForPdf && (
-        <SavingsProposalPdfModal
+      {isUploadModalOpen && (
+        <BillOcrModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          onImportCustomer={handleUploadBillSuccess}
+        />
+      )}
+
+      {activeAuditForSignature && (
+        <DigitalSignatureModal
           isOpen={true}
-          onClose={() => setSelectedAuditForPdf(null)}
-          audit={selectedAuditForPdf}
-          customer={activeCustomer}
-          advisorName="Advisor Volta"
-          onProceedToSign={() => {
-            const currentAudit = selectedAuditForPdf;
-            setSelectedAuditForPdf(null);
-            setSelectedAuditForSignature(currentAudit);
+          onClose={() => setActiveAuditForSignature(null)}
+          audit={activeAuditForSignature}
+          customerPhone={activeCustomer.phone}
+          customerFiscalCode={activeCustomer.fiscalCode}
+          onSigned={() => {
+            setActiveAuditForSignature(null);
+            addToast('Attivazione Inviata', 'La tua richiesta è stata registrata con successo e presa in carico.', 'success');
           }}
         />
       )}
 
-      {selectedAuditForSignature && (
-        <DigitalSignatureModal
-          isOpen={true}
-          onClose={() => setSelectedAuditForSignature(null)}
-          audit={selectedAuditForSignature}
-          customerPhone={activeCustomer.phone}
-          customerFiscalCode={activeCustomer.fiscalCode}
-          onSigned={(auditId) => handleSignatureCompleted(auditId)}
-        />
-      )}
-
-      <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
+      <ToastContainer toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
     </div>
   );
 };
