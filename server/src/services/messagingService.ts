@@ -211,7 +211,7 @@ export async function sendOtp(
     messageId: `sandbox-${Date.now()}`,
     expiresAt: expiresAtIso,
     channel,
-    debugOtp: code,
+    debugOtp: process.env.NODE_ENV === 'production' ? undefined : code,
     sandboxMode: true
   };
 }

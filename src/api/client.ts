@@ -795,13 +795,12 @@ export const api = {
         if (API_BASE_URL) throw err;
         if (!isStandaloneDemo) throw err;
         console.warn('[API Client] Errore sendOtp backend, attivo fallback locale:', err);
-        const code = '849201';
         return {
           success: true,
           messageId: `local-otp-${Date.now()}`,
           expiresAt: new Date(Date.now() + 300000).toISOString(),
           channel: payload.channel || 'sms',
-          debugOtp: code,
+          debugOtp: '849201',
           sandboxMode: true
         };
       }

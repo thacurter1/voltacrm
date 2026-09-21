@@ -38,7 +38,7 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
       return;
     }
     const isTotpValid = verifyTotp(totpCode, secret, 1);
-    const isDevMock = process.env.VOLTA_DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && totpCode === '123456';
+    const isDevMock = process.env.VOLTA_DEMO_MODE === 'true' && process.env.NODE_ENV === 'test' && totpCode === '123456';
 
     if (!isTotpValid && !isDevMock) {
       res.status(403).json({ success: false, message: 'Codice 2FA non valido o scaduto.' });
