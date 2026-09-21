@@ -89,6 +89,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
 
           {/* Customer Switcher (demo) */}
           <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+            <span className="hidden xl:inline text-xs font-semibold text-slate-700">Ciao, {customerName.split(' ')[0]}</span>
             <select
               value={selectedCustomerId}
               onChange={(e) => onSelectCustomer(e.target.value)}

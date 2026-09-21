@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, UploadCloud, FileText, CheckCircle2, AlertTriangle, ArrowRight, Loader2 } from 'lucide-react';
+import { X, UploadCloud, FileText, AlertTriangle, ArrowRight, Loader2 } from 'lucide-react';
 import { parseLeadCsv, CsvParseResult, ParsedLeadInput } from '../../services/csvImporter';
 import { api } from '../../api/client';
 import { Lead } from '../../types';

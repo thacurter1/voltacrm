@@ -223,8 +223,9 @@ export function runQuarterlyAudit(
     for (const utility of customer.utilityPoints) {
       const comparison = findBestMarketOffer(utility, MARKET_OFFERS, marketIndex);
       
-      // Calcolo giorni di attività
-      const start = new Date(customer.contractStartDate).getTime();
+      // Calcolo giorni di attività dall'ultimo audit o inizio fornitura
+      const auditBase = customer.lastSwitchAuditDate || customer.contractStartDate || '2026-01-01';
+      const start = new Date(auditBase).getTime();
       const now = new Date().getTime();
       const daysActive = Math.floor((now - start) / (1000 * 60 * 60 * 24));
 

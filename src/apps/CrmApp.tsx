@@ -185,7 +185,7 @@ export const CrmApp: React.FC = () => {
   };
 
   // Conversione vendite in Cliente CRM attivo (richiede dati anagrafici e POD/PDR reali via AddCustomerModal)
-  const handleConvertToCustomer = (app: Appointment) => {
+  const _handleConvertToCustomer = (app: Appointment) => {
     const lead = leads.find(l => l.id === app.leadId);
     if (lead) {
       setConvertingLead(lead);

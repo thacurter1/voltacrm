@@ -22,8 +22,7 @@ interface AddCustomerModalProps {
   accountManagers?: string[];
 }
 
-export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
-  isOpen,
+const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
   onClose,
   onSave,
   initialLead,
@@ -34,75 +33,43 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Anagrafica State
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialLead?.name || '');
   const [fiscalCode, setFiscalCode] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [city, setCity] = useState('');
+  const [phone, setPhone] = useState(initialLead?.phone || '+39 ');
+  const [email, setEmail] = useState(initialLead?.email || '');
+  const [city, setCity] = useState(initialLead?.city || '');
   const [accountManager, setAccountManager] = useState(accountManagers[0]);
   const [hasBrokerageMandate, setHasBrokerageMandate] = useState(true);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(
+    initialLead?.notes 
+      ? `Convertito da lead (${initialLead.source}): ${initialLead.notes}` 
+      : (initialLead ? `Acquisito tramite ${initialLead.source}` : '')
+  );
 
   // Forniture State
-  const [enableLuce, setEnableLuce] = useState(true);
+  const [enableLuce, setEnableLuce] = useState(Boolean(initialLead?.estimatedConsumptionKwh || !initialLead));
   const [lucePod, setLucePod] = useState('');
-  const [luceAnnualKwh, setLuceAnnualKwh] = useState(3000);
+  const [luceAnnualKwh, setLuceAnnualKwh] = useState(initialLead?.estimatedConsumptionKwh || 3000);
   const [lucePowerKw, setLucePowerKw] = useState(3.0);
   const [luceSupplier, setLuceSupplier] = useState('Enel Energia');
   const [luceUnitCost, setLuceUnitCost] = useState(0.165);
   const [luceFixedFee, setLuceFixedFee] = useState(120);
 
-  const [enableGas, setEnableGas] = useState(false);
+  const [enableGas, setEnableGas] = useState(Boolean(initialLead?.estimatedConsumptionSmc));
   const [gasPdr, setGasPdr] = useState('');
-  const [gasAnnualSmc, setGasAnnualSmc] = useState(950);
+  const [gasAnnualSmc, setGasAnnualSmc] = useState(initialLead?.estimatedConsumptionSmc || 950);
   const [gasSupplier, setGasSupplier] = useState('Eni Plenitude');
   const [gasUnitCost, setGasUnitCost] = useState(0.680);
   const [gasFixedFee, setGasFixedFee] = useState(96);
 
-  // Pre-popolamento quando si converte un Lead
-  useEffect(() => {
-    if (initialLead) {
-      setName(initialLead.name || '');
-      setPhone(initialLead.phone || '');
-      setEmail(initialLead.email || '');
-      setCity(initialLead.city || '');
-      setNotes(initialLead.notes ? `Convertito da lead (${initialLead.source}): ${initialLead.notes}` : `Acquisito tramite ${initialLead.source}`);
-      
-      if (initialLead.estimatedConsumptionKwh) {
-        setEnableLuce(true);
-        setLuceAnnualKwh(initialLead.estimatedConsumptionKwh);
-      }
-      if (initialLead.estimatedConsumptionSmc) {
-        setEnableGas(true);
-        setGasAnnualSmc(initialLead.estimatedConsumptionSmc);
-      }
-    } else {
-      // Valori di default
-      setName('');
-      setFiscalCode('');
-      setPhone('+39 ');
-      setEmail('');
-      setCity('');
-      setNotes('');
-      setEnableLuce(true);
-      setEnableGas(false);
-      setLucePod('');
-      setGasPdr('');
-    }
-    setError(null);
-  }, [initialLead, isOpen]);
-
   // Chiusura accessibile con tasto Escape
   useEffect(() => {
-    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+  }, [onClose]);
 
   // Generatore codici POD/PDR fittizi conformi per demo rapida
   const handleAutoGeneratePod = () => {
@@ -707,4 +674,9 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
       </div>
     </div>
   );
+};
+
+export const AddCustomerModal: React.FC<AddCustomerModalProps> = (props) => {
+  if (!props.isOpen) return null;
+  return <AddCustomerModalDialog key={props.initialLead?.id || 'new-customer'} {...props} />;
 };

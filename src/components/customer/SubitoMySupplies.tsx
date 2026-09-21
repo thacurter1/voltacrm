@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, Flame, FileText, Upload, ShieldCheck, CheckCircle2, Phone, Calendar, ArrowUpRight, Clock } from 'lucide-react';
+import { Zap, Flame, FileText, Upload, ShieldCheck, CheckCircle2, Phone, ArrowUpRight } from 'lucide-react';
 import { Customer, CustomerBill, UtilityPoint } from '../../types';
 
 interface SubitoMySuppliesProps {

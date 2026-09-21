@@ -112,14 +112,16 @@ export function parseLeadCsv(rawCsvText: string, defaultSource = 'Import CSV Mar
     
     let estimatedConsumptionKwh: number | undefined = undefined;
     if (kwhIdx !== -1 && rowCells[kwhIdx]) {
-      const parsed = parseFloat(rowCells[kwhIdx].replace(',', '.'));
-      if (!isNaN(parsed) && parsed > 0) estimatedConsumptionKwh = parsed;
+      const cleaned = rowCells[kwhIdx].replace(/[^0-9.,]/g, '').replace(',', '.');
+      const parsed = parseFloat(cleaned);
+      if (!isNaN(parsed) && Number.isFinite(parsed) && parsed > 0) estimatedConsumptionKwh = parsed;
     }
 
     let estimatedConsumptionSmc: number | undefined = undefined;
     if (smcIdx !== -1 && rowCells[smcIdx]) {
-      const parsed = parseFloat(rowCells[smcIdx].replace(',', '.'));
-      if (!isNaN(parsed) && parsed > 0) estimatedConsumptionSmc = parsed;
+      const cleaned = rowCells[smcIdx].replace(/[^0-9.,]/g, '').replace(',', '.');
+      const parsed = parseFloat(cleaned);
+      if (!isNaN(parsed) && Number.isFinite(parsed) && parsed > 0) estimatedConsumptionSmc = parsed;
     }
 
     const customNotes = notesIdx !== -1 && rowCells[notesIdx] ? rowCells[notesIdx] : undefined;

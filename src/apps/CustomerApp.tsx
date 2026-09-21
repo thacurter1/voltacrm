@@ -1,22 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { SubitoHeader } from '../components/customer/SubitoHeader';
 import { SubitoOfferCard } from '../components/customer/SubitoOfferCard';
 import { SubitoMySupplies } from '../components/customer/SubitoMySupplies';
 import { BillOcrModal } from '../components/BillOcrModal';
 import { DigitalSignatureModal } from '../components/DigitalSignatureModal';
-import { SavingsProposalPdfModal } from '../components/SavingsProposalPdfModal';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 import { ToastContainer } from '../components/ToastContainer';
 import { dbService } from '../services/db';
 import { MARKET_OFFERS, calculateAnnualCost } from '../services/energyEngine';
-import { api } from '../api/client';
-import { Customer, CustomerBill, SupplierOffer, SwitchAudit, ToastNotification, UserProfile } from '../types';
-import { ShieldCheck, Filter, AlertCircle } from 'lucide-react';
+import { Customer, CustomerBill, SupplierOffer, SwitchAudit, ToastNotification } from '../types';
+import { ShieldCheck, Filter } from 'lucide-react';
 
 export const CustomerApp: React.FC = () => {
   const initialDb = dbService.load();
   const [customers, setCustomers] = useState<Customer[]>(initialDb.customers);
-  const [bills, setBills] = useState<CustomerBill[]>(initialDb.bills);
+  const [bills] = useState<CustomerBill[]>(initialDb.bills);
 
   // Active customer selection
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
@@ -34,7 +32,6 @@ export const CustomerApp: React.FC = () => {
 
   // Modals
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-  const [selectedOfferForSign, setSelectedOfferForSign] = useState<SupplierOffer | null>(null);
   const [activeAuditForSignature, setActiveAuditForSignature] = useState<SwitchAudit | null>(null);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
@@ -76,7 +73,6 @@ export const CustomerApp: React.FC = () => {
 
   // Handle offer selection
   const handleSelectOffer = (offer: SupplierOffer) => {
-    setSelectedOfferForSign(offer);
     // Find matching utility point
     const matchingPoint = activeCustomer?.utilityPoints?.find((p) => p.type === offer.energyType) || activeCustomer?.utilityPoints?.[0];
     if (matchingPoint) {
@@ -85,8 +81,8 @@ export const CustomerApp: React.FC = () => {
       const annualSavings = Math.max(120, Math.round(currentCost - proposedCost));
       const syntheticAudit: SwitchAudit = {
         id: `audit-subito-${Date.now()}`,
-        customerId: activeCustomer.id,
-        customerName: activeCustomer.name,
+        customerId: activeCustomer?.id || 'cust-1',
+        customerName: activeCustomer?.name || 'Cliente',
         utilityType: offer.energyType,
         podOrPdr: matchingPoint.podOrPdr,
         currentSupplier: matchingPoint.currentSupplier,
@@ -189,7 +185,7 @@ export const CustomerApp: React.FC = () => {
           /* "Le mie forniture" View */
           <SubitoMySupplies
             customer={activeCustomer}
-            bills={bills.filter((b) => b.customerId === activeCustomer.id)}
+            bills={bills.filter((b) => b.customerId === activeCustomer?.id)}
             onUploadBill={() => setIsUploadModalOpen(true)}
           />
         )}
@@ -223,8 +219,8 @@ export const CustomerApp: React.FC = () => {
           isOpen={true}
           onClose={() => setActiveAuditForSignature(null)}
           audit={activeAuditForSignature}
-          customerPhone={activeCustomer.phone}
-          customerFiscalCode={activeCustomer.fiscalCode}
+          customerPhone={activeCustomer?.phone || ''}
+          customerFiscalCode={activeCustomer?.fiscalCode || ''}
           onSigned={() => {
             setActiveAuditForSignature(null);
             addToast('Attivazione Inviata', 'La tua richiesta è stata registrata con successo e presa in carico.', 'success');

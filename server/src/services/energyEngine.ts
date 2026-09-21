@@ -192,7 +192,8 @@ export function runQuarterlyAudit(
   for (const customer of customers) {
     for (const utility of customer.utilityPoints) {
       const comparison = findBestMarketOffer(utility, MARKET_OFFERS, marketIndex);
-      const start = new Date(customer.contractStartDate).getTime();
+      const auditBase = customer.lastSwitchAuditDate || customer.contractStartDate || '2026-01-01';
+      const start = new Date(auditBase).getTime();
       const now = new Date().getTime();
       const daysActive = Math.floor((now - start) / (1000 * 60 * 60 * 24));
       // Vincolo ARERA delibera switch quadrimestrale (minimo 120 giorni di attività)

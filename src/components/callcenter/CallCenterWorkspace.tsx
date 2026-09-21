@@ -4,19 +4,10 @@ import {
   Calendar as CalendarIcon, 
   Upload, 
   Search, 
-  Users, 
-  Clock, 
   MapPin, 
   Sparkles, 
-  CheckCircle2, 
   XCircle, 
-  AlertCircle,
-  HelpCircle,
-  ChevronRight,
-  TrendingUp,
-  FileSpreadsheet,
-  Zap,
-  ArrowRight
+  Zap
 } from 'lucide-react';
 import { Appointment, AppointmentStatus, Lead, LeadStatus, UserProfile } from '../../types';
 import { AppointmentCalendar } from './AppointmentCalendar';

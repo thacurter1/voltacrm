@@ -71,19 +71,23 @@ export function calculatePortfolioForecast(customers: Customer[]): GlobalPortfol
     let totalSmc = 0;
     let upfrontSum = 0;
 
+    const isBusiness = 
+      (Boolean(customer.fiscalCode) && customer.fiscalCode.trim().length === 11 && /^\d+$/.test(customer.fiscalCode.trim())) ||
+      /\b(srl|spa|snc|sas|ditta|societ[aà]|ristorante|bar|officin[ae]|hotel|albergo)\b/i.test(customer.name);
+
     (customer.utilityPoints || []).forEach(point => {
       if (point.type === 'luce') {
         utilityTypes.push('luce');
         const kwh = point.annualConsumption || 2700;
         totalKwh += kwh;
-        // B2B (> 5000 kWh) paga €95 upfront, Residenziale paga €45
-        upfrontSum += kwh > 5000 ? 95 : 45;
+        // B2B (P.IVA, ragione sociale business o > 5000 kWh) paga €95 upfront, Residenziale paga €45
+        upfrontSum += (isBusiness || kwh > 5000) ? 95 : 45;
       } else if (point.type === 'gas') {
         utilityTypes.push('gas');
         const smc = point.annualConsumption || 1000;
         totalSmc += smc;
-        // B2B (> 1500 Smc) paga €85 upfront, Residenziale paga €40
-        upfrontSum += smc > 1500 ? 85 : 40;
+        // B2B (P.IVA, ragione sociale business o > 1500 Smc) paga €85 upfront, Residenziale paga €40
+        upfrontSum += (isBusiness || smc > 1500) ? 85 : 40;
       }
     });
 

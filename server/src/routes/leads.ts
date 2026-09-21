@@ -5,6 +5,14 @@ import { validate, createLeadSchema } from '../middleware/validate.js';
 import { Lead } from '../types.js';
 
 export const leadsRouter = Router();
+function parseSafeNumber(val: any): number | undefined {
+  if (val === null || val === undefined || val === '') return undefined;
+  if (typeof val === 'number') return Number.isFinite(val) && val > 0 ? val : undefined;
+  const cleaned = String(val).replace(/[^0-9.-]+/g, '');
+  const num = parseFloat(cleaned);
+  return Number.isFinite(num) && num > 0 ? num : undefined;
+}
+
 // POST /api/leads/bulk-import (Import massivo da CSV per campagne marketing)
 leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator'), async (req: Request, res: Response): Promise<void> => {
   const { leads: importedLeads } = req.body;
@@ -27,8 +35,8 @@ leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_c
       status: 'new',
       notes: item.notes || 'Importato massivamente da lista marketing.',
       createdAt: new Date().toISOString().split('T')[0],
-      estimatedConsumptionKwh: item.estimatedConsumptionKwh ? Number(item.estimatedConsumptionKwh) : undefined,
-      estimatedConsumptionSmc: item.estimatedConsumptionSmc ? Number(item.estimatedConsumptionSmc) : undefined,
+      estimatedConsumptionKwh: parseSafeNumber(item.estimatedConsumptionKwh),
+      estimatedConsumptionSmc: parseSafeNumber(item.estimatedConsumptionSmc),
     };
     await addLead(newLead);
     addedLeads.push(newLead);

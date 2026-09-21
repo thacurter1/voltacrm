@@ -24,6 +24,20 @@ interface NotificationCenterProps {
   onToast?: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
 }
 
+function formatRelativeTime(iso: string, nowMs = Date.now()): string {
+  try {
+    const diffMs = Math.max(0, nowMs - new Date(iso).getTime());
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'Adesso';
+    if (diffMin < 60) return `${diffMin} min fa`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours} ore fa`;
+    return `${Math.floor(diffHours / 24)} gg fa`;
+  } catch {
+    return '';
+  }
+}
+
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   onNavigateTab,
   userRole = 'call_center',
@@ -82,10 +96,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   }, [userRole]);
 
   useEffect(() => {
-    loadNotifications();
-    // Poll per aggiornamenti periodici ogni 30 secondi
-    const interval: ReturnType<typeof setInterval> = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
+    let isMounted = true;
+    const poll = async () => {
+      if (isMounted) await loadNotifications();
+    };
+    void poll();
+    const interval: ReturnType<typeof setInterval> = setInterval(poll, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [loadNotifications]);
 
   // Chiudi cliccando fuori
@@ -230,20 +250,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         return <TrendingDown className="w-4 h-4 text-emerald-400" />;
       default:
         return <Sparkles className="w-4 h-4 text-indigo-400" />;
-    }
-  };
-
-  const formatRelativeTime = (iso: string) => {
-    try {
-      const diffMs = Date.now() - new Date(iso).getTime();
-      const diffMin = Math.floor(diffMs / 60000);
-      if (diffMin < 1) return 'Adesso';
-      if (diffMin < 60) return `${diffMin} min fa`;
-      const diffHours = Math.floor(diffMin / 60);
-      if (diffHours < 24) return `${diffHours} ore fa`;
-      return `${Math.floor(diffHours / 24)} gg fa`;
-    } catch {
-      return '';
     }
   };
 

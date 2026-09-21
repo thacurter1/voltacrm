@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, Flame, ShieldCheck, CheckCircle2, ArrowRight, Award, Leaf } from 'lucide-react';
+import { Zap, Flame, ShieldCheck, ArrowRight, Leaf } from 'lucide-react';
 import { SupplierOffer } from '../../types';
 
 interface SubitoOfferCardProps {

@@ -44,7 +44,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
   const [isSubmittingSettle, setIsSubmittingSettle] = useState(false);
 
   // Caricamento dati
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setIsLoading(true);
     try {
       const [sumRes, commRes, batchRes] = await Promise.all([
@@ -60,11 +60,38 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onToast]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    let isMounted = true;
+    const fetch = async () => {
+      setIsLoading(true);
+      try {
+        const [sumRes, commRes, batchRes] = await Promise.all([
+          api.commissions.getSummaries(),
+          api.commissions.getAll(),
+          api.commissions.getBatches(),
+        ]);
+        if (isMounted) {
+          setSummaries(sumRes);
+          setCommissions(commRes);
+          setBatches(batchRes);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          onToast('Errore Provvigioni', err.message || 'Impossibile caricare i dati provvigionali.', 'warning');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    void fetch();
+    return () => {
+      isMounted = false;
+    };
+  }, [onToast]);
 
   // Apertura modal liquidazione per agente
   const handleOpenSettleModal = (agentId: string) => {

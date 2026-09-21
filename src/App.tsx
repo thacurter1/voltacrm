@@ -15,7 +15,6 @@ import { AddCustomerModal } from './components/AddCustomerModal';
 import { ImportCustomersModal } from './components/ImportCustomersModal';
 import { MarketSimulatorModal } from './components/MarketSimulatorModal';
 import { ToastContainer } from './components/ToastContainer';
-import { CustomerPortal } from './components/CustomerPortal';
 import { LoginModal } from './components/LoginModal';
 import { ImpersonationBanner } from './components/ImpersonationBanner';
 import { TwoFactorModal } from './components/TwoFactorModal';
@@ -23,7 +22,6 @@ import { SecurityAuditDashboard } from './components/SecurityAuditDashboard';
 import { ClientBillsInbox } from './components/ClientBillsInbox';
 import { CallScriptDrawer } from './components/CallScriptDrawer';
 import { TeamProfilesManager } from './components/TeamProfilesManager';
-import { CustomerProfileSection } from './components/CustomerProfileSection';
 import { PortalGate } from './components/PortalGate';
 import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
@@ -352,12 +350,6 @@ function UnifiedApp() {
     addToast('Esito importazione',`${saved.length} salvati; ${failed} non salvati.`,failed?'warning':'success');
   };
 
-  // Upload bolletta dal portale cliente
-  const handleCustomerUploadBill = (bill: CustomerBill) => {
-    setBills(prev => [bill, ...prev]);
-    addToast('Bolletta Ricevuta', `Il documento "${bill.fileName}" è stato inviato per la verifica di conformità ARERA.`, 'success');
-  };
-
   // Marcare bolletta come analizzata
   const handleMarkBillAnalyzed = (billId: string) => {
     setBills(prev => prev.map(b => b.id === billId ? { ...b, status: 'analyzed' as const, extractedSavingsEur: 180.0 } : b));
@@ -429,9 +421,6 @@ function UnifiedApp() {
     }
   };
 
-  // Ricerca cliente attivo per la vista cliente
-  const activeCustomer = customers.find(c => c.id === currentUser.customerId) || customers[0];
-
   // Se è attiva la modalità Totem Kiosk per negozi e centri commerciali
   if (isTotemOpen) {
     return (
@@ -475,10 +464,9 @@ function UnifiedApp() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
-      {/* Impersonation Banner se un operatore naviga come Cliente */}
-      {currentUser.role === 'customer' && (
+  if (currentUser.role === 'customer') {
+    return (
+      <div className="min-h-screen bg-[#f7f7f8] flex flex-col font-sans">
         <ImpersonationBanner
           currentUser={currentUser}
           onReturnToCallCenter={() => {
@@ -486,8 +474,15 @@ function UnifiedApp() {
             handleSelectUser(operator);
           }}
         />
-      )}
+        <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
+          <CustomerApp />
+        </React.Suspense>
+      </div>
+    );
+  }
 
+  return (
+    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#635bff] focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold"
@@ -514,36 +509,8 @@ function UnifiedApp() {
       />
 
       <main id="main-content" className="flex-1 max-w-[1400px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pb-24 sm:pb-8">
-        {/* VISTA 1: PORTALE CLIENTE FINALE */}
-        {currentUser.role === 'customer' ? (
-          activeTab === 'customer_profile' ? (
-            <CustomerProfileSection
-              customer={activeCustomer}
-              currentUser={currentUser}
-              onUpdateCustomer={(updated) => setCustomers(prev => prev.map(c => c.id === updated.id ? updated : c))}
-              onToast={addToast}
-            />
-          ) : (
-            <CustomerPortal
-              customer={activeCustomer}
-              currentUser={currentUser}
-              audits={audits.filter(a => a.customerId === activeCustomer.id)}
-              bills={bills.filter(b => b.customerId === activeCustomer.id)}
-              onUploadBill={handleCustomerUploadBill}
-              onApproveSwitch={(auditId) => {
-                const a = audits.find(x => x.id === auditId);
-                if (a) setSignatureAudit(a);
-                else handleAuditSwitched(auditId);
-              }}
-              onSwitchUser={() => setIsGateOpen(true)}
-              onOpenPdfProposal={(audit) => setPdfProposalAudit(audit)}
-              onOpenSignature={(audit) => setSignatureAudit(audit)}
-            />
-          )
-        ) : (
-          /* VISTA 2: BACKEND CALL CENTER & BROKER */
-          <>
-            {activeTab === 'dashboard' && (
+        {/* BACKEND CALL CENTER & BROKER CRM */}
+        {activeTab === 'dashboard' && (
               <DashboardOverview
                 leads={leads}
                 customers={customers}
@@ -660,8 +627,6 @@ function UnifiedApp() {
                 onTriggerScan={() => addToast('Scansione di Sicurezza Completata', 'Tutti i controlli GDPR, 2FA e crittografia AES-256 sono conformi al 100%.', 'success')}
               />
             )}
-          </>
-        )}
       </main>
 
       {/* Slide-over Drawer for Lead / Customer details */}
@@ -817,9 +782,7 @@ function UnifiedApp() {
             VoltaCRM SaaS • Dual-Portal (Cliente & Call Center) • Conforme GDPR & 2FA Attivo
           </span>
           <span className="text-slate-400">
-            {currentUser.role === 'customer' 
-              ? 'Connesso come Cliente: ' + currentUser.name
-              : 'Connesso come Operatore: ' + currentUser.name + ' • 2FA Attivo'}
+            Connesso come {currentUser.role === 'admin' ? 'Amministratore' : 'Operatore'}: {currentUser.name} • 2FA Attivo
           </span>
         </div>
       </footer>
