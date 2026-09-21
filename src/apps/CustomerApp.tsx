@@ -11,7 +11,11 @@ import { MARKET_OFFERS, calculateAnnualCost } from '../services/energyEngine';
 import { Customer, CustomerBill, SupplierOffer, SwitchAudit, ToastNotification } from '../types';
 import { ShieldCheck, Filter } from 'lucide-react';
 
-export const CustomerApp: React.FC = () => {
+export interface CustomerAppProps {
+  onReturnToBackend?: () => void;
+}
+
+export const CustomerApp: React.FC<CustomerAppProps> = ({ onReturnToBackend }) => {
   const initialDb = dbService.load();
   const [customers, setCustomers] = useState<Customer[]>(initialDb.customers);
   const [bills] = useState<CustomerBill[]>(initialDb.bills);
@@ -119,6 +123,7 @@ export const CustomerApp: React.FC = () => {
         activeView={activeView}
         onSelectView={setActiveView}
         onToast={addToast}
+        onReturnToBackend={onReturnToBackend}
       />
 
       {/* Main Content */}

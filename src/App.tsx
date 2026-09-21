@@ -127,10 +127,33 @@ function UnifiedApp() {
   // Switch User Profile / Role
   const handleSelectUser = useCallback(async (_newUser?: UserProfile) => {
     try {
-      const { user } = await api.auth.me();
+      let user: UserProfile;
+      if (_newUser) {
+        user = _newUser;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(user));
+          if (user.role !== 'customer') {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${user.id}-${Date.now()}`);
+          } else {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-cust-token-${user.id}-${Date.now()}`);
+          }
+          try {
+            const raw = localStorage.getItem('VOLTA_ENERGY_CRM_DB_V3');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              parsed.currentUser = user;
+              localStorage.setItem('VOLTA_ENERGY_CRM_DB_V3', JSON.stringify(parsed));
+            }
+          } catch {}
+        }
+      } else {
+        const meRes = await api.auth.me();
+        user = meRes.user;
+      }
+
       const isCustomer = user.role === 'customer';
       const [customerRows, leadRows, profileRows, billRows, appointmentRows, securityRows] = await Promise.all([
-        isCustomer ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : api.customers.getAll(),
+        isCustomer ? (user.customerId ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : Promise.resolve([])) : api.customers.getAll(),
         isCustomer ? Promise.resolve([]) : api.leads.getAll(),
         isCustomer ? Promise.resolve([user]) : api.auth.profiles(),
         portalApi.listBills(isCustomer ? user.customerId : undefined),
@@ -142,6 +165,16 @@ function UnifiedApp() {
       setAudits(runQuarterlyAudit(customerRows, marketIndex));
       setCurrentUser(user); setIsGateOpen(false);
       setActiveTab(isCustomer ? 'customer_overview' : 'dashboard');
+
+      // Se si passa a operatore o admin, rimuove parametri ?app=customer o ?mode=customer dall'URL
+      if (!isCustomer && typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('app') || url.searchParams.has('mode')) {
+          url.searchParams.delete('app');
+          url.searchParams.delete('mode');
+          window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+        }
+      }
     } catch(error) {
       setIsGateOpen(true);
       addToast('Accesso non completato',error instanceof Error?error.message:'Dati non disponibili.','warning');
@@ -470,17 +503,19 @@ function UnifiedApp() {
   }
 
   if (currentUser.role === 'customer') {
+    const handleReturnToBackend = () => {
+      const operator = profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
+      handleSelectUser(operator);
+    };
+
     return (
       <div className="min-h-screen bg-[#f7f7f8] flex flex-col font-sans">
         <ImpersonationBanner
           currentUser={currentUser}
-          onReturnToCallCenter={() => {
-            const operator = profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
-            handleSelectUser(operator);
-          }}
+          onReturnToCallCenter={handleReturnToBackend}
         />
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
-          <CustomerApp />
+          <CustomerApp onReturnToBackend={handleReturnToBackend} />
         </React.Suspense>
       </div>
     );
@@ -848,7 +883,47 @@ export function App() {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
   if (DEMO_MODE && (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer')) {
-    return <React.Suspense fallback={<Fallback />}><CustomerApp /></React.Suspense>;
+    const handleReturnToCrm = () => {
+      const adminUser = INITIAL_PROFILES[0];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(adminUser));
+        localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-admin-${Date.now()}`);
+        try {
+          const raw = localStorage.getItem('VOLTA_ENERGY_CRM_DB_V3');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            parsed.currentUser = adminUser;
+            localStorage.setItem('VOLTA_ENERGY_CRM_DB_V3', JSON.stringify(parsed));
+          }
+        } catch {}
+        const url = new URL(window.location.href);
+        url.searchParams.delete('app');
+        url.searchParams.delete('mode');
+        window.location.href = url.pathname || '/';
+      }
+    };
+
+    return (
+      <React.Suspense fallback={<Fallback />}>
+        <div className="min-h-screen flex flex-col">
+          <div className="bg-[#0a2540] text-white px-4 py-2 flex items-center justify-between text-xs font-semibold shadow-sm z-50 border-b border-slate-700">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Portale Clienti Subito Energia • Volta Energia CRM</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleReturnToCrm}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
+              title="Ritorna alla dashboard gestionale Volta Energia"
+            >
+              <span>← Torna al Backend CRM</span>
+            </button>
+          </div>
+          <CustomerApp onReturnToBackend={handleReturnToCrm} />
+        </div>
+      </React.Suspense>
+    );
   }
   if (DEMO_MODE && (host.startsWith('crm.') || appParam === 'crm')) {
     return <React.Suspense fallback={<Fallback />}><CrmApp /></React.Suspense>;

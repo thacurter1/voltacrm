@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, Upload, Zap, Flame, Sparkles, Home, FileText, ArrowLeft } from 'lucide-react';
+import { Search, Upload, Zap, Flame, Sparkles, Home, FileText, ShieldCheck } from 'lucide-react';
 import { NotificationCenter } from '../NotificationCenter';
+import { INITIAL_PROFILES } from '../../services/supabaseClient';
 
 interface SubitoHeaderProps {
   category: string;
@@ -15,6 +16,7 @@ interface SubitoHeaderProps {
   activeView: 'marketplace' | 'supplies';
   onSelectView: (view: 'marketplace' | 'supplies') => void;
   onToast: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
+  onReturnToBackend?: () => void;
 }
 
 export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
@@ -30,6 +32,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
   activeView,
   onSelectView,
   onToast,
+  onReturnToBackend,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
@@ -120,14 +123,37 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
             </select>
           </div>
 
-          <a
-            href="/"
-            className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg px-2.5 py-1.5 transition"
-            title="Torna all'Hub Volta"
+          <button
+            type="button"
+            onClick={() => {
+              if (onReturnToBackend) {
+                onReturnToBackend();
+              } else {
+                const adminUser = INITIAL_PROFILES[0];
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(adminUser));
+                  localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-admin-${Date.now()}`);
+                  try {
+                    const raw = localStorage.getItem('VOLTA_ENERGY_CRM_DB_V3');
+                    if (raw) {
+                      const parsed = JSON.parse(raw);
+                      parsed.currentUser = adminUser;
+                      localStorage.setItem('VOLTA_ENERGY_CRM_DB_V3', JSON.stringify(parsed));
+                    }
+                  } catch {}
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('app');
+                  url.searchParams.delete('mode');
+                  window.location.href = url.pathname || '/';
+                }
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-[#635bff]/40 active:scale-95"
+            title="Passa al Backend Gestionale Volta Energia (Staff & Broker)"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Hub</span>
-          </a>
+            <ShieldCheck className="w-3.5 h-3.5 text-[#635bff]" />
+            <span className="font-bold">Torna al Backend CRM</span>
+          </button>
         </div>
       </div>
 

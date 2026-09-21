@@ -88,7 +88,8 @@ async function main() {
     'test_e2e_full_flow.cjs',
     'test_fase5_subito_callcenter_portfolio.cjs',
     path.join('tests', 'test_f1_f2_f3_engine.cjs'),
-    path.join('tests', 'test_buttons_and_navigation_integrity.cjs')
+    path.join('tests', 'test_buttons_and_navigation_integrity.cjs'),
+    path.join('tests', 'test_customer_to_backend_navigation.cjs')
   ];
 
   let passed = 0;
