@@ -51,6 +51,9 @@ export interface UtilityPoint {
   podOrPdr: string;
   annualConsumption: number;
   powerKw?: number;
+  f1Kwh?: number;
+  f2Kwh?: number;
+  f3Kwh?: number;
   currentSupplier: string;
   currentOfferName: string;
   currentTariffType: 'fixed' | 'indexed';

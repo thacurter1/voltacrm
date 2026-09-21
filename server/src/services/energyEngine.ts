@@ -197,7 +197,7 @@ export function runQuarterlyAudit(
       const now = new Date().getTime();
       const daysActive = Math.floor((now - start) / (1000 * 60 * 60 * 24));
       // Vincolo ARERA delibera switch quadrimestrale (minimo 120 giorni di attività)
-      const shouldSwitch = comparison.savings >= 70 && comparison.savingsPercent >= 8.0 && daysActive >= 120;
+      const shouldSwitch = (comparison.savings >= 70 || comparison.savingsPercent >= 8.0) && daysActive >= 120;
 
       audits.push({
         id: `audit-${customer.id}-${utility.id}`,

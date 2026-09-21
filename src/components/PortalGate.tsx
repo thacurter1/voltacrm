@@ -216,7 +216,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[#00d4aa]" />
-                <span>Audit automatico tariffe ogni 120 giorni</span>
+                <span>Audit automatico e ottimizzazione continua tariffe</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[#00d4aa]" />

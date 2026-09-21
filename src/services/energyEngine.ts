@@ -230,7 +230,7 @@ export function runQuarterlyAudit(
       const daysActive = Math.floor((now - start) / (1000 * 60 * 60 * 24));
 
       // Se il risparmio supera 70€/anno o l'8%, ed è trascorso il ciclo trimestrale/quadrimestrale di 120 giorni
-      const shouldSwitch = comparison.savings >= 70 && comparison.savingsPercent >= 8.0 && daysActive >= 120;
+      const shouldSwitch = (comparison.savings >= 70 || comparison.savingsPercent >= 8.0) && daysActive >= 120;
 
       audits.push({
         id: `audit-${customer.id}-${utility.id}`,

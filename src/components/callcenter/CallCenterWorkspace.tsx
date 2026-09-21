@@ -506,6 +506,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                     type="date"
                     name="date"
                     required
+                    min={new Date().toISOString().split('T')[0]}
                     defaultValue={new Date().toISOString().split('T')[0]}
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-indigo-500"
                   />

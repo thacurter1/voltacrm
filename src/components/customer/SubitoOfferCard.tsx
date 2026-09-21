@@ -15,9 +15,8 @@ export const SubitoOfferCard: React.FC<SubitoOfferCardProps> = ({
 }) => {
   const isLuce = offer.energyType === 'luce';
   const unitLabel = isLuce ? '€/kWh' : '€/Smc';
-  const displaySavings = estimatedSavingsEur !== undefined && estimatedSavingsEur > 0
-    ? Math.round(estimatedSavingsEur)
-    : Math.round(isLuce ? 180 : 150);
+  const hasSavings = estimatedSavingsEur !== undefined && estimatedSavingsEur > 0;
+  const displaySavings = hasSavings ? Math.round(estimatedSavingsEur) : null;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 hover:border-red-300 hover:shadow-md transition-all duration-200 p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 group">
@@ -92,12 +91,21 @@ export const SubitoOfferCard: React.FC<SubitoOfferCardProps> = ({
           <span className="text-[11px] font-semibold text-slate-500 block uppercase tracking-wider">
             Risparmio Stimato
           </span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl sm:text-3xl font-black text-[#e02424]">
-              ~€{displaySavings}
-            </span>
-            <span className="text-xs font-bold text-slate-500">/ anno</span>
-          </div>
+          {displaySavings !== null ? (
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl sm:text-3xl font-black text-[#e02424]">
+                ~€{displaySavings}
+              </span>
+              <span className="text-xs font-bold text-slate-500">/ anno</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-start md:items-end">
+              <span className="text-sm font-bold text-[#e02424]">
+                Da bolletta
+              </span>
+              <span className="text-[10px] text-slate-400">Carica PDF per calcolo</span>
+            </div>
+          )}
         </div>
 
         <button

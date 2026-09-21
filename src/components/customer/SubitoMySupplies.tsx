@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, Flame, FileText, Upload, ShieldCheck, CheckCircle2, Phone, ArrowUpRight } from 'lucide-react';
+import { Zap, Flame, FileText, Upload, CheckCircle2, Phone, ArrowUpRight } from 'lucide-react';
 import { Customer, CustomerBill, UtilityPoint } from '../../types';
 
 interface SubitoMySuppliesProps {
@@ -74,70 +74,88 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
 
       {/* Tab 1: Utility Points */}
       {activeTab === 'supplies' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {customer.utilityPoints?.map((point: UtilityPoint) => {
-            const isLuce = point.type === 'luce';
-            return (
-              <div
-                key={point.id}
-                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-all space-y-4"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      isLuce ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {isLuce ? <Zap className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
+        (!customer.utilityPoints || customer.utilityPoints.length === 0) ? (
+          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4 shadow-xs">
+            <div className="w-14 h-14 bg-red-50 text-[#e02424] rounded-2xl flex items-center justify-center mx-auto">
+              <Zap className="w-7 h-7" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-slate-800">Nessuna fornitura registrata</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                Carica la tua ultima bolletta luce o gas per analizzare i consumi e attivare il monitoraggio del risparmio.
+              </p>
+            </div>
+            <button
+              onClick={onUploadBill}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#e02424] text-white text-xs font-bold shadow-xs hover:bg-[#c81e1e] transition-all cursor-pointer"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Carica la tua prima bolletta</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {customer.utilityPoints.map((point: UtilityPoint) => {
+              const isLuce = point.type === 'luce';
+              return (
+                <div
+                  key={point.id}
+                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-all space-y-4"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        isLuce ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {isLuce ? <Zap className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          Fornitura {point.type}
+                        </span>
+                        <h4 className="text-sm font-black text-slate-900 font-mono">
+                          {point.podOrPdr}
+                        </h4>
+                      </div>
+                    </div>
+
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                      Attiva
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl text-xs">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Fornitore Attuale</span>
+                      <span className="font-bold text-slate-900">{point.currentSupplier}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Fornitura {point.type}
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Piano Tariffario</span>
+                      <span className="font-semibold text-slate-700">{point.currentOfferName}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Consumo Annuo</span>
+                      <span className="font-bold text-slate-900">
+                        {point.annualConsumption.toLocaleString('it-IT')} {isLuce ? 'kWh' : 'Smc'}
                       </span>
-                      <h4 className="text-sm font-black text-slate-900 font-mono">
-                        {point.podOrPdr}
-                      </h4>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Tipo Tariffa</span>
+                      <span className="font-bold text-slate-900 capitalize">
+                        {point.currentTariffType === 'fixed' ? 'Prezzo Fisso' : 'Indicizzata (PUN/PSV)'}
+                      </span>
                     </div>
                   </div>
 
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
-                    Attiva
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl text-xs">
-                  <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Fornitore Attuale</span>
-                    <span className="font-bold text-slate-900">{point.currentSupplier}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Piano Tariffario</span>
-                    <span className="font-semibold text-slate-700">{point.currentOfferName}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Consumo Annuo</span>
-                    <span className="font-bold text-slate-900">
-                      {point.annualConsumption.toLocaleString('it-IT')} {isLuce ? 'kWh' : 'Smc'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Costo Unitario</span>
-                    <span className="font-bold text-slate-900">
-                      {point.currentUnitCost} {isLuce ? '€/kWh' : '€/Smc'}
-                    </span>
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+                    <span>Prezzo: {point.currentUnitCost.toFixed(4)} €/{isLuce ? 'kWh' : 'Smc'}</span>
+                    <span>Quota fissa: €{point.currentFixedFeeYear}/anno</span>
                   </div>
                 </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                  <span className="flex items-center gap-1.5 text-emerald-600 font-medium">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    Garanzia prezzo tutelato
-                  </span>
-                  <span>Quota fissa: €{point.currentFixedFeeYear}/anno</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )
       )}
 
       {/* Tab 2: Bills */}

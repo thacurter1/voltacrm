@@ -135,7 +135,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
                 </div>
               </div>
               <p className="text-[11px] text-[#425466] pt-1">
-                Servizio di Audit Energetico Indipendente • Monitoraggio Ricorrente 120 Giorni
+                Servizio di Audit Energetico Indipendente • Monitoraggio Energetico Continuo
               </p>
             </div>
 

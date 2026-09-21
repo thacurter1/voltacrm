@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Zap, 
@@ -8,7 +8,7 @@ import {
   Mail, 
   MapPin, 
   FileText, 
-  RefreshCw, 
+  RefreshCw,
   MessageSquare,
   UserCheck
 } from 'lucide-react';
@@ -32,6 +32,15 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
   onConvertLeadToCustomer,
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'timeline' | 'documents'>('details');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || (!customer && !lead)) return null;
 
@@ -59,7 +68,8 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              aria-label="Chiudi pannello"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
             >
               <X className="h-5 w-5" />
             </button>

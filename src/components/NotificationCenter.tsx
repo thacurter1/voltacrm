@@ -121,6 +121,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  // Teardown AudioContext all'unmount per prevenire memory leak
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(() => {});
+      }
+    };
+  }, []);
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {

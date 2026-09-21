@@ -496,6 +496,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                   <input
                     type="date"
                     required
+                    min={new Date().toISOString().split('T')[0]}
                     value={formData.scheduledDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-indigo-500"
