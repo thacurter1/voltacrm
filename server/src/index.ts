@@ -43,7 +43,7 @@ app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Root & Health check (montato prima del rate limiter per monitor di uptime)
-app.get('/api/health', async (_req: Request, res: Response): Promise<void> => {
+app.get(['/health', '/api/health'], async (_req: Request, res: Response): Promise<void> => {
   const dbHealth = await testDatabaseConnection();
   const isHealthy = !process.env.SUPABASE_URL || dbHealth.connected;
   res.status(200).json({
