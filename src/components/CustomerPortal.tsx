@@ -684,7 +684,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             >
               {customer.utilityPoints.map(point => (
                 <option key={point.id} value={point.id}>
-                  {point.type === 'luce' ? 'Luce' : 'Gas'} — {point.podOrPdr}
+                  {point.type === 'luce' ? 'Luce' : 'Gas'} · {point.podOrPdr}
                 </option>
               ))}
             </select>

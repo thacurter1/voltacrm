@@ -631,7 +631,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                           {c.paymentReference}
                         </span>
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-300">-</span>
                       )}
                     </td>
                   </tr>
@@ -704,7 +704,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                       € {b.totalAmountEur.toFixed(2)}
                     </td>
                     <td className="py-2.5 px-3 text-slate-500 max-w-xs truncate">
-                      {b.notes || '—'}
+                      {b.notes || '-'}
                     </td>
                     <td className="py-2.5 px-3 text-right whitespace-nowrap">
                       <button

@@ -20,17 +20,17 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
   return (
     <div className="space-y-6">
       {/* Overview Card */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             <span>Forniture Attive & Certificate</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white">
+          <h2 className="text-xl sm:text-2xl font-black text-[#0a2540]">
             {customer.name}
           </h2>
-          <p className="text-xs text-slate-300 max-w-xl">
-            Codice Fiscale: <span className="font-mono text-white">{customer.fiscalCode}</span> • Città: {customer.city}
+          <p className="text-xs text-slate-500 max-w-xl">
+            Codice Fiscale: <span className="font-mono text-[#0a2540] font-semibold">{customer.fiscalCode}</span> • Città: {customer.city}
           </p>
         </div>
 
@@ -38,7 +38,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <button
             onClick={onUploadBill}
-            className="px-4 py-2.5 rounded-xl bg-[#e02424] hover:bg-[#c81e1e] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-[#e02424] hover:bg-[#c81e1e] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <Upload className="w-4 h-4" />
             <span>Carica Nuova Bolletta</span>

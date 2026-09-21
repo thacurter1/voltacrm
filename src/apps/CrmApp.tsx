@@ -282,7 +282,7 @@ export const CrmApp: React.FC = () => {
         setMarketIndex(refreshed);
         addToast(
           'Feed GME Sincronizzato',
-          `PUN: ${refreshed.punEurKwh.toFixed(4)} €/kWh (F1: ${refreshed.punF1?.toFixed(4) || '—'}) | PSV: ${refreshed.psvEurSmc.toFixed(4)} €/Smc.`,
+          `PUN: ${refreshed.punEurKwh.toFixed(4)} €/kWh (F1: ${refreshed.punF1?.toFixed(4) || '-'}) | PSV: ${refreshed.psvEurSmc.toFixed(4)} €/Smc.`,
           'success'
         );
       }
