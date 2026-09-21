@@ -128,9 +128,9 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
                   <Zap className="h-5 w-5 fill-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-black tracking-tight text-[#0a2540]">VOLTA ENERGY</h1>
+                  <h1 className="text-xl font-black tracking-tight text-[#0a2540]">VOLTA ENERGIA</h1>
                   <span className="text-[10px] uppercase font-bold tracking-widest text-[#635bff] block -mt-1">
-                    Brokerage & Cost Audit Service
+                    Servizio di Brokeraggio & Audit Energetico
                   </span>
                 </div>
               </div>

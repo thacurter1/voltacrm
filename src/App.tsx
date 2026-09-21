@@ -782,8 +782,8 @@ function UnifiedApp() {
       {/* Stripe-style Footer */}
       <footer className="border-t border-[#e3e8ee] bg-white py-5 text-center text-xs text-[#425466]">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>
-            VoltaCRM SaaS • Dual-Portal (Cliente & Call Center) • Conforme GDPR & 2FA Attivo
+          <span className="font-semibold text-[#0a2540]">
+            Volta Energia CRM • Gestione Forniture & Broker • Conforme GDPR & 2FA Attivo
           </span>
           <span className="text-slate-400">
             Connesso come {currentUser.role === 'admin' ? 'Amministratore' : 'Operatore'}: {currentUser.name} • 2FA Attivo

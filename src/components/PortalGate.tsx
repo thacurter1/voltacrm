@@ -140,9 +140,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             <Zap className="h-5 w-5 fill-white text-white" />
           </div>
           <div>
-            <span className="font-bold text-lg text-white tracking-tight">VoltaCRM</span>
+            <span className="font-bold text-lg text-white tracking-tight">Volta Energia</span>
             <span className="text-[10px] text-[#00d4aa] font-bold uppercase tracking-widest block -mt-1">
-              Energy Cloud
+              CRM & Piattaforma Broker
             </span>
           </div>
         </div>

@@ -15,7 +15,7 @@
     "switch-engine",
     "totem-kiosk"
   ],
-  "author": "Volta Energy",
+  "author": "Volta Energia",
   "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

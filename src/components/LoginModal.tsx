@@ -82,7 +82,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <Zap className="h-4 w-4 fill-white text-white" />
             </div>
             <div>
-              <h3 id="login-modal-title" className="text-base font-bold text-[#0a2540]">Accedi a VoltaCRM</h3>
+              <h3 id="login-modal-title" className="text-base font-bold text-[#0a2540]">Accedi a Volta Energia</h3>
               <p className="text-[11px] text-[#425466]">Scegli l'ambiente in base al tuo ruolo</p>
             </div>
           </div>

@@ -100,7 +100,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
   leads,
   marketIndex,
   currentUserRole: _currentUserRole = 'admin',
-  currentUserName = 'Operatore Volta Energy',
+  currentUserName = 'Operatore Volta Energia',
   onAddCustomer,
   onOpenBillOcr,
   onOpenImportCsv,
@@ -1369,12 +1369,12 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
                 {/* Scatola Termini Mandato */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600 space-y-2 max-h-48 overflow-y-auto">
-                  <div className="font-bold text-slate-800">Condizioni Mandato di Assistenza Energetica Volta Energy:</div>
+                  <div className="font-bold text-slate-800">Condizioni Mandato di Assistenza Energetica Volta Energia:</div>
                   <p>
-                    1. Il Mandante conferisce a Volta Energy mandato non esclusivo per l'analisi periodica quadrimestrale dei costi energetici e l'intermediazione delle migliori offerte del mercato libero.
+                    1. Il Mandante conferisce a Volta Energia mandato non esclusivo per l'analisi periodica quadrimestrale dei costi energetici e l'intermediazione delle migliori offerte del mercato libero.
                   </p>
                   <p>
-                    2. Volta Energy opera senza oneri diretti a carico del cliente finale, remunerata dagli operatori energetici conformemente alle tabelle ARERA.
+                    2. Volta Energia opera senza oneri diretti a carico del cliente finale, remunerata dagli operatori energetici conformemente alle tabelle ARERA.
                   </p>
                   <p>
                     3. Il Mandante autorizza l'accesso ai dati storici di consumo mediante Sistema Informativo Integrato (SII) e distributore locale.
@@ -1391,7 +1391,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       className="mt-0.5 h-4 w-4 text-indigo-600 rounded"
                     />
                     <span className="text-xs text-slate-700">
-                      <strong>Accettazione Mandato:</strong> Il cliente autorizza Volta Energy a gestire il subentro e le rinegoziazioni quadrimestrali per le forniture indicate.
+                      <strong>Accettazione Mandato:</strong> Il cliente autorizza Volta Energia a gestire il subentro e le rinegoziazioni quadrimestrali per le forniture indicate.
                     </span>
                   </label>
 

@@ -126,9 +126,9 @@ export const Header: React.FC<HeaderProps> = ({
               <Zap className="h-4 w-4 fill-white text-white" strokeWidth={2} />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-sm text-[#0a2540] tracking-tight whitespace-nowrap">Volta Energy</span>
+              <span className="font-bold text-sm text-[#0a2540] tracking-tight whitespace-nowrap">Volta Energia</span>
               <span className={`hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                isCustomer ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                isCustomer ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25'
               }`}>
                 {isCustomer ? 'PORTALE' : 'BACKEND'}
               </span>
@@ -381,7 +381,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <Zap className="h-3.5 w-3.5 fill-white text-white" />
                   </div>
                   <div>
-                    <span className="font-bold text-sm text-[#0a2540]">Volta Energy</span>
+                    <span className="font-bold text-sm text-[#0a2540]">Volta Energia</span>
                     <span className="block text-[10px] text-slate-500 font-medium">
                       {isCustomer ? 'Portale Risparmio' : 'CRM & Telemarketing'}
                     </span>

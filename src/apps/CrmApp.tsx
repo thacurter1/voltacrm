@@ -297,7 +297,7 @@ export const CrmApp: React.FC = () => {
   const pendingBillsCount = bills.filter(b => b.status === 'in_review').length;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased">
+    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
       <InstallAppBanner />
 
       {/* Header */}
@@ -640,6 +640,18 @@ export const CrmApp: React.FC = () => {
       />
 
       <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
+
+      {/* Stripe-style Volta Energia Brand Footer */}
+      <footer className="border-t border-[#e3e8ee] bg-white py-5 text-center text-xs text-[#425466]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span className="font-semibold text-[#0a2540]">
+            Volta Energia CRM • Gestione Forniture & Switch • Conforme GDPR & 2FA Attivo
+          </span>
+          <span className="text-slate-400">
+            Connesso come {currentUser.role === 'admin' ? 'Amministratore' : 'Operatore'}: {currentUser.name} • 2FA Attivo
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };

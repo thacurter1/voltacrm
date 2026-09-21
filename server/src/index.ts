@@ -49,7 +49,7 @@ app.get('/api/health', async (_req: Request, res: Response): Promise<void> => {
   res.status(200).json({
     status: isHealthy ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
-    service: 'VoltaCRM SaaS Standalone Backend API',
+    service: 'Volta Energia SaaS Standalone Backend API',
     version: '1.0.0',
     uptimeSeconds: Math.floor(process.uptime()),
     database: dbHealth,

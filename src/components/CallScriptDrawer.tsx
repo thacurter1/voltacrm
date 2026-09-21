@@ -92,7 +92,7 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
             </span>
             <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100 text-slate-700 leading-relaxed space-y-2">
               <p>
-                <strong>Saluto:</strong> <em>"Buongiorno Sig. {lead.name.split(' ')[0]}, sono [Nome] di Volta Energy. La contatto in merito alla sua richiesta di verifica tariffe..."</em>
+                <strong>Saluto:</strong> <em>"Buongiorno Sig. {lead.name.split(' ')[0]}, sono [Nome] di Volta Energia. La contatto in merito alla sua richiesta di verifica tariffe..."</em>
               </p>
               <p>
                 <strong>Gancio Risparmio:</strong> <em>"In base ai consumi di circa {lead.estimatedConsumptionKwh || 3200} kWh/anno per la sua zona di {lead.city}, con i nuovi listini all'ingrosso del PUN possiamo abbattere la spesa materia di circa 20-30%..."</em>
