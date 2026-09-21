@@ -346,7 +346,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
               <tbody className="divide-y divide-[#e3e8ee]">
                 {customerProfiles.map((cust) => {
                   const inviteLink = `${window.location.origin}?invite=${cust.id}&portal=customer`;
-                  const rawMsg = `Ciao ${cust.name}, ecco il tuo accesso sicuro all'Area Risparmio VoltaCRM per le tue forniture: ${inviteLink}`;
+                  const rawMsg = `Ciao ${cust.name}, ecco il tuo accesso sicuro all'Area Risparmio Volta Energia per le tue forniture: ${inviteLink}`;
                   const waUrl = `https://wa.me/${cust.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(rawMsg)}`;
 
                   return (

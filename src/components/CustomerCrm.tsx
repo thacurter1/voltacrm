@@ -137,7 +137,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-[#635bff]" />
               <h3 className="font-bold text-xs sm:text-sm text-[#0a2540]">
-                4 Modalità per Inserire Clienti in VoltaCRM:
+                4 Modalità per Inserire Clienti in Volta Energia:
               </h3>
             </div>
             <button

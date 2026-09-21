@@ -493,7 +493,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-400 border-t border-white/10">
-        VoltaCRM Enterprise • Crittografia AES-256-GCM • Conforme ARERA & GDPR EU 2016/679
+        Volta Energia Enterprise • Crittografia AES-256-GCM • Conforme ARERA & GDPR EU 2016/679
       </footer>
     </div>
   );

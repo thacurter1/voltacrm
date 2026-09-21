@@ -53,7 +53,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
     window.print();
   };
 
-  const whatsappMessage = `Ciao ${audit.customerName}, ecco il tuo Studio di Fattibilità Energetica VoltaCRM: con il cambio tariffa per ${audit.utilityType.toUpperCase()} (${audit.podOrPdr}) risparmi €${audit.annualSavings.toFixed(2)}/anno (-${audit.savingsPercent}%). Possiamo attivarlo oggi a costo zero.`;
+  const whatsappMessage = `Ciao ${audit.customerName}, ecco il tuo Studio di Fattibilità Energetica Volta Energia: con il cambio tariffa per ${audit.utilityType.toUpperCase()} (${audit.podOrPdr}) risparmi €${audit.annualSavings.toFixed(2)}/anno (-${audit.savingsPercent}%). Possiamo attivarlo oggi a costo zero.`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
@@ -270,7 +270,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
           <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 text-xs space-y-1 text-emerald-900">
             <div className="font-bold flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              Garanzie di Tutela ARERA & VoltaCRM
+              Garanzie di Tutela ARERA & Volta Energia
             </div>
             <p className="text-[11px] leading-relaxed text-emerald-800">
               Il passaggio al nuovo fornitore non prevede alcuna interruzione dell'erogazione di energia né interventi tecnici sul contatore. La disdetta verso il vecchio fornitore è gestita in automatico a costo zero.
@@ -282,7 +282,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Il tuo Consulente Dedicato</span>
               <div className="font-bold text-[#0a2540]">{advisorName}</div>
-              <div className="text-[11px] text-[#425466]">Specialista Mercato Libero VoltaCRM</div>
+              <div className="text-[11px] text-[#425466]">Specialista Mercato Libero Volta Energia</div>
               <div className="text-[11px] text-[#425466]">WhatsApp: +39 347 1122334</div>
             </div>
 

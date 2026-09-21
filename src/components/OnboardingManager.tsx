@@ -397,7 +397,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
       accountManager: currentUserName,
       hasBrokerageMandate: true,
       utilityPoints,
-      notes: `Onboarding completato via Wizard VoltaCRM. Mandato firmato via ${signatureMethod.toUpperCase()}. Risparmio stimato: €${estimatedSavings}/anno.`
+      notes: `Onboarding completato via Wizard Volta Energia. Mandato firmato via ${signatureMethod.toUpperCase()}. Risparmio stimato: €${estimatedSavings}/anno.`
     };
 
     // Creazione del record di tracking onboarding

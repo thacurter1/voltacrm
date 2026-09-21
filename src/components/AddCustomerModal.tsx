@@ -366,7 +366,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                       Delega di Brokeraggio Continuo ARERA Attiva
                     </span>
                     <p className="text-[11px] text-emerald-800/90 mt-0.5 leading-relaxed">
-                      Autorizza VoltaCRM a verificare periodicamente (ogni 120 giorni) le offerte di mercato e proporre o eseguire il passaggio alla migliore tariffa garantendo il massimo risparmio.
+                      Autorizza Volta Energia a verificare periodicamente (ogni 120 giorni) le offerte di mercato e proporre o eseguire il passaggio alla migliore tariffa garantendo il massimo risparmio.
                     </p>
                   </div>
                 </label>

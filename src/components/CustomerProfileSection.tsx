@@ -213,7 +213,7 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
             </p>
 
             <a
-              href={`https://wa.me/393471122334?text=Ciao%20${encodeURIComponent(customer.accountManager)},%20sono%20${encodeURIComponent(customer.name)}%20di%20VoltaCRM.`}
+              href={`https://wa.me/393471122334?text=Ciao%20${encodeURIComponent(customer.accountManager)},%20sono%20${encodeURIComponent(customer.name)}%20di%20Volta%20Energia.`}
               target="_blank"
               rel="noreferrer"
               className="w-full py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-center flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"

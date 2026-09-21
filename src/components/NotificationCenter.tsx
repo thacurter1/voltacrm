@@ -229,7 +229,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       const perm = await Notification.requestPermission();
       setBrowserPermission(perm);
       if (perm === 'granted') {
-        new Notification('VoltaCRM Notifiche Attive', {
+        new Notification('Volta Energia Notifiche Attive', {
           body: 'Riceverai avvisi in tempo reale per nuovi lead Totem e scadenze switch.'
         });
       }
@@ -268,7 +268,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-600 hover:text-[#0a2540] transition cursor-pointer"
-        title="Centro Notifiche VoltaCRM"
+        title="Centro Notifiche Volta Energia"
         aria-label="Apri notifiche"
       >
         <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-[#635bff]' : 'text-slate-500'}`} />
@@ -285,14 +285,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 text-slate-800">
           
           {/* Header */}
-          <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between">
+          <div className="p-3.5 bg-[#0a2540] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#635bff] flex items-center justify-center text-white">
+              <div className="w-7 h-7 rounded-lg bg-[#635bff] flex items-center justify-center text-white shadow-xs">
                 <Bell className="w-3.5 h-3.5" />
               </div>
               <div>
                 <h3 className="text-xs font-bold tracking-tight">Centro Notifiche</h3>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10px] text-slate-300">
                   {unreadCount > 0 ? `${unreadCount} nuove notifiche operative` : 'Nessuna notifica non letta'}
                 </p>
               </div>
@@ -302,16 +302,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               {/* Sound toggle */}
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-1 rounded text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
                 title={soundEnabled ? 'Disattiva audio avvisi' : 'Attiva audio avvisi'}
               >
-                {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-cyan-400" /> : <VolumeX className="w-3.5 h-3.5" />}
+                {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5" />}
               </button>
 
               {/* Close */}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-1 rounded text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -472,11 +472,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
           {/* Footer: Browser Push Permission Banner */}
           {browserPermission !== 'granted' && (
-            <div className="p-2.5 bg-slate-900 text-slate-200 text-[11px] flex items-center justify-between border-t border-slate-800">
-              <span className="text-slate-300">Notifiche push desktop:</span>
+            <div className="p-2.5 bg-slate-50 text-[#0a2540] text-[11px] flex items-center justify-between border-t border-[#e3e8ee]">
+              <span className="text-[#425466]">Notifiche push desktop:</span>
               <button
                 onClick={requestBrowserPermission}
-                className="px-2 py-0.5 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[10px] transition cursor-pointer"
+                className="px-2.5 py-1 rounded-md bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-[10px] shadow-2xs transition cursor-pointer"
               >
                 Abilita
               </button>

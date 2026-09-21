@@ -317,7 +317,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                 € {historicalSavingsEur.toFixed(2)}
               </div>
               <p className="text-[11px] text-slate-300 leading-relaxed mt-1">
-                Risparmio netto calcolato da quando VoltaCRM monitora le tue forniture energetiche.
+                Risparmio netto calcolato da quando Volta Energia monitora le tue forniture energetiche.
               </p>
             </div>
           </div>
