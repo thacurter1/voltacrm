@@ -31,13 +31,29 @@ export const createLeadSchema = z.object({
   estimatedConsumptionSmc: z.number().optional(),
 }).strict();
 
+export const createUtilityPointSchema = z.object({
+  id: z.string().optional(),
+  type: z.enum(['luce', 'gas']),
+  podOrPdr: z.string().min(1),
+  annualConsumption: z.number().optional(),
+  powerKw: z.number().optional(),
+  f1Kwh: z.number().optional(),
+  f2Kwh: z.number().optional(),
+  f3Kwh: z.number().optional(),
+  currentSupplier: z.string().optional(),
+  currentOfferName: z.string().optional(),
+  currentTariffType: z.enum(['fixed', 'indexed']).optional(),
+  currentUnitCost: z.number().optional(),
+  currentFixedFeeYear: z.number().optional(),
+}).strict();
+
 export const createCustomerSchema = z.object({
   name: z.string().min(1),
   fiscalCode: z.string().min(1),
   phone: z.string().optional(),
   email: z.string().optional(),
   city: z.string().optional(),
-  utilityPoints: z.array(z.any()).optional(),
+  utilityPoints: z.array(createUtilityPointSchema).optional(),
   hasBrokerageMandate: z.boolean().optional(),
   accountManager: z.string().optional(),
   notes: z.string().optional(),
@@ -104,16 +120,4 @@ export const triggerNotificationSchema = z.object({
   targetRole: z.string().optional(),
   actionTab: z.string().optional(),
   meta: z.any().optional(),
-}).strict();
-
-export const createUtilityPointSchema = z.object({
-  type: z.enum(['luce', 'gas']),
-  podOrPdr: z.string().min(1),
-  annualConsumption: z.number().optional(),
-  powerKw: z.number().optional(),
-  currentSupplier: z.string().optional(),
-  currentOfferName: z.string().optional(),
-  currentTariffType: z.enum(['fixed', 'indexed']).optional(),
-  currentUnitCost: z.number().optional(),
-  currentFixedFeeYear: z.number().optional(),
 }).strict();
