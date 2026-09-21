@@ -35,12 +35,17 @@ export interface SignatureReceipt {
 
 const SIGNATURE_CONSENT_VERSION = 'brokerage-and-switch-v1';
 
-export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
-  isOpen,
-  onClose,
+const DigitalSignatureDialog: React.FC<{
+  audit: SwitchAudit;
+  customerPhone: string;
+  customerFiscalCode?: string;
+  onClose: () => void;
+  onSigned: (auditId: string, signatureType: 'canvas' | 'otp', receipt: SignatureReceipt) => void;
+}> = ({
   audit,
-  customerPhone = '+39 340 1234567',
+  customerPhone,
   customerFiscalCode,
+  onClose,
   onSigned,
 }) => {
   const [signatureMode, setSignatureMode] = useState<'canvas' | 'otp'>('canvas');
@@ -67,29 +72,14 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     return () => clearInterval(interval);
   }, [otpTimer]);
 
-  // Reset state on open
-  useEffect(() => {
-    if (isOpen) {
-      setHasDrawn(false);
-      setConsentChecked(false);
-      setOtpCode('');
-      setOtpSent(false);
-      setOtpError(null);
-      setOtpNotice(null);
-    }
-  }, [isOpen, audit?.id]);
-
   // Chiusura accessibile con tasto Escape
   useEffect(() => {
-    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !audit) return null;
+  }, [onClose]);
 
   // Coordinate normalizzate per schermi touch / desktop
   const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>, canvas: HTMLCanvasElement) => {
@@ -466,5 +456,26 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
 
       </div>
     </div>
+  );
+};
+
+export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
+  isOpen,
+  onClose,
+  audit,
+  customerPhone = '+39 340 1234567',
+  customerFiscalCode,
+  onSigned,
+}) => {
+  if (!isOpen || !audit) return null;
+  return (
+    <DigitalSignatureDialog
+      key={audit.id}
+      audit={audit}
+      customerPhone={customerPhone}
+      customerFiscalCode={customerFiscalCode}
+      onClose={onClose}
+      onSigned={onSigned}
+    />
   );
 };

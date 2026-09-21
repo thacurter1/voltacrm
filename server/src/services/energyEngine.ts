@@ -111,7 +111,7 @@ export const MARKET_OFFERS: SupplierOffer[] = [
 ];
 
 export function calculateAnnualCost(
-  utility: { type: 'luce' | 'gas'; annualConsumption?: number; powerKw?: number } | UtilityPoint,
+  utility: { type: 'luce' | 'gas'; annualConsumption?: number; powerKw?: number; f1Kwh?: number; f2Kwh?: number; f3Kwh?: number } | UtilityPoint,
   pricingType: 'fixed' | 'indexed' | 'indexed_pun' | 'indexed_psv',
   unitPriceOrSpread: number,
   fixedAnnualFee: number,
@@ -132,10 +132,44 @@ export function calculateAnnualCost(
 
   const safeConsumption = Math.max(0, utility.annualConsumption || 0);
   const powerCost = utility.type === 'luce' ? ((utility as any).powerKw || 3) * 23.50 : 0;
-  const rawCost = (safeConsumption * effectiveUnitCost) + fixedAnnualFee;
+
+  let rawCost = 0;
+  const hasTimeBands = utility.type === 'luce' && 
+    typeof (utility as any).f1Kwh === 'number' && 
+    typeof (utility as any).f2Kwh === 'number' && 
+    typeof (utility as any).f3Kwh === 'number' &&
+    ((utility as any).f1Kwh > 0 || (utility as any).f2Kwh > 0 || (utility as any).f3Kwh > 0);
+
+  let billableConsumption = safeConsumption;
+
+  if (hasTimeBands) {
+    const f1 = Math.max(0, (utility as any).f1Kwh);
+    const f2 = Math.max(0, (utility as any).f2Kwh);
+    const f3 = Math.max(0, (utility as any).f3Kwh);
+    const sumTimeBands = f1 + f2 + f3;
+    if (billableConsumption === 0 && sumTimeBands > 0) {
+      billableConsumption = sumTimeBands;
+    }
+
+    if (pricingType === 'indexed' || pricingType === 'indexed_pun') {
+      const punF1 = marketIndex.punF1 ?? marketIndex.punEurKwh;
+      const punF2 = marketIndex.punF2 ?? marketIndex.punEurKwh;
+      const punF3 = marketIndex.punF3 ?? marketIndex.punEurKwh;
+      
+      const effF1 = (punF1 * 1.1) + unitPriceOrSpread;
+      const effF2 = (punF2 * 1.1) + unitPriceOrSpread;
+      const effF3 = (punF3 * 1.1) + unitPriceOrSpread;
+      rawCost = (f1 * effF1) + (f2 * effF2) + (f3 * effF3) + fixedAnnualFee;
+    } else {
+      rawCost = (sumTimeBands * effectiveUnitCost) + fixedAnnualFee;
+    }
+  } else {
+    rawCost = (billableConsumption * effectiveUnitCost) + fixedAnnualFee;
+  }
+
   const estimatedTaxesAndNetwork = utility.type === 'luce' 
-    ? (safeConsumption * 0.075) + 60 + powerCost
-    : (safeConsumption * 0.22) + 75;
+    ? (billableConsumption * 0.075) + 60 + powerCost
+    : (billableConsumption * 0.22) + 75;
 
   return Math.round((rawCost + estimatedTaxesAndNetwork) * 100) / 100;
 }

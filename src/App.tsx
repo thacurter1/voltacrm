@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from './components/Header';
 import { DashboardOverview } from './components/DashboardOverview';
 import { LeadsManager } from './components/LeadsManager';
@@ -85,6 +85,10 @@ function UnifiedApp() {
 
   // Business Data State
   const [customers, setCustomers] = useState<Customer[]>(DEMO_MODE ? initialDb.customers : []);
+  const customersRef = useRef(customers.length > 0 ? customers : initialDb.customers);
+  useEffect(() => {
+    customersRef.current = customers.length > 0 ? customers : initialDb.customers;
+  }, [customers, initialDb.customers]);
   const [leads, setLeads] = useState<Lead[]>(DEMO_MODE ? initialDb.leads : []);
   const [appointments, setAppointments] = useState<Appointment[]>(DEMO_MODE ? initialDb.appointments : []);
   const [bills, setBills] = useState<CustomerBill[]>(DEMO_MODE ? initialDb.bills : []);
@@ -150,7 +154,7 @@ function UnifiedApp() {
       .then(liveIndex => {
         if (isMounted && liveIndex && liveIndex.punEurKwh) {
           setMarketIndex(liveIndex);
-          setAudits(() => runQuarterlyAudit(customers.length > 0 ? customers : initialDb.customers, liveIndex));
+          setAudits(runQuarterlyAudit(customersRef.current, liveIndex));
         }
       })
       .catch(err => {

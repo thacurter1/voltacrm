@@ -14,7 +14,7 @@ const db = require('./server/dist/services/dbClient.js');
 const app = express(); app.use(express.json());
 app.use('/auth', require('./server/dist/routes/auth.js').authRouter);
 app.use('/messaging', require('./server/dist/routes/messaging.js').messagingRouter);
-app.use((err, request, response, next) => response.status(err.status || 500).json({ success: false, message: err.message }));
+app.use((err, request, response, _next) => response.status(err.status || 500).json({ success: false, message: err.message }));
 
 test('core persistence and identity regressions', async t => {
  const server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r));

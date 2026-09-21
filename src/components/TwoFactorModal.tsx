@@ -10,24 +10,21 @@ interface TwoFactorModalProps {
   onVerified: (user: AuthUser) => void;
 }
 
-export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
-  isOpen,
+const TwoFactorDialog: React.FC<{
+  user: AuthUser;
+  onClose: () => void;
+  onVerified: (user: AuthUser) => void;
+}> = ({
   user,
   onClose,
   onVerified,
 }) => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
-  const userIdentifier = user?.email || user?.id || 'volta_user';
-  const [dynamicTotp, setDynamicTotp] = useState(securityValidator.generateCurrentTotp(userIdentifier));
+  const userIdentifier = user.email || user.id || 'volta_user';
+  const [dynamicTotp, setDynamicTotp] = useState(() => securityValidator.generateCurrentTotp(userIdentifier));
 
   useEffect(() => {
-    if (!isOpen) return;
-    setCode(['', '', '', '', '', '']);
-    setError('');
-    // Genera immediatamente il token TOTP corrente per evitare stato obsoleto (stale)
-    setDynamicTotp(securityValidator.generateCurrentTotp(userIdentifier));
-
     const handleKeyDownGlobal = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -40,9 +37,7 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
       clearInterval(interval);
       window.removeEventListener('keydown', handleKeyDownGlobal);
     };
-  }, [isOpen, userIdentifier, onClose]);
-
-  if (!isOpen || !user) return null;
+  }, [userIdentifier, onClose]);
 
   const handleDigitChange = (index: number, val: string) => {
     if (!/^\d*$/.test(val)) return;
@@ -193,5 +188,22 @@ export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
         </form>
       </div>
     </div>
+  );
+};
+
+export const TwoFactorModal: React.FC<TwoFactorModalProps> = ({
+  isOpen,
+  user,
+  onClose,
+  onVerified,
+}) => {
+  if (!isOpen || !user) return null;
+  return (
+    <TwoFactorDialog
+      key={`${user.id}-${user.email || ''}`}
+      user={user}
+      onClose={onClose}
+      onVerified={onVerified}
+    />
   );
 };

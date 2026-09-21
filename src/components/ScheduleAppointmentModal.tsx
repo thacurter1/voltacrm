@@ -9,27 +9,18 @@ interface ScheduleAppointmentModalProps {
   onSchedule: (appointment: Appointment) => void;
 }
 
-export const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({
-  lead,
-  isOpen,
-  onClose,
-  onSchedule,
-}) => {
+
+const ScheduleAppointmentDialog: React.FC<{
+  lead: Lead;
+  onClose: () => void;
+  onSchedule: (appointment: Appointment) => void;
+}> = ({ lead, onClose, onSchedule }) => {
   const [agentName, setAgentName] = useState('Alessandro Mori (Energy Specialist)');
   const [date, setDate] = useState('2026-09-05');
   const [time, setTime] = useState('11:00');
   const [duration, setDuration] = useState(45);
   const [type, setType] = useState<AppointmentType>('phone_consultation');
-  const [notes, setNotes] = useState('');
-
-  // Update notes if lead changes
-  React.useEffect(() => {
-    if (lead?.notes) {
-      setNotes(lead.notes);
-    }
-  }, [lead]);
-
-  if (!isOpen || !lead) return null;
+  const [notes, setNotes] = useState(lead.notes || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,4 +147,14 @@ export const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> =
       </div>
     </div>
   );
+};
+
+export const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({
+  lead,
+  isOpen,
+  onClose,
+  onSchedule,
+}) => {
+  if (!isOpen || !lead) return null;
+  return <ScheduleAppointmentDialog key={lead.id} lead={lead} onClose={onClose} onSchedule={onSchedule} />;
 };

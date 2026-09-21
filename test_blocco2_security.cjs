@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 
 function request(options, body) {
   return new Promise((resolve) => {
@@ -41,7 +41,7 @@ async function run() {
     password: 'admin123',
     totpCode: '123456'
   });
-  const adminToken = adminLogin.data?.token;
+  const _adminToken = adminLogin.data?.token;
 
   // Login Customer (user-cust-1 associato a cust-1)
   const custLogin = await request({

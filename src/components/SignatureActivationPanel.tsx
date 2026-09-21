@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircle2, FileSignature, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 
@@ -28,22 +28,30 @@ export const SignatureActivationPanel: React.FC<SignatureActivationPanelProps> =
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await api.switch.getSignatures();
-      setSignatures(result.filter((signature: PendingSignature) =>
-        signature.status === 'signed' && signature.activationStatus === 'pending_activation'
-      ));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Impossibile caricare le firme in attesa.');
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    let isMounted = true;
+    api.switch.getSignatures()
+      .then(result => {
+        if (isMounted) {
+          setSignatures(result.filter((signature: PendingSignature) =>
+            signature.status === 'signed' && signature.activationStatus === 'pending_activation'
+          ));
+        }
+      })
+      .catch(loadError => {
+        if (isMounted) {
+          setError(loadError instanceof Error ? loadError.message : 'Impossibile caricare le firme in attesa.');
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  useEffect(() => { void load(); }, [load]);
 
   const activate = async (signature: PendingSignature) => {
     const activationReference = references[signature.id]?.trim();

@@ -198,7 +198,7 @@ Panificio Roma;+39 06 112233;Roma;1900;Referral`;
   // Dual Fuel: +€25 upfront
   // Ricorrente annuo: kWh * 0.0025 + Smc * 0.015
 
-  const dummyCustomers = [
+  const _dummyCustomers = [
     {
       id: 'cust-res-1',
       name: 'Mario Rossi',
