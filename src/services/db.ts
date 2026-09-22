@@ -18,7 +18,7 @@ export const DEMO_USERS: AuthUser[] = [
     id: 'user-op-2',
     name: 'Chiara Bianchi (Consulente Senior)',
     email: 'c.bianchi@voltagroup.it',
-    role: 'call_center',
+    role: 'operator',
     avatar: 'CB',
     is2faEnabled: true
   },
@@ -26,8 +26,16 @@ export const DEMO_USERS: AuthUser[] = [
     id: 'user-op-3',
     name: 'Valentina Neri (Consulente Energetico)',
     email: 'v.neri@voltagroup.it',
-    role: 'call_center',
+    role: 'operator',
     avatar: 'VN',
+    is2faEnabled: true
+  },
+  {
+    id: 'user-cc-4',
+    name: 'Marco Rossi (Operatore Call Center)',
+    email: 'm.rossi@voltagroup.it',
+    role: 'call_center',
+    avatar: 'MR',
     is2faEnabled: true
   },
   {

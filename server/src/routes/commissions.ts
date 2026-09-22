@@ -16,7 +16,7 @@ import { authenticateToken, requireRole } from '../middleware/auth.js';
 export const commissionRouter = Router();
 
 commissionRouter.use(authenticateToken);
-commissionRouter.use(requireRole('admin', 'call_center', 'operator'));
+commissionRouter.use(requireRole('admin', 'operator', 'broker'));
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
@@ -55,7 +55,7 @@ commissionRouter.get('/', async (req: Request, res: Response): Promise<void> => 
   res.json({ success: true, count: commissions.length, commissions });
 });
 
-commissionRouter.post('/generate', requireRole('admin', 'call_center'), async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+commissionRouter.post('/generate', requireRole('admin', 'operator', 'broker'), async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const body = req.body as Partial<ContractCommissionInput>;
   const missing = ['agentId', 'customerName', 'contractId', 'podOrPdr', 'utilityType']
     .filter(field => !isNonEmptyString((body as any)[field]));

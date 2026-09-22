@@ -70,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
     badge?: number;
   }
 
-  const callCenterNavItems: NavItem[] = [
+  const adminNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Panoramica', icon: BarChart3 },
     { id: 'onboarding', label: 'Onboarding', icon: Sparkles },
     { id: 'leads', label: 'Lead Marketing', icon: Users },
@@ -100,13 +100,50 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'security', label: 'Audit Sicurezza & GDPR', icon: Lock },
   ];
 
+  const brokerNavItems: NavItem[] = [
+    { id: 'crm', label: 'I Miei Clienti', icon: ShieldCheck },
+    { id: 'portfolio', label: 'Mio Portafoglio', icon: TrendingUp },
+    { 
+      id: 'commissions', 
+      label: 'Le Mie Provvigioni', 
+      icon: Coins, 
+      badge: pendingCommissionsCount && pendingCommissionsCount > 0 ? pendingCommissionsCount : undefined 
+    },
+    { 
+      id: 'switch4m', 
+      label: 'Switch a 120gg', 
+      icon: RefreshCw, 
+      badge: pendingSwitchesCount > 0 ? pendingSwitchesCount : undefined 
+    },
+    { id: 'onboarding', label: 'Nuovo Cliente / OCR', icon: Sparkles },
+    { id: 'tariffe', label: 'Comparatore Tariffe', icon: Zap },
+  ];
+
+  const callCenterNavItems: NavItem[] = [
+    { id: 'callcenter', label: 'Agenda & Chiamate', icon: PhoneCall },
+    { id: 'leads', label: 'Coda Lead Marketing', icon: Users },
+    { 
+      id: 'inbox_bills', 
+      label: 'Bollette da Assegnare', 
+      icon: FileText,
+      badge: pendingBillsCount > 0 ? pendingBillsCount : undefined
+    },
+    { id: 'onboarding', label: 'Nuovo Contatto / OCR', icon: Sparkles },
+  ];
+
   const customerNavItems: NavItem[] = [
     { id: 'customer_overview', label: 'Le Mie Forniture', icon: ShieldCheck },
     { id: 'customer_upload', label: 'Carica Nuova Bolletta', icon: UploadCloud },
     { id: 'customer_profile', label: 'Il Mio Profilo & GDPR', icon: User },
   ];
 
-  const navItems: NavItem[] = isCustomer ? customerNavItems : callCenterNavItems;
+  const navItems: NavItem[] = isCustomer 
+    ? customerNavItems 
+    : currentUser.role === 'admin' 
+    ? adminNavItems 
+    : currentUser.role === 'call_center' 
+    ? callCenterNavItems 
+    : brokerNavItems;
 
   const handleMobileNavClick = (tabId: string) => {
     setActiveTab(tabId);
@@ -136,9 +173,15 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-sm text-[#0a2540] tracking-tight whitespace-nowrap">Volta Energia</span>
               <span className={`hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                isCustomer ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25'
+                isCustomer 
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                  : currentUser.role === 'admin'
+                  ? 'bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25'
+                  : currentUser.role === 'call_center'
+                  ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
               }`}>
-                {isCustomer ? 'PORTALE' : 'BACKEND'}
+                {isCustomer ? 'PORTALE' : currentUser.role === 'admin' ? 'DIREZIONE' : currentUser.role === 'call_center' ? 'CALL CENTER' : 'BROKER COCKPIT'}
               </span>
             </div>
           </div>
@@ -321,7 +364,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <ChevronDown className="h-3 w-3 text-slate-400" />
               </span>
               <span className="text-[10px] text-slate-500 block leading-none mt-0.5 font-medium">
-                {isCustomer ? 'Cliente Finale' : 'Operatore Call Center'}
+                {isCustomer 
+                  ? 'Cliente Finale' 
+                  : currentUser.role === 'admin' 
+                  ? 'Broker Owner & Direzione' 
+                  : currentUser.role === 'call_center' 
+                  ? 'Operatore Call Center' 
+                  : 'Consulente & Broker'}
               </span>
             </div>
           </button>

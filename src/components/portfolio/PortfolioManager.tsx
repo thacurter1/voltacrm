@@ -16,6 +16,7 @@ import { calculatePortfolioForecast, ConsultantPortfolioSummary } from '../../se
 interface PortfolioManagerProps {
   customers: Customer[];
   profiles?: UserProfile[];
+  currentUser?: UserProfile;
   onSelectCustomer?: (customer: Customer) => void;
   onTriggerSwitchAudit?: (customerId: string) => void;
 }
@@ -23,9 +24,11 @@ interface PortfolioManagerProps {
 export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
   customers,
   profiles: _profiles,
+  currentUser,
   onSelectCustomer,
   onTriggerSwitchAudit
 }) => {
+  const isBroker = currentUser && currentUser.role !== 'admin';
   const [selectedConsultant, setSelectedConsultant] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterSwitchStatus, setFilterSwitchStatus] = useState<'all' | 'due_soon' | 'upcoming'>('all');
@@ -172,47 +175,56 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-2 pt-1">
-          <button
-            onClick={() => setSelectedConsultant('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
-              selectedConsultant === 'all'
-                ? 'bg-[#635bff] text-white shadow-xs'
-                : 'bg-slate-100 text-[#425466] hover:bg-slate-200 hover:text-[#0a2540]'
-            }`}
-          >
-            <span>Tutti i Portafogli</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              selectedConsultant === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
-            }`}>
-              {customers.length}
+        {isBroker ? (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Users className="w-3.5 h-3.5 text-emerald-600" />
+              Consulente: {currentUser?.name} ({customers.length} clienti gestiti nel tuo portafoglio)
             </span>
-          </button>
-
-          {summary.consultants.map(c => (
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2 pt-1">
             <button
-              key={c.consultantName}
-              onClick={() => setSelectedConsultant(c.consultantName)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-2 ${
-                selectedConsultant === c.consultantName
+              onClick={() => setSelectedConsultant('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                selectedConsultant === 'all'
                   ? 'bg-[#635bff] text-white shadow-xs'
                   : 'bg-slate-100 text-[#425466] hover:bg-slate-200 hover:text-[#0a2540]'
               }`}
             >
-              <span>{c.consultantName}</span>
+              <span>Tutti i Portafogli</span>
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                selectedConsultant === c.consultantName ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                selectedConsultant === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
               }`}>
-                {c.totalCustomers} clienti
-              </span>
-              <span className={`text-[10px] font-semibold font-mono ${
-                selectedConsultant === c.consultantName ? 'text-emerald-200' : 'text-emerald-600'
-              }`}>
-                €{c.projectedUpfrontSwitchEur}
+                {customers.length}
               </span>
             </button>
-          ))}
-        </div>
+
+            {summary.consultants.map(c => (
+              <button
+                key={c.consultantName}
+                onClick={() => setSelectedConsultant(c.consultantName)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-2 ${
+                  selectedConsultant === c.consultantName
+                    ? 'bg-[#635bff] text-white shadow-xs'
+                    : 'bg-slate-100 text-[#425466] hover:bg-slate-200 hover:text-[#0a2540]'
+                }`}
+              >
+                <span>{c.consultantName}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  selectedConsultant === c.consultantName ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {c.totalCustomers} clienti
+                </span>
+                <span className={`text-[10px] font-semibold font-mono ${
+                  selectedConsultant === c.consultantName ? 'text-emerald-200' : 'text-emerald-600'
+                }`}>
+                  €{c.projectedUpfrontSwitchEur}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Switch Window Pipeline Breakdown for Active Portfolio */}

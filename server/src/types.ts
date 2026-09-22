@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'operator' | 'call_center' | 'customer';
+export type UserRole = 'admin' | 'operator' | 'broker' | 'call_center' | 'customer';
 
 export interface UserProfile {
   id: string;
@@ -73,6 +73,7 @@ export interface Customer {
   lastSwitchAuditDate: string;
   nextSwitchAuditDate: string;
   accountManager: string;
+  assignedBrokerId?: string;
   hasBrokerageMandate: boolean;
   notes?: string;
 }

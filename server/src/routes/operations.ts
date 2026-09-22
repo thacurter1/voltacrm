@@ -7,7 +7,7 @@ import {
 
 export const operationsRouter = Router();
 operationsRouter.use(authenticateToken);
-operationsRouter.use(requireRole('admin', 'call_center', 'operator'));
+operationsRouter.use(requireRole('admin', 'call_center', 'operator', 'broker'));
 
 const appointmentStatuses = new Set(['scheduled', 'completed', 'cancelled', 'no_show']);
 const appointmentTypes = new Set(['phone_consultation', 'field_visit', 'video_call']);
@@ -41,7 +41,7 @@ operationsRouter.patch('/appointments/:id/status', async (req: AuthRequest, res:
   res.json({ success: true, appointment: await updateAppointmentStatus(req.params.id, status) });
 });
 
-operationsRouter.get('/security-logs', async (_req, res: Response) => {
+operationsRouter.get('/security-logs', requireRole('admin'), async (_req, res: Response) => {
   res.json({ success: true, logs: await listSecurityLogs() });
 });
 

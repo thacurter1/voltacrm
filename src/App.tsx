@@ -100,8 +100,15 @@ function UnifiedApp() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
 
+  const getInitialTab = (role: string) => {
+    if (role === 'customer') return 'customer_overview';
+    if (role === 'call_center') return 'callcenter';
+    if (role === 'operator' || role === 'broker') return 'crm';
+    return 'dashboard';
+  };
+
   const [activeTab, setActiveTab] = useState<string>(
-    currentUser.role === 'customer' ? 'customer_overview' : 'dashboard'
+    getInitialTab(currentUser.role)
   );
 
   const [isRefreshingMarketIndex, setIsRefreshingMarketIndex] = useState(false);
@@ -156,19 +163,40 @@ function UnifiedApp() {
       }
 
       const isCustomer = user.role === 'customer';
+      const isAdmin = user.role === 'admin';
+      const isBroker = user.role === 'operator' || user.role === 'broker';
+
       const [customerRows, leadRows, profileRows, billRows, appointmentRows, securityRows] = await Promise.all([
         isCustomer ? (user.customerId ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : Promise.resolve([])) : api.customers.getAll(),
         isCustomer ? Promise.resolve([]) : api.leads.getAll(),
         isCustomer ? Promise.resolve([user]) : api.auth.profiles(),
         portalApi.listBills(isCustomer ? user.customerId : undefined),
         isCustomer ? Promise.resolve([]) : api.operations.listAppointments(),
-        isCustomer ? Promise.resolve([]) : api.operations.listSecurityLogs(),
+        isAdmin ? api.operations.listSecurityLogs() : Promise.resolve([]),
       ]);
-      setCustomers(customerRows); setLeads(leadRows); setProfiles(profileRows); setBills(billRows);
+
+      const resolvedCustomers = isBroker
+        ? customerRows.filter(c => {
+            const brokerName = user.name.split(' (')[0].trim();
+            return (
+              c.assignedBrokerId === user.id ||
+              (c.accountManager && (
+                c.accountManager === user.name ||
+                c.accountManager === brokerName ||
+                user.name.includes(c.accountManager) ||
+                c.accountManager.includes(brokerName)
+              ))
+            );
+          })
+        : user.role === 'call_center'
+        ? []
+        : customerRows;
+
+      setCustomers(resolvedCustomers); setLeads(leadRows); setProfiles(profileRows); setBills(billRows);
       setAppointments(appointmentRows); setSecurityLogs(securityRows);
-      setAudits(runQuarterlyAudit(customerRows, marketIndex));
+      setAudits(runQuarterlyAudit(resolvedCustomers, marketIndex));
       setCurrentUser(user); setIsGateOpen(false);
-      setActiveTab(isCustomer ? 'customer_overview' : 'dashboard');
+      setActiveTab(getInitialTab(user.role));
 
       // Se si passa a operatore o admin, rimuove parametri ?app=customer o ?mode=customer dall'URL
       if (!isCustomer && typeof window !== 'undefined') {
@@ -644,30 +672,51 @@ function UnifiedApp() {
               <PortfolioManager
                 customers={customers}
                 profiles={profiles}
+                currentUser={currentUser}
                 onSelectCustomer={(customer) => setDrawerState({ isOpen: true, customer, lead: null })}
                 onTriggerSwitchAudit={(_cId) => setActiveTab('switch4m')}
               />
             )}
 
             {activeTab === 'team_profiles' && (
-              <TeamProfilesManager
-                currentUser={currentUser}
-                profiles={profiles}
-                customers={customers}
-                onProfilesUpdated={setProfiles}
-                onCustomerCreated={(newCust) => {
-                  setCustomers(prev => [newCust, ...prev]);
-                  setAudits(runQuarterlyAudit([newCust, ...customers]));
-                }}
-                onToast={addToast}
-              />
+              currentUser.role === 'admin' ? (
+                <TeamProfilesManager
+                  currentUser={currentUser}
+                  profiles={profiles}
+                  customers={customers}
+                  onProfilesUpdated={setProfiles}
+                  onCustomerCreated={(newCust) => {
+                    setCustomers(prev => [newCust, ...prev]);
+                    setAudits(runQuarterlyAudit([newCust, ...customers]));
+                  }}
+                  onToast={addToast}
+                />
+              ) : (
+                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+                  <p className="text-sm text-slate-500 mt-2">La gestione dei profili e dei permessi dell'agenzia è accessibile esclusivamente agli amministratori.</p>
+                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                    Torna ai tuoi clienti
+                  </button>
+                </div>
+              )
             )}
 
             {activeTab === 'commissions' && (
-              <CommissionManager
-                currentUser={currentUser}
-                onToast={addToast}
-              />
+              currentUser.role !== 'call_center' ? (
+                <CommissionManager
+                  currentUser={currentUser}
+                  onToast={addToast}
+                />
+              ) : (
+                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata a Broker e Consulenti</h2>
+                  <p className="text-sm text-slate-500 mt-2">Gli operatori Call Center lavorano sulla presa appuntamenti e qualificazione contatti.</p>
+                  <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                    Vai alla tua postazione Agenda
+                  </button>
+                </div>
+              )
             )}
 
             {activeTab === 'tariffe' && (
@@ -704,10 +753,20 @@ function UnifiedApp() {
             )}
 
             {activeTab === 'security' && (
-              <SecurityAuditDashboard
-                logs={securityLogs}
-                onTriggerScan={() => addToast('Scansione di Sicurezza Completata', 'Tutti i controlli GDPR, 2FA e crittografia AES-256 sono conformi al 100%.', 'success')}
-              />
+              currentUser.role === 'admin' ? (
+                <SecurityAuditDashboard
+                  logs={securityLogs}
+                  onTriggerScan={() => addToast('Scansione di Sicurezza Completata', 'Tutti i controlli GDPR, 2FA e crittografia AES-256 sono conformi al 100%.', 'success')}
+                />
+              ) : (
+                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+                  <p className="text-sm text-slate-500 mt-2">I registri di audit GDPR e i controlli infrastrutturali sono riservati agli amministratori.</p>
+                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                    Torna ai tuoi clienti
+                  </button>
+                </div>
+              )
             )}
       </main>
 

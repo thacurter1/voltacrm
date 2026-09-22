@@ -90,7 +90,8 @@ async function main() {
     path.join('tests', 'test_f1_f2_f3_engine.cjs'),
     path.join('tests', 'test_buttons_and_navigation_integrity.cjs'),
     path.join('tests', 'test_customer_to_backend_navigation.cjs'),
-    path.join('tests', 'test_oauth_registration.cjs')
+    path.join('tests', 'test_oauth_registration.cjs'),
+    path.join('tests', 'test_rbac_hierarchy.cjs')
   ];
 
   let passed = 0;

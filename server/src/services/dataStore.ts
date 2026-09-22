@@ -31,7 +31,7 @@ export const users: any[] = [
     name: 'Chiara Bianchi (Consulente Senior)',
     email: 'c.bianchi@voltagroup.it',
     password: bcrypt.hashSync(defaultOpPass, 10),
-    role: 'call_center',
+    role: 'operator',
     phone: '+39 338 5566778',
     whatsapp: '+393385566778',
     avatar: 'CB',
@@ -45,7 +45,7 @@ export const users: any[] = [
     name: 'Valentina Neri (Consulente Energetico)',
     email: 'v.neri@voltagroup.it',
     password: bcrypt.hashSync(defaultOpPass, 10),
-    role: 'call_center',
+    role: 'operator',
     phone: '+39 334 1122990',
     whatsapp: '+393341122990',
     avatar: 'VN',
@@ -53,6 +53,20 @@ export const users: any[] = [
     twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isDemo ? 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026' : undefined),
     onboardingStatus: 'active',
     createdAt: '2026-02-15'
+  },
+  {
+    id: 'user-cc-4',
+    name: 'Marco Rossi (Operatore Call Center)',
+    email: 'm.rossi@voltagroup.it',
+    password: bcrypt.hashSync(defaultOpPass, 10),
+    role: 'call_center',
+    phone: '+39 331 4455667',
+    whatsapp: '+393314455667',
+    avatar: 'MR',
+    is2faEnabled: true,
+    twoFactorSecret: process.env.OPERATOR_2FA_SECRET || (isDemo ? 'VOLTA_OPERATOR_SECRET_KEY_2FA_2026' : undefined),
+    onboardingStatus: 'active',
+    createdAt: '2026-03-01'
   },
   {
     id: 'user-cust-1',

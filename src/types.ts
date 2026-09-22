@@ -70,6 +70,7 @@ export interface Customer {
   lastSwitchAuditDate: string; // ultima verifica quadrimestrale
   nextSwitchAuditDate: string; // prossima scadenza quadrimestrale (120gg)
   accountManager: string;
+  assignedBrokerId?: string;
   hasBrokerageMandate: boolean; // delega per cambio offerta automatico
   notes?: string;
 }
@@ -154,7 +155,7 @@ export interface BillOcrResult {
   notes?: string;
 }
 
-export type UserRole = 'call_center' | 'operator' | 'customer' | 'admin';
+export type UserRole = 'call_center' | 'operator' | 'broker' | 'customer' | 'admin';
 
 export interface UserProfile {
   id: string;
