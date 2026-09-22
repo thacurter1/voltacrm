@@ -132,10 +132,14 @@ function UnifiedApp() {
         user = _newUser;
         if (typeof window !== 'undefined') {
           localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(user));
-          if (user.role !== 'customer') {
-            localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${user.id}-${Date.now()}`);
-          } else {
-            localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-cust-token-${user.id}-${Date.now()}`);
+          const currentToken = localStorage.getItem('VOLTA_AUTH_TOKEN');
+          const isMockOrMissing = !currentToken || currentToken.startsWith('mock-');
+          if (isMockOrMissing) {
+            if (user.role !== 'customer') {
+              localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${user.id}-${Date.now()}`);
+            } else {
+              localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-cust-token-${user.id}-${Date.now()}`);
+            }
           }
           try {
             const raw = localStorage.getItem('VOLTA_ENERGY_CRM_DB_V3');

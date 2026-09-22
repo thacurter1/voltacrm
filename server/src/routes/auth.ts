@@ -117,10 +117,32 @@ authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSch
 
 // POST /api/auth/oauth (Google & Apple OAuth login / registration)
 authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: Request, res: Response): Promise<void> => {
-  const { provider, role, email, name } = req.body;
+  const { provider, role, email, name, idToken } = req.body;
   const userRole = role || 'customer';
-  const targetEmail = (email || `${provider}.${userRole === 'customer' ? 'cliente' : 'staff'}@voltagroup.it`).trim().toLowerCase();
-  const targetName = (name || (provider === 'google' ? 'Utente Google' : 'Utente Apple')).trim();
+
+  let tokenEmail = email;
+  let tokenName = name;
+  let tokenAvatar: string | undefined;
+
+  if (idToken && typeof idToken === 'string') {
+    try {
+      const parts = idToken.split('.');
+      if (parts.length === 3) {
+        const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
+        const decoded = JSON.parse(payloadJson);
+        if (decoded && typeof decoded === 'object') {
+          if (decoded.email) tokenEmail = decoded.email;
+          if (decoded.name) tokenName = decoded.name;
+          if (decoded.picture) tokenAvatar = decoded.picture;
+        }
+      }
+    } catch (e) {
+      console.warn('Impossibile decodificare idToken OAuth:', e);
+    }
+  }
+
+  const targetEmail = (tokenEmail || `${provider}.${userRole === 'customer' ? 'cliente' : 'staff'}@voltagroup.it`).trim().toLowerCase();
+  const targetName = (tokenName || (provider === 'google' ? 'Utente Google' : 'Utente Apple')).trim();
 
   // Check if user already exists
   let user = users.find(u => u.email.toLowerCase() === targetEmail);
@@ -137,7 +159,7 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
       phone: '+39 340 0000000',
       fiscalCode: userRole === 'customer' ? 'OAUTHUSER00A00A0' : undefined,
       customerId,
-      avatar: targetName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'OU',
+      avatar: tokenAvatar || (targetName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'OU'),
       is2faEnabled: false,
       onboardingStatus: 'active',
       createdAt: today,

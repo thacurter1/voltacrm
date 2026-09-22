@@ -102,16 +102,42 @@ async function runTests() {
     assert.equal(invalidRes.status, 400, 'Unsupported OAuth provider must return 400 Bad Request');
     console.log('✔ Validazione schema Zod rifiuta provider non consentiti');
 
-    // TEST 5: Frontend UI Wiring Verification
-    console.log('--- TEST 5: Frontend UI Wiring & Component Presence ---');
+    // TEST 5: Google OAuth with idToken payload decoding
+    console.log('--- TEST 5: Google OAuth with idToken payload decoding ---');
+    const fakeGoogleIdToken = 'header.' + Buffer.from(JSON.stringify({
+      email: 'verified.google.user@gmail.com',
+      name: 'Google User Verified',
+      picture: 'https://lh3.googleusercontent.com/a/test'
+    })).toString('base64url') + '.signature';
+
+    const idTokenRes = await fetch(`${baseUrl}/oauth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'google',
+        role: 'customer',
+        idToken: fakeGoogleIdToken
+      })
+    });
+    assert.equal(idTokenRes.status, 200);
+    const idTokenData = await idTokenRes.json();
+    assert.equal(idTokenData.user.email, 'verified.google.user@gmail.com');
+    assert.equal(idTokenData.user.name, 'Google User Verified');
+    console.log('✔ idToken Google decodificato con successo:', idTokenData.user.email);
+
+    // TEST 6: Frontend UI Wiring & Token Preservation Verification
+    console.log('--- TEST 6: Frontend UI Wiring & Token Preservation ---');
+    const appCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'App.tsx'), 'utf8');
     const portalGateCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'PortalGate.tsx'), 'utf8');
     const loginModalCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'LoginModal.tsx'), 'utf8');
     const oauthButtonsCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'OAuthButtons.tsx'), 'utf8');
 
+    assert.ok(appCode.includes('isMockOrMissing'), 'App.tsx must not overwrite valid JWT tokens');
     assert.ok(portalGateCode.includes('<OAuthButtons'), 'PortalGate must render OAuthButtons');
     assert.ok(loginModalCode.includes('<OAuthButtons'), 'LoginModal must render OAuthButtons');
     assert.ok(oauthButtonsCode.includes('Google') && oauthButtonsCode.includes('Apple'), 'OAuthButtons must support both Google and Apple');
-    console.log('✔ Componenti UI PortalGate e LoginModal integrati correttamente con OAuthButtons');
+    assert.ok(oauthButtonsCode.includes('activeModalProvider'), 'OAuthButtons must support interactive account selection modal');
+    console.log('✔ Componenti UI e preservazione token verificati con successo');
 
     console.log('\n🎉 ALL GOOGLE & APPLE OAUTH TESTS PASSED SUCCESSFULLY!');
   } finally {
@@ -120,6 +146,8 @@ async function runTests() {
     if (idx1 !== -1) users.splice(idx1, 1);
     const idx2 = users.findIndex(u => u.email === 'consultant.apple@voltagroup.it');
     if (idx2 !== -1) users.splice(idx2, 1);
+    const idx3 = users.findIndex(u => u.email === 'verified.google.user@gmail.com');
+    if (idx3 !== -1) users.splice(idx3, 1);
 
     await new Promise(resolve => server.close(resolve));
   }

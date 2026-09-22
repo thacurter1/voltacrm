@@ -258,7 +258,11 @@ class ProfileService {
   }
 
   // Autenticazione e Registrazione OAuth (Google / Apple)
-  async signInWithOAuth(provider: 'google' | 'apple', role: 'customer' | 'operator' = 'customer'): Promise<UserProfile> {
+  async signInWithOAuth(
+    provider: 'google' | 'apple', 
+    role: 'customer' | 'operator' = 'customer',
+    options?: { email?: string; name?: string; idToken?: string }
+  ): Promise<UserProfile> {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as 'google' | 'apple',
@@ -271,17 +275,18 @@ class ProfileService {
 
     // In demo / fallback locale
     const current = this.getLocalProfiles();
-    const existing = current.find(p => p.email?.toLowerCase().includes(provider) && (role === 'customer' ? p.role === 'customer' : p.role !== 'customer'));
+    const targetEmail = (options?.email || `${provider}.${role === 'customer' ? 'cliente' : 'staff'}@voltagroup.it`).trim().toLowerCase();
+    const existing = current.find(p => p.email?.toLowerCase() === targetEmail && (role === 'customer' ? p.role === 'customer' : p.role !== 'customer'));
     if (existing) {
       return existing;
     }
 
     const initials = provider === 'google' ? 'UG' : 'UA';
     const customerId = role === 'customer' ? `cust-oauth-${Date.now()}` : undefined;
-    const name = provider === 'google' 
+    const name = options?.name || (provider === 'google' 
       ? (role === 'customer' ? 'Marco Rossi (Google)' : 'Matteo Riva (Google Staff)') 
-      : (role === 'customer' ? 'Alessandro V. (Apple ID)' : 'Chiara Bianchi (Apple Staff)');
-    const email = `${provider}.${role === 'customer' ? 'cliente' : 'staff'}@voltagroup.it`;
+      : (role === 'customer' ? 'Alessandro V. (Apple ID)' : 'Chiara Bianchi (Apple Staff)'));
+    const email = targetEmail;
 
     const newProfile: UserProfile = {
       id: `user-${provider}-${Date.now()}`,

@@ -226,12 +226,16 @@ export const api = {
       return { success: true, token: mockToken, user: newProfile };
     },
 
-    async loginWithOAuth(provider: 'google' | 'apple', role: 'customer' | 'operator' = 'customer') {
+    async loginWithOAuth(
+      provider: 'google' | 'apple', 
+      role: 'customer' | 'operator' = 'customer',
+      options?: { email?: string; name?: string; idToken?: string }
+    ) {
       if (API_BASE_URL) {
         try {
           const data = await request<{ success: boolean; token: string; user: any; provider: string }>('/auth/oauth', {
             method: 'POST',
-            body: JSON.stringify({ provider, role })
+            body: JSON.stringify({ provider, role, ...(options || {}) })
           });
           if (data.token && typeof window !== 'undefined') {
             localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
@@ -246,7 +250,7 @@ export const api = {
       }
 
       // Supabase / Demo fallback
-      const profile = await profileService.signInWithOAuth(provider, role);
+      const profile = await profileService.signInWithOAuth(provider, role, options);
       const mockToken = `mock-oauth-${provider}-${profile.id}-${Date.now()}`;
       if (typeof window !== 'undefined') {
         localStorage.setItem('VOLTA_AUTH_TOKEN', mockToken);
