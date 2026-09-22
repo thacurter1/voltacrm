@@ -40,11 +40,16 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         {/* Brand Logo */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => onSelectView('marketplace')}>
-            <span className="font-black text-2xl tracking-tighter text-[#e02424]">subito</span>
-            <span className="text-xs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-red-100 text-[#e02424]">
-              energia
-            </span>
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onSelectView('marketplace')}>
+            <div className="h-8 w-8 rounded-lg bg-[#635bff] flex items-center justify-center text-white shadow-xs shrink-0">
+              <Zap className="h-4 w-4 fill-white text-white" strokeWidth={2} />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-base text-[#0a2540] tracking-tight whitespace-nowrap">Volta Energia</span>
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25">
+                PORTALE TRASPARENZA
+              </span>
+            </div>
           </div>
           <span className="hidden md:inline-block text-xs text-slate-400 border-l border-slate-200 pl-3">
             Il marketplace delle migliori tariffe luce e gas certificate
@@ -63,7 +68,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#e02424]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#635bff]" />
               <span>Offerte</span>
             </button>
             <button
@@ -74,7 +79,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-blue-600" />
+              <FileText className="w-3.5 h-3.5 text-[#635bff]" />
               <span>Le mie forniture</span>
             </button>
           </div>
@@ -89,7 +94,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
           <button
             type="button"
             onClick={onUploadBill}
-            className="sm:hidden p-2 rounded-xl bg-[#e02424] hover:bg-[#c81e1e] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+            className="sm:hidden p-2 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
             title="Carica la tua bolletta"
             aria-label="Carica la tua bolletta"
           >
@@ -100,7 +105,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
           <button
             type="button"
             onClick={onUploadBill}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-[#e02424] hover:bg-[#c81e1e] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
           >
             <Upload className="w-4 h-4" />
             <span>Carica la tua bolletta</span>
@@ -112,7 +117,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
             <select
               value={selectedCustomerId}
               onChange={(e) => onSelectCustomer(e.target.value)}
-              className="bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none focus:ring-2 focus:ring-red-400"
+              className="bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none focus:ring-2 focus:ring-[#635bff]/50"
               title="Cambia cliente demo"
             >
               {customers.map((c) => (
@@ -169,7 +174,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
                 placeholder="Cosa cerchi? Cerca tariffa o fornitore..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#e02424] focus:ring-1 focus:ring-[#e02424] shadow-2xs"
+                className="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] shadow-2xs"
               />
             </div>
 
@@ -189,7 +194,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
                     onClick={() => onSelectCategory(cat.id)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                       isSelected
-                        ? 'bg-[#e02424] text-white shadow-xs'
+                        ? 'bg-[#635bff] text-white shadow-xs'
                         : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100'
                     }`}
                   >

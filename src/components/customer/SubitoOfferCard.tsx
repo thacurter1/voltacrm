@@ -19,7 +19,7 @@ export const SubitoOfferCard: React.FC<SubitoOfferCardProps> = ({
   const displaySavings = hasSavings ? Math.round(estimatedSavingsEur) : null;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 hover:border-red-300 hover:shadow-md transition-all duration-200 p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 group">
+    <div className="bg-white rounded-2xl border border-slate-200 hover:border-[#635bff]/40 hover:shadow-md transition-all duration-200 p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 group">
       {/* Left Column: Supplier badge & Energy Type */}
       <div className="flex items-start gap-4 flex-1">
         <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-xs ${
@@ -40,7 +40,7 @@ export const SubitoOfferCard: React.FC<SubitoOfferCardProps> = ({
               {offer.supplier}
             </span>
             {offer.tag && (
-              <span className="px-2 py-0.5 rounded-md bg-red-50 border border-red-200 text-[#e02424] text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-[#635bff]/10 border border-[#635bff]/25 text-[#635bff] text-[10px] font-bold">
                 {offer.tag}
               </span>
             )}
@@ -56,7 +56,7 @@ export const SubitoOfferCard: React.FC<SubitoOfferCardProps> = ({
             </span>
           </div>
 
-          <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-[#e02424] transition-colors leading-snug">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-[#635bff] transition-colors leading-snug">
             {offer.name}
           </h3>
 
@@ -93,14 +93,14 @@ export const SubitoOfferCard: React.FC<SubitoOfferCardProps> = ({
           </span>
           {displaySavings !== null ? (
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl sm:text-3xl font-black text-[#e02424]">
+              <span className="text-2xl sm:text-3xl font-black text-emerald-600">
                 ~€{displaySavings}
               </span>
               <span className="text-xs font-bold text-slate-500">/ anno</span>
             </div>
           ) : (
             <div className="flex flex-col items-start md:items-end">
-              <span className="text-sm font-bold text-[#e02424]">
+              <span className="text-sm font-bold text-[#635bff]">
                 Da bolletta
               </span>
               <span className="text-[10px] text-slate-400">Carica PDF per calcolo</span>
@@ -110,7 +110,7 @@ export const SubitoOfferCard: React.FC<SubitoOfferCardProps> = ({
 
         <button
           onClick={() => onSelectOffer(offer)}
-          className="px-5 py-2.5 rounded-xl bg-[#e02424] hover:bg-[#c81e1e] text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-2 group-hover:scale-105 active:scale-95"
+          className="px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-2 group-hover:scale-105 active:scale-95"
         >
           <span>Attiva questa tariffa</span>
           <ArrowRight className="w-4 h-4" />

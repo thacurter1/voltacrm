@@ -106,7 +106,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ onReturnToBackend }) =
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f8] text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f6f9fc] text-slate-900 flex flex-col font-sans">
       <InstallAppBanner />
 
       {/* Subito-style Header */}
@@ -133,10 +133,10 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ onReturnToBackend }) =
             {/* Marketplace Banner */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#e02424] bg-red-50 px-2.5 py-1 rounded-md">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#635bff] bg-[#635bff]/10 border border-[#635bff]/25 px-2.5 py-1 rounded-md">
                   Offerte Certificate dal Broker
                 </span>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                <h1 className="text-xl sm:text-2xl font-black text-[#0a2540] mt-2">
                   Risparmia subito sulle tue bollette luce e gas
                 </h1>
                 <p className="text-xs text-slate-500 mt-1 max-w-2xl">
@@ -159,7 +159,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ onReturnToBackend }) =
                   <p className="text-sm font-semibold text-slate-600">Nessuna offerta corrisponde ai filtri impostati</p>
                   <button
                     onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}
-                    className="text-xs text-[#e02424] font-bold hover:underline"
+                    className="text-xs text-[#635bff] font-bold hover:underline"
                   >
                     Reimposta filtri di ricerca
                   </button>
@@ -210,7 +210,10 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ onReturnToBackend }) =
       <footer className="bg-white border-t border-slate-200 py-6 px-6 text-center text-xs text-slate-500 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-black text-[#e02424]">subito energia</span>
+            <span className="font-bold text-[#0a2540]">Volta Energia</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/20">
+              Portale Trasparenza
+            </span>
             <span>• Portale Trasparenza Tariffe & Risparmio Certificato</span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
