@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { UserProfile } from '../types';
+import { Customer, UserProfile } from '../types';
+import { dbService } from './db';
 
 // Credenziali lette dalle variabili d'ambiente (configurabili su Vercel e in locale)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -304,6 +305,28 @@ class ProfileService {
       onboardingStatus: 'active',
       createdAt: new Date().toISOString().split('T')[0]
     };
+
+    if (role === 'customer' && customerId) {
+      const state = dbService.load();
+      if (!state.customers.some((c: Customer) => c.id === customerId)) {
+        const newCustomer: Customer = {
+          id: customerId,
+          name: newProfile.name,
+          email: newProfile.email,
+          phone: newProfile.phone || '+39 340 1234567',
+          fiscalCode: newProfile.fiscalCode || 'RSSMRC85M01H501Z',
+          city: 'Milano',
+          utilityPoints: [],
+          contractStartDate: newProfile.createdAt || new Date().toISOString().split('T')[0],
+          lastSwitchAuditDate: newProfile.createdAt || new Date().toISOString().split('T')[0],
+          nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
+          accountManager: 'Matteo Riva',
+          hasBrokerageMandate: true,
+          notes: `Registrato via ${provider.toUpperCase()} OAuth`
+        };
+        dbService.save({ ...state, customers: [newCustomer, ...state.customers] });
+      }
+    }
 
     this.saveLocalProfiles([newProfile, ...current]);
     return newProfile;

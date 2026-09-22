@@ -125,19 +125,49 @@ async function runTests() {
     assert.equal(idTokenData.user.name, 'Google User Verified');
     console.log('✔ idToken Google decodificato con successo:', idTokenData.user.email);
 
-    // TEST 6: Frontend UI Wiring & Token Preservation Verification
-    console.log('--- TEST 6: Frontend UI Wiring & Token Preservation ---');
+    // TEST 7: Apple OAuth Customer with idToken payload decoding
+    console.log('--- TEST 7: Apple OAuth Customer with idToken payload decoding ---');
+    const fakeAppleIdToken = 'header.' + Buffer.from(JSON.stringify({
+      sub: '001234.apple.user.sub.id',
+      email: 'verified.apple.customer@icloud.com',
+      email_verified: 'true'
+    })).toString('base64url') + '.signature';
+
+    const appleCustRes = await fetch(`${baseUrl}/oauth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'apple',
+        role: 'customer',
+        name: 'Alessandro Apple User',
+        idToken: fakeAppleIdToken
+      })
+    });
+    assert.equal(appleCustRes.status, 200, 'Apple customer OAuth must return 200');
+    const appleCustData = await appleCustRes.json();
+    assert.equal(appleCustData.user.email, 'verified.apple.customer@icloud.com');
+    assert.equal(appleCustData.user.name, 'Alessandro Apple User');
+    assert.equal(appleCustData.user.role, 'customer');
+    assert.ok(appleCustData.user.customerId, 'Apple customer must have customerId provisioned');
+    console.log('✔ idToken Apple decodificato con successo:', appleCustData.user.email);
+
+    // TEST 8: Apple CSP and Apple ID SDK Verification in index.html and OAuthButtons.tsx
+    console.log('--- TEST 8: Apple CSP and Apple ID SDK Integration ---');
     const appCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'App.tsx'), 'utf8');
     const portalGateCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'PortalGate.tsx'), 'utf8');
     const loginModalCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'LoginModal.tsx'), 'utf8');
     const oauthButtonsCode = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'OAuthButtons.tsx'), 'utf8');
+    const indexHtmlCode = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
     assert.ok(appCode.includes('isMockOrMissing'), 'App.tsx must not overwrite valid JWT tokens');
     assert.ok(portalGateCode.includes('<OAuthButtons'), 'PortalGate must render OAuthButtons');
     assert.ok(loginModalCode.includes('<OAuthButtons'), 'LoginModal must render OAuthButtons');
     assert.ok(oauthButtonsCode.includes('Google') && oauthButtonsCode.includes('Apple'), 'OAuthButtons must support both Google and Apple');
     assert.ok(oauthButtonsCode.includes('activeModalProvider'), 'OAuthButtons must support interactive account selection modal');
-    console.log('✔ Componenti UI e preservazione token verificati con successo');
+    assert.ok(indexHtmlCode.includes('appleid.cdn-apple.com'), 'CSP must allow appleid.cdn-apple.com in script-src');
+    assert.ok(indexHtmlCode.includes('appleid.apple.com'), 'CSP must allow appleid.apple.com in connect-src / frame-src');
+    assert.ok(oauthButtonsCode.includes('AppleID') || oauthButtonsCode.includes('VITE_APPLE_CLIENT_ID'), 'OAuthButtons must support Apple ID SDK');
+    console.log('✔ CSP Apple e Apple ID SDK verificati con successo');
 
     console.log('\n🎉 ALL GOOGLE & APPLE OAUTH TESTS PASSED SUCCESSFULLY!');
   } finally {
@@ -148,6 +178,8 @@ async function runTests() {
     if (idx2 !== -1) users.splice(idx2, 1);
     const idx3 = users.findIndex(u => u.email === 'verified.google.user@gmail.com');
     if (idx3 !== -1) users.splice(idx3, 1);
+    const idx4 = users.findIndex(u => u.email === 'verified.apple.customer@icloud.com');
+    if (idx4 !== -1) users.splice(idx4, 1);
 
     await new Promise(resolve => server.close(resolve));
   }

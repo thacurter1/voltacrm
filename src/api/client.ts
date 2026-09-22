@@ -56,6 +56,13 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
   return res.json() as Promise<T>;
 }
 
+export function isNetworkError(err: unknown): boolean {
+  if (!err) return false;
+  if (err instanceof TypeError) return true;
+  const msg = (err as Error)?.message || '';
+  return msg.includes('fetch') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ECONNREFUSED');
+}
+
 export const api = {
   // --- AUTHENTICATION ---
   auth: {
@@ -78,8 +85,8 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL) throw err;
-          if (!isStandaloneDemo) throw err;
+          if (API_BASE_URL && !isNetworkError(err)) throw err;
+          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
           console.warn('[API Client] Fallback locale per loginOperator:', err);
         }
       }
@@ -117,8 +124,8 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL) throw err;
-          if (!isStandaloneDemo) throw err;
+          if (API_BASE_URL && !isNetworkError(err)) throw err;
+          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
           console.warn('[API Client] Fallback locale per loginCustomer:', err);
         }
       }
@@ -181,8 +188,8 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL) throw err;
-          if (!isStandaloneDemo) throw err;
+          if (API_BASE_URL && !isNetworkError(err)) throw err;
+          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
           console.warn('[API Client] Fallback locale per registerCustomer:', err);
         }
       }
@@ -243,8 +250,8 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL) throw err;
-          if (!isStandaloneDemo) throw err;
+          if (API_BASE_URL && !isNetworkError(err)) throw err;
+          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
           console.warn('[API Client] Fallback locale per loginWithOAuth:', err);
         }
       }

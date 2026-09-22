@@ -87,6 +87,46 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
       }
     }
 
+    // Check if real Apple ID Sign In SDK is available with Client ID
+    const appleClientId = (import.meta as any).env?.VITE_APPLE_CLIENT_ID;
+    const appleAuth = (window as any).AppleID?.auth;
+
+    if (provider === 'apple' && appleClientId && appleAuth) {
+      try {
+        appleAuth.init({
+          clientId: appleClientId,
+          scope: 'name email',
+          redirectURI: window.location.origin,
+          usePopup: true
+        });
+        appleAuth.signIn().then((response: any) => {
+          if (response?.authorization?.id_token) {
+            let appleName: string | undefined;
+            if (response.user?.name) {
+              appleName = `${response.user.name.firstName || ''} ${response.user.name.lastName || ''}`.trim();
+            }
+            handleOAuth('apple', {
+              idToken: response.authorization.id_token,
+              email: response.user?.email,
+              name: appleName
+            });
+          }
+        }).catch((e: any) => {
+          if (e?.error !== 'popup_closed_by_user') {
+            console.warn('Apple ID SDK initialization error, fallback su dialogo:', e);
+            openFallbackModal('apple');
+          }
+        });
+        return;
+      } catch (e) {
+        console.warn('Apple ID SDK initialization error, fallback su dialogo:', e);
+      }
+    }
+
+    openFallbackModal(provider);
+  };
+
+  const openFallbackModal = (provider: 'google' | 'apple') => {
     // Set suggested default inputs
     if (provider === 'google') {
       setCustomEmail(role === 'customer' ? 'mario.rossi.demo@gmail.com' : 'matteo.riva.google@gmail.com');
