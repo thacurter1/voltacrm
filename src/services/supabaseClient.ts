@@ -256,6 +256,53 @@ class ProfileService {
 
     return updated;
   }
+
+  // Autenticazione e Registrazione OAuth (Google / Apple)
+  async signInWithOAuth(provider: 'google' | 'apple', role: 'customer' | 'operator' = 'customer'): Promise<UserProfile> {
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider as 'google' | 'apple',
+        options: {
+          redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
+        }
+      });
+      if (error) throw error;
+    }
+
+    // In demo / fallback locale
+    const current = this.getLocalProfiles();
+    const existing = current.find(p => p.email?.toLowerCase().includes(provider) && (role === 'customer' ? p.role === 'customer' : p.role !== 'customer'));
+    if (existing) {
+      return existing;
+    }
+
+    const initials = provider === 'google' ? 'UG' : 'UA';
+    const customerId = role === 'customer' ? `cust-oauth-${Date.now()}` : undefined;
+    const name = provider === 'google' 
+      ? (role === 'customer' ? 'Marco Rossi (Google)' : 'Matteo Riva (Google Staff)') 
+      : (role === 'customer' ? 'Alessandro V. (Apple ID)' : 'Chiara Bianchi (Apple Staff)');
+    const email = `${provider}.${role === 'customer' ? 'cliente' : 'staff'}@voltagroup.it`;
+
+    const newProfile: UserProfile = {
+      id: `user-${provider}-${Date.now()}`,
+      name,
+      email,
+      role: role === 'customer' ? 'customer' : 'call_center',
+      phone: '+39 340 1234567',
+      whatsapp: '+393401234567',
+      fiscalCode: role === 'customer' ? 'RSSMRC85M01H501Z' : undefined,
+      customerId,
+      assignedBrokerId: 'user-admin-1',
+      assignedBrokerName: 'Matteo Riva (Broker Volta)',
+      avatar: initials,
+      is2faEnabled: false,
+      onboardingStatus: 'active',
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    this.saveLocalProfiles([newProfile, ...current]);
+    return newProfile;
+  }
 }
 
 export const profileService = new ProfileService();

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
 import { api, DEMO_MODE } from '../api/client';
+import { OAuthButtons } from './OAuthButtons';
 
 interface PortalGateProps {
   onLoginOperator: (user: UserProfile) => void;
@@ -267,7 +268,15 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                 </div>
 
                 {customerMode === 'login' ? (
-                  <form onSubmit={handleCustomerLogin} className="space-y-4">
+                  <div className="space-y-4">
+                    <OAuthButtons
+                      role="customer"
+                      mode="login"
+                      onSuccess={onLoginCustomer}
+                      onToast={onToast}
+                    />
+
+                    <form onSubmit={handleCustomerLogin} className="space-y-4">
                     <div>
                       <label className="block font-semibold text-[#0a2540] mb-1">Email o Codice Fiscale</label>
                       <input
@@ -334,7 +343,16 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       </div>
                     </div>}
                   </form>
-                ) : (
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <OAuthButtons
+                    role="customer"
+                    mode="register"
+                    onSuccess={onLoginCustomer}
+                    onToast={onToast}
+                  />
+
                   <form onSubmit={handleCustomerRegister} className="space-y-3.5">
                     <div>
                       <label className="block font-semibold text-[#0a2540] mb-1">Nome e Cognome / Ragione Sociale *</label>
@@ -397,24 +415,32 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       <span>{isSubmitting ? 'Attivazione in corso...' : 'Crea Profilo & Inizia'}</span>
                     </button>
                   </form>
-                )}
-              </div>
-            )}
-
-            {/* PORTAL 2: OPERATORE CALL CENTER & BROKER */}
-            {activePortal === 'operator' && (
-              <div className="space-y-5">
-                <div className="border-b border-[#e3e8ee] pb-3">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#635bff] text-[10px] font-bold uppercase mb-1">
-                    <Headphones className="h-3 w-3" /> Area Operativa Riservata
-                  </div>
-                  <h3 className="text-base font-bold text-[#0a2540]">Accesso Consulenti & Call Center</h3>
-                  <p className="text-[#425466] text-[11px]">
-                    Accesso protetto con autenticazione a due fattori TOTP (RFC 6238).
-                  </p>
                 </div>
+              )}
+            </div>
+          )}
 
-                {DEMO_MODE && <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          {/* PORTAL 2: OPERATORE CALL CENTER & BROKER */}
+          {activePortal === 'operator' && (
+            <div className="space-y-5">
+              <div className="border-b border-[#e3e8ee] pb-3">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#635bff] text-[10px] font-bold uppercase mb-1">
+                  <Headphones className="h-3 w-3" /> Area Operativa Riservata
+                </div>
+                <h3 className="text-base font-bold text-[#0a2540]">Accesso Consulenti & Call Center</h3>
+                <p className="text-[#425466] text-[11px]">
+                  Accesso protetto con autenticazione a due fattori TOTP (RFC 6238) o Social OAuth aziendale.
+                </p>
+              </div>
+
+              <OAuthButtons
+                role="operator"
+                mode="login"
+                onSuccess={onLoginOperator}
+                onToast={onToast}
+              />
+
+              {DEMO_MODE && <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="text-[10px] text-slate-500 block mb-1.5 uppercase font-bold">Compila rapido con account demo:</span>
                   <div className="grid grid-cols-3 gap-1.5">
                     <button

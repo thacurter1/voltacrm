@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { AuthUser, Customer } from '../types';
 import { DEMO_USERS } from '../services/db';
+import { OAuthButtons } from './OAuthButtons';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -65,6 +66,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       onSelectUser(user);
       onClose();
     }
+  };
+
+  const handleOAuthSuccess = (u: any) => {
+    const authUser: AuthUser = {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      customerId: u.customerId,
+      avatar: u.avatar || 'OU',
+      is2faEnabled: false,
+    };
+    onSelectUser(authUser);
+    onClose();
   };
 
   return (
@@ -129,6 +144,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               Include Lead Marketing, Agenda appuntamenti, Audit contratti a 120 giorni e OCR bollette.
             </div>
 
+            <OAuthButtons
+              role="operator"
+              mode="login"
+              onSuccess={handleOAuthSuccess}
+              onToast={() => {}}
+            />
+
             <div className="space-y-3">
               <div>
                 <label htmlFor="operator-select-input" className="text-[#425466] font-medium block mb-1">Seleziona Operatore / Consulente</label>
@@ -181,11 +203,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
         {/* TAB 2: CUSTOMER LOGIN */}
         {activeTab === 'customer' && (
-          <form onSubmit={handleCustomerLogin} className="space-y-4" role="tabpanel">
+          <div className="space-y-4" role="tabpanel">
             <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-100 text-slate-700 leading-relaxed">
               <span className="font-bold text-[#0a2540] block mb-0.5">Area Riservata Cliente Finale</span>
               Permette al cliente di vedere le proprie forniture, caricare la bolletta e accettare offerte migliorative.
             </div>
+
+            <OAuthButtons
+              role="customer"
+              mode="login"
+              onSuccess={handleOAuthSuccess}
+              onToast={() => {}}
+            />
+
+            <form onSubmit={handleCustomerLogin} className="space-y-4">
 
             <div className="space-y-3">
               <div>
@@ -213,7 +244,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               Accedi al Portale Cliente
             </button>
           </form>
-        )}
+        </div>
+      )}
       </div>
     </div>
   );

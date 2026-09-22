@@ -102,6 +102,14 @@ export const registerCustomerSchema = z.object({
   password: z.string().min(12).max(72)
 }).strict();
 
+export const oauthAuthSchema = z.object({
+  provider: z.enum(['google', 'apple']),
+  role: z.enum(['customer', 'operator', 'call_center', 'admin']).default('customer'),
+  email: z.string().email().optional(),
+  name: z.string().optional(),
+  idToken: z.string().optional(),
+}).strict();
+
 export const kioskLeadSchema = z.object({
   phone: z.string().min(1),
   name: z.string().optional(),

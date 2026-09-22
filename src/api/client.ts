@@ -7,7 +7,7 @@
 import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionRecord, AgentCommissionSummary, SettlementBatch, Appointment, AppointmentStatus, SecurityAuditLog, UserProfile } from '../types';
 import { dbService } from '../services/db';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
-import { INITIAL_PROFILES } from '../services/supabaseClient';
+import { INITIAL_PROFILES, profileService } from '../services/supabaseClient';
 
 // Rileva se l'app sta girando in locale (sviluppo) o su un dominio cloud pubblico (es. Vercel, Netlify)
 const isLocalhost = typeof window !== 'undefined' && (
@@ -224,6 +224,35 @@ export const api = {
         localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(newProfile));
       }
       return { success: true, token: mockToken, user: newProfile };
+    },
+
+    async loginWithOAuth(provider: 'google' | 'apple', role: 'customer' | 'operator' = 'customer') {
+      if (API_BASE_URL) {
+        try {
+          const data = await request<{ success: boolean; token: string; user: any; provider: string }>('/auth/oauth', {
+            method: 'POST',
+            body: JSON.stringify({ provider, role })
+          });
+          if (data.token && typeof window !== 'undefined') {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
+            localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(data.user));
+          }
+          return data;
+        } catch (err) {
+          if (API_BASE_URL) throw err;
+          if (!isStandaloneDemo) throw err;
+          console.warn('[API Client] Fallback locale per loginWithOAuth:', err);
+        }
+      }
+
+      // Supabase / Demo fallback
+      const profile = await profileService.signInWithOAuth(provider, role);
+      const mockToken = `mock-oauth-${provider}-${profile.id}-${Date.now()}`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', mockToken);
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(profile));
+      }
+      return { success: true, token: mockToken, user: profile, provider };
     },
 
     async me() {
