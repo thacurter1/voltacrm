@@ -57,14 +57,6 @@ switchRouter.post('/refresh-indices', authenticateToken, requireRole('admin'), a
   });
 });
 
-// GET /api/switch/offers (Pubblico per comparatore tariffe)
-switchRouter.get('/offers', (_req: Request, res: Response): void => {
-  res.json({
-    success: true,
-    offers: MARKET_OFFERS
-  });
-});
-
 // GET /api/switch/audit
 switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
@@ -90,7 +82,7 @@ switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response
   }
 });
 
-// GET /api/switch/offers (Catalogo offerte del mercato libero verificate da VoltaCRM)
+// GET /api/switch/offers (Catalogo offerte del mercato libero verificate da VoltaCRM - Pubblico per comparatore tariffe)
 switchRouter.get('/offers', (_req: Request, res: Response): void => {
   res.json({
     success: true,
