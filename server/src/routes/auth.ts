@@ -7,6 +7,7 @@ import { loginLimiter } from '../middleware/rateLimiter.js';
 import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema, oauthAuthSchema } from '../middleware/validate.js';
 
 import { verifyTotp } from '../utils/totp.js';
+import { verifyOAuthToken } from '../services/oauthVerifier.js';
 
 export const authRouter = Router();
 
@@ -115,59 +116,34 @@ authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSch
   res.status(201).json({success:true,user:toSafeProfile(profile),token});
 });
 
-// POST /api/auth/oauth (Google & Apple OAuth login / registration)
+// POST /api/auth/oauth (Google & Apple OAuth login / registration con verifica crittografica token)
 authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: Request, res: Response): Promise<void> => {
-  const { provider, role, email, name, idToken } = req.body;
+  const { provider, name, idToken } = req.body;
 
-  let tokenEmail = email;
-  let tokenName = name;
-  let tokenAvatar: string | undefined;
-
-  // Decodifica idToken JWT se fornito
-  if (idToken && typeof idToken === 'string') {
-    const parts = idToken.split('.');
-    if (parts.length === 3) {
-      try {
-        const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
-        const decoded = JSON.parse(payloadJson);
-        if (decoded && typeof decoded === 'object') {
-          if (decoded.email) tokenEmail = decoded.email;
-          if (decoded.name) tokenName = decoded.name;
-          if (decoded.picture) tokenAvatar = decoded.picture;
-        }
-      } catch (e) {
-        console.warn('Impossibile decodificare idToken OAuth:', e);
-      }
-    } else {
-      res.status(400).json({ success: false, message: 'Formato idToken OAuth non valido: atteso JWT a 3 parti.' });
-      return;
-    }
-  }
-
-  if (!tokenEmail) {
-    res.status(400).json({ success: false, message: 'Dati di autenticazione OAuth insufficienti: token o email obbligatori.' });
+  let verifiedClaims;
+  try {
+    verifiedClaims = await verifyOAuthToken(provider, idToken);
+  } catch (err: any) {
+    res.status(401).json({
+      success: false,
+      message: `Autenticazione OAuth fallita: ${err.message || 'token non valido'}`
+    });
     return;
   }
 
-  const targetEmail = tokenEmail.trim().toLowerCase();
-  const targetName = (tokenName || (provider === 'google' ? 'Utente Google' : 'Utente Apple')).trim();
+  const targetEmail = verifiedClaims.email;
+  const targetName = (verifiedClaims.name || name || (provider === 'google' ? 'Utente Google' : 'Utente Apple')).trim();
+  const tokenAvatar = verifiedClaims.picture;
 
   // Check if user already exists
   let user = users.find(u => u.email.toLowerCase() === targetEmail);
 
-  // Security: Prevent unverified account takeover for admin account
-  if (user && user.role === 'admin' && !idToken && process.env.NODE_ENV !== 'test') {
-    res.status(403).json({ success: false, message: 'Accesso amministratore tramite OAuth richiede credenziali verificate.' });
-    return;
-  }
-
   if (!user) {
-    // Ruolo: ammessi customer, operator, broker, call_center. MAI auto-elezione ad admin via OAuth.
-    const requestedRole = role || 'customer';
-    const safeRole = (requestedRole === 'admin') ? 'customer' : (['operator', 'broker', 'call_center', 'customer'].includes(requestedRole) ? requestedRole : 'customer');
-
+    // REGISTRAZIONE OAUTH: consentita ESCLUSIVAMENTE con ruolo 'customer'
+    // I ruoli di staff (admin, operator, broker, call_center) possono essere generati solo tramite provisioning interno protetto.
+    const safeRole = 'customer';
     const today = new Date().toISOString().split('T')[0];
-    const customerId = safeRole === 'customer' ? crypto.randomUUID() : undefined;
+    const customerId = crypto.randomUUID();
     const profile = {
       id: crypto.randomUUID(),
       name: targetName,
@@ -175,7 +151,7 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
       password: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12),
       role: safeRole,
       phone: '+39 340 0000000',
-      fiscalCode: safeRole === 'customer' ? 'OAUTHUSER00A00A0' : undefined,
+      fiscalCode: 'OAUTHUSER00A00A0',
       customerId,
       avatar: tokenAvatar || (targetName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'OU'),
       is2faEnabled: false,
@@ -184,25 +160,22 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
       authProvider: provider
     };
 
-    if (safeRole === 'customer' && customerId) {
-      await registerAccount(profile, {
-        id: customerId,
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone,
-        fiscalCode: profile.fiscalCode || 'OAUTHUSER00A00A0',
-        city: 'Milano',
-        utilityPoints: [],
-        contractStartDate: today,
-        lastSwitchAuditDate: today,
-        nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
-        accountManager: 'Matteo Riva',
-        hasBrokerageMandate: true,
-        notes: `Registrato via ${provider.toUpperCase()} OAuth`
-      });
-    } else {
-      users.push(profile);
-    }
+    await registerAccount(profile, {
+      id: customerId,
+      name: profile.name,
+      email: profile.email,
+      phone: profile.phone,
+      fiscalCode: profile.fiscalCode || 'OAUTHUSER00A00A0',
+      city: 'Milano',
+      utilityPoints: [],
+      contractStartDate: today,
+      lastSwitchAuditDate: today,
+      nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
+      accountManager: 'Matteo Riva',
+      hasBrokerageMandate: true,
+      notes: `Registrato via ${provider.toUpperCase()} OAuth`
+    });
+
     user = profile;
   }
 

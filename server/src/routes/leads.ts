@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getLeads, addLead, updateLead } from '../services/dataStore.js';
+import { getLeads, addLead, updateLead, users } from '../services/dataStore.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, createLeadSchema, bulkImportLeadsSchema } from '../middleware/validate.js';
 import { Lead } from '../types.js';
@@ -52,8 +52,21 @@ leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_c
 
 
 // GET /api/leads (Riservato a Call Center e Admin)
-leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (_req: Request, res: Response) => {
-  res.json({ success: true, leads: getLeads() });
+leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (req: any, res: Response) => {
+  const actor = users.find(u => u.id === req.user?.userId);
+  let allLeads = getLeads();
+
+  if (actor && (actor.role === 'operator' || actor.role === 'broker')) {
+    allLeads = allLeads.filter(l =>
+      l.assignedBrokerId === actor.id ||
+      l.assignedBrokerId === actor.name ||
+      l.assignedAgent === actor.name ||
+      l.assignedAgent === actor.id ||
+      l.assignedCallCenterAgent === actor.name
+    );
+  }
+
+  res.json({ success: true, leads: allLeads });
 });
 
 // POST /api/leads

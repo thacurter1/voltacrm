@@ -129,6 +129,7 @@ create table if not exists public.customers (
   phone text not null,
   email text,
   city text default 'Milano',
+  assigned_broker_id text,
   contract_start_date date default current_date,
   last_switch_audit_date date default current_date,
   next_switch_audit_date date default (current_date + interval '120 days'),
@@ -141,18 +142,23 @@ create table if not exists public.customers (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 9. Tabella Appuntamenti Call Center & Consulenze
+create index if not exists idx_customers_assigned_broker on public.customers (assigned_broker_id);
+
+-- 9. Tabella Appuntamenti Call Center & Consulenze (Unificata)
 create table if not exists public.appointments (
   id text primary key,
   lead_id text references public.leads(id) on delete set null,
+  customer_id text references public.customers(id) on delete set null,
   customer_name text not null,
   phone text not null,
   city text default 'Milano',
+  agent_id uuid references public.profiles(id) on delete set null,
   agent_name text not null,
   scheduled_at timestamp with time zone not null,
   duration_minutes integer default 30 check (duration_minutes > 0),
-  type text not null check (type in ('phone_consultation', 'field_visit', 'video_call')) default 'phone_consultation',
-  status text not null check (status in ('scheduled', 'completed', 'cancelled', 'no_show')) default 'scheduled',
+  type text not null check (type in ('phone_consultation', 'field_visit', 'video_call', 'call', 'in_person', 'video', 'consultation')) default 'phone_consultation',
+  status text not null check (status in ('scheduled', 'confirmed', 'completed', 'cancelled', 'no_show', 'rescheduled')) default 'scheduled',
+  location text,
   notes text,
   deleted_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
@@ -160,6 +166,7 @@ create table if not exists public.appointments (
 );
 
 -- Indici di performance per appuntamenti e soft-delete
+create index if not exists idx_appointments_agent on public.appointments (agent_id);
 create index if not exists idx_appointments_agent_name on public.appointments (agent_name);
 create index if not exists idx_appointments_scheduled_at on public.appointments (scheduled_at);
 create index if not exists idx_appointments_status on public.appointments (status);
@@ -575,38 +582,10 @@ create index if not exists idx_commissions_contract_id on public.commissions (co
 create unique index if not exists uq_commissions_idempotency on public.commissions (contract_id, pod_or_pdr, type, period);
 
 -- ==============================================================================
--- 12. TABELLA AGENDA APPUNTAMENTI CONSULENTI / OPERATORI
+-- 12. TABELLA AGENDA APPUNTAMENTI (Vedi Sezione 9 Unificata)
 -- ==============================================================================
-create table if not exists public.appointments (
-  id uuid default gen_random_uuid() primary key,
-  lead_id text references public.leads(id) on delete set null,
-  customer_id text references public.customers(id) on delete set null,
-  agent_id uuid references public.profiles(id) on delete cascade,
-  title text not null,
-  type text not null check (type in ('call', 'in_person', 'video', 'consultation')),
-  status text not null default 'scheduled' check (status in ('scheduled', 'confirmed', 'completed', 'cancelled', 'rescheduled')),
-  scheduled_at timestamp with time zone not null,
-  duration_minutes integer default 30 check (duration_minutes > 0),
-  location text,
-  notes text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
-alter table public.appointments enable row level security;
-
-drop policy if exists "Operatori e staff gestiscono agenda appuntamenti" on public.appointments;
-create policy "Operatori e staff gestiscono agenda appuntamenti"
-  on public.appointments for all
-  to authenticated
-  using (public.is_operator_or_admin())
-  with check (public.is_operator_or_admin());
-
-grant select, insert, update, delete on public.appointments to authenticated;
-
-create index if not exists idx_appointments_agent on public.appointments (agent_id);
-create index if not exists idx_appointments_scheduled_at on public.appointments (scheduled_at);
-create index if not exists idx_appointments_status on public.appointments (status);
+-- Nota: La tabella public.appointments è definita in modo canonico nella Sezione 9
+-- comprensiva di campi operativi per call center, consulenti e foreign key ad agenti e clienti.
 
 -- Indice GIN per ricerche ad alte prestazioni sui codici POD e PDR all'interno del JSONB utility_points
 create index if not exists idx_cust_utility_points_gin on public.customers using gin (utility_points);

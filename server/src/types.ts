@@ -40,6 +40,8 @@ export interface Lead {
   notes: string;
   createdAt: string;
   assignedCallCenterAgent?: string;
+  assignedBrokerId?: string;
+  assignedAgent?: string;
   appointmentId?: string;
   estimatedConsumptionKwh?: number;
   estimatedConsumptionSmc?: number;

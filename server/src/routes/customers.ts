@@ -180,7 +180,7 @@ customersRouter.post('/', authenticateToken, requireRole('admin', 'call_center',
 });
 
 // POST /api/customers/:id/utility-point
-customersRouter.post('/:id/utility-point', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(createUtilityPointSchema), async (req: any, res: Response): Promise<void> => {
+customersRouter.post('/:id/utility-point', authenticateToken, requireRole('admin', 'operator', 'broker'), validate(createUtilityPointSchema), async (req: any, res: Response): Promise<void> => {
   const actor = users.find(u => u.id === req.user?.userId);
   const customer = getCustomers().find((c: Customer) => c.id === req.params.id);
   if (!customer) {

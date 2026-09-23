@@ -240,9 +240,14 @@ export const api = {
     ) {
       if (API_BASE_URL) {
         try {
+          const payload: any = {
+            provider,
+            idToken: options?.idToken,
+            name: options?.name
+          };
           const data = await request<{ success: boolean; token: string; user: any; provider: string }>('/auth/oauth', {
             method: 'POST',
-            body: JSON.stringify({ provider, role, ...(options || {}) })
+            body: JSON.stringify(payload)
           });
           if (data.token && typeof window !== 'undefined') {
             localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
