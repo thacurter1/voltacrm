@@ -25,7 +25,7 @@ export const switchRouter = Router();
 
 const enforceSignatureOwnership = (req: Request, res: Response, next: NextFunction): void => {
   const authUser = (req as any).user;
-  const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator');
+  const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
   if (!isStaff) {
     const userProfile = users.find(user => user.id === authUser?.userId);
     const ownedCustomerId = userProfile?.customerId || authUser?.userId;
@@ -61,10 +61,17 @@ switchRouter.post('/refresh-indices', authenticateToken, requireRole('admin'), a
 switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const authUser = (req as any).user;
-    const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator');
+    const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
     
     let customerList: Customer[] = getCustomers();
-    if (!isStaff) {
+    if (authUser?.role === 'broker') {
+      const brokerUser = users.find(u => u.id === authUser.userId);
+      const brokerName = (brokerUser?.name || '').split(' (')[0].trim().toLowerCase();
+      customerList = customerList.filter(c => 
+        c.assignedBrokerId === authUser.userId || 
+        (c.accountManager && c.accountManager.toLowerCase().includes(brokerName))
+      );
+    } else if (!isStaff) {
       const userProfile = users.find(u => u.id === authUser?.userId);
       const userCustId = userProfile?.customerId;
       customerList = customerList.filter(c => c.id === userCustId || c.id === authUser?.userId);
@@ -241,7 +248,7 @@ switchRouter.post(
         const pendingSignature = getSignatureLogs().find(item => item.id === req.params.id);
         if (!pendingSignature) throw new SignatureNotFoundError('Richiesta di firma non trovata.');
         const requestedAgentId = req.body?.agentId || authUser.userId;
-        if (authUser.role === 'operator' && requestedAgentId !== authUser.userId) {
+        if ((authUser.role === 'operator' || authUser.role === 'broker') && requestedAgentId !== authUser.userId) {
           res.status(403).json({ success: false, message: 'Non puoi attribuire provvigioni a un altro agente.' });
           return;
         }
@@ -291,13 +298,22 @@ switchRouter.post(
   }
 );
 
-// GET /api/switch/signatures (Filtrato per ruolo: i clienti vedono solo le proprie firme)
+// GET /api/switch/signatures (Filtrato per ruolo: i clienti e i broker vedono solo i propri record)
 switchRouter.get('/signatures', authenticateToken, (req: Request, res: Response): void => {
   const authUser = (req as any).user;
-  const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator');
+  const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
   
   let signatures = getSignatureLogs();
-  if (!isStaff) {
+  if (authUser?.role === 'broker') {
+    const brokerUser = users.find(u => u.id === authUser.userId);
+    const brokerName = (brokerUser?.name || '').split(' (')[0].trim().toLowerCase();
+    const brokerCustomers = getCustomers().filter(c =>
+      c.assignedBrokerId === authUser.userId ||
+      (c.accountManager && c.accountManager.toLowerCase().includes(brokerName))
+    );
+    const brokerCustIds = new Set(brokerCustomers.map(c => c.id));
+    signatures = signatures.filter(s => brokerCustIds.has(s.customerId));
+  } else if (!isStaff) {
     const userProfile = users.find(u => u.id === authUser?.userId);
     const userCustId = userProfile?.customerId;
     signatures = signatures.filter(s => s.customerId === userCustId || s.customerId === authUser?.userId);

@@ -27,10 +27,19 @@ export default defineConfig({
           if (id.includes('node_modules/@supabase/')) {
             return 'vendor-supabase';
           }
+          if (id.includes('/components/QuarterlySwitchEngine') || id.includes('/components/SavingsProposalPdfModal') || id.includes('/components/DigitalSignatureModal')) {
+            return 'feature-switch-engine';
+          }
+          if (id.includes('/components/CommissionManager')) {
+            return 'feature-commissions';
+          }
+          if (id.includes('/components/SecurityAuditDashboard')) {
+            return 'feature-security';
+          }
         }
       }
     },
-    chunkSizeWarningLimit: 800
+    chunkSizeWarningLimit: 600
   }
 });
 
