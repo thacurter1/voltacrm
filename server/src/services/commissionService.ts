@@ -193,11 +193,11 @@ export async function getAgentSummaries(agentId?: string): Promise<AgentCommissi
   const agents = new Map<string, { agentName: string; role: string }>();
   if (!isSupabaseConfigured) {
     agents.set('user-admin-1', { agentName: 'Matteo Riva (Broker Owner)', role: 'admin' });
-    agents.set('user-op-2', { agentName: 'Chiara Bianchi (Consulente Senior)', role: 'call_center' });
-    agents.set('user-op-3', { agentName: 'Marco Rossi (Junior Sales)', role: 'call_center' });
+    agents.set('user-op-2', { agentName: 'Chiara Bianchi (Consulente Senior)', role: 'operator' });
+    agents.set('user-op-3', { agentName: 'Valentina Neri (Consulente Energetico)', role: 'operator' });
   }
   for (const record of records) {
-    if (!agents.has(record.agentId)) agents.set(record.agentId, { agentName: record.agentName, role: 'call_center' });
+    if (!agents.has(record.agentId)) agents.set(record.agentId, { agentName: record.agentName, role: 'operator' });
   }
   const summaries: AgentCommissionSummary[] = [];
   for (const [currentAgentId, info] of agents.entries()) {

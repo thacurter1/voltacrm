@@ -36,7 +36,7 @@ export const INITIAL_PROFILES: UserProfile[] = [
     id: 'user-op-2',
     name: 'Chiara Bianchi (Consulente Senior)',
     email: 'c.bianchi@voltagroup.it',
-    role: 'call_center',
+    role: 'operator',
     phone: '+39 338 5566778',
     whatsapp: '+393385566778',
     avatar: 'CB',
@@ -45,16 +45,40 @@ export const INITIAL_PROFILES: UserProfile[] = [
     createdAt: '2026-02-10'
   },
   {
+    id: 'user-op-3',
+    name: 'Valentina Neri (Consulente Energetico)',
+    email: 'v.neri@voltagroup.it',
+    role: 'broker',
+    phone: '+39 334 1122990',
+    whatsapp: '+393341122990',
+    avatar: 'VN',
+    is2faEnabled: true,
+    onboardingStatus: 'active',
+    createdAt: '2026-02-15'
+  },
+  {
+    id: 'user-cc-4',
+    name: 'Marco Rossi (Operatore Call Center)',
+    email: 'm.rossi@voltagroup.it',
+    role: 'call_center',
+    phone: '+39 331 4455667',
+    whatsapp: '+393314455667',
+    avatar: 'MR',
+    is2faEnabled: true,
+    onboardingStatus: 'active',
+    createdAt: '2026-03-01'
+  },
+  {
     id: 'user-cust-1',
     name: 'Andrea Moretti',
     email: 'andrea.moretti@email.it',
     role: 'customer',
     phone: '+39 340 1234567',
     whatsapp: '+393401234567',
-    fiscalCode: 'MRTNDR85M01H501Z',
+    fiscalCode: 'MRTNRA82M15F205X',
     customerId: 'cust-1',
-    assignedBrokerId: 'user-admin-1',
-    assignedBrokerName: 'Matteo Riva',
+    assignedBrokerId: 'user-op-3',
+    assignedBrokerName: 'Valentina Neri',
     avatar: 'AM',
     is2faEnabled: false,
     onboardingStatus: 'active',
@@ -67,7 +91,7 @@ export const INITIAL_PROFILES: UserProfile[] = [
     role: 'customer',
     phone: '+39 06 6988231',
     whatsapp: '+393339988776',
-    fiscalCode: '08945621008',
+    fiscalCode: '09876540152',
     customerId: 'cust-2',
     assignedBrokerId: 'user-op-2',
     assignedBrokerName: 'Chiara Bianchi',
@@ -75,6 +99,22 @@ export const INITIAL_PROFILES: UserProfile[] = [
     is2faEnabled: true,
     onboardingStatus: 'active',
     createdAt: '2026-03-12'
+  },
+  {
+    id: 'user-cust-3',
+    name: 'Elena Fontana',
+    email: 'elena.fontana@libero.it',
+    role: 'customer',
+    phone: '+39 340 7788990',
+    whatsapp: '+393407788990',
+    fiscalCode: 'FNTLNE88A41L219Z',
+    customerId: 'cust-3',
+    assignedBrokerId: 'user-op-3',
+    assignedBrokerName: 'Valentina Neri',
+    avatar: 'EF',
+    is2faEnabled: false,
+    onboardingStatus: 'active',
+    createdAt: '2026-03-15'
   }
 ];
 
@@ -261,7 +301,7 @@ class ProfileService {
   // Autenticazione e Registrazione OAuth (Google / Apple)
   async signInWithOAuth(
     provider: 'google' | 'apple', 
-    role: 'customer' | 'operator' = 'customer',
+    role: 'customer' | 'operator' | 'broker' | 'call_center' = 'customer',
     options?: { email?: string; name?: string; idToken?: string }
   ): Promise<UserProfile> {
     if (isSupabaseConfigured && supabase) {
@@ -293,7 +333,7 @@ class ProfileService {
       id: `user-${provider}-${Date.now()}`,
       name,
       email,
-      role: role === 'customer' ? 'customer' : 'call_center',
+      role: role === 'customer' ? 'customer' : role,
       phone: '+39 340 1234567',
       whatsapp: '+393401234567',
       fiscalCode: role === 'customer' ? 'RSSMRC85M01H501Z' : undefined,

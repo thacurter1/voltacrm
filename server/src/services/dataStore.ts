@@ -45,7 +45,7 @@ export const users: any[] = [
     name: 'Valentina Neri (Consulente Energetico)',
     email: 'v.neri@voltagroup.it',
     password: bcrypt.hashSync(defaultOpPass, 10),
-    role: 'operator',
+    role: 'broker',
     phone: '+39 334 1122990',
     whatsapp: '+393341122990',
     avatar: 'VN',
@@ -160,6 +160,7 @@ export let customers: any[] = [
     lastSwitchAuditDate: '2026-05-01',
     nextSwitchAuditDate: '2026-09-01',
     accountManager: 'Valentina Neri',
+    assignedBrokerId: 'user-op-3',
     hasBrokerageMandate: true,
     utilityPoints: [
       {
@@ -227,6 +228,7 @@ export let customers: any[] = [
     lastSwitchAuditDate: '2026-07-15',
     nextSwitchAuditDate: '2026-11-15',
     accountManager: 'Valentina Neri',
+    assignedBrokerId: 'user-op-3',
     hasBrokerageMandate: false,
     utilityPoints: [
       {
@@ -330,13 +332,14 @@ export const customerToRow = (c: Customer) => ({
   email: c.email || null, city: c.city || '', contract_start_date: c.contractStartDate,
   last_switch_audit_date: c.lastSwitchAuditDate, next_switch_audit_date: c.nextSwitchAuditDate,
   has_brokerage_mandate: c.hasBrokerageMandate, account_manager: c.accountManager || '',
+  assigned_broker_id: c.assignedBrokerId || null,
   notes: c.notes || null, utility_points: c.utilityPoints || []
 });
 const rowToCustomer = (c: any): Customer => ({
   id:c.id,name:c.name,fiscalCode:c.fiscal_code,phone:c.phone,email:c.email||'',city:c.city||'',
   contractStartDate:c.contract_start_date,lastSwitchAuditDate:c.last_switch_audit_date,
   nextSwitchAuditDate:c.next_switch_audit_date,hasBrokerageMandate:c.has_brokerage_mandate,
-  accountManager:c.account_manager,notes:c.notes,utilityPoints:c.utility_points||[]
+  accountManager:c.account_manager,assignedBrokerId:c.assigned_broker_id||undefined,notes:c.notes,utilityPoints:c.utility_points||[]
 });
 const leadToRow = (l: Lead) => ({id:l.id,name:l.name,phone:l.phone,email:l.email||null,
   city:l.city,source:l.source,status:l.status,notes:l.notes,
@@ -431,9 +434,16 @@ export async function registerAccount(profile:any, customer:Customer):Promise<vo
   users.unshift(structuredClone(profile)); customers.unshift(structuredClone(customer));
 }
 
-export async function initDataStore(): Promise<void> {
+let lastRefreshTime = 0;
+const REFRESH_TTL_MS = 5000;
+
+export async function initDataStore(force = false): Promise<void> {
   requireStorage();
   if(!isSupabaseConfigured || !supabase) return;
+  const now = Date.now();
+  if (!force && (now - lastRefreshTime < REFRESH_TTL_MS)) return;
+  lastRefreshTime = now;
+
   // Await every query and publish a complete snapshot only if all have succeeded.
   const database = supabase;
   const results = await Promise.all(['leads','customers','signature_logs','notifications','crm_accounts'].map(table=>database.from(table).select('*')));
@@ -445,8 +455,13 @@ export async function initDataStore(): Promise<void> {
   customers = cs.map(rowToCustomer); signatureLogs = ss.map(rowToSignature);
   notifications = ns.map((n:any)=>({id:n.id,type:n.type,title:n.title,message:n.message,timestamp:n.timestamp,
     isRead:n.is_read,priority:n.priority,targetRole:n.target_role,actionTab:n.action_tab,meta:n.meta}));
-  users.splice(0, users.length, ...us.map((u:any)=>({...u.profile,id:u.id,email:u.email,password:u.password_hash,
-    role:u.role,customerId:u.customer_id,twoFactorSecret:u.two_factor_secret,is2faEnabled:u.is_2fa_enabled})));
+
+  const dbUsers = us.map((u:any)=>({...u.profile,id:u.id,email:u.email,password:u.password_hash,
+    role:u.role,customerId:u.customer_id,twoFactorSecret:u.two_factor_secret,is2faEnabled:u.is_2fa_enabled}));
+
+  // Preserve existing dynamic users (e.g. staff created during runtime/OAuth not yet in DB)
+  const existingDynamicUsers = users.filter(u => !dbUsers.some(dbU => dbU.id === u.id || dbU.email.toLowerCase() === u.email.toLowerCase()));
+  users.splice(0, users.length, ...dbUsers, ...existingDynamicUsers);
 }
 export const refreshDataStore = initDataStore;
 

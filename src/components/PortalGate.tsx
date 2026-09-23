@@ -442,7 +442,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
               {DEMO_MODE && <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="text-[10px] text-slate-500 block mb-1.5 uppercase font-bold">Compila rapido con account demo:</span>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -474,7 +474,18 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       }}
                       className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-[10px] font-semibold text-slate-800 text-center transition-all cursor-pointer shadow-2xs"
                     >
-                      💼 Consulente (Neri)
+                      💼 Broker (Neri)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOperatorEmail('m.rossi@voltagroup.it');
+                        setOperatorPassword('operator123');
+                        setOperatorTotp('123456');
+                      }}
+                      className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-[10px] font-semibold text-slate-800 text-center transition-all cursor-pointer shadow-2xs"
+                    >
+                      📞 Call Center (Rossi)
                     </button>
                   </div>
                 </div>}

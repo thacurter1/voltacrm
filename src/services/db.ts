@@ -26,7 +26,7 @@ export const DEMO_USERS: AuthUser[] = [
     id: 'user-op-3',
     name: 'Valentina Neri (Consulente Energetico)',
     email: 'v.neri@voltagroup.it',
-    role: 'operator',
+    role: 'broker',
     avatar: 'VN',
     is2faEnabled: true
   },

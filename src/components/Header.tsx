@@ -641,48 +641,26 @@ export const Header: React.FC<HeaderProps> = ({
           </>
         ) : (
           <>
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-colors ${
-                activeTab === 'dashboard' ? 'text-[#635bff] font-bold' : 'text-slate-500 hover:text-[#0a2540]'
-              }`}
-            >
-              <BarChart3 className="h-5 w-5 mb-0.5" />
-              <span>Home</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('leads')}
-              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-colors ${
-                activeTab === 'leads' ? 'text-[#635bff] font-bold' : 'text-slate-500 hover:text-[#0a2540]'
-              }`}
-            >
-              <Users className="h-5 w-5 mb-0.5" />
-              <span>Lead</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('crm')}
-              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-colors ${
-                activeTab === 'crm' ? 'text-[#635bff] font-bold' : 'text-slate-500 hover:text-[#0a2540]'
-              }`}
-            >
-              <ShieldCheck className="h-5 w-5 mb-0.5" />
-              <span>Clienti</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('switch4m')}
-              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-colors relative ${
-                activeTab === 'switch4m' ? 'text-[#635bff] font-bold' : 'text-slate-500 hover:text-[#0a2540]'
-              }`}
-            >
-              <RefreshCw className="h-5 w-5 mb-0.5" />
-              <span>Switch 4M</span>
-              {pendingSwitchesCount > 0 && (
-                <span className="absolute top-0 right-1 h-2 w-2 rounded-full bg-[#635bff]" />
-              )}
-            </button>
+            {navItems.slice(0, 4).map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              const hasBadge = item.id === 'switch4m' && pendingSwitchesCount > 0;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-colors relative ${
+                    isActive ? 'text-[#635bff] font-bold' : 'text-slate-500 hover:text-[#0a2540]'
+                  }`}
+                >
+                  <Icon className="h-5 w-5 mb-0.5" />
+                  <span className="truncate max-w-[64px]">{item.label}</span>
+                  {hasBadge && (
+                    <span className="absolute top-0 right-1 h-2 w-2 rounded-full bg-[#635bff]" />
+                  )}
+                </button>
+              );
+            })}
 
             <button
               onClick={() => setIsMobileMenuOpen(true)}

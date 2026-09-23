@@ -235,7 +235,7 @@ export const api = {
 
     async loginWithOAuth(
       provider: 'google' | 'apple', 
-      role: 'customer' | 'operator' = 'customer',
+      role: 'customer' | 'operator' | 'broker' | 'call_center' = 'customer',
       options?: { email?: string; name?: string; idToken?: string }
     ) {
       if (API_BASE_URL) {
@@ -1027,7 +1027,7 @@ export const api = {
           {
             agentId: 'user-op-2',
             agentName: 'Chiara Bianchi (Consulente Senior)',
-            role: 'call_center',
+            role: 'operator',
             pendingCount: 1,
             pendingAmountEur: 40.00,
             accruedCount: 3,
@@ -1036,6 +1036,19 @@ export const api = {
             settledAmountEur: 45.00,
             totalEarnedEur: 193.50,
             contractsCount: 4
+          },
+          {
+            agentId: 'user-op-3',
+            agentName: 'Valentina Neri (Consulente Energetico)',
+            role: 'broker',
+            pendingCount: 2,
+            pendingAmountEur: 75.00,
+            accruedCount: 4,
+            accruedAmountEur: 210.00,
+            settledCount: 2,
+            settledAmountEur: 110.00,
+            totalEarnedEur: 320.00,
+            contractsCount: 6
           }
         ];
       }

@@ -8,7 +8,13 @@ export const customersRouter = Router();
 
 function isBrokerAssigned(customer: Customer, actor: any): boolean {
   if (!actor || !customer) return false;
-  if (customer.assignedBrokerId && customer.assignedBrokerId === actor.id) return true;
+
+  // ID-based match takes absolute priority
+  if (customer.assignedBrokerId) {
+    return customer.assignedBrokerId === actor.id;
+  }
+
+  // Fallback to name matching only when assignedBrokerId is not set
   if (!customer.accountManager) return false;
 
   const actorName = (actor.name || '').trim();
@@ -16,12 +22,12 @@ function isBrokerAssigned(customer: Customer, actor: any): boolean {
   const mgr = (customer.accountManager || '').trim();
   const mgrSimpleName = mgr.split(' (')[0].trim();
 
+  // Guard against empty name bypass — empty string .includes('') is always true
+  if (!brokerSimpleName || !mgrSimpleName) return false;
+
+  // Strict equality only — no substring matching to prevent "Marco" matching "Gianmarco"
   return (
-    mgr === actorName ||
-    mgr === brokerSimpleName ||
-    mgrSimpleName === brokerSimpleName ||
-    actorName.toLowerCase().includes(mgrSimpleName.toLowerCase()) ||
-    mgr.toLowerCase().includes(brokerSimpleName.toLowerCase())
+    mgrSimpleName.toLowerCase() === brokerSimpleName.toLowerCase()
   );
 }
 
@@ -103,7 +109,7 @@ customersRouter.get('/:id', authenticateToken, (req: any, res: Response): void =
   }
 
   if (actor.role === 'call_center') {
-    res.json({ success: true, customer });
+    res.status(403).json({ success: false, message: 'Accesso negato. Il Call Center opera esclusivamente sulla coda lead.' });
     return;
   }
 

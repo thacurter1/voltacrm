@@ -55,8 +55,33 @@ export const CrmApp: React.FC = () => {
   );
   const [profiles, setProfiles] = useState<UserProfile[]>(INITIAL_PROFILES);
 
-  // Business Data
-  const [customers, setCustomers] = useState<Customer[]>(initialDb.customers);
+  const getInitialTab = (role: string) => {
+    if (role === 'customer') return 'profile';
+    if (role === 'call_center') return 'callcenter';
+    if (role === 'operator' || role === 'broker') return 'crm';
+    return 'dashboard';
+  };
+
+  const isBroker = currentUser.role === 'operator' || currentUser.role === 'broker';
+  const isCallCenter = currentUser.role === 'call_center';
+
+  // Business Data with RBAC scoping
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    if (isCallCenter) return [];
+    if (isBroker) {
+      const brokerName = currentUser.name.split(' (')[0].trim();
+      return initialDb.customers.filter(c =>
+        c.assignedBrokerId === currentUser.id ||
+        (c.accountManager && (
+          c.accountManager === currentUser.name ||
+          c.accountManager === brokerName ||
+          currentUser.name.includes(c.accountManager) ||
+          c.accountManager.includes(brokerName)
+        ))
+      );
+    }
+    return initialDb.customers;
+  });
   const [leads, setLeads] = useState<Lead[]>(initialDb.leads);
   const [appointments, setAppointments] = useState<Appointment[]>(initialDb.appointments);
   const [bills, setBills] = useState<CustomerBill[]>(initialDb.bills);
@@ -72,7 +97,7 @@ export const CrmApp: React.FC = () => {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>(getInitialTab(currentUser.role));
 
   // Load GME live feed on startup
   useEffect(() => {
@@ -394,6 +419,7 @@ export const CrmApp: React.FC = () => {
 
         {activeTab === 'portfolio' && (
           <PortfolioManager
+            currentUser={currentUser}
             customers={customers}
             profiles={profiles}
             onSelectCustomer={(customer) => {
@@ -466,21 +492,41 @@ export const CrmApp: React.FC = () => {
         )}
 
         {activeTab === 'team_profiles' && (
-          <TeamProfilesManager
-            currentUser={currentUser}
-            profiles={profiles}
-            customers={customers}
-            onProfilesUpdated={(updated) => setProfiles(updated)}
-            onCustomerCreated={(newCust) => setCustomers(prev => [newCust, ...prev])}
-            onToast={addToast}
-          />
+          currentUser.role === 'admin' ? (
+            <TeamProfilesManager
+              currentUser={currentUser}
+              profiles={profiles}
+              customers={customers}
+              onProfilesUpdated={(updated) => setProfiles(updated)}
+              onCustomerCreated={(newCust) => setCustomers(prev => [newCust, ...prev])}
+              onToast={addToast}
+            />
+          ) : (
+            <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+              <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+              <p className="text-sm text-slate-500 mt-2">La gestione dei profili e dei permessi dell'agenzia è accessibile esclusivamente agli amministratori.</p>
+              <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                Torna ai tuoi clienti
+              </button>
+            </div>
+          )
         )}
 
         {activeTab === 'commissions' && (
-          <CommissionManager
-            currentUser={currentUser}
-            onToast={addToast}
-          />
+          currentUser.role !== 'call_center' ? (
+            <CommissionManager
+              currentUser={currentUser}
+              onToast={addToast}
+            />
+          ) : (
+            <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+              <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata a Broker e Consulenti</h2>
+              <p className="text-sm text-slate-500 mt-2">Gli operatori Call Center lavorano sulla presa appuntamenti e qualificazione contatti.</p>
+              <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                Vai alla tua postazione Agenda
+              </button>
+            </div>
+          )
         )}
 
         {activeTab === 'profile' && (
@@ -496,12 +542,22 @@ export const CrmApp: React.FC = () => {
         )}
 
         {activeTab === 'security' && (
-          <SecurityAuditDashboard
-            logs={securityLogs}
-            onTriggerScan={() => {
-              addToast('Diagnostica Sicurezza', 'Tutti i controlli Zero-Trust RLS sono conformi al 100%.', 'success');
-            }}
-          />
+          currentUser.role === 'admin' ? (
+            <SecurityAuditDashboard
+              logs={securityLogs}
+              onTriggerScan={() => {
+                addToast('Diagnostica Sicurezza', 'Tutti i controlli Zero-Trust RLS sono conformi al 100%.', 'success');
+              }}
+            />
+          ) : (
+            <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+              <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+              <p className="text-sm text-slate-500 mt-2">I registri di audit GDPR e i controlli infrastrutturali sono riservati agli amministratori.</p>
+              <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                Torna ai tuoi clienti
+              </button>
+            </div>
+          )
         )}
       </main>
 
@@ -659,7 +715,7 @@ export const CrmApp: React.FC = () => {
             Volta Energia CRM • Gestione Forniture & Switch • Conforme GDPR & 2FA Attivo
           </span>
           <span className="text-slate-400">
-            Connesso come {currentUser.role === 'admin' ? 'Amministratore' : 'Operatore'}: {currentUser.name} • 2FA Attivo
+            Connesso come {currentUser.role === 'admin' ? 'Amministratore' : currentUser.role === 'broker' ? 'Broker Cockpit' : currentUser.role === 'call_center' ? 'Operatore Call Center' : 'Consulente & Operatore'}: {currentUser.name} • 2FA Attivo
           </span>
         </div>
       </footer>

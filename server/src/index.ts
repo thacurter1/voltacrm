@@ -110,8 +110,12 @@ app.use((req: Request, res: Response): void => {
 
 // Error handler
 app.use((err: any, req: Request, res: Response, _next: NextFunction): void => {
-  if (err.type === 'entity.parse.failed' || err.status === 400) {
+  if (err.type === 'entity.parse.failed') {
     res.status(400).json({ success: false, message: 'Payload JSON non valido o malformato.' });
+    return;
+  }
+  if (err.status === 400) {
+    res.status(400).json({ success: false, message: err.message || 'Richiesta non valida (Bad Request).' });
     return;
   }
   console.error('Unhandled error:', err);

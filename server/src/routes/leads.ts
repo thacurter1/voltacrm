@@ -14,7 +14,7 @@ function parseSafeNumber(val: any): number | undefined {
 }
 
 // POST /api/leads/bulk-import (Import massivo da CSV per campagne marketing con validazione Zod)
-leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator'), validate(bulkImportLeadsSchema), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(bulkImportLeadsSchema), async (req: Request, res: Response): Promise<void> => {
   const { leads: importedLeads } = req.body;
   if (!Array.isArray(importedLeads) || importedLeads.length === 0) {
     res.status(400).json({ success: false, message: 'Array di lead vuoto o non valido.' });
@@ -52,12 +52,12 @@ leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_c
 
 
 // GET /api/leads (Riservato a Call Center e Admin)
-leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center', 'operator'), (_req: Request, res: Response) => {
+leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (_req: Request, res: Response) => {
   res.json({ success: true, leads: getLeads() });
 });
 
 // POST /api/leads
-leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'operator'), validate(createLeadSchema), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(createLeadSchema), async (req: Request, res: Response): Promise<void> => {
   const { name, phone, email, city, source, notes, estimatedConsumptionKwh, estimatedConsumptionSmc } = req.body;
 
   const newLead: Lead = {
@@ -79,7 +79,7 @@ leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'op
 });
 
 // PATCH /api/leads/:id/status
-leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center', 'operator'), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { status, note } = req.body;
 

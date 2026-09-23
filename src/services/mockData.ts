@@ -126,6 +126,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     lastSwitchAuditDate: '2026-05-01',
     nextSwitchAuditDate: '2026-09-01', // Da verificare subito!
     accountManager: 'Valentina Neri',
+    assignedBrokerId: 'user-op-3',
     hasBrokerageMandate: true,
     utilityPoints: [
       {
@@ -196,6 +197,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     lastSwitchAuditDate: '2026-07-15',
     nextSwitchAuditDate: '2026-11-15',
     accountManager: 'Valentina Neri',
+    assignedBrokerId: 'user-op-3',
     hasBrokerageMandate: false,
     utilityPoints: [
       {

@@ -547,7 +547,7 @@ function UnifiedApp() {
           onReturnToCallCenter={handleReturnToBackend}
         />
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
-          <CustomerApp onReturnToBackend={handleReturnToBackend} />
+          <CustomerApp currentUser={currentUser} onReturnToBackend={handleReturnToBackend} />
         </React.Suspense>
       </div>
     );
@@ -923,7 +923,7 @@ function UnifiedApp() {
             Volta Energia CRM • Gestione Forniture & Broker • Conforme GDPR & 2FA Attivo
           </span>
           <span className="text-slate-400">
-            Connesso come {currentUser.role === 'admin' ? 'Amministratore' : 'Operatore'}: {currentUser.name} • 2FA Attivo
+            Connesso come {currentUser.role === 'admin' ? 'Amministratore' : currentUser.role === 'broker' ? 'Broker Cockpit' : currentUser.role === 'call_center' ? 'Operatore Call Center' : 'Consulente & Operatore'}: {currentUser.name} • 2FA Attivo
           </span>
         </div>
       </footer>

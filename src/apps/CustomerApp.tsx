@@ -8,22 +8,38 @@ import { InstallAppBanner } from '../components/InstallAppBanner';
 import { ToastContainer } from '../components/ToastContainer';
 import { dbService } from '../services/db';
 import { MARKET_OFFERS, calculateAnnualCost } from '../services/energyEngine';
-import { Customer, CustomerBill, SupplierOffer, SwitchAudit, ToastNotification } from '../types';
+import { AuthUser, Customer, CustomerBill, SupplierOffer, SwitchAudit, ToastNotification } from '../types';
 import { ShieldCheck, Filter } from 'lucide-react';
 
 export interface CustomerAppProps {
+  currentUser?: AuthUser;
   onReturnToBackend?: () => void;
 }
 
-export const CustomerApp: React.FC<CustomerAppProps> = ({ onReturnToBackend }) => {
+export const CustomerApp: React.FC<CustomerAppProps> = ({ currentUser, onReturnToBackend }) => {
   const initialDb = dbService.load();
-  const [customers, setCustomers] = useState<Customer[]>(initialDb.customers);
+  
+  // Data Isolation: If logged in as customer, isolate exclusively to their own account
+  const isCustomerRole = currentUser?.role === 'customer';
+  const myCustomerId = currentUser?.customerId || currentUser?.id;
+
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    if (isCustomerRole && myCustomerId) {
+      const self = initialDb.customers.filter((c) => c.id === myCustomerId || c.email?.toLowerCase() === currentUser?.email?.toLowerCase());
+      return self.length > 0 ? self : initialDb.customers;
+    }
+    return initialDb.customers;
+  });
   const [bills] = useState<CustomerBill[]>(initialDb.bills);
 
-  // Active customer selection
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
-    initialDb.customers[0]?.id || 'cust-1'
-  );
+  // Active customer selection strictly bounded
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(() => {
+    if (isCustomerRole && myCustomerId) {
+      const match = initialDb.customers.find((c) => c.id === myCustomerId || c.email?.toLowerCase() === currentUser?.email?.toLowerCase());
+      if (match) return match.id;
+    }
+    return initialDb.customers[0]?.id || 'cust-1';
+  });
   const activeCustomer = useMemo(
     () => customers.find((c) => c.id === selectedCustomerId) || customers[0] || initialDb.customers[0],
     [customers, selectedCustomerId, initialDb.customers]

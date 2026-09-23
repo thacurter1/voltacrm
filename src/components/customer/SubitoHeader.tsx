@@ -1,7 +1,6 @@
 import React from 'react';
 import { Search, Upload, Zap, Flame, Sparkles, Home, FileText, ShieldCheck } from 'lucide-react';
 import { NotificationCenter } from '../NotificationCenter';
-import { INITIAL_PROFILES } from '../../services/supabaseClient';
 
 interface SubitoHeaderProps {
   category: string;
@@ -111,21 +110,23 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
             <span>Carica la tua bolletta</span>
           </button>
 
-          {/* Customer Switcher (demo) */}
+          {/* Customer Switcher (visible only when multiple demo accounts available in staff impersonation) */}
           <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
             <span className="hidden xl:inline text-xs font-semibold text-slate-700">Ciao, {customerName.split(' ')[0]}</span>
-            <select
-              value={selectedCustomerId}
-              onChange={(e) => onSelectCustomer(e.target.value)}
-              className="bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none focus:ring-2 focus:ring-[#635bff]/50"
-              title="Cambia cliente demo"
-            >
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.city ? `(${c.city})` : ''}
-                </option>
-              ))}
-            </select>
+            {customers.length > 1 && (
+              <select
+                value={selectedCustomerId}
+                onChange={(e) => onSelectCustomer(e.target.value)}
+                className="bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none focus:ring-2 focus:ring-[#635bff]/50"
+                title="Cambia cliente demo"
+              >
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.city ? `(${c.city})` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <button
@@ -134,22 +135,12 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
               if (onReturnToBackend) {
                 onReturnToBackend();
               } else {
-                const adminUser = INITIAL_PROFILES[0];
                 if (typeof window !== 'undefined') {
-                  localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(adminUser));
-                  localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-admin-${Date.now()}`);
-                  try {
-                    const raw = localStorage.getItem('VOLTA_ENERGY_CRM_DB_V3');
-                    if (raw) {
-                      const parsed = JSON.parse(raw);
-                      parsed.currentUser = adminUser;
-                      localStorage.setItem('VOLTA_ENERGY_CRM_DB_V3', JSON.stringify(parsed));
-                    }
-                  } catch {}
                   const url = new URL(window.location.href);
                   url.searchParams.delete('app');
                   url.searchParams.delete('mode');
-                  window.location.href = url.pathname || '/';
+                  url.searchParams.set('portal', 'operator');
+                  window.location.href = url.pathname + url.search;
                 }
               }
             }}

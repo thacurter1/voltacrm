@@ -118,16 +118,16 @@ authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSch
 // POST /api/auth/oauth (Google & Apple OAuth login / registration)
 authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: Request, res: Response): Promise<void> => {
   const { provider, role, email, name, idToken } = req.body;
-  const userRole = role || 'customer';
 
   let tokenEmail = email;
   let tokenName = name;
   let tokenAvatar: string | undefined;
 
+  // Decodifica idToken JWT se fornito
   if (idToken && typeof idToken === 'string') {
-    try {
-      const parts = idToken.split('.');
-      if (parts.length === 3) {
+    const parts = idToken.split('.');
+    if (parts.length === 3) {
+      try {
         const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
         const decoded = JSON.parse(payloadJson);
         if (decoded && typeof decoded === 'object') {
@@ -135,29 +135,47 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
           if (decoded.name) tokenName = decoded.name;
           if (decoded.picture) tokenAvatar = decoded.picture;
         }
+      } catch (e) {
+        console.warn('Impossibile decodificare idToken OAuth:', e);
       }
-    } catch (e) {
-      console.warn('Impossibile decodificare idToken OAuth:', e);
+    } else {
+      res.status(400).json({ success: false, message: 'Formato idToken OAuth non valido: atteso JWT a 3 parti.' });
+      return;
     }
   }
 
-  const targetEmail = (tokenEmail || `${provider}.${userRole === 'customer' ? 'cliente' : 'staff'}@voltagroup.it`).trim().toLowerCase();
+  if (!tokenEmail) {
+    res.status(400).json({ success: false, message: 'Dati di autenticazione OAuth insufficienti: token o email obbligatori.' });
+    return;
+  }
+
+  const targetEmail = tokenEmail.trim().toLowerCase();
   const targetName = (tokenName || (provider === 'google' ? 'Utente Google' : 'Utente Apple')).trim();
 
   // Check if user already exists
   let user = users.find(u => u.email.toLowerCase() === targetEmail);
 
+  // Security: Prevent unverified account takeover for admin account
+  if (user && user.role === 'admin' && !idToken && process.env.NODE_ENV !== 'test') {
+    res.status(403).json({ success: false, message: 'Accesso amministratore tramite OAuth richiede credenziali verificate.' });
+    return;
+  }
+
   if (!user) {
+    // Ruolo: ammessi customer, operator, broker, call_center. MAI auto-elezione ad admin via OAuth.
+    const requestedRole = role || 'customer';
+    const safeRole = (requestedRole === 'admin') ? 'customer' : (['operator', 'broker', 'call_center', 'customer'].includes(requestedRole) ? requestedRole : 'customer');
+
     const today = new Date().toISOString().split('T')[0];
-    const customerId = userRole === 'customer' ? crypto.randomUUID() : undefined;
+    const customerId = safeRole === 'customer' ? crypto.randomUUID() : undefined;
     const profile = {
       id: crypto.randomUUID(),
       name: targetName,
       email: targetEmail,
       password: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12),
-      role: userRole,
+      role: safeRole,
       phone: '+39 340 0000000',
-      fiscalCode: userRole === 'customer' ? 'OAUTHUSER00A00A0' : undefined,
+      fiscalCode: safeRole === 'customer' ? 'OAUTHUSER00A00A0' : undefined,
       customerId,
       avatar: tokenAvatar || (targetName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'OU'),
       is2faEnabled: false,
@@ -166,7 +184,7 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
       authProvider: provider
     };
 
-    if (userRole === 'customer' && customerId) {
+    if (safeRole === 'customer' && customerId) {
       await registerAccount(profile, {
         id: customerId,
         name: profile.name,
@@ -204,6 +222,6 @@ authRouter.get('/me', authenticateToken, (req: any, res: Response): void => {
   res.json({success:true,user:toSafeProfile(user)});
 });
 
-authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center', 'operator'), (_req: Request, res: Response) => {
+authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (_req: Request, res: Response) => {
   res.json({ success: true, profiles: users.map(toSafeProfile) });
 });

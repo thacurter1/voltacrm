@@ -160,11 +160,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   onChange={(e) => setSelectedOperatorId(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] font-medium"
                 >
-                  {DEMO_USERS.filter(u => u.role !== 'customer').map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.role === 'admin' ? 'Broker Owner' : 'Consulente'})
-                    </option>
-                  ))}
+                  {DEMO_USERS.filter(u => u.role !== 'customer').map(u => {
+                    const cleanName = u.name.split(' (')[0].trim();
+                    const roleLabel = u.role === 'admin'
+                      ? 'Broker Owner'
+                      : u.role === 'broker'
+                      ? 'Broker Consulente'
+                      : u.role === 'call_center'
+                      ? 'Operatore Call Center'
+                      : 'Consulente Senior';
+                    return (
+                      <option key={u.id} value={u.id}>
+                        {cleanName} ({roleLabel})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
