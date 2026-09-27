@@ -94,7 +94,9 @@ async function main() {
     path.join('tests', 'test_oauth_production_verifier.cjs'),
     path.join('tests', 'test_production_seed_isolation.cjs'),
     path.join('tests', 'test_rbac_hierarchy.cjs'),
-    path.join('tests', 'test_broker_switch_and_portal_access.cjs')
+    path.join('tests', 'test_broker_switch_and_portal_access.cjs'),
+    path.join('tests', 'test_account_invitation_boundaries.cjs'),
+    path.join('tests', 'test_data_store_pagination.cjs')
   ];
 
   let passed = 0;

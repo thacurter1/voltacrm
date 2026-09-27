@@ -448,19 +448,37 @@ export async function registerAccount(profile:any, customer:Customer):Promise<vo
 
 let lastRefreshTime = 0;
 const REFRESH_TTL_MS = 5000;
+const PAGE_SIZE = 1000;
+let refreshInFlight: Promise<void> | null = null;
+
+async function readAllRows(table: string): Promise<any[]> {
+  if (!supabase) throw new Error('Supabase non configurato.');
+  const rows: any[] = [];
+  let lastId: string | null = null;
+  for (;;) {
+    let query = supabase.from(table).select('*').order('id', { ascending: true }).limit(PAGE_SIZE);
+    if (lastId) query = query.gt('id', lastId);
+    const { data, error } = await query;
+    check(error);
+    const page = data || [];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+    lastId = page[page.length - 1]?.id;
+    if (!lastId) throw new Error(`Paginazione non disponibile per ${table}.`);
+  }
+}
 
 export async function initDataStore(force = false): Promise<void> {
   requireStorage();
   if(!isSupabaseConfigured || !supabase) return;
-  const now = Date.now();
-  if (!force && (now - lastRefreshTime < REFRESH_TTL_MS)) return;
+  if (refreshInFlight) return refreshInFlight;
+  if (!force && Date.now() - lastRefreshTime < REFRESH_TTL_MS) return;
 
-  // Await every query and publish a complete snapshot only if all have succeeded.
-  const database = supabase;
-  const results = await Promise.all(['leads','customers','signature_logs','notifications','crm_accounts'].map(table=>database.from(table).select('*')));
-  for(const result of results) check(result.error);
-  lastRefreshTime = now;
-  const [ls,cs,ss,ns,us] = results.map(r=>r.data||[]);
+  refreshInFlight = (async () => {
+  // Read every page before publishing a complete snapshot. Concurrent requests share this refresh.
+  const [ls,cs,ss,ns,us] = await Promise.all(
+    ['leads','customers','signature_logs','notifications','crm_accounts'].map(readAllRows)
+  );
   leads = ls.map((l:any)=>({id:l.id,name:l.name,phone:l.phone,email:l.email||'',city:l.city,source:l.source,
     status:l.status,notes:l.notes,createdAt:l.created_at?.split('T')[0],estimatedConsumptionKwh:l.estimated_consumption_kwh,
     estimatedConsumptionSmc:l.estimated_consumption_smc,assignedCallCenterAgent:l.assigned_call_center_agent,
@@ -475,6 +493,9 @@ export async function initDataStore(force = false): Promise<void> {
   // Preserve existing dynamic users (e.g. staff created during runtime/OAuth not yet in DB)
   const existingDynamicUsers = isDemo ? users.filter(u => !dbUsers.some(dbU => dbU.id === u.id || dbU.email.toLowerCase() === u.email.toLowerCase())) : [];
   users.splice(0, users.length, ...dbUsers, ...existingDynamicUsers);
+  lastRefreshTime = Date.now();
+  })();
+  try { await refreshInFlight; } finally { refreshInFlight = null; }
 }
 export const refreshDataStore = initDataStore;
 

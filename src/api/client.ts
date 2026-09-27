@@ -8,60 +8,8 @@ import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionReco
 import { dbService } from '../services/db';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
 import { INITIAL_PROFILES, profileService } from '../services/supabaseClient';
-
-// Rileva se l'app sta girando in locale (sviluppo) o su un dominio cloud pubblico (es. Vercel, Netlify)
-const isLocalhost = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  window.location.hostname.endsWith('.local')
-);
-
-// Determina in modo sicuro l'endpoint del backend:
-// Su domini remoti (es. Vercel), se VITE_API_URL non è impostato oppure punta a localhost,
-// impostiamo API_BASE_URL a null per EVITARE categoricamente che il browser tenti connessioni
-// a localhost/127.0.0.1 scatenando il popup di Chrome "Accedere ad altri servizi e app su questo dispositivo" (Private Network Access).
-function resolveApiBaseUrl(): string | null {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
-    if (!isLocalhost && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
-      return null;
-    }
-    return envUrl.trim();
-  }
-  return isLocalhost ? 'http://localhost:5000/api' : null;
-}
-
-export const API_BASE_URL: string | null = resolveApiBaseUrl();
-export const DEMO_MODE = (import.meta as any).env?.VITE_DEMO_MODE === 'true';
-export const isStandaloneDemo = DEMO_MODE;
-
-export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error('Servizio non configurato. Contatta un amministratore.');
-  }
-
-  const url = `${API_BASE_URL}${endpoint}`;
-  const token = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    ...(options.headers as Record<string, string> || {})
-  };
-
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || `Errore HTTP ${res.status}: ${res.statusText}`);
-  }
-  return res.json() as Promise<T>;
-}
-
-export function isNetworkError(err: unknown): boolean {
-  if (!err) return false;
-  if (err instanceof TypeError) return true;
-  const msg = (err as Error)?.message || '';
-  return msg.includes('fetch') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ECONNREFUSED');
-}
+import { API_BASE_URL, DEMO_MODE, isStandaloneDemo, request } from './transport';
+export { API_BASE_URL, DEMO_MODE, isStandaloneDemo, request, isNetworkError } from './transport';
 
 export const api = {
   // --- AUTHENTICATION ---

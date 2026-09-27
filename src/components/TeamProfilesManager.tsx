@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { UserProfile, Customer } from '../types';
 import { profileService } from '../services/supabaseClient';
+import { request } from '../api/transport';
 
 interface TeamProfilesManagerProps {
   currentUser: UserProfile;
@@ -43,6 +44,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
   const [newOpEmail, setNewOpEmail] = useState('');
   const [newOpPhone, setNewOpPhone] = useState('');
   const [newOpRole, setNewOpRole] = useState<'admin' | 'call_center'>('call_center');
+  const [generatedStaffInvite, setGeneratedStaffInvite] = useState<{ link: string; name: string } | null>(null);
 
   // Form State: Invito Cliente
   const [inviteName, setInviteName] = useState('');
@@ -74,18 +76,19 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
       const created = await profileService.createOperatorProfile({
         name: newOpName,
         email: newOpEmail,
-        phone: newOpPhone || '+39 333 0000000',
-        whatsapp: newOpPhone || '+393330000000',
+        phone: newOpPhone,
+        whatsapp: newOpPhone,
         role: newOpRole,
       });
 
       const updated = await profileService.getProfiles();
       onProfilesUpdated(updated);
-      setIsAddOperatorOpen(false);
+      if (created.inviteLink) setGeneratedStaffInvite({ link: created.inviteLink, name: created.profile.name });
+      else setIsAddOperatorOpen(false);
       setNewOpName('');
       setNewOpEmail('');
       setNewOpPhone('');
-      onToast('Operatore Aggiunto', `Profilo per ${created.name} creato con successo. Accesso 2FA abilitato.`, 'success');
+      onToast('Invito creato', `Condividi il link con ${created.profile.name} per attivare password e 2FA.`, 'success');
     } catch {
       onToast('Errore', 'Impossibile creare il profilo operatore.', 'warning');
     }
@@ -100,13 +103,16 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
         name: inviteName,
         email: inviteEmail,
         phone: invitePhone,
-        fiscalCode: inviteFiscalCode || 'CF' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+        fiscalCode: inviteFiscalCode,
+        city: inviteCity,
         assignedBrokerId: currentUser.id,
         assignedBrokerName: currentUser.name,
       });
 
       // Se richiesto, crea anche il record cliente in anagrafica
-      if (onCustomerCreated) {
+      if (onCustomerCreated && result.customer) {
+        onCustomerCreated(result.customer);
+      } else if (onCustomerCreated) {
         const today = new Date().toISOString().split('T')[0];
         const nextAudit = new Date();
         nextAudit.setDate(nextAudit.getDate() + 120);
@@ -116,7 +122,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
           name: inviteName,
           email: inviteEmail,
           phone: invitePhone,
-          fiscalCode: inviteFiscalCode || 'CF' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+          fiscalCode: inviteFiscalCode,
           city: inviteCity,
           contractStartDate: today,
           lastSwitchAuditDate: today,
@@ -150,6 +156,19 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
       onToast('Profilo Cliente Creato', `Link di onboarding generato per ${inviteName}.`, 'success');
     } catch {
       onToast('Errore', 'Impossibile generare il profilo cliente.', 'warning');
+    }
+  };
+
+  const handleRenewCustomerInvite = async (customer: UserProfile) => {
+    try {
+      const response = await request<{ token: string }>(`/auth/invitations/${encodeURIComponent(customer.id)}/renew`, { method: 'POST' });
+      const link = `${window.location.origin}/#invite=${response.token}`;
+      const message = `Ciao ${customer.name}! Attiva il tuo account VoltaCRM: ${link}`;
+      setGeneratedInvite({ link, clientName: customer.name,
+        whatsappUrl: `https://wa.me/${(customer.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}` });
+      setIsInviteCustomerOpen(true);
+    } catch (error) {
+      onToast('Errore', error instanceof Error ? error.message : 'Impossibile rigenerare l’invito.', 'warning');
     }
   };
 
@@ -345,10 +364,6 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
               </thead>
               <tbody className="divide-y divide-[#e3e8ee]">
                 {customerProfiles.map((cust) => {
-                  const inviteLink = `${window.location.origin}?invite=${cust.id}&portal=customer`;
-                  const rawMsg = `Ciao ${cust.name}, ecco il tuo accesso sicuro all'Area Risparmio Volta Energia per le tue forniture: ${inviteLink}`;
-                  const waUrl = `https://wa.me/${cust.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(rawMsg)}`;
-
                   return (
                     <tr key={cust.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3.5 px-4">
@@ -381,21 +396,10 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleCopyLink(inviteLink, cust.id)}
+                          {cust.onboardingStatus === 'invited' ? <button
+                            onClick={() => handleRenewCustomerInvite(cust)}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-100 text-[#0a2540] font-medium text-[11px] cursor-pointer transition-colors"
-                          >
-                            {copiedId === cust.id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                            {copiedId === cust.id ? 'Copiato' : 'Copia Link'}
-                          </button>
-                          <a
-                            href={waUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-[11px] transition-colors"
-                          >
-                            <Send className="h-3 w-3" /> Invia WhatsApp
-                          </a>
+                          ><Copy className="h-3 w-3" /> Rigenera link</button> : <span className="text-slate-500">Account attivo</span>}
                         </div>
                       </td>
                     </tr>
@@ -410,7 +414,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
       {/* MODAL 1: AGGIUNGI OPERATORE */}
       {isAddOperatorOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center">
-          <div onClick={() => setIsAddOperatorOpen(false)} className="fixed inset-0 bg-[#0a2540]/50 backdrop-blur-xs" />
+          <div onClick={() => { setIsAddOperatorOpen(false); setGeneratedStaffInvite(null); }} className="fixed inset-0 bg-[#0a2540]/50 backdrop-blur-xs" />
           <div className="relative w-full max-w-md bg-white rounded-2xl border border-[#e3e8ee] shadow-2xl p-6 space-y-4 text-xs">
             <div className="flex justify-between items-center border-b border-[#e3e8ee] pb-3">
               <div className="flex items-center gap-2">
@@ -419,12 +423,12 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                 </div>
                 <h3 className="font-bold text-sm text-[#0a2540]">Nuovo Account Operatore / Consulente</h3>
               </div>
-              <button onClick={() => setIsAddOperatorOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
+              <button onClick={() => { setIsAddOperatorOpen(false); setGeneratedStaffInvite(null); }} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateOperator} className="space-y-3.5">
+            {!generatedStaffInvite ? <form onSubmit={handleCreateOperator} className="space-y-3.5">
               <div>
                 <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Nome e Cognome</label>
                 <input
@@ -488,7 +492,14 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                   Crea Profilo Operatore
                 </button>
               </div>
-            </form>
+            </form> : <div className="space-y-3">
+              <p className="text-emerald-700 font-semibold">Invito creato per {generatedStaffInvite.name}. Il profilo si attiva solo dopo la scelta della password e la conferma del codice Authenticator.</p>
+              <label className="block text-[#0a2540] font-semibold">Link di attivazione (valido 7 giorni)</label>
+              <input readOnly value={generatedStaffInvite.link} className="w-full rounded-xl border border-[#e3e8ee] px-3 py-2 text-xs" />
+              <button type="button" onClick={() => handleCopyLink(generatedStaffInvite.link, 'staff-link')} className="rounded-xl bg-[#635bff] px-4 py-2 font-semibold text-white">
+                {copiedId === 'staff-link' ? 'Copiato' : 'Copia link'}
+              </button>
+            </div>}
           </div>
         </div>
       )}
@@ -532,6 +543,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                     <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Codice Fiscale / P.IVA</label>
                     <input
                       type="text"
+                      required
                       placeholder="RSSMRA80A01H501U"
                       value={inviteFiscalCode}
                       onChange={e => setInviteFiscalCode(e.target.value)}
@@ -602,10 +614,10 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                 <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1">
                   <div className="font-bold flex items-center gap-1.5 text-sm">
                     <Check className="h-4 w-4 text-emerald-600" />
-                    Profilo per {generatedInvite.clientName} Creato!
+                    Invito pronto per {generatedInvite.clientName}
                   </div>
                   <p className="text-xs text-emerald-700">
-                    Il cliente è stato registrato ed è associato a te come consulente dedicato.
+                    Il link è monouso e scade dopo 7 giorni. Condividilo con il cliente.
                   </p>
                 </div>
 

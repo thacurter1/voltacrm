@@ -8,7 +8,7 @@ export function validateProductionConfiguration(): void {
   if (isExample(process.env.JWT_SECRET) || process.env.JWT_SECRET!.length < 32 || process.env.JWT_SECRET!.includes('volta-dev')) {
     throw new Error('JWT_SECRET univoco di almeno 32 caratteri obbligatorio fuori dalla modalità demo.');
   }
-  if (isExample(process.env.SUPABASE_URL) || isExample(process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+  if (isExample(process.env.SUPABASE_URL) || isExample(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
     throw new Error('Persistenza Supabase obbligatoria fuori dalla modalità demo.');
   }
   if (process.env.TOTEM_KIOSK_API_KEY && (isExample(process.env.TOTEM_KIOSK_API_KEY) || process.env.TOTEM_KIOSK_API_KEY.length < 32 || process.env.TOTEM_KIOSK_API_KEY === 'KIOSK-TOKEN-RETAIL-01')) {

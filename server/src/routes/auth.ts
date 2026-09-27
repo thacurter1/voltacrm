@@ -2,9 +2,10 @@ import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { users, registerAccount } from '../services/dataStore.js';
-import { generateToken, authenticateToken, requireRole } from '../middleware/auth.js';
+import { generateToken, authenticateToken, requireRole, AuthRequest } from '../middleware/auth.js';
 import { loginLimiter } from '../middleware/rateLimiter.js';
-import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema, oauthAuthSchema } from '../middleware/validate.js';
+import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema, oauthAuthSchema, createInvitationSchema, inspectInvitationSchema, acceptInvitationSchema } from '../middleware/validate.js';
+import { createAccountInvitation, inspectAccountInvitation, acceptAccountInvitation, renewAccountInvitation } from '../services/invitationService.js';
 
 import { verifyTotp } from '../utils/totp.js';
 import { verifyOAuthToken } from '../services/oauthVerifier.js';
@@ -12,7 +13,9 @@ import { verifyOAuthToken } from '../services/oauthVerifier.js';
 export const authRouter = Router();
 
 const toSafeProfile = (user: any) => {
-  const { password: _password, twoFactorSecret: _secret, oauthSubject: _oauthSubject, ...safeUser } = user;
+  const { password: _password, twoFactorSecret: _secret, oauthSubject: _oauthSubject,
+    inviteTokenHash: _inviteHash, inviteExpiresAt: _inviteExpires,
+    inviteTotpSecret: _inviteTotp, ...safeUser } = user;
   return safeUser;
 };
 
@@ -23,6 +26,10 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
 
   if (!user || !bcrypt.compareSync(password, user.password)) {
     res.status(401).json({ success: false, message: 'Credenziali operatore non valide.' });
+    return;
+  }
+  if (user.onboardingStatus === 'invited') {
+    res.status(403).json({ success: false, message: 'Completa prima l’attivazione del tuo invito.' });
     return;
   }
 
@@ -72,6 +79,10 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
     res.status(401).json({ success: false, message: 'Credenziali cliente non valide.' });
     return;
   }
+  if (user.onboardingStatus === 'invited') {
+    res.status(403).json({ success: false, message: 'Completa prima l’attivazione del tuo invito.' });
+    return;
+  }
 
   const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
@@ -114,6 +125,32 @@ authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSch
   });
   const token=generateToken({userId:profile.id,email:profile.email,role:profile.role});
   res.status(201).json({success:true,user:toSafeProfile(profile),token});
+});
+
+authRouter.post('/invitations', authenticateToken, requireRole('admin'), validate(createInvitationSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+  const actor = users.find(user => user.id === req.user?.userId);
+  if (!actor) { res.status(403).json({ success: false, message: 'Account amministratore non trovato.' }); return; }
+  const invitation = await createAccountInvitation(actor, req.body);
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(201).json({ success: true, ...invitation });
+});
+
+authRouter.post('/invitations/:id/renew', authenticateToken, requireRole('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+  const invitation = await renewAccountInvitation(req.params.id);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ success: true, ...invitation });
+});
+
+authRouter.post('/invitations/inspect', loginLimiter, validate(inspectInvitationSchema), async (req: Request, res: Response): Promise<void> => {
+  const invitation = await inspectAccountInvitation(req.body.token);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ success: true, invitation });
+});
+
+authRouter.post('/invitations/accept', loginLimiter, validate(acceptInvitationSchema), async (req: Request, res: Response): Promise<void> => {
+  const accepted = await acceptAccountInvitation(req.body.token, req.body.password, req.body.totpCode);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ success: true, ...accepted });
 });
 
 // POST /api/auth/oauth (Google & Apple OAuth login / registration con verifica crittografica token)

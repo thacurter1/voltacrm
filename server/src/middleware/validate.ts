@@ -107,6 +107,29 @@ export const registerCustomerSchema = z.object({
   password: z.string().min(12).max(72)
 }).strict();
 
+export const createInvitationSchema = z.discriminatedUnion('role', [
+  z.object({
+    role: z.literal('customer'), name: z.string().trim().min(2).max(150),
+    email: z.string().trim().email().max(254),
+    phone: z.string().regex(/^\+?[0-9 ()-]{8,25}$/),
+    fiscalCode: z.string().trim().regex(/^(?:[A-Za-z0-9]{16}|[0-9]{11})$/),
+    city: z.string().trim().max(150).optional(),
+  }).strict(),
+  z.object({
+    role: z.enum(['admin', 'call_center']), name: z.string().trim().min(2).max(150),
+    email: z.string().trim().email().max(254), phone: z.string().trim().max(25).default(''),
+  }).strict(),
+]);
+
+export const inspectInvitationSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+}).strict();
+
+export const acceptInvitationSchema = inspectInvitationSchema.extend({
+  password: z.string().min(12).max(72),
+  totpCode: z.string().regex(/^\d{6}$/).optional(),
+});
+
 export const oauthAuthSchema = z.object({
   provider: z.enum(['google', 'apple']),
   idToken: z.string().min(1),

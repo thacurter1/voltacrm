@@ -12,7 +12,9 @@ export function generateTotp(secret: string, stepOffset = 0, timeStep = 30): str
   const buf = Buffer.alloc(8);
   buf.writeBigUInt64BE(BigInt(counter));
 
-  const keyBuffer = Buffer.isBuffer(secret) ? secret : Buffer.from(secret, 'utf-8');
+  const keyBuffer = secret.startsWith('b32:')
+    ? decodeBase32(secret.slice(4))
+    : Buffer.from(secret, 'utf-8');
   const hmac = crypto.createHmac('sha1', keyBuffer);
   hmac.update(buf);
   const digest = hmac.digest();
@@ -47,5 +49,35 @@ export function verifyTotp(code: string, secret: string, allowedStepsWindow = 1,
 }
 
 export function generateTotpSecret(): string {
-  return crypto.randomBytes(20).toString('hex');
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const bytes = crypto.randomBytes(20);
+  let bits = 0;
+  let value = 0;
+  let encoded = '';
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      encoded += alphabet[(value >>> (bits -= 5)) & 31];
+    }
+  }
+  if (bits > 0) encoded += alphabet[(value << (5 - bits)) & 31];
+  return `b32:${encoded}`;
+}
+
+function decodeBase32(value: string): Buffer {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const bytes: number[] = [];
+  let bits = 0;
+  let buffer = 0;
+  for (const character of value.toUpperCase().replace(/=+$/, '')) {
+    const digit = alphabet.indexOf(character);
+    if (digit < 0) throw new Error('Segreto TOTP non valido.');
+    buffer = (buffer << 5) | digit;
+    bits += 5;
+    if (bits >= 8) {
+      bytes.push((buffer >>> (bits -= 8)) & 255);
+    }
+  }
+  return Buffer.from(bytes);
 }

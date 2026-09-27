@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Customer, UserProfile } from '../types';
 import { dbService } from './db';
+import { DEMO_MODE, request } from '../api/transport';
 
 // Credenziali lette dalle variabili d'ambiente (configurabili su Vercel e in locale)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -142,6 +143,10 @@ class ProfileService {
 
   // Lista tutti i profili
   async getProfiles(): Promise<UserProfile[]> {
+    if (!DEMO_MODE) {
+      const response = await request<{ profiles: UserProfile[] }>('/auth/profiles');
+      return response.profiles;
+    }
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.from('profiles').select('*');
       if (!error && data) {
@@ -170,7 +175,15 @@ class ProfileService {
     role: 'admin' | 'call_center';
     phone: string;
     whatsapp: string;
-  }): Promise<UserProfile> {
+  }): Promise<{ profile: UserProfile; inviteLink?: string }> {
+    if (!DEMO_MODE) {
+      const response = await request<{ profile: UserProfile; token: string }>('/auth/invitations', {
+        method: 'POST', body: JSON.stringify({
+          role: operator.role, name: operator.name, email: operator.email, phone: operator.phone || '',
+        }),
+      });
+      return { profile: response.profile, inviteLink: `${window.location.origin}/#invite=${response.token}` };
+    }
     const initials = operator.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
     const newProfile: UserProfile = {
       id: `user-op-${Date.now()}`,
@@ -199,7 +212,7 @@ class ProfileService {
     const current = this.getLocalProfiles();
     const updated = [newProfile, ...current];
     this.saveLocalProfiles(updated);
-    return newProfile;
+    return { profile: newProfile };
   }
 
   // Crea Profilo Cliente con Invito Onboarding da Call Center
@@ -208,9 +221,24 @@ class ProfileService {
     email: string;
     phone: string;
     fiscalCode: string;
+    city?: string;
     assignedBrokerId: string;
     assignedBrokerName: string;
-  }): Promise<{ profile: UserProfile; inviteLink: string; whatsappShareUrl: string }> {
+  }): Promise<{ profile: UserProfile; inviteLink: string; whatsappShareUrl: string; customer?: Customer }> {
+    if (!DEMO_MODE) {
+      const response = await request<{ profile: UserProfile; token: string; customer: Customer }>('/auth/invitations', {
+        method: 'POST', body: JSON.stringify({
+          role: 'customer', name: params.name, email: params.email,
+          phone: params.phone, fiscalCode: params.fiscalCode, city: params.city,
+        }),
+      });
+      const inviteLink = `${window.location.origin}/#invite=${response.token}`;
+      const message = `Ciao ${params.name}! Attiva il tuo account VoltaCRM: ${inviteLink}`;
+      const phone = params.phone.replace(/[^0-9]/g, '');
+      return { profile: response.profile, inviteLink,
+        whatsappShareUrl: `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+        customer: response.customer };
+    }
     const initials = params.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
     const customerId = `cust-${Date.now()}`;
     const newProfile: UserProfile = {

@@ -1,4 +1,4 @@
-import { request, API_BASE_URL } from './client';
+import { request, API_BASE_URL, DEMO_MODE } from './client';
 import type { CustomerBill } from '../types';
 import { dbService } from '../services/db';
 
@@ -37,9 +37,11 @@ export const portalApi = {
         const response = await request<{ success: true; bills: CustomerBill[] }>('/portal/bills' + query);
         return response.bills;
       } catch (err) {
+        if (!DEMO_MODE) throw err;
         console.warn('[portalApi] Backend non raggiungibile, fallback locale per bollette:', err);
       }
     }
+    if (!DEMO_MODE) throw new Error('Servizio bollette non configurato.');
     const allBills = dbService.load().bills || [];
     return customerId ? allBills.filter(b => b.customerId === customerId) : allBills;
   },
@@ -66,9 +68,11 @@ export const portalApi = {
         });
         return response.bill;
       } catch (err) {
+        if (!DEMO_MODE) throw err;
         console.warn('[portalApi] Backend non raggiungibile, fallback locale per upload bolletta:', err);
       }
     }
+    if (!DEMO_MODE) throw new Error('Servizio bollette non configurato.');
     const state = dbService.load();
     const cust = (state.customers || []).find(c => c.id === input.customerId);
     const newBill: CustomerBill = {
@@ -100,9 +104,11 @@ export const portalApi = {
         const response = await request<{ success: true; readings: MeterReading[] }>('/portal/readings' + query);
         return response.readings;
       } catch (err) {
+        if (!DEMO_MODE) throw err;
         console.warn('[portalApi] Backend non raggiungibile, fallback locale per letture:', err);
       }
     }
+    if (!DEMO_MODE) throw new Error('Servizio autoletture non configurato.');
     try {
       const stored = localStorage.getItem('VOLTA_METER_READINGS');
       const parsed: MeterReading[] = stored ? JSON.parse(stored) : [];
@@ -126,9 +132,11 @@ export const portalApi = {
         });
         return response.reading;
       } catch (err) {
+        if (!DEMO_MODE) throw err;
         console.warn('[portalApi] Backend non raggiungibile, fallback locale per invio lettura:', err);
       }
     }
+    if (!DEMO_MODE) throw new Error('Servizio autoletture non configurato.');
     const newReading: MeterReading = {
       id: `read-${Date.now()}`,
       customerId: input.customerId,

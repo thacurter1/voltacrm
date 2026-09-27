@@ -23,6 +23,7 @@ import { SecurityAuditDashboard } from './components/SecurityAuditDashboard';
 import { ClientBillsInbox } from './components/ClientBillsInbox';
 import { CallScriptDrawer } from './components/CallScriptDrawer';
 import { TeamProfilesManager } from './components/TeamProfilesManager';
+import { InvitationActivation } from './components/InvitationActivation';
 import { PortalGate } from './components/PortalGate';
 import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
@@ -941,6 +942,9 @@ export function App() {
   const host = typeof window !== 'undefined' ? window.location.hostname : '';
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const appParam = searchParams.get('app') || searchParams.get('mode');
+  const inviteToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.hash.slice(1)).get('invite') : null;
+
+  if (inviteToken) return <InvitationActivation token={inviteToken} />;
 
   if (host.startsWith('totem.') || appParam === 'totem') {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;

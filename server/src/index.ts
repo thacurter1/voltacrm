@@ -46,7 +46,7 @@ app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.get(['/health', '/api/health'], async (_req: Request, res: Response): Promise<void> => {
   const dbHealth = await testDatabaseConnection();
   const isHealthy = !process.env.SUPABASE_URL || dbHealth.connected;
-  res.status(200).json({
+  res.status(isHealthy ? 200 : 503).json({
     status: isHealthy ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     service: 'Volta Energia SaaS Standalone Backend API',
