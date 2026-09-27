@@ -18,15 +18,17 @@ export interface UserProfile {
   createdAt?: string;
 }
 
-export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk';
+export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator';
 
 export type LeadStatus = 
   | 'new' 
   | 'call_center_queue' 
+  | 'contacted'
   | 'appointment_booked' 
   | 'in_negotiation' 
   | 'contract_signed' 
   | 'unreachable' 
+  | 'won'
   | 'lost';
 
 export interface Lead {

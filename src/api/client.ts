@@ -33,7 +33,7 @@ function resolveApiBaseUrl(): string | null {
 
 export const API_BASE_URL: string | null = resolveApiBaseUrl();
 export const DEMO_MODE = (import.meta as any).env?.VITE_DEMO_MODE === 'true';
-export const isStandaloneDemo = !API_BASE_URL || DEMO_MODE;
+export const isStandaloneDemo = DEMO_MODE;
 
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   if (!API_BASE_URL) {
@@ -85,11 +85,11 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL && !isNetworkError(err)) throw err;
-          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
+          if (!DEMO_MODE) throw err;
           console.warn('[API Client] Fallback locale per loginOperator:', err);
         }
       }
+      if (!DEMO_MODE) throw new Error('Servizio di autenticazione non configurato.');
       const normalizedEmail = (email || '').trim().toLowerCase();
       const operatorProfiles = INITIAL_PROFILES.filter(p => p.role !== 'customer');
       const profile = operatorProfiles.find(p => p.email.toLowerCase() === normalizedEmail) || operatorProfiles[0];
@@ -124,11 +124,11 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL && !isNetworkError(err)) throw err;
-          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
+          if (!DEMO_MODE) throw err;
           console.warn('[API Client] Fallback locale per loginCustomer:', err);
         }
       }
+      if (!DEMO_MODE) throw new Error('Servizio di autenticazione non configurato.');
       const query = (identifier || '').trim().toLowerCase();
       const state = dbService.load();
       const customers = state.customers || [];
@@ -188,11 +188,11 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL && !isNetworkError(err)) throw err;
-          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
+          if (!DEMO_MODE) throw err;
           console.warn('[API Client] Fallback locale per registerCustomer:', err);
         }
       }
+      if (!DEMO_MODE) throw new Error('Servizio di registrazione non configurato.');
       const state = dbService.load();
       const customerId = `cust-${Date.now()}`;
       const newCustomer: Customer = {
@@ -255,13 +255,13 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (API_BASE_URL && !isNetworkError(err)) throw err;
-          if (!isStandaloneDemo && !isNetworkError(err)) throw err;
+          if (!DEMO_MODE) throw err;
           console.warn('[API Client] Fallback locale per loginWithOAuth:', err);
         }
       }
 
-      // Supabase / Demo fallback
+      if (!DEMO_MODE) throw new Error('Servizio OAuth non configurato.');
+      // Demo fallback
       const profile = await profileService.signInWithOAuth(provider, role, options);
       const mockToken = `mock-oauth-${provider}-${profile.id}-${Date.now()}`;
       if (typeof window !== 'undefined') {
@@ -281,6 +281,7 @@ export const api = {
           console.warn('[API Client] Fallback locale per me():', err);
         }
       }
+      if (!DEMO_MODE) throw new Error('Servizio di autenticazione non configurato.');
       if (typeof window !== 'undefined') {
         const stored = localStorage.getItem('VOLTA_CURRENT_USER');
         if (stored) {
@@ -303,6 +304,7 @@ export const api = {
           console.warn('[API Client] Fallback locale per profiles():', err);
         }
       }
+      if (!DEMO_MODE) throw new Error('Servizio profili non configurato.');
       return INITIAL_PROFILES;
     },
 
@@ -392,7 +394,7 @@ export const api = {
           phone: item.phone || '',
           email: item.email || '',
           city: item.city || 'Italia',
-          source: item.source || 'Import CSV Marketing',
+          source: item.source || 'manual',
           status: 'new',
           notes: item.notes || 'Importato massivamente da lista marketing.',
           createdAt: new Date().toISOString().split('T')[0],

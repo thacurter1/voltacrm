@@ -102,7 +102,7 @@ switchRouter.get('/offers', (_req: Request, res: Response): void => {
 switchRouter.post('/sign', authenticateToken, enforceSignatureOwnership, validate(signContractSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const authUser = (req as any).user;
-    const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator');
+    const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
     const {
       customerId, customerName, signerFiscalCode, phone, otpCode,
       signatureType = 'otp', canvasDataUrl, offerId, supplier,

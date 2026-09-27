@@ -9,6 +9,28 @@ export interface VerifiedOAuthClaims {
   sub: string;
 }
 
+function expectedAudience(provider: 'google' | 'apple'): string {
+  const configured = provider === 'google' ? process.env.GOOGLE_OAUTH_CLIENT_ID : process.env.APPLE_OAUTH_CLIENT_ID;
+  if (process.env.NODE_ENV === 'test') return configured || `voltacrm-${provider}-test-client`;
+  if (!configured) throw new Error(`Client ID OAuth ${provider} non configurato sul server.`);
+  return configured;
+}
+
+function verifiedClaims(provider: 'google' | 'apple', payload: any): VerifiedOAuthClaims {
+  if (!payload || typeof payload !== 'object' || typeof payload.email !== 'string' ||
+      !payload.email.trim() || (payload.email_verified !== true && payload.email_verified !== 'true') ||
+      typeof payload.sub !== 'string' || !payload.sub.trim() || !Number.isInteger(payload.exp)) {
+    throw new Error(`Claim di identità ${provider} incompleti o non verificati.`);
+  }
+  return {
+    provider,
+    email: payload.email.trim().toLowerCase(),
+    name: typeof payload.name === 'string' ? payload.name.trim() : undefined,
+    picture: typeof payload.picture === 'string' ? payload.picture : undefined,
+    sub: payload.sub
+  };
+}
+
 interface JwksKey {
   kty: string;
   kid: string;
@@ -90,23 +112,17 @@ export async function verifyOAuthToken(provider: 'google' | 'apple', idToken: st
     let payload: any;
     try {
       // Supporta verifica HMAC con OAUTH_TEST_SECRET
-      payload = jwt.verify(idToken, OAUTH_TEST_SECRET, { algorithms: ['HS256', 'HS384', 'HS512'] });
+      payload = jwt.verify(idToken, OAUTH_TEST_SECRET, {
+        algorithms: ['HS256'],
+        issuer: provider === 'google' ? GOOGLE_ISSUERS : APPLE_ISSUERS,
+        audience: expectedAudience(provider)
+      });
     } catch (testVerifyErr: any) {
       // Se non passa con la chiave simmetrica di test, lancia errore di autenticazione
       throw new Error(`Verifica crittografica idToken fallita (test): ${testVerifyErr.message}`);
     }
 
-    if (!payload || typeof payload !== 'object' || !payload.email || typeof payload.email !== 'string') {
-      throw new Error('Token OAuth privo di campo email valido nei claim.');
-    }
-
-    return {
-      provider,
-      email: payload.email.trim().toLowerCase(),
-      name: payload.name?.trim(),
-      picture: payload.picture || payload.avatar,
-      sub: payload.sub || payload.email
-    };
+    return verifiedClaims(provider, payload);
   }
 
   // Runtime di Produzione / Staging: verifica crittografica RS256 tramite JWKS ufficiali
@@ -124,21 +140,12 @@ export async function verifyOAuthToken(provider: 'google' | 'apple', idToken: st
   try {
     payload = jwt.verify(idToken, pem, {
       algorithms: ['RS256'],
-      issuer: validIssuers
+      issuer: validIssuers,
+      audience: expectedAudience(provider)
     });
   } catch (verifyErr: any) {
     throw new Error(`Firma o claim idToken ${provider} non validi: ${verifyErr.message}`);
   }
 
-  if (!payload || typeof payload !== 'object' || !payload.email || typeof payload.email !== 'string') {
-    throw new Error(`Il token ${provider} non contiene un indirizzo email verificato.`);
-  }
-
-  return {
-    provider,
-    email: payload.email.trim().toLowerCase(),
-    name: (payload.name || (provider === 'google' ? 'Utente Google' : 'Utente Apple')).trim(),
-    picture: payload.picture,
-    sub: payload.sub || payload.email
-  };
+  return verifiedClaims(provider, payload);
 }

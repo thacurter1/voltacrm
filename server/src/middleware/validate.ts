@@ -49,6 +49,11 @@ export const bulkImportLeadsSchema = z.object({
   leads: z.array(bulkImportLeadItemSchema).min(1),
 }).strict();
 
+export const updateLeadStatusSchema = z.object({
+  status: z.enum(['new', 'call_center_queue', 'contacted', 'appointment_booked', 'in_negotiation', 'contract_signed', 'unreachable', 'won', 'lost']),
+  note: z.string().max(2000).optional()
+}).strict();
+
 export const createUtilityPointSchema = z.object({
   id: z.string().optional(),
   type: z.enum(['luce', 'gas']),

@@ -12,7 +12,7 @@ import { verifyOAuthToken } from '../services/oauthVerifier.js';
 export const authRouter = Router();
 
 const toSafeProfile = (user: any) => {
-  const { password: _password, twoFactorSecret: _secret, ...safeUser } = user;
+  const { password: _password, twoFactorSecret: _secret, oauthSubject: _oauthSubject, ...safeUser } = user;
   return safeUser;
 };
 
@@ -135,8 +135,23 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
   const targetName = (verifiedClaims.name || name || (provider === 'google' ? 'Utente Google' : 'Utente Apple')).trim();
   const tokenAvatar = verifiedClaims.picture;
 
-  // Check if user already exists
-  let user = users.find(u => u.email.toLowerCase() === targetEmail);
+  // The provider subject is the stable identity; email can change or be reused.
+  let user = users.find(u => u.authProvider === provider && u.oauthSubject === verifiedClaims.sub);
+  const emailOwner = users.find(u => u.email.toLowerCase() === targetEmail);
+
+  // OAuth is a customer sign-in method. Matching a staff email must never bypass staff 2FA.
+  if (user && user.role !== 'customer') {
+    res.status(403).json({ success: false, message: 'Per lo staff è richiesto l’accesso con credenziali aziendali e 2FA.' });
+    return;
+  }
+  if (!user && emailOwner?.role !== undefined && emailOwner.role !== 'customer') {
+    res.status(403).json({ success: false, message: 'Per lo staff è richiesto l’accesso con credenziali aziendali e 2FA.' });
+    return;
+  }
+  if (!user && emailOwner) {
+    res.status(409).json({ success: false, message: 'Account già presente. Accedi con il metodo associato o contatta l’assistenza.' });
+    return;
+  }
 
   if (!user) {
     // REGISTRAZIONE OAUTH: consentita ESCLUSIVAMENTE con ruolo 'customer'
@@ -157,7 +172,8 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
       is2faEnabled: false,
       onboardingStatus: 'active',
       createdAt: today,
-      authProvider: provider
+      authProvider: provider,
+      oauthSubject: verifiedClaims.sub
     };
 
     await registerAccount(profile, {
@@ -195,6 +211,15 @@ authRouter.get('/me', authenticateToken, (req: any, res: Response): void => {
   res.json({success:true,user:toSafeProfile(user)});
 });
 
-authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (_req: Request, res: Response) => {
-  res.json({ success: true, profiles: users.map(toSafeProfile) });
+authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (req: any, res: Response) => {
+  if (req.user?.role === 'admin') {
+    res.json({ success: true, profiles: users.map(toSafeProfile) });
+    return;
+  }
+  res.json({
+    success: true,
+    profiles: users.filter(user => user.role !== 'customer').map(user => ({
+      id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar
+    }))
+  });
 });

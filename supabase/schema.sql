@@ -11,7 +11,8 @@ create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text not null,
   full_name text not null,
-  role text not null check (role in ('admin', 'operator', 'call_center', 'customer')) default 'customer',
+  role text not null check (role in ('admin', 'operator', 'broker', 'call_center', 'customer')) default 'customer',
+  customer_id text,
   phone text,
   whatsapp text,
   fiscal_code text,
@@ -80,6 +81,8 @@ create table if not exists public.leads (
   source text not null check (source in ('totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page')) default 'totem_kiosk',
   status text not null check (status in ('new', 'call_center_queue', 'contacted', 'appointment_booked', 'in_negotiation', 'contract_signed', 'unreachable', 'won', 'lost')) default 'new',
   assigned_call_center_agent text,
+  assigned_broker_id text,
+  assigned_agent text,
   appointment_id text,
   notes text,
   estimated_consumption_kwh numeric default 2800,
@@ -87,6 +90,8 @@ create table if not exists public.leads (
   deleted_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+create index if not exists idx_leads_assigned_broker on public.leads (assigned_broker_id);
 
 -- 6. Tabella Log Firme Digitali & Mandati di Brokeraggio (Anti-Tamper SHA-256)
 create table if not exists public.signature_logs (
@@ -102,6 +107,21 @@ create table if not exists public.signature_logs (
   offer_id text,
   supplier text,
   signature_hash text not null,
+  utility_point_id text,
+  pod_or_pdr text,
+  energy_type text check (energy_type is null or energy_type in ('luce', 'gas')),
+  offer_snapshot jsonb,
+  original_point_snapshot jsonb,
+  consent_version text,
+  canonical_document jsonb,
+  canvas_data_url text,
+  document_hash text,
+  status text not null default 'signed' check (status in ('signed', 'activated')),
+  activation_status text not null default 'pending_activation' check (activation_status in ('pending_activation', 'activated')),
+  activation_reference text,
+  activation_date date,
+  activated_by text,
+  activated_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -173,12 +193,6 @@ create index if not exists idx_appointments_status on public.appointments (statu
 create index if not exists idx_customers_deleted_at on public.customers (deleted_at) where deleted_at is null;
 create index if not exists idx_leads_deleted_at on public.leads (deleted_at) where deleted_at is null;
 
--- RLS Appuntamenti
-alter table public.appointments enable row level security;
-drop policy if exists "Operatori gestiscono appuntamenti" on public.appointments;
-create policy "Operatori gestiscono appuntamenti" on public.appointments for all to authenticated using (public.is_operator_or_admin());
-grant select, insert, update, delete on public.appointments to authenticated;
-
 -- ==============================================================================
 -- FUNZIONI SICURE DI CONTROLLO RUOLI (SECURITY DEFINER CON SEARCH_PATH PROTETTO)
 -- ==============================================================================
@@ -212,6 +226,12 @@ begin
   );
 end;
 $$;
+
+-- La policy usa la funzione appena definita: questo ordine vale anche per un database vuoto.
+alter table public.appointments enable row level security;
+drop policy if exists "Operatori gestiscono appuntamenti" on public.appointments;
+create policy "Operatori gestiscono appuntamenti" on public.appointments for all to authenticated using (public.is_operator_or_admin());
+grant select, insert, update, delete on public.appointments to authenticated;
 
 -- ==============================================================================
 -- TRIGGER ANTI-SCALATA PRIVILEGI (PREVENT PRIVILEGE ESCALATION)
@@ -983,6 +1003,122 @@ $$;
 revoke all on function public.settle_commissions(text, text[], text, text, text) from public, anon, authenticated;
 grant execute on function public.settle_commissions(text, text[], text, text, text) to service_role;
 
+create or replace function public.activate_signed_signature(
+  p_signature_id text,
+  p_confirmation_reference text,
+  p_activation_date date,
+  p_activated_by text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_signature public.signature_logs%rowtype;
+  v_customer public.customers%rowtype;
+  v_points jsonb;
+  v_current_point jsonb;
+  v_original_point jsonb;
+  v_offer jsonb;
+  v_point_index integer;
+  v_updated_point jsonb;
+  v_activated_at timestamp with time zone := timezone('utc'::text, now());
+begin
+  if nullif(btrim(p_confirmation_reference), '') is null or p_activation_date is null then
+    raise exception 'Activation reference and date are required' using errcode = '22023';
+  end if;
+
+  select * into v_signature
+  from public.signature_logs
+  where id = p_signature_id
+  for update;
+
+  if not found then
+    raise exception 'Signature not found' using errcode = 'P0002';
+  end if;
+  if v_signature.status <> 'signed' or v_signature.activation_status <> 'pending_activation' then
+    raise exception 'Signature already activated or not pending' using errcode = '40001';
+  end if;
+  if v_signature.utility_point_id is null or v_signature.pod_or_pdr is null
+     or v_signature.offer_snapshot is null or v_signature.original_point_snapshot is null then
+    raise exception 'Signature lacks the immutable point or offer snapshot' using errcode = '22023';
+  end if;
+
+  select * into v_customer
+  from public.customers
+  where id = v_signature.customer_id
+  for update;
+
+  if not found then
+    raise exception 'Customer not found for signature' using errcode = 'P0002';
+  end if;
+
+  v_points := coalesce(v_customer.utility_points, '[]'::jsonb);
+  select point.value, (point.ordinality - 1)::integer
+    into v_current_point, v_point_index
+  from jsonb_array_elements(v_points) with ordinality as point(value, ordinality)
+  where point.value->>'id' = v_signature.utility_point_id
+    and point.value->>'podOrPdr' = v_signature.pod_or_pdr
+  limit 1;
+
+  if v_current_point is null then
+    raise exception 'Signed utility point not found' using errcode = '40001';
+  end if;
+
+  v_original_point := v_signature.original_point_snapshot;
+  if (v_current_point->>'id', v_current_point->>'type', v_current_point->>'podOrPdr',
+      v_current_point->>'currentSupplier', v_current_point->>'currentOfferName',
+      v_current_point->>'currentTariffType', v_current_point->>'currentUnitCost',
+      v_current_point->>'currentFixedFeeYear')
+     is distinct from
+     (v_original_point->>'id', v_original_point->>'type', v_original_point->>'podOrPdr',
+      v_original_point->>'currentSupplier', v_original_point->>'currentOfferName',
+      v_original_point->>'currentTariffType', v_original_point->>'currentUnitCost',
+      v_original_point->>'currentFixedFeeYear') then
+    raise exception 'Stale utility point snapshot conflict' using errcode = '40001';
+  end if;
+
+  v_offer := v_signature.offer_snapshot;
+  if v_offer->>'energyType' is distinct from v_current_point->>'type' then
+    raise exception 'Offer energy type conflicts with signed point' using errcode = '22023';
+  end if;
+
+  v_updated_point := v_current_point || jsonb_build_object(
+    'currentSupplier', v_offer->>'supplier',
+    'currentOfferName', v_offer->>'name',
+    'currentTariffType', case when v_offer->>'pricingType' = 'fixed' then 'fixed' else 'indexed' end,
+    'currentUnitCost', (v_offer->>'unitPriceOrSpread')::numeric,
+    'currentFixedFeeYear', (v_offer->>'fixedAnnualFee')::numeric
+  );
+
+  update public.customers
+  set utility_points = jsonb_set(v_points, array[v_point_index::text], v_updated_point, false)
+  where id = v_customer.id;
+
+  update public.signature_logs
+  set status = 'activated',
+      activation_status = 'activated',
+      activation_reference = btrim(p_confirmation_reference),
+      activation_date = p_activation_date,
+      activated_by = p_activated_by,
+      activated_at = v_activated_at
+  where id = p_signature_id;
+
+  return to_jsonb(v_signature) || jsonb_build_object(
+    'status', 'activated',
+    'activation_status', 'activated',
+    'activation_reference', btrim(p_confirmation_reference),
+    'activation_date', p_activation_date,
+    'activated_by', p_activated_by,
+    'activated_at', v_activated_at
+  );
+end;
+$$;
+
+revoke all on function public.activate_signed_signature(text, text, date, text) from public, anon, authenticated;
+grant execute on function public.activate_signed_signature(text, text, date, text) to service_role;
+
 create or replace function public.activate_signature_with_commissions(
   p_signature_id text,
   p_confirmation_reference text,
@@ -1034,3 +1170,175 @@ $$;
 
 revoke all on function public.activate_signature_with_commissions(text, text, date, text, text, text, text, text, text, text, numeric, boolean) from public, anon, authenticated;
 grant execute on function public.activate_signature_with_commissions(text, text, date, text, text, text, text, text, text, text, numeric, boolean) to service_role;
+
+-- Trigger di sincronizzazione stato cliente post attivazione firma
+create or replace function public.sync_customer_after_signature_activation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if new.status = 'activated'
+     and new.activation_status = 'activated'
+     and new.activation_date is not null
+     and (old.status, old.activation_status) is distinct from (new.status, new.activation_status) then
+    update public.customers
+       set last_switch_audit_date = new.activation_date,
+           next_switch_audit_date = new.activation_date + 120,
+           has_brokerage_mandate = true
+     where id = new.customer_id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists signature_activation_sync_customer on public.signature_logs;
+create trigger signature_activation_sync_customer
+after update of status, activation_status, activation_date on public.signature_logs
+for each row execute function public.sync_customer_after_signature_activation();
+
+-- 15. Tabella Account e Credenziali Unificati CRM
+create table if not exists public.crm_accounts (
+  id text primary key,
+  email text not null,
+  password_hash text not null,
+  role text not null check(role in ('admin', 'operator', 'broker', 'call_center', 'customer')),
+  customer_id text references public.customers(id),
+  two_factor_secret text,
+  is_2fa_enabled boolean not null default false,
+  profile jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists crm_accounts_email_unique on public.crm_accounts(lower(trim(email)));
+create unique index if not exists crm_accounts_oauth_identity_unique
+  on public.crm_accounts ((profile->>'authProvider'), (profile->>'oauthSubject'))
+  where profile ? 'oauthSubject';
+
+alter table public.crm_accounts enable row level security;
+revoke all on public.crm_accounts from public, anon, authenticated;
+grant all on public.crm_accounts to service_role;
+
+-- 16. Tabella Appuntamenti Operativi CRM
+create table if not exists public.crm_appointments (
+  id text primary key,
+  lead_id text not null,
+  customer_name text not null,
+  phone text not null,
+  city text not null,
+  agent_name text not null,
+  scheduled_at timestamptz not null,
+  duration_minutes integer not null check (duration_minutes between 5 and 480),
+  type text not null check (type in ('phone_consultation', 'field_visit', 'video_call')),
+  status text not null check (status in ('scheduled', 'completed', 'cancelled', 'no_show')),
+  notes text not null default '',
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists crm_appointments_scheduled_at_idx on public.crm_appointments (scheduled_at desc);
+alter table public.crm_appointments enable row level security;
+revoke all on public.crm_appointments from anon, authenticated;
+grant all on public.crm_appointments to service_role;
+
+-- 17. Funzioni RPC Gestione Account e Contatti
+create or replace function public.register_customer_account(p_profile jsonb, p_customer jsonb)
+returns void language plpgsql security definer set search_path=public,pg_temp as $$
+begin
+  if p_profile->>'role' <> 'customer' or p_profile->>'customerId' <> p_customer->>'id' then
+    raise exception 'Invalid customer registration';
+  end if;
+  insert into public.customers(id,name,fiscal_code,phone,email,city,contract_start_date,last_switch_audit_date,
+    next_switch_audit_date,has_brokerage_mandate,account_manager,notes,utility_points)
+  values(p_customer->>'id',p_customer->>'name',p_customer->>'fiscal_code',p_customer->>'phone',
+    p_customer->>'email',p_customer->>'city',(p_customer->>'contract_start_date')::date,
+    (p_customer->>'last_switch_audit_date')::date,(p_customer->>'next_switch_audit_date')::date,
+    false,p_customer->>'account_manager',p_customer->>'notes',coalesce(p_customer->'utility_points','[]'::jsonb));
+  insert into public.crm_accounts(id,email,password_hash,role,customer_id,is_2fa_enabled,profile)
+  values(p_profile->>'id',lower(trim(p_profile->>'email')),p_profile->>'password','customer',
+    p_customer->>'id',false,p_profile - 'password' - 'twoFactorSecret');
+end;
+$$;
+
+create or replace function public.bootstrap_crm_admin(p_profile jsonb)
+returns void language plpgsql security definer set search_path=public,pg_temp as $$
+begin
+  perform pg_advisory_xact_lock(hashtext('voltacrm-bootstrap-admin'));
+  if exists(select 1 from public.crm_accounts where role='admin') then return; end if;
+  if length(coalesce(p_profile->>'twoFactorSecret','')) < 20 or p_profile->>'role' <> 'admin' then
+    raise exception 'Missing secure bootstrap credentials';
+  end if;
+  insert into public.crm_accounts(id,email,password_hash,role,two_factor_secret,is_2fa_enabled,profile)
+  values(p_profile->>'id',lower(trim(p_profile->>'email')),p_profile->>'password','admin',
+    p_profile->>'twoFactorSecret',true,p_profile - 'password' - 'twoFactorSecret');
+end;
+$$;
+
+create or replace function public.update_customer_contact(
+  p_actor_id text,
+  p_customer_id text,
+  p_contact jsonb
+) returns jsonb
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  v_actor public.crm_accounts%rowtype;
+  v_customer public.customers%rowtype;
+  v_email text := lower(btrim(p_contact->>'email'));
+  v_actor_name text;
+begin
+  select * into v_actor from public.crm_accounts where id = p_actor_id for update;
+  if not found then raise exception 'Actor account not found'; end if;
+  select * into v_customer from public.customers where id = p_customer_id for update;
+  if not found then raise exception 'Customer not found'; end if;
+
+  if v_actor.role = 'customer' and v_actor.customer_id is distinct from p_customer_id then
+    raise exception 'Customer ownership mismatch';
+  elsif v_actor.role in ('operator', 'broker') then
+    v_actor_name := lower(btrim(split_part(coalesce(v_actor.profile->>'name', ''), ' (', 1)));
+    if v_customer.assigned_broker_id is not null then
+      if v_customer.assigned_broker_id <> p_actor_id then raise exception 'Broker ownership mismatch'; end if;
+    elsif v_actor_name = '' or lower(btrim(split_part(coalesce(v_customer.account_manager, ''), ' (', 1))) <> v_actor_name then
+      raise exception 'Broker ownership mismatch';
+    end if;
+  elsif v_actor.role <> 'admin' and v_actor.role <> 'customer' then
+    raise exception 'Role not allowed';
+  end if;
+
+  if nullif(v_email, '') is null then raise exception 'Email is required'; end if;
+  if exists (select 1 from public.crm_accounts where lower(trim(email)) = v_email and customer_id is distinct from p_customer_id) then
+    raise exception 'Email already registered' using errcode = '23505';
+  end if;
+
+  update public.customers
+     set phone = btrim(p_contact->>'phone'), email = v_email, city = btrim(p_contact->>'city'),
+         updated_at = timezone('utc', now())
+   where id = p_customer_id returning * into v_customer;
+  update public.crm_accounts
+     set email = v_email,
+         profile = profile || jsonb_build_object('email', v_email, 'phone', btrim(p_contact->>'phone'))
+   where customer_id = p_customer_id;
+  return to_jsonb(v_customer);
+end;
+$$;
+
+revoke all on function public.register_customer_account(jsonb, jsonb) from public, anon, authenticated;
+revoke all on function public.bootstrap_crm_admin(jsonb) from public, anon, authenticated;
+revoke all on function public.update_customer_contact(text, text, jsonb) from public, anon, authenticated;
+
+grant execute on function public.register_customer_account(jsonb, jsonb) to service_role;
+grant execute on function public.bootstrap_crm_admin(jsonb) to service_role;
+grant execute on function public.update_customer_contact(text, text, jsonb) to service_role;
+
+-- 18. Supabase Storage Buckets
+insert into storage.buckets (id, name, public)
+values ('customer-bills', 'customer-bills', false)
+on conflict (id) do nothing;
+
+-- 19. Grant Espliciti Service Role
+grant usage on schema public to service_role;
+grant all on public.crm_accounts to service_role;
+grant all on public.crm_appointments to service_role;
+grant select, insert, update, delete on public.profiles, public.commissions, public.settlement_batches to service_role;
+grant select, insert, update, delete on public.leads, public.customers, public.notifications, public.portal_bills to service_role;
+grant select, insert, update, delete on public.signature_logs, public.meter_readings, public.security_logs to service_role;

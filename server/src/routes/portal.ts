@@ -25,7 +25,7 @@ function resolveActor(req: AuthRequest): PortalActor {
   const profile = users.find((item) => item.id === authUser?.userId);
   if (!authUser || !profile) throw httpError('Profilo autenticato non trovato.', 403);
 
-  if (['admin', 'call_center', 'operator'].includes(authUser.role)) {
+  if (['admin', 'call_center', 'operator', 'broker'].includes(authUser.role)) {
     return { isStaff: true };
   }
   if (authUser.role !== 'customer' || !profile.customerId) {

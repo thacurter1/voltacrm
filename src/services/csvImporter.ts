@@ -30,7 +30,7 @@ function normalizeHeader(header: string): string {
     .replace(/[^a-z0-9]/g, '');
 }
 
-export function parseLeadCsv(rawCsvText: string, defaultSource = 'Import CSV Marketing'): CsvParseResult {
+export function parseLeadCsv(rawCsvText: string, defaultSource = 'manual'): CsvParseResult {
   const result: CsvParseResult = {
     valid: [],
     errors: [],

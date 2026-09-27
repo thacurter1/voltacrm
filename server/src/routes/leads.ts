@@ -1,10 +1,19 @@
-import { Router, Request, Response } from 'express';
-import { getLeads, addLead, updateLead, users } from '../services/dataStore.js';
+import { Router, Response } from 'express';
+import { getLeads, addLead, addLeads, updateLead, users } from '../services/dataStore.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
-import { validate, createLeadSchema, bulkImportLeadsSchema } from '../middleware/validate.js';
+import { validate, createLeadSchema, bulkImportLeadsSchema, updateLeadStatusSchema } from '../middleware/validate.js';
 import { Lead } from '../types.js';
 
 export const leadsRouter = Router();
+const allowedSources = new Set(['totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page']);
+function canAccessLead(lead: Lead, actor: any): boolean {
+  if (!actor) return false;
+  if (actor.role === 'admin' || actor.role === 'call_center') return true;
+  if (actor.role !== 'operator' && actor.role !== 'broker') return false;
+  return lead.assignedBrokerId === actor.id || lead.assignedBrokerId === actor.name ||
+    lead.assignedAgent === actor.id || lead.assignedAgent === actor.name ||
+    lead.assignedCallCenterAgent === actor.name;
+}
 function parseSafeNumber(val: any): number | undefined {
   if (val === null || val === undefined || val === '') return undefined;
   if (typeof val === 'number') return Number.isFinite(val) && val > 0 ? val : undefined;
@@ -14,8 +23,9 @@ function parseSafeNumber(val: any): number | undefined {
 }
 
 // POST /api/leads/bulk-import (Import massivo da CSV per campagne marketing con validazione Zod)
-leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(bulkImportLeadsSchema), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(bulkImportLeadsSchema), async (req: any, res: Response): Promise<void> => {
   const { leads: importedLeads } = req.body;
+  const actor = users.find(user => user.id === req.user?.userId);
   if (!Array.isArray(importedLeads) || importedLeads.length === 0) {
     res.status(400).json({ success: false, message: 'Array di lead vuoto o non valido.' });
     return;
@@ -31,16 +41,18 @@ leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_c
       phone: item.phone.trim(),
       email: item.email?.trim() || '',
       city: item.city?.trim() || 'Italia',
-      source: item.source || 'Import CSV Marketing',
+      source: allowedSources.has(item.source) ? item.source : 'manual',
       status: 'new',
       notes: item.notes || 'Importato massivamente da lista marketing.',
       createdAt: new Date().toISOString().split('T')[0],
       estimatedConsumptionKwh: parseSafeNumber(item.estimatedConsumptionKwh),
       estimatedConsumptionSmc: parseSafeNumber(item.estimatedConsumptionSmc),
+      assignedBrokerId: actor && (actor.role === 'broker' || actor.role === 'operator') ? actor.id : undefined,
     };
-    await addLead(newLead);
     addedLeads.push(newLead);
   }
+
+  if (addedLeads.length) await addLeads(addedLeads);
 
   res.status(201).json({
     success: true,
@@ -54,24 +66,15 @@ leadsRouter.post('/bulk-import', authenticateToken, requireRole('admin', 'call_c
 // GET /api/leads (Riservato a Call Center e Admin)
 leadsRouter.get('/', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (req: any, res: Response) => {
   const actor = users.find(u => u.id === req.user?.userId);
-  let allLeads = getLeads();
-
-  if (actor && (actor.role === 'operator' || actor.role === 'broker')) {
-    allLeads = allLeads.filter(l =>
-      l.assignedBrokerId === actor.id ||
-      l.assignedBrokerId === actor.name ||
-      l.assignedAgent === actor.name ||
-      l.assignedAgent === actor.id ||
-      l.assignedCallCenterAgent === actor.name
-    );
-  }
+  const allLeads = getLeads().filter(lead => canAccessLead(lead, actor));
 
   res.json({ success: true, leads: allLeads });
 });
 
 // POST /api/leads
-leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(createLeadSchema), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(createLeadSchema), async (req: any, res: Response): Promise<void> => {
   const { name, phone, email, city, source, notes, estimatedConsumptionKwh, estimatedConsumptionSmc } = req.body;
+  const actor = users.find(user => user.id === req.user?.userId);
 
   const newLead: Lead = {
     id: `lead-${Date.now()}`,
@@ -79,12 +82,13 @@ leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'op
     phone,
     email: email || 'lead@voltagroup.it',
     city: city || 'Milano',
-    source: source || 'landing_page',
+    source: allowedSources.has(source) ? source : 'landing_page',
     status: 'new',
     notes: notes || 'Lead acquisito da canale digitale.',
     createdAt: new Date().toISOString().split('T')[0],
     estimatedConsumptionKwh,
     estimatedConsumptionSmc,
+    assignedBrokerId: actor && (actor.role === 'broker' || actor.role === 'operator') ? actor.id : undefined,
   };
 
   await addLead(newLead);
@@ -92,7 +96,7 @@ leadsRouter.post('/', authenticateToken, requireRole('admin', 'call_center', 'op
 });
 
 // PATCH /api/leads/:id/status
-leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), async (req: Request, res: Response): Promise<void> => {
+leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(updateLeadStatusSchema), async (req: any, res: Response): Promise<void> => {
   const { id } = req.params;
   const { status, note } = req.body;
 
@@ -100,6 +104,12 @@ leadsRouter.patch('/:id/status', authenticateToken, requireRole('admin', 'call_c
   const lead = leads.find((l: Lead) => l.id === id);
   if (!lead) {
     res.status(404).json({ success: false, message: 'Lead non trovato.' });
+    return;
+  }
+
+  const actor = users.find(user => user.id === req.user?.userId);
+  if (!canAccessLead(lead, actor)) {
+    res.status(403).json({ success: false, message: 'Accesso negato al lead richiesto.' });
     return;
   }
 

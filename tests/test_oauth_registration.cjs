@@ -18,8 +18,13 @@ const { authRouter } = require(path.join(serverDir, 'dist', 'routes', 'auth.js')
 const { customersRouter } = require(path.join(serverDir, 'dist', 'routes', 'customers.js'));
 const { leadsRouter } = require(path.join(serverDir, 'dist', 'routes', 'leads.js'));
 
-function createSignedTestToken(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '1h' });
+function createSignedTestToken(payload, provider = 'google') {
+  return jwt.sign({ sub: `subject-${payload.email}`, email_verified: true, ...payload },
+    process.env.JWT_SECRET, {
+      algorithm: 'HS256', expiresIn: '1h',
+      issuer: provider === 'google' ? 'https://accounts.google.com' : 'https://appleid.apple.com',
+      audience: `voltacrm-${provider}-test-client`
+    });
 }
 
 async function runTests() {
@@ -140,7 +145,7 @@ async function runTests() {
       email: 'verified.apple.customer@icloud.com',
       name: 'Alessandro Apple User',
       sub: 'apple-sub-987654'
-    });
+    }, 'apple');
 
     const appleRes = await fetch(`${baseUrl}/auth/oauth`, {
       method: 'POST',
@@ -155,6 +160,36 @@ async function runTests() {
     assert.equal(appleData.user.email, 'verified.apple.customer@icloud.com');
     assert.equal(appleData.user.role, 'customer');
     assert.ok(appleData.user.customerId, 'Apple customer must have customerId');
+
+    const admin = users.find(u => u.role === 'admin');
+    const adminToken = createSignedTestToken({ email: admin.email, sub: 'external-admin-subject' });
+    const adminOAuth = await fetch(`${baseUrl}/auth/oauth`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: 'google', idToken: adminToken })
+    });
+    assert.equal(adminOAuth.status, 403, 'OAuth must not bypass staff TOTP');
+
+    const wrongAudience = jwt.sign({ sub: 'wrong-client', email: 'wrong-client@example.com', email_verified: true },
+      process.env.JWT_SECRET, { issuer: 'https://accounts.google.com', audience: 'other-app', expiresIn: '1h' });
+    const wrongAudienceRes = await fetch(`${baseUrl}/auth/oauth`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: 'google', idToken: wrongAudience })
+    });
+    assert.equal(wrongAudienceRes.status, 401, 'OAuth token for another application must be rejected');
+
+    const unverifiedToken = createSignedTestToken({ email: 'unverified@example.com', email_verified: false });
+    const unverifiedRes = await fetch(`${baseUrl}/auth/oauth`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: 'google', idToken: unverifiedToken })
+    });
+    assert.equal(unverifiedRes.status, 401, 'Unverified email must be rejected');
+
+    const differentSubject = createSignedTestToken({ email: 'test.google.user@gmail.com', sub: 'different-subject' });
+    const differentSubjectRes = await fetch(`${baseUrl}/auth/oauth`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: 'google', idToken: differentSubject })
+    });
+    assert.equal(differentSubjectRes.status, 409, 'Same email with another provider identity must not take over account');
     console.log('✔ Apple OAuth Customer autenticato con successo:', appleData.user.email);
 
     // TEST 7: BLOCCO CALL CENTER SU AGGIUNTA PUNTI FORNITURA (POST /api/customers/:id/utility-point)
@@ -202,6 +237,19 @@ async function runTests() {
       })
     });
     assert.equal(addPointRes.status, 403, 'Call center must receive 403 Forbidden when adding utility points');
+    const profilesRes = await fetch(`${baseUrl}/auth/profiles`, {
+      headers: { 'Authorization': `Bearer ${ccAuthToken}` }
+    });
+    const visibleProfiles = (await profilesRes.json()).profiles;
+    assert.ok(visibleProfiles.every(profile => profile.role !== 'customer' && !profile.customerId),
+      'Call center must not enumerate customer identities');
+
+    const contactRes = await fetch(`${baseUrl}/customers/${testCustId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ccAuthToken}` },
+      body: JSON.stringify({ phone: '+39 340 1234567', email: 'takeover@example.com', city: 'Roma' })
+    });
+    assert.equal(contactRes.status, 403, 'Call center must not change customer login email');
     console.log('✔ Call center correttamente bloccato (403 Forbidden) dall\'aggiunta punti fornitura');
 
     // TEST 8: SCOPING LEADS PER BROKER (GET /api/leads non deve mostrare lead di altri broker)
@@ -252,6 +300,19 @@ async function runTests() {
     const hasUnassigned = brokerLeadsData.leads.some(l => l.id === leadUnassigned.id);
     assert.ok(hasAssigned, 'Broker must see leads assigned to them');
     assert.ok(!hasUnassigned, 'Broker must NOT see leads that are not assigned to them');
+    const forbiddenLeadUpdate = await fetch(`${baseUrl}/leads/${leadUnassigned.id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${brokerToken}` },
+      body: JSON.stringify({ status: 'won' })
+    });
+    assert.equal(forbiddenLeadUpdate.status, 403, 'Broker must not update a lead excluded from its list');
+
+    const invalidLeadStatus = await fetch(`${baseUrl}/leads/${leadBroker.id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${brokerToken}` },
+      body: JSON.stringify({ status: 'unknown' })
+    });
+    assert.equal(invalidLeadStatus.status, 400, 'Unknown lead status must be rejected');
     console.log('✔ Scoping lead per broker verificato: vede i propri lead e non quelli non assegnati');
 
     // TEST 9: Apple CSP and Apple ID SDK Integration
@@ -266,7 +327,7 @@ async function runTests() {
     assert.ok(portalGateCode.includes('<OAuthButtons'), 'PortalGate must render OAuthButtons');
     assert.ok(loginModalCode.includes('<OAuthButtons'), 'LoginModal must render OAuthButtons');
     assert.ok(oauthButtonsCode.includes('Google') && oauthButtonsCode.includes('Apple'), 'OAuthButtons must support both Google and Apple');
-    assert.ok(oauthButtonsCode.includes('activeModalProvider'), 'OAuthButtons must support interactive account selection modal');
+    assert.ok(oauthButtonsCode.includes('if (!DEMO_MODE)'), 'OAuthButtons must not offer email-only fallback outside demo');
     assert.ok(indexHtmlCode.includes('appleid.cdn-apple.com'), 'CSP must allow appleid.cdn-apple.com in script-src');
     assert.ok(indexHtmlCode.includes('appleid.apple.com'), 'CSP must allow appleid.apple.com in connect-src / frame-src');
     assert.ok(oauthButtonsCode.includes('AppleID') || oauthButtonsCode.includes('VITE_APPLE_CLIENT_ID'), 'OAuthButtons must support Apple ID SDK');

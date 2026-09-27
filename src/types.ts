@@ -1,12 +1,14 @@
-export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk';
+export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator';
 
 export type LeadStatus = 
   | 'new' 
   | 'call_center_queue' 
+  | 'contacted'
   | 'appointment_booked' 
   | 'in_negotiation' 
   | 'contract_signed' 
   | 'unreachable' 
+  | 'won'
   | 'lost';
 
 export interface Lead {
@@ -20,6 +22,8 @@ export interface Lead {
   notes: string;
   createdAt: string;
   assignedCallCenterAgent?: string;
+  assignedBrokerId?: string;
+  assignedAgent?: string;
   appointmentId?: string;
   estimatedConsumptionKwh?: number;
   estimatedConsumptionSmc?: number;

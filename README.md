@@ -54,7 +54,7 @@ npm ci
 cd server && npm ci && cd ..
 ```
 
-### 2. Eseguire la suite di test completa (9/9 Suites)
+### 2. Eseguire la suite di test completa (19 suite)
 ```bash
 npm run server:build
 node run_all_tests.cjs
@@ -77,5 +77,13 @@ La pipeline automatica su `.github/workflows/ci.yml` garantisce che ogni commit 
 1. `npm ci` (root e server)
 2. `npm --prefix server run build` (Typecheck & compilazione TypeScript Backend)
 3. `npm run build` (Vite client bundling)
-4. `node run_all_tests.cjs` (Esecuzione delle 9 test suite end-to-end e di sicurezza)
+4. `node run_all_tests.cjs` (Suite end-to-end, sicurezza e regressioni)
 5. Deploy automatico istantaneo su **Vercel** con SPA rewrite a `/index.html`.
+
+### Configurazione per un rilascio con dati reali
+
+- Impostare `VITE_API_URL` sull'URL pubblico del backend con suffisso `/api` e `VITE_DEMO_MODE=false` nel frontend. Una demo isolata richiede `VITE_DEMO_MODE=true` esplicito; il frontend non simula più un login se il backend non risponde.
+- Impostare `VITE_GOOGLE_CLIENT_ID` / `VITE_APPLE_CLIENT_ID` nel frontend e gli stessi ID come `GOOGLE_OAUTH_CLIENT_ID` / `APPLE_OAUTH_CLIENT_ID` nel backend per abilitare i rispettivi provider. Senza questi valori l'accesso OAuth rimane indisponibile.
+- Prima di distribuire il backend aggiornato, eseguire un backup del database e applicare `supabase/migrations/20260927_01_audit_security_and_assignments.sql` dopo le migrazioni del 2026-09-17. Il file `supabase/schema.sql` serve per un database nuovo; `CREATE TABLE IF NOT EXISTS` non aggiorna le tabelle già installate.
+- Gli account OAuth creati con la vecchia verifica, privi dell'identificativo stabile del provider, richiedono un collegamento assistito prima di poter accedere con OAuth. Non associarli automaticamente usando soltanto l'email.
+- Verificare su staging: bootstrap admin persistente, login staff con TOTP, login OAuth cliente, import CSV e assegnazioni broker. In caso di errore prima dell'apertura agli utenti, ripristinare il backup e la precedente versione del backend insieme.

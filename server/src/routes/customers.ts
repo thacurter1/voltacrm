@@ -134,9 +134,7 @@ customersRouter.patch('/:id', authenticateToken, validate(updateCustomerContactS
   const isAdmin = actor.role === 'admin';
   const isBrokerOwner = (actor.role === 'operator' || actor.role === 'broker') && isBrokerAssigned(targetCustomer, actor);
   const isCustomerSelf = actor.role === 'customer' && (actor.customerId === req.params.id || actor.id === req.params.id);
-  const isCallCenter = actor.role === 'call_center';
-
-  if (!isAdmin && !isBrokerOwner && !isCustomerSelf && !isCallCenter) {
+  if (!isAdmin && !isBrokerOwner && !isCustomerSelf) {
     res.status(403).json({ success: false, message: 'Accesso negato alla modifica del cliente.' });
     return;
   }

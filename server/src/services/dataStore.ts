@@ -310,6 +310,14 @@ export let notifications: any[] = [
 
 export let signatureLogs: any[] = [];
 
+// Seed data belongs exclusively to the explicit demo runtime.
+if (!isDemo) {
+  users.splice(0, users.length);
+  leads = [];
+  customers = [];
+  notifications = [];
+}
+
 import { supabase, isSupabaseConfigured } from './dbClient.js';
 
 
@@ -344,12 +352,16 @@ const rowToCustomer = (c: any): Customer => ({
 const leadToRow = (l: Lead) => ({id:l.id,name:l.name,phone:l.phone,email:l.email||null,
   city:l.city,source:l.source,status:l.status,notes:l.notes,
   estimated_consumption_kwh:l.estimatedConsumptionKwh??null,estimated_consumption_smc:l.estimatedConsumptionSmc??null,
-  assigned_call_center_agent:l.assignedCallCenterAgent||null,appointment_id:l.appointmentId||null});
+  assigned_call_center_agent:l.assignedCallCenterAgent||null,assigned_broker_id:l.assignedBrokerId||null,
+  assigned_agent:l.assignedAgent||null,appointment_id:l.appointmentId||null});
 export async function addLead(lead: Lead): Promise<void> {
-  if (!lead?.name || !lead?.phone) throw new Error('Nome e telefono lead obbligatori.');
+  await addLeads([lead]);
+}
+export async function addLeads(items: Lead[]): Promise<void> {
+  if (!items.length || items.some(lead => !lead?.name || !lead?.phone)) throw new Error('Nome e telefono lead obbligatori.');
   requireStorage();
-  if (isSupabaseConfigured && supabase) check((await supabase.from('leads').insert(leadToRow(lead))).error);
-  leads.unshift(structuredClone(lead));
+  if (isSupabaseConfigured && supabase) check((await supabase.from('leads').insert(items.map(leadToRow))).error);
+  leads.unshift(...items.map(item => structuredClone(item)));
 }
 export async function updateLead(lead: Lead): Promise<void> {
   requireStorage();
@@ -442,16 +454,17 @@ export async function initDataStore(force = false): Promise<void> {
   if(!isSupabaseConfigured || !supabase) return;
   const now = Date.now();
   if (!force && (now - lastRefreshTime < REFRESH_TTL_MS)) return;
-  lastRefreshTime = now;
 
   // Await every query and publish a complete snapshot only if all have succeeded.
   const database = supabase;
   const results = await Promise.all(['leads','customers','signature_logs','notifications','crm_accounts'].map(table=>database.from(table).select('*')));
   for(const result of results) check(result.error);
+  lastRefreshTime = now;
   const [ls,cs,ss,ns,us] = results.map(r=>r.data||[]);
   leads = ls.map((l:any)=>({id:l.id,name:l.name,phone:l.phone,email:l.email||'',city:l.city,source:l.source,
     status:l.status,notes:l.notes,createdAt:l.created_at?.split('T')[0],estimatedConsumptionKwh:l.estimated_consumption_kwh,
-    estimatedConsumptionSmc:l.estimated_consumption_smc,assignedCallCenterAgent:l.assigned_call_center_agent,appointmentId:l.appointment_id}));
+    estimatedConsumptionSmc:l.estimated_consumption_smc,assignedCallCenterAgent:l.assigned_call_center_agent,
+    assignedBrokerId:l.assigned_broker_id,assignedAgent:l.assigned_agent,appointmentId:l.appointment_id}));
   customers = cs.map(rowToCustomer); signatureLogs = ss.map(rowToSignature);
   notifications = ns.map((n:any)=>({id:n.id,type:n.type,title:n.title,message:n.message,timestamp:n.timestamp,
     isRead:n.is_read,priority:n.priority,targetRole:n.target_role,actionTab:n.action_tab,meta:n.meta}));
@@ -460,7 +473,7 @@ export async function initDataStore(force = false): Promise<void> {
     role:u.role,customerId:u.customer_id,twoFactorSecret:u.two_factor_secret,is2faEnabled:u.is_2fa_enabled}));
 
   // Preserve existing dynamic users (e.g. staff created during runtime/OAuth not yet in DB)
-  const existingDynamicUsers = users.filter(u => !dbUsers.some(dbU => dbU.id === u.id || dbU.email.toLowerCase() === u.email.toLowerCase()));
+  const existingDynamicUsers = isDemo ? users.filter(u => !dbUsers.some(dbU => dbU.id === u.id || dbU.email.toLowerCase() === u.email.toLowerCase())) : [];
   users.splice(0, users.length, ...dbUsers, ...existingDynamicUsers);
 }
 export const refreshDataStore = initDataStore;

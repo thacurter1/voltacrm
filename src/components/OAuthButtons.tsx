@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { api } from '../api/client';
+import { api, DEMO_MODE } from '../api/client';
 import { X, CheckCircle2 } from 'lucide-react';
 
 interface OAuthButtonsProps {
@@ -127,6 +127,10 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
   };
 
   const openFallbackModal = (provider: 'google' | 'apple') => {
+    if (!DEMO_MODE) {
+      onToast('Accesso non disponibile', `Accesso ${provider === 'google' ? 'Google' : 'Apple'} non configurato. Usa le credenziali Volta o contatta l’assistenza.`, 'warning');
+      return;
+    }
     // Set suggested default inputs
     if (provider === 'google') {
       setCustomEmail(role === 'customer' ? 'mario.rossi.demo@gmail.com' : 'matteo.riva.google@gmail.com');
@@ -146,6 +150,8 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
       name: customName.trim()
     });
   };
+
+  if (role === 'operator' && !DEMO_MODE) return null;
 
   return (
     <div className={`space-y-2.5 ${className}`}>
