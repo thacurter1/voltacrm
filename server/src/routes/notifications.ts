@@ -67,7 +67,7 @@ notificationsRouter.post('/mark-all-read', authenticateToken, async (req: Reques
 });
 
 // POST /api/notifications/trigger
-notificationsRouter.post('/trigger', authenticateToken, requireRole('admin', 'call_center', 'operator'), validate(triggerNotificationSchema), async (req: Request, res: Response): Promise<void> => {
+notificationsRouter.post('/trigger', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), validate(triggerNotificationSchema), async (req: Request, res: Response): Promise<void> => {
   const { type, title, message, priority, targetRole, actionTab, meta } = req.body;
 
   const newNotification: AppNotification = {

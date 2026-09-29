@@ -227,7 +227,7 @@ switchRouter.post('/sign', authenticateToken, enforceSignatureOwnership, validat
 switchRouter.post(
   '/signatures/:id/activate',
   authenticateToken,
-  requireRole('admin', 'call_center', 'operator'),
+  requireRole('admin', 'call_center', 'operator', 'broker'),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const confirmationReference = req.body?.confirmationReference ?? req.body?.activationReference;
