@@ -147,11 +147,21 @@ function UnifiedApp() {
       let user: UserProfile;
       if (_newUser) {
         user = _newUser;
+        if (!DEMO_MODE) {
+          const verified = (await api.auth.me()).user;
+          if (verified.id !== user.id || verified.role !== user.role) {
+            throw new Error('Il profilo non corrisponde alla sessione autenticata.');
+          }
+          user = verified;
+        }
         if (typeof window !== 'undefined') {
+          const existingToken = localStorage.getItem('VOLTA_AUTH_TOKEN');
+          if (!DEMO_MODE && (!existingToken || existingToken.startsWith('mock-'))) {
+            throw new Error('Sessione non valida. Accedi di nuovo.');
+          }
           localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(user));
-          const currentToken = localStorage.getItem('VOLTA_AUTH_TOKEN');
-          const isMockOrMissing = !currentToken || currentToken.startsWith('mock-');
-          if (isMockOrMissing) {
+          const isMockOrMissing = !existingToken || existingToken.startsWith('mock-');
+          if (DEMO_MODE && isMockOrMissing) {
             if (user.role !== 'customer') {
               localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${user.id}-${Date.now()}`);
             } else {
@@ -184,6 +194,11 @@ function UnifiedApp() {
         isCustomer ? Promise.resolve([]) : api.operations.listAppointments(),
         isAdmin ? api.operations.listSecurityLogs() : Promise.resolve([]),
       ]);
+
+      if (!DEMO_MODE) {
+        const failed = results.find(result => result.status === 'rejected');
+        if (failed?.status === 'rejected') throw failed.reason;
+      }
 
       const localState = dbService.load();
       const customerRows = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : (localState.customers || []);
@@ -231,12 +246,13 @@ function UnifiedApp() {
         }
       }
     } catch(error) {
-      console.warn('[VoltaCRM] Errore in handleSelectUser, fallback a sessione locale:', error);
-      if (_newUser) {
+      console.warn('[VoltaCRM] Errore in handleSelectUser:', error);
+      if (DEMO_MODE && _newUser) {
         setCurrentUser(_newUser);
         setIsGateOpen(false);
         setActiveTab(getInitialTab(_newUser.role));
       } else {
+        api.auth.logout();
         setIsGateOpen(true);
         addToast('Accesso non completato', error instanceof Error ? error.message : 'Dati non disponibili.', 'warning');
       }

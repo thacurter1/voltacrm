@@ -9,6 +9,7 @@ const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 export const isSupabaseConfigured = Boolean(
+  process.env.VOLTA_DEMO_MODE !== 'true' &&
   supabaseUrl && 
   supabaseKey && 
   supabaseUrl !== 'https://your-project.supabase.co' &&

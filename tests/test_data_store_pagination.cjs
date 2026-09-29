@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 
 process.env.SUPABASE_URL = 'https://pagination-test.supabase.co';
 process.env.SUPABASE_SECRET_KEY = 'sb_secret_pagination_test_only';
-process.env.VOLTA_DEMO_MODE = 'true';
+process.env.VOLTA_DEMO_MODE = 'false';
 
 const { supabase } = require('../server/dist/services/dbClient.js');
 const store = require('../server/dist/services/dataStore.js');

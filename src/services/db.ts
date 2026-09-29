@@ -4,6 +4,7 @@ import { CURRENT_MARKET_INDEX } from './energyEngine';
 import { cryptoService } from './cryptoService';
 
 const STORAGE_KEY = 'VOLTA_ENERGY_CRM_DB_V3';
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 export const DEMO_USERS: AuthUser[] = [
   {
@@ -207,18 +208,24 @@ interface DbState {
 
 export const dbService = {
   load(): DbState {
+    if (!DEMO_MODE) {
+      return {
+        customers: [], leads: [], appointments: [], bills: [],
+        marketIndex: CURRENT_MARKET_INDEX, currentUser: DEMO_USERS[0], securityLogs: [],
+      };
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         return {
-          customers: parsed.customers?.length ? parsed.customers : INITIAL_CUSTOMERS,
-          leads: parsed.leads?.length ? parsed.leads : INITIAL_LEADS,
-          appointments: parsed.appointments?.length ? parsed.appointments : INITIAL_APPOINTMENTS,
-          bills: parsed.bills?.length ? parsed.bills : INITIAL_BILLS,
+          customers: Array.isArray(parsed.customers) ? parsed.customers : INITIAL_CUSTOMERS,
+          leads: Array.isArray(parsed.leads) ? parsed.leads : INITIAL_LEADS,
+          appointments: Array.isArray(parsed.appointments) ? parsed.appointments : INITIAL_APPOINTMENTS,
+          bills: Array.isArray(parsed.bills) ? parsed.bills : INITIAL_BILLS,
           marketIndex: parsed.marketIndex || CURRENT_MARKET_INDEX,
           currentUser: parsed.currentUser || DEMO_USERS[0],
-          securityLogs: parsed.securityLogs?.length ? parsed.securityLogs : INITIAL_SECURITY_LOGS,
+          securityLogs: Array.isArray(parsed.securityLogs) ? parsed.securityLogs : INITIAL_SECURITY_LOGS,
         };
       }
     } catch (e) {
@@ -239,6 +246,7 @@ export const dbService = {
   },
 
   save(state: DbState): void {
+    if (!DEMO_MODE) return;
     try {
       const json = JSON.stringify(state);
       localStorage.setItem(STORAGE_KEY, json);

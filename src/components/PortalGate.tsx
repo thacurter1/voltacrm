@@ -119,17 +119,18 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         return;
       }
     } catch (err) {
-      // Fallback matching local demo customer
-      const customerProfiles = INITIAL_PROFILES.filter(p => p.role === 'customer');
-      const matched = customerProfiles.find(p => 
-        p.email.toLowerCase() === query.toLowerCase() || 
-        (p.fiscalCode && p.fiscalCode.toLowerCase() === query.toLowerCase()) ||
-        p.name.toLowerCase().includes(query.toLowerCase())
-      ) || customerProfiles[0];
-      if (matched) {
-        onToast('Accesso Demo Cliente', `Benvenuto ${matched.name}`, 'success');
-        onLoginCustomer(matched);
-        return;
+      if (DEMO_MODE) {
+        const customerProfiles = INITIAL_PROFILES.filter(p => p.role === 'customer');
+        const matched = customerProfiles.find(p =>
+          p.email.toLowerCase() === query.toLowerCase() ||
+          (p.fiscalCode && p.fiscalCode.toLowerCase() === query.toLowerCase()) ||
+          p.name.toLowerCase().includes(query.toLowerCase())
+        ) || customerProfiles[0];
+        if (matched) {
+          onToast('Accesso Demo Cliente', `Benvenuto ${matched.name}`, 'success');
+          onLoginCustomer(matched);
+          return;
+        }
       }
       onToast('Accesso Negato', err instanceof Error ? err.message : 'Accesso non riuscito.', 'warning');
     }
@@ -172,20 +173,21 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         onLoginOperator(result.user);
         return;
       } else if (result.require2FA) {
-        if (operatorTotp === '123456') {
+        if (DEMO_MODE && operatorTotp === '123456') {
           const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase()) || INITIAL_PROFILES[0];
           onLoginOperator(matched);
           return;
         }
-        onToast('Richiesta 2FA', result.message || 'Inserisci il codice TOTP a 6 cifre (es. 123456).', 'info');
+        onToast('Richiesta 2FA', result.message || 'Inserisci il codice TOTP a 6 cifre.', 'info');
       }
     } catch (err) {
-      // Fallback matching operator profiles
-      const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase());
-      if (matched) {
-        onToast('Accesso Demo Operatore', `Benvenuto ${matched.name}`, 'success');
-        onLoginOperator(matched);
-        return;
+      if (DEMO_MODE) {
+        const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase());
+        if (matched) {
+          onToast('Accesso Demo Operatore', `Benvenuto ${matched.name}`, 'success');
+          onLoginOperator(matched);
+          return;
+        }
       }
       onToast('Accesso Negato', err instanceof Error ? err.message : 'Credenziali non valide.', 'warning');
     } finally {

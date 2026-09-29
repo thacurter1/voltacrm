@@ -2,6 +2,16 @@ const { spawn } = require('child_process');
 const http = require('http');
 const path = require('path');
 
+// Test processes must never inherit credentials for a real Supabase project.
+const isolatedEnv = {
+  ...process.env,
+  NODE_ENV: 'test',
+  VOLTA_DEMO_MODE: 'true',
+  SUPABASE_URL: '',
+  SUPABASE_SECRET_KEY: '',
+  SUPABASE_SERVICE_ROLE_KEY: '',
+};
+
 function checkServer(requireHealthy = true) {
   return new Promise((resolve) => {
     const tryUrl = (url, fallback) => {
@@ -30,7 +40,7 @@ function runScript(scriptName) {
     console.log(`========================================`);
     const proc = spawn(process.execPath, [path.join(__dirname, scriptName)], {
       stdio: 'inherit',
-      env: { ...process.env, NODE_ENV: 'test', VOLTA_DEMO_MODE: 'true' }
+      env: isolatedEnv
     });
     proc.on('close', (code) => {
       if (code === 0) {
@@ -55,7 +65,7 @@ async function main() {
     let serverOutput = '';
     serverProc = spawn(process.execPath, [path.join(__dirname, 'server', 'dist', 'index.js')], {
       stdio: 'pipe',
-      env: { ...process.env, NODE_ENV: 'test', VOLTA_DEMO_MODE: 'true' }
+      env: isolatedEnv
     });
     serverProc.stdout.on('data', chunk => { serverOutput += chunk; });
     serverProc.stderr.on('data', chunk => { serverOutput += chunk; });
@@ -96,6 +106,8 @@ async function main() {
     path.join('tests', 'test_oauth_registration.cjs'),
     path.join('tests', 'test_oauth_production_verifier.cjs'),
     path.join('tests', 'test_production_seed_isolation.cjs'),
+    path.join('tests', 'test_demo_database_isolation.cjs'),
+    path.join('tests', 'test_frontend_demo_isolation.cjs'),
     path.join('tests', 'test_rbac_hierarchy.cjs'),
     path.join('tests', 'test_broker_switch_and_portal_access.cjs'),
     path.join('tests', 'test_account_invitation_boundaries.cjs'),
