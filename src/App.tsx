@@ -32,6 +32,7 @@ import { CommissionManager } from './components/CommissionManager';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { TotemKioskMode } from './components/TotemKioskMode';
+import { DemoRoleSwitcher } from './components/DemoRoleSwitcher';
 const TotemApp = React.lazy(() => import('./apps/TotemApp'));
 const CustomerApp = React.lazy(() => import('./apps/CustomerApp'));
 const CrmApp = React.lazy(() => import('./apps/CrmApp'));
@@ -168,7 +169,7 @@ function UnifiedApp() {
       const isAdmin = user.role === 'admin';
       const isBroker = user.role === 'operator' || user.role === 'broker';
 
-      const [customerRows, leadRows, profileRows, billRows, appointmentRows, securityRows] = await Promise.all([
+      const results = await Promise.allSettled([
         isCustomer ? (user.customerId ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : Promise.resolve([])) : api.customers.getAll(),
         isCustomer ? Promise.resolve([]) : api.leads.getAll(),
         isCustomer ? Promise.resolve([user]) : api.auth.profiles(),
@@ -176,6 +177,14 @@ function UnifiedApp() {
         isCustomer ? Promise.resolve([]) : api.operations.listAppointments(),
         isAdmin ? api.operations.listSecurityLogs() : Promise.resolve([]),
       ]);
+
+      const localState = dbService.load();
+      const customerRows = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : (localState.customers || []);
+      const leadRows = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : (localState.leads || []);
+      const profileRows = (results[2].status === 'fulfilled' && results[2].value) ? results[2].value : (INITIAL_PROFILES || []);
+      const billRows = (results[3].status === 'fulfilled' && results[3].value) ? results[3].value : (localState.bills || []);
+      const appointmentRows = (results[4].status === 'fulfilled' && results[4].value) ? results[4].value : (localState.appointments || []);
+      const securityRows = (results[5].status === 'fulfilled' && results[5].value) ? results[5].value : (localState.securityLogs || []);
 
       const resolvedCustomers = isBroker
         ? customerRows.filter(c => {
@@ -194,10 +203,15 @@ function UnifiedApp() {
         ? []
         : customerRows;
 
-      setCustomers(resolvedCustomers); setLeads(leadRows); setProfiles(profileRows); setBills(billRows);
-      setAppointments(appointmentRows); setSecurityLogs(securityRows);
+      setCustomers(resolvedCustomers); 
+      setLeads(leadRows); 
+      setProfiles(profileRows); 
+      setBills(billRows);
+      setAppointments(appointmentRows); 
+      setSecurityLogs(securityRows);
       setAudits(runQuarterlyAudit(resolvedCustomers, marketIndex));
-      setCurrentUser(user); setIsGateOpen(false);
+      setCurrentUser(user); 
+      setIsGateOpen(false);
       setActiveTab(getInitialTab(user.role));
 
       // Se si passa a operatore o admin, rimuove parametri ?app=customer o ?mode=customer dall'URL
@@ -210,8 +224,15 @@ function UnifiedApp() {
         }
       }
     } catch(error) {
-      setIsGateOpen(true);
-      addToast('Accesso non completato',error instanceof Error?error.message:'Dati non disponibili.','warning');
+      console.warn('[VoltaCRM] Errore in handleSelectUser, fallback a sessione locale:', error);
+      if (_newUser) {
+        setCurrentUser(_newUser);
+        setIsGateOpen(false);
+        setActiveTab(getInitialTab(_newUser.role));
+      } else {
+        setIsGateOpen(true);
+        addToast('Accesso non completato', error instanceof Error ? error.message : 'Dati non disponibili.', 'warning');
+      }
     }
   }, [marketIndex, addToast]);
 
@@ -552,6 +573,17 @@ function UnifiedApp() {
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
           <CustomerApp currentUser={currentUser} onReturnToBackend={handleReturnToBackend} />
         </React.Suspense>
+        <DemoRoleSwitcher
+          currentUser={currentUser}
+          customers={customers}
+          onSelectUser={handleSelectUser}
+          onOpenTotem={() => setIsTotemOpen(true)}
+          onLogout={() => {
+            api.auth.logout();
+            setIsGateOpen(true);
+          }}
+        />
+        <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
       </div>
     );
   }
@@ -913,6 +945,18 @@ function UnifiedApp() {
 
       {/* Install PWA Mobile Banner */}
       <InstallAppBanner />
+
+      {/* Barra persistente per cambiare ruolo demo in 1-click */}
+      <DemoRoleSwitcher
+        currentUser={currentUser}
+        customers={customers}
+        onSelectUser={handleSelectUser}
+        onOpenTotem={() => setIsTotemOpen(true)}
+        onLogout={() => {
+          api.auth.logout();
+          setIsGateOpen(true);
+        }}
+      />
 
       {/* Toast Notifications */}
       <ToastContainer

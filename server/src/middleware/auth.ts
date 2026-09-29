@@ -35,6 +35,13 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     return;
   }
 
+  if (process.env.VOLTA_DEMO_MODE === 'true' && token.startsWith('mock-')) {
+    const current = users.find(u => token.includes(u.id)) || users[0];
+    req.user = { userId: current.id, email: current.email, role: current.role };
+    next();
+    return;
+  }
+
   jwt.verify(token, getJwtSecret(), (err, user) => {
     if (err) {
       res.status(403).json({ success: false, message: 'Token non valido o scaduto.' });

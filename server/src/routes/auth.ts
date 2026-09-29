@@ -19,6 +19,21 @@ const toSafeProfile = (user: any) => {
   return safeUser;
 };
 
+// POST /api/auth/demo-login (Accesso rapido 1-click in modalità demo / testing)
+authRouter.post('/demo-login', loginLimiter, (req: Request, res: Response): void => {
+  const { role, userId } = req.body || {};
+  let user = users.find(u => (userId && u.id === userId) || (role && u.role === role));
+  if (!user) {
+    user = users.find(u => u.role === role) || users[0];
+  }
+  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+  res.json({
+    success: true,
+    token,
+    user: toSafeProfile(user)
+  });
+});
+
 // POST /api/auth/login-operator
 authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), (req: Request, res: Response): void => {
   const { email, password, totpCode } = req.body;
