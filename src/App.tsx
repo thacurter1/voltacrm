@@ -30,6 +30,7 @@ import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 import { SignatureActivationPanel } from './components/SignatureActivationPanel';
 import { CommissionManager } from './components/CommissionManager';
 import { InstallAppBanner } from './components/InstallAppBanner';
+import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { TotemKioskMode } from './components/TotemKioskMode';
 const TotemApp = React.lazy(() => import('./apps/TotemApp'));
 const CustomerApp = React.lazy(() => import('./apps/CustomerApp'));
@@ -543,6 +544,7 @@ function UnifiedApp() {
 
     return (
       <div className="min-h-screen bg-[#f7f7f8] flex flex-col font-sans">
+        <NetworkStatusBanner />
         <ImpersonationBanner
           currentUser={currentUser}
           onReturnToCallCenter={handleReturnToBackend}
@@ -556,6 +558,7 @@ function UnifiedApp() {
 
   return (
     <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
+      <NetworkStatusBanner />
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#635bff] focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold"

@@ -1,24 +1,63 @@
-const isLocalhost = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  window.location.hostname.endsWith('.local')
-);
-
-function resolveApiBaseUrl(): string | null {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (typeof envUrl === 'string' && envUrl.trim()) {
-    if (!isLocalhost && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) return null;
-    return envUrl.trim();
-  }
-  return isLocalhost ? 'http://localhost:5000/api' : null;
+export interface ApiConfigurationStatus {
+  isConfigured: boolean;
+  isCloudEnvironment: boolean;
+  apiBaseUrl: string | null;
+  statusMessage?: string;
 }
 
-export const API_BASE_URL = resolveApiBaseUrl();
-export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+export function evaluateApiConfiguration(hostname?: string, envApiUrl?: string): ApiConfigurationStatus {
+  const currentHostname = hostname !== undefined 
+    ? hostname 
+    : (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
+    
+  const isLocal = currentHostname === 'localhost' || 
+                  currentHostname === '127.0.0.1' || 
+                  currentHostname.endsWith('.local');
+
+  const rawEnv = envApiUrl !== undefined 
+    ? envApiUrl 
+    : (typeof import.meta !== 'undefined' && (import.meta as any).env ? (import.meta as any).env.VITE_API_URL : '');
+  const envUrl = typeof rawEnv === 'string' ? rawEnv.trim() : '';
+
+  if (envUrl) {
+    if (!isLocal && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+      return {
+        isConfigured: false,
+        isCloudEnvironment: true,
+        apiBaseUrl: null,
+        statusMessage: 'Ambiente cloud rilevato ma VITE_API_URL punta a localhost. Configurare l\'URL del backend nelle impostazioni di deployment (es. Vercel).'
+      };
+    }
+    return {
+      isConfigured: true,
+      isCloudEnvironment: !isLocal,
+      apiBaseUrl: envUrl,
+    };
+  }
+
+  if (isLocal) {
+    return {
+      isConfigured: true,
+      isCloudEnvironment: false,
+      apiBaseUrl: 'http://localhost:5000/api',
+    };
+  }
+
+  return {
+    isConfigured: false,
+    isCloudEnvironment: true,
+    apiBaseUrl: null,
+    statusMessage: 'Backend non configurato. Impostare la variabile d\'ambiente VITE_API_URL.'
+  };
+}
+
+export const apiConfigStatus = evaluateApiConfiguration();
+export const API_BASE_URL = apiConfigStatus.apiBaseUrl;
+export const DEMO_MODE = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEMO_MODE === 'true';
 export const isStandaloneDemo = DEMO_MODE;
 
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  if (!API_BASE_URL) throw new Error('Servizio non configurato. Contatta un amministratore.');
+  if (!API_BASE_URL) throw new Error(apiConfigStatus.statusMessage || 'Servizio non configurato. Contatta un amministratore.');
   const token = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
