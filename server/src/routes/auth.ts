@@ -21,6 +21,10 @@ const toSafeProfile = (user: any) => {
 
 // POST /api/auth/demo-login (Accesso rapido 1-click in modalità demo / testing)
 authRouter.post('/demo-login', loginLimiter, (req: Request, res: Response): void => {
+  if (process.env.VOLTA_DEMO_MODE !== 'true' || process.env.NODE_ENV === 'production') {
+    res.status(404).json({ success: false, message: 'Endpoint non trovato.' });
+    return;
+  }
   const { role, userId } = req.body || {};
   let user = users.find(u => (userId && u.id === userId) || (role && u.role === role));
   if (!user) {

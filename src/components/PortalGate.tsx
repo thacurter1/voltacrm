@@ -61,6 +61,10 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
   // 1-Click Demo Login: Entra istantaneamente in qualsiasi ruolo senza blocchi
   const handleDirectDemoLogin = async (role: string, userId?: string) => {
+    if (!DEMO_MODE) {
+      onToast('Demo non disponibile', 'L’accesso rapido è disponibile solo nell’ambiente demo.', 'warning');
+      return;
+    }
     try {
       setIsSubmitting(true);
       const res = await api.auth.demoLogin(role, userId);
@@ -247,15 +251,15 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               </span>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                  Accesso Immediato Demo (Senza Password né 2FA)
+                  {DEMO_MODE ? 'Accesso Immediato Demo (Senza Password né 2FA)' : 'Esplora i ruoli della demo'}
                 </h2>
                 <p className="text-[11px] text-slate-300">
-                  Clicca un qualsiasi ruolo per entrare direttamente con account demo preconfigurato:
+                  {DEMO_MODE ? 'Clicca un qualsiasi ruolo per entrare direttamente con account demo preconfigurato:' : 'L’accesso rapido richiede un ambiente demo separato dai dati reali.'}
                 </p>
               </div>
             </div>
             <div className="text-[11px] text-amber-300 font-semibold flex items-center gap-1 shrink-0">
-              <span>⚡ Accesso garantito senza errori</span>
+              <span>{DEMO_MODE ? '⚡ Accesso garantito senza errori' : 'Demo non attiva su questo sito'}</span>
             </div>
           </div>
 

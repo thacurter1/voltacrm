@@ -19,6 +19,7 @@ export const api = {
       token: string;
       user: UserProfile;
     }> {
+      if (!DEMO_MODE) throw new Error('Accesso demo non disponibile.');
       if (API_BASE_URL) {
         try {
           const data = await request<{ success: boolean; token: string; user: any }>('/auth/demo-login', {
