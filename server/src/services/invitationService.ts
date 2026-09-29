@@ -5,7 +5,7 @@ import { registerAccount, users, initDataStore } from './dataStore.js';
 import { isSupabaseConfigured, supabase } from './dbClient.js';
 import { generateTotpSecret, verifyTotp } from '../utils/totp.js';
 
-export type InvitationRole = 'customer' | 'admin' | 'call_center';
+export type InvitationRole = 'customer' | 'admin' | 'call_center' | 'operator' | 'broker';
 
 export interface InvitationInput {
   role: InvitationRole;

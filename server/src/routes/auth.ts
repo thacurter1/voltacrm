@@ -128,29 +128,45 @@ authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSch
 });
 
 authRouter.post('/invitations', authenticateToken, requireRole('admin'), validate(createInvitationSchema), async (req: AuthRequest, res: Response): Promise<void> => {
-  const actor = users.find(user => user.id === req.user?.userId);
-  if (!actor) { res.status(403).json({ success: false, message: 'Account amministratore non trovato.' }); return; }
-  const invitation = await createAccountInvitation(actor, req.body);
-  res.setHeader('Cache-Control', 'no-store');
-  res.status(201).json({ success: true, ...invitation });
+  try {
+    const actor = users.find(user => user.id === req.user?.userId);
+    if (!actor) { res.status(403).json({ success: false, message: 'Account amministratore non trovato.' }); return; }
+    const invitation = await createAccountInvitation(actor, req.body);
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(201).json({ success: true, ...invitation });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, message: error.message || 'Errore durante la creazione dell\'invito.' });
+  }
 });
 
 authRouter.post('/invitations/:id/renew', authenticateToken, requireRole('admin'), async (req: AuthRequest, res: Response): Promise<void> => {
-  const invitation = await renewAccountInvitation(req.params.id);
-  res.setHeader('Cache-Control', 'no-store');
-  res.json({ success: true, ...invitation });
+  try {
+    const invitation = await renewAccountInvitation(req.params.id);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true, ...invitation });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, message: error.message || 'Errore durante il rinnovo dell\'invito.' });
+  }
 });
 
 authRouter.post('/invitations/inspect', loginLimiter, validate(inspectInvitationSchema), async (req: Request, res: Response): Promise<void> => {
-  const invitation = await inspectAccountInvitation(req.body.token);
-  res.setHeader('Cache-Control', 'no-store');
-  res.json({ success: true, invitation });
+  try {
+    const invitation = await inspectAccountInvitation(req.body.token);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true, invitation });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, message: error.message || 'Errore durante la verifica dell\'invito.' });
+  }
 });
 
 authRouter.post('/invitations/accept', loginLimiter, validate(acceptInvitationSchema), async (req: Request, res: Response): Promise<void> => {
-  const accepted = await acceptAccountInvitation(req.body.token, req.body.password, req.body.totpCode);
-  res.setHeader('Cache-Control', 'no-store');
-  res.json({ success: true, ...accepted });
+  try {
+    const accepted = await acceptAccountInvitation(req.body.token, req.body.password, req.body.totpCode);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true, ...accepted });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, message: error.message || 'Errore durante l\'accettazione dell\'invito.' });
+  }
 });
 
 // POST /api/auth/oauth (Google & Apple OAuth login / registration con verifica crittografica token)

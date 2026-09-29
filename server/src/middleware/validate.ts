@@ -116,7 +116,7 @@ export const createInvitationSchema = z.discriminatedUnion('role', [
     city: z.string().trim().max(150).optional(),
   }).strict(),
   z.object({
-    role: z.enum(['admin', 'call_center']), name: z.string().trim().min(2).max(150),
+    role: z.enum(['admin', 'call_center', 'operator', 'broker']), name: z.string().trim().min(2).max(150),
     email: z.string().trim().email().max(254), phone: z.string().trim().max(25).default(''),
   }).strict(),
 ]);
