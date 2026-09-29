@@ -96,7 +96,11 @@ async function main() {
     path.join('tests', 'test_rbac_hierarchy.cjs'),
     path.join('tests', 'test_broker_switch_and_portal_access.cjs'),
     path.join('tests', 'test_account_invitation_boundaries.cjs'),
-    path.join('tests', 'test_data_store_pagination.cjs')
+    path.join('tests', 'test_data_store_pagination.cjs'),
+    path.join('tests', 'test_broker_activation_and_notifications.cjs'),
+    path.join('tests', 'test_portal_broker_idor_isolation.cjs'),
+    path.join('tests', 'test_staff_invitations_broker_operator.cjs'),
+    path.join('tests', 'test_transport_diagnostics.cjs')
   ];
 
   let passed = 0;

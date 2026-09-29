@@ -11,7 +11,7 @@ const serverDir = path.join(__dirname, '..', 'server');
 const req = require('node:module').createRequire(path.join(serverDir, 'package.json'));
 const express = req('express');
 
-const { users, customers, addCustomer, addSignatureLog, getSignatureLogs } = require(path.join(serverDir, 'dist', 'services', 'dataStore.js'));
+const { users, customers, addSignatureLog } = require(path.join(serverDir, 'dist', 'services', 'dataStore.js'));
 const { generateToken } = require(path.join(serverDir, 'dist', 'middleware', 'auth.js'));
 const { switchRouter } = require(path.join(serverDir, 'dist', 'routes', 'switch.js'));
 const { notificationsRouter } = require(path.join(serverDir, 'dist', 'routes', 'notifications.js'));

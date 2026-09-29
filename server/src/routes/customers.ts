@@ -5,7 +5,7 @@ import { validate, createCustomerSchema, createUtilityPointSchema, updateCustome
 import { Customer, UtilityPoint } from '../types.js';
 
 export const customersRouter = Router();
-import { isBrokerAssigned, canActorAccessCustomer } from '../services/customerOwnership.js';
+import { isBrokerAssigned } from '../services/customerOwnership.js';
 
 // GET /api/customers (Filtro rigoroso in base al ruolo RBAC)
 customersRouter.get('/', authenticateToken, (req: any, res: Response): void => {

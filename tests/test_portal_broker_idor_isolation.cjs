@@ -39,7 +39,7 @@ async function runTests() {
 
     // Create a bill for cust-1 (assigned) and a bill for cust-2 (unassigned)
     const dummyPdfBase64 = Buffer.from('%PDF-1.4 dummy content').toString('base64');
-    const bill1 = await portalService.uploadBill({
+    await portalService.uploadBill({
       customerId: assignedCust.id,
       customerName: assignedCust.name,
       fileName: 'bolletta-valentina-cust1.pdf',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, X, CloudOff } from 'lucide-react';
+import { X, CloudOff } from 'lucide-react';
 import { apiConfigStatus } from '../api/transport';
 
 export const NetworkStatusBanner: React.FC = () => {
