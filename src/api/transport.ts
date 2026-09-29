@@ -20,12 +20,29 @@ export function evaluateApiConfiguration(hostname?: string, envApiUrl?: string):
   const envUrl = typeof rawEnv === 'string' ? rawEnv.trim() : '';
 
   if (envUrl) {
-    if (!isLocal && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+    const sameOriginPath = envUrl.startsWith('/') && !envUrl.startsWith('//');
+    let parsedUrl: URL | null = null;
+    if (!sameOriginPath) {
+      try { parsedUrl = new URL(envUrl); } catch { /* Invalid configuration below. */ }
+    }
+    if (!sameOriginPath && (!parsedUrl || !['http:', 'https:'].includes(parsedUrl.protocol))) {
+      return {
+        isConfigured: false, isCloudEnvironment: !isLocal, apiBaseUrl: null,
+        statusMessage: 'VITE_API_URL non valido. Usa un URL HTTPS o un percorso dello stesso sito, per esempio /api.'
+      };
+    }
+    if (!isLocal && parsedUrl && ['localhost', '127.0.0.1', '[::1]'].includes(parsedUrl.hostname)) {
       return {
         isConfigured: false,
         isCloudEnvironment: true,
         apiBaseUrl: null,
         statusMessage: 'Ambiente cloud rilevato ma VITE_API_URL punta a localhost. Configurare l\'URL del backend nelle impostazioni di deployment (es. Vercel).'
+      };
+    }
+    if (!isLocal && parsedUrl?.protocol !== 'https:' && !sameOriginPath) {
+      return {
+        isConfigured: false, isCloudEnvironment: true, apiBaseUrl: null,
+        statusMessage: 'Il backend cloud deve usare HTTPS: correggi VITE_API_URL nelle impostazioni di deployment.'
       };
     }
     return {

@@ -2,11 +2,12 @@ const { spawn } = require('child_process');
 const http = require('http');
 const path = require('path');
 
-function checkServer() {
+function checkServer(requireHealthy = true) {
   return new Promise((resolve) => {
     const tryUrl = (url, fallback) => {
       const req = http.get(url, (res) => {
-        resolve(res.statusCode === 200);
+        res.resume();
+        resolve(!requireHealthy || res.statusCode === 200);
       });
       req.on('error', () => {
         if (fallback) tryUrl(fallback, null);
@@ -43,9 +44,13 @@ function runScript(scriptName) {
 
 async function main() {
   let serverProc = null;
-  let isRunning = await checkServer();
+  let isRunning = await checkServer(false);
 
-  if (!isRunning) {
+  if (isRunning) {
+    throw new Error('La porta 5000 è già occupata da un server HTTP. Fermalo prima dei test: la suite deve usare solo il proprio server demo.');
+  }
+
+  {
     console.log('Backend server not running on port 5000. Starting server/dist/index.js...');
     let serverOutput = '';
     serverProc = spawn(process.execPath, [path.join(__dirname, 'server', 'dist', 'index.js')], {
@@ -70,8 +75,6 @@ async function main() {
       process.exit(1);
     }
     console.log('Backend server started and healthy on http://127.0.0.1:5000\n');
-  } else {
-    console.log('Backend server is already running on port 5000\n');
   }
 
   const testSuites = [

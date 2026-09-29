@@ -59,6 +59,18 @@ assert.equal(cloudHttpsStatus.isCloudEnvironment, true);
 assert.equal(cloudHttpsStatus.apiBaseUrl, 'https://api.voltacrm.it/api');
 console.log('✔ Dominio cloud con backend remoto HTTPS configurato correttamente');
 
+const cloudHttpStatus = evaluateApiConfiguration('voltacrm.vercel.app', 'http://api.voltacrm.it/api');
+assert.equal(cloudHttpStatus.isConfigured, false);
+assert.equal(cloudHttpStatus.apiBaseUrl, null);
+assert.match(cloudHttpStatus.statusMessage, /HTTPS/i);
+
+const sameOriginStatus = evaluateApiConfiguration('voltacrm.vercel.app', '/api');
+assert.equal(sameOriginStatus.isConfigured, true);
+assert.equal(sameOriginStatus.apiBaseUrl, '/api');
+
+const invalidStatus = evaluateApiConfiguration('voltacrm.vercel.app', 'ftp://api.voltacrm.it/api');
+assert.equal(invalidStatus.isConfigured, false);
+
 // TEST 4: Cloud domain with empty VITE_API_URL
 console.log('--- TEST 4: Cloud domain with missing VITE_API_URL ---');
 const cloudEmptyStatus = evaluateApiConfiguration('voltacrm.vercel.app', '');

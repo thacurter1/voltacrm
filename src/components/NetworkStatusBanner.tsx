@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, CloudOff } from 'lucide-react';
-import { apiConfigStatus } from '../api/transport';
+import { apiConfigStatus, DEMO_MODE } from '../api/transport';
 
 export const NetworkStatusBanner: React.FC = () => {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -20,9 +20,9 @@ export const NetworkStatusBanner: React.FC = () => {
         <div>
           <span className="font-semibold text-amber-300">Stato Backend Cloud: </span>
           <span>{apiConfigStatus.statusMessage || 'API Backend non raggiungibile.'}</span>
-          <span className="ml-2 text-amber-400/80 hidden sm:inline">
-            (L'applicazione opera in modalità demo locale con persistenza client).
-          </span>
+          {DEMO_MODE && <span className="ml-2 text-amber-400/80 hidden sm:inline">
+            (Modalità demo locale attiva; dati salvati solo su questo dispositivo).
+          </span>}
         </div>
       </div>
       <button
