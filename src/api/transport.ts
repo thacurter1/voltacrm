@@ -68,9 +68,12 @@ export function evaluateApiConfiguration(hostname?: string, envApiUrl?: string):
   };
 }
 
-export const apiConfigStatus = evaluateApiConfiguration();
-export const API_BASE_URL = apiConfigStatus.apiBaseUrl;
 export const DEMO_MODE = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEMO_MODE === 'true';
+// The public demo is browser-only, even if a deploy accidentally receives API settings.
+export const apiConfigStatus: ApiConfigurationStatus = DEMO_MODE
+  ? { isConfigured: true, isCloudEnvironment: true, apiBaseUrl: null }
+  : evaluateApiConfiguration();
+export const API_BASE_URL = apiConfigStatus.apiBaseUrl;
 export const isStandaloneDemo = DEMO_MODE;
 
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

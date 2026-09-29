@@ -82,7 +82,14 @@ function UnifiedApp() {
   const initialDb = dbService.load();
 
   // Auth & Session State
-  const [currentUser, setCurrentUser] = useState<UserProfile>(initialDb.currentUser || INITIAL_PROFILES[0]);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
+    const selectedDemoId = DEMO_MODE && typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('demo_user')
+      : null;
+    return INITIAL_PROFILES.find(profile => profile.id === selectedDemoId)
+      || initialDb.currentUser
+      || INITIAL_PROFILES[0];
+  });
   const [isGateOpen, setIsGateOpen] = useState(!DEMO_MODE);
   const [isTotemOpen, setIsTotemOpen] = useState(false);
   const [profiles, setProfiles] = useState<UserProfile[]>(DEMO_MODE ? INITIAL_PROFILES : []);

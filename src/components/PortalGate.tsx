@@ -62,7 +62,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   // 1-Click Demo Login: Entra istantaneamente in qualsiasi ruolo senza blocchi
   const handleDirectDemoLogin = async (role: string, userId?: string) => {
     if (!DEMO_MODE) {
-      onToast('Demo non disponibile', 'L’accesso rapido è disponibile solo nell’ambiente demo.', 'warning');
+      const demoUrl = new URL(import.meta.env.VITE_PUBLIC_DEMO_URL || 'https://voltacrm-demo.vercel.app/');
+      if (userId) demoUrl.searchParams.set('demo_user', userId);
+      window.location.assign(demoUrl.toString());
       return;
     }
     try {
@@ -254,12 +256,12 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   {DEMO_MODE ? 'Accesso Immediato Demo (Senza Password né 2FA)' : 'Esplora i ruoli della demo'}
                 </h2>
                 <p className="text-[11px] text-slate-300">
-                  {DEMO_MODE ? 'Clicca un qualsiasi ruolo per entrare direttamente con account demo preconfigurato:' : 'L’accesso rapido richiede un ambiente demo separato dai dati reali.'}
+                  {DEMO_MODE ? 'Clicca un qualsiasi ruolo per entrare direttamente con account demo preconfigurato:' : 'Scegli un ruolo per aprire la demo con dati fittizi, separata dai dati reali.'}
                 </p>
               </div>
             </div>
             <div className="text-[11px] text-amber-300 font-semibold flex items-center gap-1 shrink-0">
-              <span>{DEMO_MODE ? '⚡ Accesso garantito senza errori' : 'Demo non attiva su questo sito'}</span>
+              <span>{DEMO_MODE ? '⚡ Demo locale attiva' : 'Demo disponibile'}</span>
             </div>
           </div>
 
@@ -370,7 +372,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             <button
               type="button"
               onClick={() => {
-                if (onOpenTotem) onOpenTotem();
+                if (DEMO_MODE) {
+                  if (onOpenTotem) onOpenTotem();
+                } else {
+                  const demoUrl = new URL(import.meta.env.VITE_PUBLIC_DEMO_URL || 'https://voltacrm-demo.vercel.app/');
+                  demoUrl.searchParams.set('app', 'totem');
+                  window.location.assign(demoUrl.toString());
+                }
               }}
               className="p-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500 border border-amber-400/40 hover:border-amber-400 text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-sm flex flex-col justify-between col-span-2 sm:col-span-3 lg:col-span-1"
             >
