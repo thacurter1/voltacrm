@@ -116,6 +116,17 @@ async function runTests() {
     );
     console.log('✔ Upload bolletta per cliente altrui bloccato (403 Forbidden)');
 
+    const callCenter = users.find(u => u.id === 'user-cc-4');
+    assert.ok(callCenter, 'Call Center demo account must exist');
+    const callCenterToken = generateToken({ userId: callCenter.id, email: callCenter.email, role: callCenter.role });
+    for (const endpoint of ['/bills', `/bills/${bill2.id}/download`, `/bills/${bill2.id}/analyze`, '/readings']) {
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        method: endpoint.endsWith('/analyze') ? 'POST' : 'GET',
+        headers: { Authorization: `Bearer ${callCenterToken}` }
+      });
+      assert.equal(response.status, 403, `Call Center must not access portal endpoint ${endpoint}`);
+    }
+
     console.log('\n🎉 ALL PORTAL IDOR & BROKER ISOLATION TESTS PASSED!');
   } finally {
     await new Promise(resolve => server.close(resolve));

@@ -26,8 +26,11 @@ function resolveActor(req: AuthRequest): PortalActor {
   const profile = users.find((item) => item.id === authUser?.userId);
   if (!authUser || !profile) throw httpError('Profilo autenticato non trovato.', 403);
 
-  if (['admin', 'call_center', 'operator', 'broker'].includes(authUser.role)) {
+  if (['admin', 'operator', 'broker'].includes(authUser.role)) {
     return { isStaff: true };
+  }
+  if (authUser.role === 'call_center') {
+    throw httpError('Il Call Center non è autorizzato ad accedere al portale clienti.', 403);
   }
   if (authUser.role !== 'customer' || !profile.customerId) {
     throw httpError('Il profilo non è associato a un cliente.', 403);
