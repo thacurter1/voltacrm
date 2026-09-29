@@ -5,31 +5,7 @@ import { validate, createCustomerSchema, createUtilityPointSchema, updateCustome
 import { Customer, UtilityPoint } from '../types.js';
 
 export const customersRouter = Router();
-
-function isBrokerAssigned(customer: Customer, actor: any): boolean {
-  if (!actor || !customer) return false;
-
-  // ID-based match takes absolute priority
-  if (customer.assignedBrokerId) {
-    return customer.assignedBrokerId === actor.id;
-  }
-
-  // Fallback to name matching only when assignedBrokerId is not set
-  if (!customer.accountManager) return false;
-
-  const actorName = (actor.name || '').trim();
-  const brokerSimpleName = actorName.split(' (')[0].trim();
-  const mgr = (customer.accountManager || '').trim();
-  const mgrSimpleName = mgr.split(' (')[0].trim();
-
-  // Guard against empty name bypass — empty string .includes('') is always true
-  if (!brokerSimpleName || !mgrSimpleName) return false;
-
-  // Strict equality only — no substring matching to prevent "Marco" matching "Gianmarco"
-  return (
-    mgrSimpleName.toLowerCase() === brokerSimpleName.toLowerCase()
-  );
-}
+import { isBrokerAssigned, canActorAccessCustomer } from '../services/customerOwnership.js';
 
 // GET /api/customers (Filtro rigoroso in base al ruolo RBAC)
 customersRouter.get('/', authenticateToken, (req: any, res: Response): void => {

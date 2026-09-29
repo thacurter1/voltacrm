@@ -7,6 +7,7 @@ import {
   PortalUtilityType,
   portalService,
 } from '../services/portalService.js';
+import { canActorAccessCustomer, isBrokerAssigned } from '../services/customerOwnership.js';
 
 export const portalRouter = Router();
 
@@ -46,6 +47,13 @@ function resolveCustomer(req: AuthRequest, requestedCustomerId?: unknown) {
 
   const customer = getCustomers().find((item) => item.id === customerId);
   if (!customer) throw httpError('Cliente non trovato.', 404);
+
+  const authUser = req.user;
+  const profile = users.find((item) => item.id === authUser?.userId);
+  if (profile && !canActorAccessCustomer(customer, profile)) {
+    throw httpError('Accesso negato alla clientela non assegnata.', 403);
+  }
+
   return { actor, customer };
 }
 
@@ -62,18 +70,54 @@ function decodeBase64File(value: unknown): Buffer {
   return Buffer.from(value, 'base64');
 }
 
-portalRouter.get('/bills', async (req: AuthRequest, res: Response): Promise<void> => {
+type AsyncPortalHandler = (req: AuthRequest, res: Response) => Promise<void>;
+
+function handlePortalRoute(fn: AsyncPortalHandler) {
+  return async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      await fn(req, res);
+    } catch (err: any) {
+      const status = typeof err.status === 'number' ? err.status : 500;
+      res.status(status).json({
+        success: false,
+        message: err.message || 'Errore durante l\'elaborazione della richiesta portale.',
+      });
+    }
+  };
+}
+
+portalRouter.get('/bills', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const actor = resolveActor(req);
   const requested = typeof req.query.customerId === 'string' ? req.query.customerId.trim() : undefined;
   if (requested && !getCustomers().some((customer) => customer.id === requested)) {
     throw httpError('Cliente non trovato.', 404);
   }
-  const customerId = actor.isStaff ? requested : actor.customerId;
-  const bills = await portalService.listBills(customerId);
-  res.json({ success: true, bills });
-});
 
-portalRouter.post('/bills', async (req: AuthRequest, res: Response): Promise<void> => {
+  const authUser = req.user;
+  const profile = users.find((item) => item.id === authUser?.userId);
+  if (requested) {
+    const customer = getCustomers().find((item) => item.id === requested);
+    if (customer && profile && !canActorAccessCustomer(customer, profile)) {
+      throw httpError('Accesso negato alla clientela non assegnata.', 403);
+    }
+  }
+
+  const customerId = actor.isStaff ? requested : actor.customerId;
+  let bills = await portalService.listBills(customerId);
+
+  if (profile && (profile.role === 'broker' || profile.role === 'operator') && !requested) {
+    const assignedCustIds = new Set(
+      getCustomers()
+        .filter((c) => isBrokerAssigned(c, profile))
+        .map((c) => c.id)
+    );
+    bills = bills.filter((b) => assignedCustIds.has(b.customerId));
+  }
+
+  res.json({ success: true, bills });
+}));
+
+portalRouter.post('/bills', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const { customer } = resolveCustomer(req, req.body?.customerId);
   const utilityType = req.body?.utilityType as PortalUtilityType;
   if (!customer.utilityPoints.some((point: any) => point.type === utilityType)) {
@@ -90,13 +134,23 @@ portalRouter.post('/bills', async (req: AuthRequest, res: Response): Promise<voi
     notes: typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 1000) : undefined,
   });
   res.status(201).json({ success: true, bill });
-});
+}));
 
-portalRouter.get('/bills/:id/download', async (req: AuthRequest, res: Response): Promise<void> => {
+portalRouter.get('/bills/:id/download', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const actor = resolveActor(req);
   const bill = await portalService.getBill(req.params.id);
+  const authUser = req.user;
+  const profile = users.find((item) => item.id === authUser?.userId);
+
   if (!actor.isStaff && bill.customerId !== actor.customerId) {
     throw httpError('Accesso negato alla bolletta richiesta.', 403);
+  }
+
+  if (profile && (profile.role === 'broker' || profile.role === 'operator')) {
+    const customer = getCustomers().find((c) => c.id === bill.customerId);
+    if (!customer || !canActorAccessCustomer(customer, profile)) {
+      throw httpError('Accesso negato alla bolletta del cliente non assegnato.', 403);
+    }
   }
 
   const download = await portalService.getBillDownload(bill.id);
@@ -109,27 +163,58 @@ portalRouter.get('/bills/:id/download', async (req: AuthRequest, res: Response):
   res.setHeader('Content-Length', String(download.bytes.length));
   res.setHeader('Content-Disposition', 'attachment; filename="' + bill.fileName + '"');
   res.status(200).send(download.bytes);
-});
+}));
 
-portalRouter.post('/bills/:id/analyze', async (req: AuthRequest, res: Response): Promise<void> => {
+portalRouter.post('/bills/:id/analyze', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const actor = resolveActor(req);
   if (!actor.isStaff) throw httpError('Solo lo staff può analizzare le bollette.', 403);
+  const bill = await portalService.getBill(req.params.id);
+  const authUser = req.user;
+  const profile = users.find((item) => item.id === authUser?.userId);
+
+  if (profile && (profile.role === 'broker' || profile.role === 'operator')) {
+    const customer = getCustomers().find((c) => c.id === bill.customerId);
+    if (!customer || !canActorAccessCustomer(customer, profile)) {
+      throw httpError('Accesso negato alla bolletta del cliente non assegnato.', 403);
+    }
+  }
+
   const analysis = await portalService.analyzeBill(req.params.id);
   res.status(200).json({ success: true, ...analysis });
-});
+}));
 
-portalRouter.get('/readings', async (req: AuthRequest, res: Response): Promise<void> => {
+portalRouter.get('/readings', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const actor = resolveActor(req);
   const requested = typeof req.query.customerId === 'string' ? req.query.customerId.trim() : undefined;
   if (requested && !getCustomers().some((customer) => customer.id === requested)) {
     throw httpError('Cliente non trovato.', 404);
   }
-  const customerId = actor.isStaff ? requested : actor.customerId;
-  const readings = await portalService.listReadings(customerId);
-  res.json({ success: true, readings });
-});
 
-portalRouter.post('/readings', async (req: AuthRequest, res: Response): Promise<void> => {
+  const authUser = req.user;
+  const profile = users.find((item) => item.id === authUser?.userId);
+  if (requested) {
+    const customer = getCustomers().find((item) => item.id === requested);
+    if (customer && profile && !canActorAccessCustomer(customer, profile)) {
+      throw httpError('Accesso negato alla clientela non assegnata.', 403);
+    }
+  }
+
+  const customerId = actor.isStaff ? requested : actor.customerId;
+  let readings = await portalService.listReadings(customerId);
+
+  if (profile && (profile.role === 'broker' || profile.role === 'operator') && !requested) {
+    const assignedCustIds = new Set(
+      getCustomers()
+        .filter((c) => isBrokerAssigned(c, profile))
+        .map((c) => c.id)
+    );
+    readings = readings.filter((r) => assignedCustIds.has(r.customerId));
+  }
+
+  res.json({ success: true, readings });
+}));
+
+portalRouter.post('/readings', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const { customer } = resolveCustomer(req, req.body?.customerId);
   const input = req.body as MeterReadingInput;
   const point = customer.utilityPoints.find((item: any) => item.id === input.utilityPointId);
@@ -143,4 +228,4 @@ portalRouter.post('/readings', async (req: AuthRequest, res: Response): Promise<
     readings: input.readings,
   });
   res.status(201).json({ success: true, reading });
-});
+}));
