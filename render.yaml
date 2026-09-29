@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: voltacrm-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VOLTA_DEMO_MODE
+        value: "false"
+      - key: CORS_ORIGIN
+        value: https://voltacrm.vercel.app
+      - key: SUPABASE_URL
+        value: https://wobbcdurpamtbkicqzhx.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false
+      - key: ADMIN_2FA_SECRET
+        sync: false
