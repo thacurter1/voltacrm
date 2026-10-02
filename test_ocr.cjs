@@ -67,7 +67,8 @@ async function runOcrTests() {
   }, {
     fileName: 'Bolletta_Enel_Luce_Test.pdf',
     mimeType: 'application/pdf',
-    base64Data: Buffer.from('PDF DEMO CONTENT FOR ENEL LUCE IT001E12345678 CF: RSSMRA80A01H501U').toString('base64')
+    // Pass strict file validation so the test reaches the missing-provider branch.
+    base64Data: Buffer.from('%PDF-1.4\n%%EOF\n').toString('base64')
   });
 
   console.log('STATUS:', authRes.status);
