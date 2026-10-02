@@ -234,7 +234,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ currentUser, onReturnT
           </div>
           <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Crittografia di grado bancario SHA-256 e conformità GDPR</span>
+            <span>Connessione HTTPS. La demo non certifica la conformità GDPR.</span>
           </div>
         </div>
       </footer>

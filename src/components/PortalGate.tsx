@@ -403,7 +403,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             <div className="space-y-4 relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-emerald-400 text-xs font-semibold backdrop-blur-xs border border-white/10">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                {activePortal === 'customer' ? 'Area Personale Protetta' : 'Crittografia AES-256 & 2FA'}
+                {activePortal === 'customer' ? 'Area Personale Protetta' : 'Accesso con 2FA'}
               </div>
 
               <h2 className="text-2xl font-bold tracking-tight leading-tight">
@@ -743,7 +743,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-400 border-t border-white/10">
-        Volta Energia Enterprise • Crittografia AES-256-GCM • Conforme ARERA & GDPR EU 2016/679
+        Volta Energia • Demo locale: non inserire dati reali
       </footer>
     </div>
   );

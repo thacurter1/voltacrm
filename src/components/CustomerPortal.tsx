@@ -245,7 +245,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </span>
             <span className="stripe-badge-neutral font-mono">
               <Lock className="h-3 w-3 text-slate-400" />
-              Crittografia AES-256
+              Sessione protetta
             </span>
           </div>
 

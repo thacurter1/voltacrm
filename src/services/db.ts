@@ -1,7 +1,6 @@
 import { Appointment, AuthUser, Customer, CustomerBill, Lead, MarketIndex, SecurityAuditLog, SecurityCheckItem } from '../types';
 import { INITIAL_APPOINTMENTS, INITIAL_CUSTOMERS, INITIAL_LEADS } from './mockData';
 import { CURRENT_MARKET_INDEX } from './energyEngine';
-import { cryptoService } from './cryptoService';
 
 const STORAGE_KEY = 'VOLTA_ENERGY_CRM_DB_V3';
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
@@ -164,19 +163,19 @@ export const INITIAL_SECURITY_CHECKS: SecurityCheckItem[] = [
   },
   {
     id: 'chk-2',
-    category: 'Crittografia',
-    title: 'Crittografia Dati Sensibili a Riposo (AES-256-GCM)',
-    status: 'passed',
-    score: 96,
-    description: 'Codici POD, PDR, IBAN e Codici Fiscali cifrati con chiavi ruotate ogni 90 giorni.'
+    category: 'Infrastruttura',
+    title: 'Mascheramento Dati Sensibili nella Demo',
+    status: 'warning',
+    score: 0,
+    description: 'La demo memorizza dati dimostrativi nel browser e non fornisce cifratura locale a riposo.'
   },
   {
     id: 'chk-3',
     category: 'GDPR',
     title: 'Registro Consensi e Delega di Brokeraggio',
-    status: 'passed',
-    score: 95,
-    description: 'I mandati per lo switch quadrimestrale sono firmati digitalmente e marcati con timestamp.'
+    status: 'warning',
+    score: 0,
+    description: 'La schermata non verifica requisiti normativi né certifica la conformità legale.'
   },
   {
     id: 'chk-4',
@@ -184,15 +183,15 @@ export const INITIAL_SECURITY_CHECKS: SecurityCheckItem[] = [
     title: 'Rate Limiting & Prevenzione Brute Force',
     status: 'passed',
     score: 90,
-    description: 'Blocco IP automatico dopo 5 tentativi di login errati su portale e API.'
+    description: 'Il limite applicativo è 15 richieste di login ogni 15 minuti; non equivale a un blocco dopo 5 errori.'
   },
   {
     id: 'chk-5',
-    category: 'Crittografia',
-    title: 'Trasporto Dati Sicuro (TLS 1.3 / HSTS)',
+    category: 'Infrastruttura',
+    title: 'Trasporto Dati HTTPS/HSTS',
     status: 'passed',
-    score: 100,
-    description: 'Tutte le connessioni forzano TLS 1.3 con crittografia end-to-end su documenti e bollette.'
+    score: 0,
+    description: 'Il sito usa HTTPS/HSTS per il trasporto. Questo non equivale a cifratura end-to-end.'
   }
 ];
 
@@ -250,14 +249,8 @@ export const dbService = {
     try {
       const json = JSON.stringify(state);
       localStorage.setItem(STORAGE_KEY, json);
-      // Salva copia con crittografia WebCrypto AES-256-GCM
-      cryptoService.encrypt(json).then((ciphertext) => {
-        try {
-          localStorage.setItem(STORAGE_KEY + '_ENCRYPTED_AES256', ciphertext);
-        } catch {
-          // ignore storage quota errors
-        }
-      });
+      // Demo fixtures are stored locally for convenience; this is not encryption at rest.
+      localStorage.removeItem(STORAGE_KEY + '_ENCRYPTED_AES256');
     } catch (e) {
       console.error('Errore salvataggio database localStorage', e);
     }
@@ -265,6 +258,7 @@ export const dbService = {
 
   reset(): DbState {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY + '_ENCRYPTED_AES256');
     return this.load();
   }
 };

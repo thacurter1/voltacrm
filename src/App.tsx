@@ -815,7 +815,7 @@ function UnifiedApp() {
               currentUser.role === 'admin' ? (
                 <SecurityAuditDashboard
                   logs={securityLogs}
-                  onTriggerScan={() => addToast('Scansione di Sicurezza Completata', 'Tutti i controlli GDPR, 2FA e crittografia AES-256 sono conformi al 100%.', 'success')}
+                  onTriggerScan={() => addToast('Controllo demo', 'Questa schermata dimostrativa non esegue una verifica di conformità o della cifratura.', 'info')}
                 />
               ) : (
                 <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">

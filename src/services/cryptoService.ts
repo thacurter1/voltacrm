@@ -1,9 +1,5 @@
-/**
- * WebCrypto AES-GCM 256-bit Encryption & PII Masking Service
- * Standard NIST SP 800-38D compliant encryption for energy identifiers (POD/PDR) and Fiscal Codes.
- */
+/** Session-only AES-GCM helpers and display-only PII masking. These helpers do not provide encryption at rest. */
 
-// Chiave di sessione effimera generata dinamicamente in memoria RAM (nessun segreto cablato nel client bundle)
 let sessionKeyPromise: Promise<CryptoKey> | null = null;
 
 async function getSessionKey(): Promise<CryptoKey> {
@@ -22,60 +18,50 @@ async function getSessionKey(): Promise<CryptoKey> {
 
 export const cryptoService = {
   /**
-   * Cifra una stringa o oggetto JSON con AES-256-GCM
+   * Encrypts data for use in the current page session only.
+   * The key is intentionally ephemeral and must not be used for persisted data.
    */
   async encrypt(data: string): Promise<string> {
-    try {
-      const key = await getSessionKey();
-      const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV
-      const enc = new TextEncoder();
-      const encodedData = enc.encode(data);
+    const key = await getSessionKey();
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encodedData = new TextEncoder().encode(data);
 
-      const cipherBuffer = await window.crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        encodedData
-      );
+    const cipherBuffer = await window.crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      encodedData
+    );
 
-      // Concatenazione IV + Ciphertext in base64
-      const combined = new Uint8Array(iv.length + cipherBuffer.byteLength);
-      combined.set(iv, 0);
-      combined.set(new Uint8Array(cipherBuffer), iv.length);
+    const combined = new Uint8Array(iv.length + cipherBuffer.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(cipherBuffer), iv.length);
 
-      return btoa(String.fromCharCode(...combined));
-    } catch (err) {
-      console.error('Errore durante crittografia AES-GCM:', err);
-      return data;
-    }
+    return btoa(String.fromCharCode(...combined));
   },
 
   /**
-   * Decifra una stringa cifrata con AES-256-GCM
+   * Decrypts a value encrypted in this page session. Invalid ciphertext and
+   * values from another session are rejected instead of being returned as text.
    */
   async decrypt(encryptedBase64: string): Promise<string> {
-    try {
-      const key = await getSessionKey();
-      const rawString = atob(encryptedBase64);
-      const combined = new Uint8Array(rawString.length);
-      for (let i = 0; i < rawString.length; i++) {
-        combined[i] = rawString.charCodeAt(i);
-      }
-
-      const iv = combined.slice(0, 12);
-      const cipherText = combined.slice(12);
-
-      const decryptedBuffer = await window.crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        cipherText
-      );
-
-      const dec = new TextDecoder();
-      return dec.decode(decryptedBuffer);
-    } catch {
-      // Se fallisce, potrebbe essere testo non cifrato (backward compatibility)
-      return encryptedBase64;
+    if (typeof encryptedBase64 !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encryptedBase64)) {
+      throw new Error('Formato Base64 AES-GCM non valido.');
     }
+
+    const rawString = atob(encryptedBase64);
+    if (btoa(rawString) !== encryptedBase64 || rawString.length < 28) {
+      throw new Error('Ciphertext AES-GCM troncato o non canonico.');
+    }
+    const combined = Uint8Array.from(rawString, character => character.charCodeAt(0));
+    const iv = combined.slice(0, 12);
+    const cipherText = combined.slice(12);
+
+    const decryptedBuffer = await window.crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      await getSessionKey(),
+      cipherText
+    );
+    return new TextDecoder('utf-8', { fatal: true }).decode(decryptedBuffer);
   },
 
   /**

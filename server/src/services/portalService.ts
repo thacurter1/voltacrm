@@ -1,9 +1,10 @@
 import { randomUUID } from 'crypto';
 import { isSupabaseConfigured, supabase } from './dbClient.js';
 import { analyzeBillWithGemini, ExtractedBillData } from './geminiOcrService.js';
+import { validateBillFile, sanitizeBillFileName } from '../utils/billFile.js';
+export { MAX_BILL_BYTES, validateBillFile, sanitizeBillFileName } from '../utils/billFile.js';
 
 export const PORTAL_BILL_BUCKET = 'customer-bills';
-export const MAX_BILL_BYTES = 10 * 1024 * 1024;
 
 export type PortalUtilityType = 'luce' | 'gas';
 export type PortalBillStatus = 'in_review' | 'analyzed' | 'archived';
@@ -76,46 +77,8 @@ export interface MeterReadingInput {
   readings: MeterReadingValues;
 }
 
-const MIME_SIGNATURES: Record<string, (bytes: Buffer) => boolean> = {
-  'application/pdf': (bytes) => bytes.length >= 5 && bytes.subarray(0, 5).toString('ascii') === '%PDF-',
-  'image/png': (bytes) =>
-    bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
-  'image/jpeg': (bytes) =>
-    bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff,
-};
-
 function portalError(message: string, status = 400): Error & { status: number } {
   return Object.assign(new Error(message), { status });
-}
-
-export function sanitizeBillFileName(fileName: string): string {
-  const leaf = fileName.replace(/\\/g, '/').split('/').pop() || 'bolletta';
-  const normalized = leaf
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .replace(/_+/g, '_')
-    .slice(0, 160);
-  return normalized && normalized !== '.' && normalized !== '..' ? normalized : 'bolletta';
-}
-
-export function validateBillFile(bytes: Buffer, declaredMimeType: string): { mimeType: string } {
-  if (!Buffer.isBuffer(bytes) || bytes.length === 0) {
-    throw portalError('Il file della bolletta è vuoto.');
-  }
-  if (bytes.length > MAX_BILL_BYTES) {
-    throw portalError('La bolletta supera il limite massimo di 10 MB.', 413);
-  }
-
-  const mimeType = declaredMimeType.trim().toLowerCase();
-  const signatureMatches = MIME_SIGNATURES[mimeType];
-  if (!signatureMatches) {
-    throw portalError('Formato non consentito. Carica un file PDF, PNG o JPEG.');
-  }
-  if (!signatureMatches(bytes)) {
-    throw portalError('Il contenuto del file non corrisponde al tipo dichiarato.');
-  }
-  return { mimeType };
 }
 
 export function validateMeterReadingInput(input: MeterReadingInput): MeterReadingInput {

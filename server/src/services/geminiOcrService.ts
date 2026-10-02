@@ -122,7 +122,7 @@ Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
         throw new Error('Dati OCR incompleti o non validi: ' + validated.error.issues.map(issue => issue.path.join('.')).join(', '));
       }
       const bill = validated.data;
-      console.log(`[Gemini OCR] Estrazione completata con successo per ${fileName}: POD/PDR ${bill.podOrPdr}`);
+      console.log(`[Gemini OCR] Estrazione completata con successo per ${fileName}.`);
       return {
         fileName,
         utilityType: bill.utilityType,

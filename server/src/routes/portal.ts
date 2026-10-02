@@ -1,8 +1,8 @@
 import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { decodeAndValidateBillFile } from '../utils/billFile.js';
 import { getCustomers, users } from '../services/dataStore.js';
 import {
-  MAX_BILL_BYTES,
   MeterReadingInput,
   PortalUtilityType,
   portalService,
@@ -58,19 +58,6 @@ function resolveCustomer(req: AuthRequest, requestedCustomerId?: unknown) {
   }
 
   return { actor, customer };
-}
-
-function decodeBase64File(value: unknown): Buffer {
-  if (typeof value !== 'string' || value.length === 0) {
-    throw httpError('File della bolletta mancante.', 400);
-  }
-  if (value.length > Math.ceil(MAX_BILL_BYTES / 3) * 4 + 4) {
-    throw httpError('La bolletta supera il limite massimo di 10 MB.', 413);
-  }
-  if (value.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) {
-    throw httpError('Codifica del file non valida.', 400);
-  }
-  return Buffer.from(value, 'base64');
 }
 
 type AsyncPortalHandler = (req: AuthRequest, res: Response) => Promise<void>;
@@ -132,7 +119,7 @@ portalRouter.post('/bills', handlePortalRoute(async (req: AuthRequest, res: Resp
     customerName: customer.name,
     fileName: typeof req.body?.fileName === 'string' ? req.body.fileName : 'bolletta',
     mimeType: typeof req.body?.mimeType === 'string' ? req.body.mimeType : '',
-    bytes: decodeBase64File(req.body?.base64Data),
+    bytes: decodeAndValidateBillFile(req.body?.base64Data, req.body?.mimeType),
     utilityType,
     notes: typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 1000) : undefined,
   });

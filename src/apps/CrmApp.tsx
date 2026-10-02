@@ -546,7 +546,7 @@ export const CrmApp: React.FC = () => {
             <SecurityAuditDashboard
               logs={securityLogs}
               onTriggerScan={() => {
-                addToast('Diagnostica Sicurezza', 'Tutti i controlli Zero-Trust RLS sono conformi al 100%.', 'success');
+                addToast('Schermata demo', 'Questo controllo è illustrativo: non esegue una scansione delle policy RLS.', 'info');
               }}
             />
           ) : (

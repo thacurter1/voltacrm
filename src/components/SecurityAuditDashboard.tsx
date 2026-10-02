@@ -78,21 +78,21 @@ export const SecurityAuditDashboard: React.FC<SecurityAuditDashboardProps> = ({
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-[#635bff] border border-indigo-100">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Security Posture & Compliance Report
+            Riepilogo dimostrativo della sicurezza
           </div>
           <h1 className="text-2xl font-bold text-[#0a2540] tracking-tight">
-            Audit di Sicurezza & Protezione Dati Energetici
+            Stato illustrativo, non auditato
           </h1>
           <p className="text-xs text-[#425466]">
-            Standard bancari per crittografia POD/PDR, autenticazione 2FA e adempimenti privacy GDPR/ARERA.
+            I valori mostrati sono statici: questa schermata non esegue scansioni né certifica requisiti tecnici o legali.
           </p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-            <span className="text-[10px] font-bold uppercase text-emerald-800 block">Security Score</span>
-            <span className="text-2xl font-black text-emerald-600 font-mono">96 / 100</span>
-            <span className="text-[10px] text-emerald-700 block font-semibold">Grado A+ (Eccellente)</span>
+            <span className="text-[10px] font-bold uppercase text-slate-600 block">Security Score</span>
+            <span className="text-2xl font-black text-slate-600 font-mono">N/D</span>
+            <span className="text-[10px] text-slate-500 block font-semibold">Nessun audit eseguito</span>
           </div>
 
           <button
@@ -101,7 +101,7 @@ export const SecurityAuditDashboard: React.FC<SecurityAuditDashboardProps> = ({
             className="px-4 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-2 active:scale-95"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            {isScanning ? 'Scansione in corso...' : 'Esegui Audit Live'}
+            {isScanning ? 'Simulazione in corso...' : 'Simula controllo'}
           </button>
         </div>
       </div>
@@ -113,17 +113,17 @@ export const SecurityAuditDashboard: React.FC<SecurityAuditDashboardProps> = ({
             <span className="text-[#425466] font-medium">Autenticazione 2FA</span>
             <KeyRound className="h-4 w-4 text-[#635bff]" />
           </div>
-          <div className="text-xl font-bold text-[#0a2540]">100% Attiva</div>
-          <span className="text-[11px] text-emerald-700 font-semibold block">Obbligatoria per tutti gli operatori</span>
+          <div className="text-xl font-bold text-[#0a2540]">Non verificata</div>
+          <span className="text-[11px] text-slate-500 font-semibold block">Verificare la configurazione effettiva</span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[#425466] font-medium">Crittografia POD/PDR</span>
+            <span className="text-[#425466] font-medium">Mascheramento POD/PDR</span>
             <Lock className="h-4 w-4 text-emerald-600" />
           </div>
-          <div className="text-xl font-bold text-[#0a2540]">AES-256-GCM</div>
-          <span className="text-[11px] text-emerald-700 font-semibold block">Chiavi rotanti & mascheramento</span>
+          <div className="text-xl font-bold text-[#0a2540]">Solo interfaccia</div>
+          <span className="text-[11px] text-slate-500 font-semibold block">Nasconde parte dei codici nella vista demo</span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-2xs space-y-2">
@@ -131,8 +131,8 @@ export const SecurityAuditDashboard: React.FC<SecurityAuditDashboardProps> = ({
             <span className="text-[#425466] font-medium">Conformità GDPR</span>
             <FileCheck className="h-4 w-4 text-sky-600" />
           </div>
-          <div className="text-xl font-bold text-[#0a2540]">Audit Trail Totale</div>
-          <span className="text-[11px] text-slate-500 font-medium block">Consensi tracciati con timestamp</span>
+          <div className="text-xl font-bold text-[#0a2540]">Verifica richiesta</div>
+          <span className="text-[11px] text-slate-500 font-medium block">La schermata non certifica conformità legale</span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-2xs space-y-2">
@@ -140,8 +140,8 @@ export const SecurityAuditDashboard: React.FC<SecurityAuditDashboardProps> = ({
             <span className="text-[#425466] font-medium">Minacce Rilevate</span>
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           </div>
-          <div className="text-xl font-bold text-[#0a2540]">0 Critiche</div>
-          <span className="text-[11px] text-slate-500 font-medium block">1 warning mitigato da rate limit</span>
+          <div className="text-xl font-bold text-[#0a2540]">Non verificato</div>
+          <span className="text-[11px] text-slate-500 font-medium block">I contatori in questa demo non sono live</span>
         </div>
       </div>
 
