@@ -85,6 +85,10 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       setIsSubmitting(false);
     }
 
+    if (!DEMO_MODE) {
+      onToast('Demo non disponibile', 'Accesso demo disattivato in questo ambiente.', 'warning');
+      return;
+    }
     const fallbackProfile = INITIAL_PROFILES.find(p => (userId && p.id === userId) || p.role === role) || INITIAL_PROFILES[0];
     onToast('Accesso Demo Diretto', `Benvenuto ${fallbackProfile.name}`, 'success');
     if (fallbackProfile.role === 'customer') {
@@ -123,10 +127,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         const customerProfiles = INITIAL_PROFILES.filter(p => p.role === 'customer');
         const matched = customerProfiles.find(p =>
           p.email.toLowerCase() === query.toLowerCase() ||
-          (p.fiscalCode && p.fiscalCode.toLowerCase() === query.toLowerCase()) ||
-          p.name.toLowerCase().includes(query.toLowerCase())
-        ) || customerProfiles[0];
-        if (matched) {
+          (p.fiscalCode && p.fiscalCode.toLowerCase() === query.toLowerCase())
+        );
+        if (matched && (pwd === 'customer123' || pwd === 'password')) {
           onToast('Accesso Demo Cliente', `Benvenuto ${matched.name}`, 'success');
           onLoginCustomer(matched);
           return;
@@ -174,16 +177,19 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         return;
       } else if (result.require2FA) {
         if (DEMO_MODE && operatorTotp === '123456') {
-          const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase()) || INITIAL_PROFILES[0];
-          onLoginOperator(matched);
-          return;
+          const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase());
+          if (matched) {
+            onLoginOperator(matched);
+            return;
+          }
         }
         onToast('Richiesta 2FA', result.message || 'Inserisci il codice TOTP a 6 cifre.', 'info');
       }
     } catch (err) {
       if (DEMO_MODE) {
         const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase());
-        if (matched) {
+        const isValidDemoPwd = operatorPassword === 'admin123' || operatorPassword === 'operator123' || operatorPassword === 'password';
+        if (matched && isValidDemoPwd) {
           onToast('Accesso Demo Operatore', `Benvenuto ${matched.name}`, 'success');
           onLoginOperator(matched);
           return;
@@ -247,7 +253,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       {/* Main Container */}
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-4 max-w-5xl mx-auto w-full">
         {/* ⚡ BANNER ACCESSO RAPIDO DEMO A OGNI RUOLO */}
-        <section aria-label="Accesso rapido demo" className="w-full mb-6 bg-slate-900/90 border border-amber-400/40 rounded-3xl p-5 shadow-2xl backdrop-blur-md">
+        {DEMO_MODE && <section aria-label="Accesso rapido demo" className="w-full mb-6 bg-slate-900/90 border border-amber-400/40 rounded-3xl p-5 shadow-2xl backdrop-blur-md">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-white/10">
             <div className="flex items-center gap-2.5">
               <span className="px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 font-black text-xs tracking-wider shadow-sm flex items-center gap-1">
@@ -394,7 +400,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               </span>
             </button>
           </div>
-        </section>
+        </section>}
 
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 bg-white rounded-3xl shadow-2xl overflow-hidden text-slate-900 border border-[#e3e8ee]">
           

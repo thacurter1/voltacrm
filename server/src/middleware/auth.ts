@@ -26,6 +26,10 @@ export const generateToken = (payload: { userId: string; email: string; role: st
   return jwt.sign(payload, getJwtSecret(), { expiresIn: '8h' });
 };
 
+/** Demo shortcuts are allowed only in explicit demo mode AND outside production. */
+export const isDemoAllowed = (): boolean =>
+  process.env.VOLTA_DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production';
+
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -35,8 +39,18 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     return;
   }
 
-  if (process.env.VOLTA_DEMO_MODE === 'true' && token.startsWith('mock-')) {
-    const current = users.find(u => token.includes(u.id)) || users[0];
+  if (token.startsWith('mock-')) {
+    if (!isDemoAllowed()) {
+      res.status(403).json({ success: false, message: 'Token non valido o scaduto.' });
+      return;
+    }
+    const current = users
+      .filter(u => token.includes(`-${u.id}-`))
+      .sort((a, b) => b.id.length - a.id.length)[0];
+    if (!current) {
+      res.status(403).json({ success: false, message: 'Token demo non valido.' });
+      return;
+    }
     req.user = { userId: current.id, email: current.email, role: current.role };
     next();
     return;

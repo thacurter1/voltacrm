@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { users, registerAccount } from '../services/dataStore.js';
-import { generateToken, authenticateToken, requireRole, AuthRequest } from '../middleware/auth.js';
+import { generateToken, authenticateToken, requireRole, AuthRequest, isDemoAllowed } from '../middleware/auth.js';
 import { loginLimiter } from '../middleware/rateLimiter.js';
 import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema, oauthAuthSchema, createInvitationSchema, inspectInvitationSchema, acceptInvitationSchema } from '../middleware/validate.js';
 import { createAccountInvitation, inspectAccountInvitation, acceptAccountInvitation, renewAccountInvitation } from '../services/invitationService.js';
@@ -21,14 +21,15 @@ const toSafeProfile = (user: any) => {
 
 // POST /api/auth/demo-login (Accesso rapido 1-click in modalità demo / testing)
 authRouter.post('/demo-login', loginLimiter, (req: Request, res: Response): void => {
-  if (process.env.VOLTA_DEMO_MODE !== 'true' || process.env.NODE_ENV === 'production') {
+  if (!isDemoAllowed()) {
     res.status(404).json({ success: false, message: 'Endpoint non trovato.' });
     return;
   }
   const { role, userId } = req.body || {};
-  let user = users.find(u => (userId && u.id === userId) || (role && u.role === role));
+  const user = (userId && users.find(u => u.id === userId)) || (role && users.find(u => u.role === role));
   if (!user) {
-    user = users.find(u => u.role === role) || users[0];
+    res.status(404).json({ success: false, message: 'Account demo non trovato.' });
+    return;
   }
   const token = generateToken({ userId: user.id, email: user.email, role: user.role });
   res.json({
@@ -65,7 +66,7 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
       return;
     }
     const isTotpValid = verifyTotp(totpCode, secret, 1);
-    const isDevMock = process.env.VOLTA_DEMO_MODE === 'true' && totpCode === '123456';
+    const isDevMock = isDemoAllowed() && totpCode === '123456';
 
     if (!isTotpValid && !isDevMock) {
       res.status(403).json({ success: false, message: 'Codice 2FA non valido o scaduto.' });

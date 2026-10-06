@@ -36,6 +36,7 @@ export const api = {
         }
       }
 
+      if (!DEMO_MODE) throw new Error('Accesso demo disattivato.');
       let targetProfile = userId ? INITIAL_PROFILES.find(p => p.id === userId) : undefined;
       if (!targetProfile && role) {
         targetProfile = INITIAL_PROFILES.find(p => p.role === role);

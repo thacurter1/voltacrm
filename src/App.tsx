@@ -596,16 +596,18 @@ function UnifiedApp() {
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
           <CustomerApp currentUser={currentUser} onReturnToBackend={handleReturnToBackend} />
         </React.Suspense>
-        {DEMO_MODE && <DemoRoleSwitcher
-          currentUser={currentUser}
-          customers={customers}
-          onSelectUser={handleSelectUser}
-          onOpenTotem={() => setIsTotemOpen(true)}
-          onLogout={() => {
-            api.auth.logout();
-            setIsGateOpen(true);
-          }}
-        />}
+        {DEMO_MODE && (
+          <DemoRoleSwitcher
+            currentUser={currentUser}
+            customers={customers}
+            onSelectUser={handleSelectUser}
+            onOpenTotem={() => setIsTotemOpen(true)}
+            onLogout={() => {
+              api.auth.logout();
+              setIsGateOpen(true);
+            }}
+          />
+        )}
         <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
       </div>
     );
@@ -970,16 +972,18 @@ function UnifiedApp() {
       <InstallAppBanner />
 
       {/* Barra persistente per cambiare ruolo demo in 1-click */}
-      {DEMO_MODE && <DemoRoleSwitcher
-        currentUser={currentUser}
-        customers={customers}
-        onSelectUser={handleSelectUser}
-        onOpenTotem={() => setIsTotemOpen(true)}
-        onLogout={() => {
-          api.auth.logout();
-          setIsGateOpen(true);
-        }}
-      />}
+      {DEMO_MODE && (
+        <DemoRoleSwitcher
+          currentUser={currentUser}
+          customers={customers}
+          onSelectUser={handleSelectUser}
+          onOpenTotem={() => setIsTotemOpen(true)}
+          onLogout={() => {
+            api.auth.logout();
+            setIsGateOpen(true);
+          }}
+        />
+      )}
 
       {/* Toast Notifications */}
       <ToastContainer
