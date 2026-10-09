@@ -116,7 +116,8 @@ async function main() {
     path.join('tests', 'test_portal_broker_idor_isolation.cjs'),
     path.join('tests', 'test_staff_invitations_broker_operator.cjs'),
     path.join('tests', 'test_transport_diagnostics.cjs'),
-    path.join('tests', 'test_demo_security_hardening.cjs')
+    path.join('tests', 'test_demo_security_hardening.cjs'),
+    path.join('tests', 'test_customer_portal_isolation.cjs')
   ];
 
   let passed = 0;

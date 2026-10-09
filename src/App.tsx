@@ -109,6 +109,9 @@ function UnifiedApp() {
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
+  const [customerPortalLoading, setCustomerPortalLoading] = useState(false);
+  const [customerPortalError, setCustomerPortalError] = useState<string | null>(null);
+  const [impersonatingStaffUser, setImpersonatingStaffUser] = useState<UserProfile | null>(null);
 
   const getInitialTab = (role: string) => {
     if (role === 'customer') return 'customer_overview';
@@ -186,6 +189,22 @@ function UnifiedApp() {
       const isAdmin = user.role === 'admin';
       const isBroker = user.role === 'operator' || user.role === 'broker';
 
+      // Impersonation tracking: if current logged user is staff and selects a customer
+      const isSwitchingFromStaffToCustomer = 
+        currentUser && 
+        ['admin', 'call_center', 'operator', 'broker'].includes(currentUser.role) && 
+        user.role === 'customer';
+      if (isSwitchingFromStaffToCustomer) {
+        setImpersonatingStaffUser(currentUser);
+      } else if (user.role !== 'customer') {
+        setImpersonatingStaffUser(null);
+      }
+
+      if (isCustomer) {
+        setCustomerPortalLoading(true);
+        setCustomerPortalError(null);
+      }
+
       const results = await Promise.allSettled([
         isCustomer ? (user.customerId ? api.customers.getById(user.customerId).then(c=>c?[c]:[]) : Promise.resolve([])) : api.customers.getAll(),
         isCustomer ? Promise.resolve([]) : api.leads.getAll(),
@@ -201,10 +220,40 @@ function UnifiedApp() {
       }
 
       const localState = dbService.load();
-      const customerRows = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : (localState.customers || []);
+      let customerRows: Customer[] = [];
+      if (isCustomer) {
+        if (results[0].status === 'fulfilled' && Array.isArray(results[0].value) && results[0].value.length > 0) {
+          customerRows = results[0].value;
+        } else if (DEMO_MODE) {
+          const matched = (localState.customers || []).find(
+            (c: Customer) => c.id === user.customerId || (user.email && c.email?.toLowerCase() === user.email.toLowerCase())
+          );
+          customerRows = matched ? [matched] : [];
+        } else {
+          customerRows = [];
+        }
+        if (customerRows.length === 0) {
+          setCustomerPortalError('Non riusciamo a trovare la tua fornitura.');
+        }
+      } else {
+        customerRows = (results[0].status === 'fulfilled' && results[0].value) ? results[0].value : (localState.customers || []);
+      }
+
       const leadRows = (results[1].status === 'fulfilled' && results[1].value) ? results[1].value : (localState.leads || []);
       const profileRows = (results[2].status === 'fulfilled' && results[2].value) ? results[2].value : (INITIAL_PROFILES || []);
-      const billRows = (results[3].status === 'fulfilled' && results[3].value) ? results[3].value : (localState.bills || []);
+      
+      let billRows: CustomerBill[] = [];
+      if (results[3].status === 'fulfilled' && Array.isArray(results[3].value)) {
+        billRows = isCustomer
+          ? results[3].value.filter((b: CustomerBill) => b.customerId === user.customerId)
+          : results[3].value;
+      } else if (DEMO_MODE) {
+        const demoBills = localState.bills || [];
+        billRows = isCustomer
+          ? demoBills.filter((b: CustomerBill) => b.customerId === user.customerId)
+          : demoBills;
+      }
+
       const appointmentRows = (results[4].status === 'fulfilled' && results[4].value) ? results[4].value : (localState.appointments || []);
       const securityRows = (results[5].status === 'fulfilled' && results[5].value) ? results[5].value : (localState.securityLogs || []);
 
@@ -235,6 +284,7 @@ function UnifiedApp() {
       setCurrentUser(user); 
       setIsGateOpen(false);
       setActiveTab(getInitialTab(user.role));
+      setCustomerPortalLoading(false);
 
       // Se si passa a operatore o admin, rimuove parametri ?app=customer o ?mode=customer dall'URL
       if (!isCustomer && typeof window !== 'undefined') {
@@ -247,6 +297,10 @@ function UnifiedApp() {
       }
     } catch(error) {
       console.warn('[VoltaCRM] Errore in handleSelectUser:', error);
+      setCustomerPortalLoading(false);
+      if (_newUser?.role === 'customer') {
+        setCustomerPortalError(error instanceof Error ? error.message : 'Dati non disponibili.');
+      }
       if (DEMO_MODE && _newUser) {
         setCurrentUser(_newUser);
         setIsGateOpen(false);
@@ -582,19 +636,32 @@ function UnifiedApp() {
 
   if (currentUser.role === 'customer') {
     const handleReturnToBackend = () => {
-      const operator = profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
-      handleSelectUser(operator);
+      const returnTarget = impersonatingStaffUser || profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
+      setImpersonatingStaffUser(null);
+      handleSelectUser(returnTarget);
+    };
+
+    const handleReloadCustomerBills = async () => {
+      if (!currentUser.customerId) return;
+      try {
+        const updated = await portalApi.listBills(currentUser.customerId);
+        setBills(updated.filter(b => b.customerId === currentUser.customerId));
+      } catch (err) {
+        console.warn('[App] Errore ricaricamento bollette:', err);
+      }
     };
 
     return (
       <div className="min-h-screen bg-[#f7f7f8] flex flex-col font-sans">
         <NetworkStatusBanner />
-        <ImpersonationBanner
-          currentUser={currentUser}
-          onReturnToCallCenter={handleReturnToBackend}
-        />
+        {impersonatingStaffUser && (
+          <ImpersonationBanner
+            currentUser={currentUser}
+            onReturnToCallCenter={handleReturnToBackend}
+          />
+        )}
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
-          <CustomerApp currentUser={currentUser} onReturnToBackend={handleReturnToBackend} />
+          <CustomerApp onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined} currentUser={currentUser} customer={customers[0] || null} bills={bills} isLoading={customerPortalLoading} loadError={customerPortalError} onReloadBills={handleReloadCustomerBills} />
         </React.Suspense>
         {DEMO_MODE && (
           <DemoRoleSwitcher

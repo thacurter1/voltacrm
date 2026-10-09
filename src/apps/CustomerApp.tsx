@@ -6,44 +6,30 @@ import { BillOcrModal } from '../components/BillOcrModal';
 import { DigitalSignatureModal } from '../components/DigitalSignatureModal';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 import { ToastContainer } from '../components/ToastContainer';
-import { dbService } from '../services/db';
 import { MARKET_OFFERS, calculateAnnualCost } from '../services/energyEngine';
 import { AuthUser, Customer, CustomerBill, SupplierOffer, SwitchAudit, ToastNotification } from '../types';
 import { ShieldCheck, Filter } from 'lucide-react';
 
 export interface CustomerAppProps {
   currentUser?: AuthUser;
+  customer?: Customer | null;
+  bills?: CustomerBill[];
+  isLoading?: boolean;
+  loadError?: string | null;
+  onReloadBills?: () => void | Promise<void>;
   onReturnToBackend?: () => void;
 }
 
-export const CustomerApp: React.FC<CustomerAppProps> = ({ currentUser, onReturnToBackend }) => {
-  const initialDb = dbService.load();
-  
-  // Data Isolation: If logged in as customer, isolate exclusively to their own account
-  const isCustomerRole = currentUser?.role === 'customer';
-  const myCustomerId = currentUser?.customerId || currentUser?.id;
-
-  const [customers, setCustomers] = useState<Customer[]>(() => {
-    if (isCustomerRole && myCustomerId) {
-      const self = initialDb.customers.filter((c) => c.id === myCustomerId || c.email?.toLowerCase() === currentUser?.email?.toLowerCase());
-      return self.length > 0 ? self : initialDb.customers;
-    }
-    return initialDb.customers;
-  });
-  const [bills] = useState<CustomerBill[]>(initialDb.bills);
-
-  // Active customer selection strictly bounded
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(() => {
-    if (isCustomerRole && myCustomerId) {
-      const match = initialDb.customers.find((c) => c.id === myCustomerId || c.email?.toLowerCase() === currentUser?.email?.toLowerCase());
-      if (match) return match.id;
-    }
-    return initialDb.customers[0]?.id || 'cust-1';
-  });
-  const activeCustomer = useMemo(
-    () => customers.find((c) => c.id === selectedCustomerId) || customers[0] || initialDb.customers[0],
-    [customers, selectedCustomerId, initialDb.customers]
-  );
+export const CustomerApp: React.FC<CustomerAppProps> = ({
+  currentUser: _currentUser,
+  customer = null,
+  bills = [],
+  isLoading = false,
+  loadError = null,
+  onReloadBills,
+  onReturnToBackend,
+}) => {
+  const activeCustomer = customer;
 
   // Subito UI states
   const [activeView, setActiveView] = useState<'marketplace' | 'supplies'>('marketplace');
@@ -66,11 +52,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ currentUser, onReturnT
     setToasts((prev) => [...prev, newToast]);
   };
 
-  const handleUploadBillSuccess = (importedCustomer: Customer) => {
+  const handleUploadBillSuccess = (_importedCustomer: Customer) => {
     setIsUploadModalOpen(false);
-    setCustomers((prev) => [importedCustomer, ...prev.filter((c) => c.id !== importedCustomer.id)]);
-    setSelectedCustomerId(importedCustomer.id);
-    addToast('Bolletta Caricata con Successo', 'Abbiamo analizzato i tuoi consumi e aggiornato le stime di risparmio.', 'success');
+    if (onReloadBills) {
+      onReloadBills();
+    }
+    addToast('Bolletta Caricata con Successo', 'Abbiamo preso in carico la tua bolletta. L\'analisi è in verifica.', 'success');
   };
 
   // Filtered market offers
@@ -93,16 +80,17 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ currentUser, onReturnT
 
   // Handle offer selection
   const handleSelectOffer = (offer: SupplierOffer) => {
+    if (!activeCustomer) return;
     // Find matching utility point
-    const matchingPoint = activeCustomer?.utilityPoints?.find((p) => p.type === offer.energyType) || activeCustomer?.utilityPoints?.[0];
+    const matchingPoint = activeCustomer.utilityPoints?.find((p) => p.type === offer.energyType) || activeCustomer.utilityPoints?.[0];
     if (matchingPoint) {
       const currentCost = calculateAnnualCost(matchingPoint, matchingPoint.currentTariffType, matchingPoint.currentUnitCost, matchingPoint.currentFixedFeeYear);
       const proposedCost = calculateAnnualCost(matchingPoint, offer.pricingType, offer.unitPriceOrSpread, offer.fixedAnnualFee);
       const annualSavings = Math.max(120, Math.round(currentCost - proposedCost));
       const syntheticAudit: SwitchAudit = {
         id: `audit-subito-${Date.now()}`,
-        customerId: activeCustomer?.id || 'cust-1',
-        customerName: activeCustomer?.name || 'Cliente',
+        customerId: activeCustomer.id,
+        customerName: activeCustomer.name || 'Cliente',
         utilityType: offer.energyType,
         podOrPdr: matchingPoint.podOrPdr,
         currentSupplier: matchingPoint.currentSupplier,
@@ -121,6 +109,50 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ currentUser, onReturnT
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f6f9fc] flex flex-col justify-center items-center p-6 text-slate-600 font-sans">
+        <div className="w-10 h-10 border-4 border-[#635bff] border-t-transparent rounded-full animate-spin mb-4" />
+        <h2 className="text-base font-bold text-[#0a2540]">Caricamento della tua fornitura...</h2>
+        <p className="text-xs text-slate-400 mt-1">Stiamo recuperando i dettagli del tuo account e delle tue bollette.</p>
+      </div>
+    );
+  }
+
+  if (!activeCustomer) {
+    return (
+      <div className="min-h-screen bg-[#f6f9fc] flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 shadow-xs space-y-4">
+          <div className="w-12 h-12 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl flex items-center justify-center mx-auto">
+            <ShieldCheck className="w-6 h-6 text-amber-600" />
+          </div>
+          <h2 className="text-lg font-black text-[#0a2540]">Non riusciamo a trovare la tua fornitura</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            {loadError || 'Non è stata trovata alcuna fornitura energetica associata al tuo profilo. Verifica le tue credenziali o contatta l\'assistenza clienti Volta Energia.'}
+          </p>
+          <div className="pt-2 flex flex-col gap-2">
+            {onReturnToBackend && (
+              <button
+                onClick={onReturnToBackend}
+                className="w-full py-2.5 px-4 bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold rounded-xl transition cursor-pointer"
+              >
+                Torna al Backend CRM
+              </button>
+            )}
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') window.location.reload();
+              }}
+              className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
+            >
+              Riprova caricamento
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f9fc] text-slate-900 flex flex-col font-sans">
       <InstallAppBanner />
@@ -132,10 +164,10 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({ currentUser, onReturnT
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onUploadBill={() => setIsUploadModalOpen(true)}
-        customerName={activeCustomer?.name || 'Cliente'}
-        customers={customers}
-        selectedCustomerId={selectedCustomerId}
-        onSelectCustomer={setSelectedCustomerId}
+        customerName={activeCustomer.name || 'Cliente'}
+        customers={[activeCustomer]}
+        selectedCustomerId={activeCustomer.id}
+        onSelectCustomer={() => {}}
         activeView={activeView}
         onSelectView={setActiveView}
         onToast={addToast}

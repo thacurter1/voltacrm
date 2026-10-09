@@ -113,7 +113,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
           {/* Customer Switcher (visible only when multiple demo accounts available in staff impersonation) */}
           <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
             <span className="hidden xl:inline text-xs font-semibold text-slate-700">Ciao, {customerName.split(' ')[0]}</span>
-            {customers.length > 1 && (
+            {Boolean(onReturnToBackend) && customers.length > 1 && (
               <select
                 value={selectedCustomerId}
                 onChange={(e) => onSelectCustomer(e.target.value)}
@@ -129,27 +129,17 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (onReturnToBackend) {
-                onReturnToBackend();
-              } else {
-                if (typeof window !== 'undefined') {
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete('app');
-                  url.searchParams.delete('mode');
-                  url.searchParams.set('portal', 'operator');
-                  window.location.href = url.pathname + url.search;
-                }
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-[#635bff]/40 active:scale-95"
-            title="Passa al Backend Gestionale Volta Energia (Staff & Broker)"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#635bff]" />
-            <span className="font-bold">Torna al Backend CRM</span>
-          </button>
+          {onReturnToBackend && (
+            <button
+              type="button"
+              onClick={onReturnToBackend}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-[#635bff]/40 active:scale-95"
+              title="Passa al Backend Gestionale Volta Energia (Staff & Broker)"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#635bff]" />
+              <span className="font-bold">Torna al Backend CRM</span>
+            </button>
+          )}
         </div>
       </div>
 
