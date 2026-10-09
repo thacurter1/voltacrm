@@ -275,6 +275,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <span>Accedi al Backend Operativo</span>
               <ArrowRight className="h-4 w-4 ml-1" />
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const user = DEMO_USERS.find(u => u.id === selectedOperatorId) || DEMO_USERS[0];
+                onSelectUser(user);
+                onClose();
+              }}
+              className="w-full min-h-[40px] py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-[#635bff] font-bold text-xs border border-indigo-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-[#635bff]" />
+              <span>Accedi come Demo Mode (Senza Password né 2FA)</span>
+            </button>
           </div>
         )}
 
@@ -314,6 +327,29 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <User className="h-4 w-4" />
                 <span>Accedi al Portale Bollette</span>
                 <ArrowRight className="h-4 w-4 ml-1" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const matched = customers.find(c => c.id === selectedCustomerId) || customers[0];
+                  if (matched) {
+                    onSelectUser({
+                      id: `user-${matched.id}`,
+                      name: matched.name,
+                      email: matched.email,
+                      role: 'customer',
+                      customerId: matched.id,
+                      avatar: matched.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+                      is2faEnabled: false,
+                    });
+                    onClose();
+                  }
+                }}
+                className="w-full min-h-[40px] py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Accedi come Demo Mode (Cliente Diretto)</span>
               </button>
             </form>
           </div>

@@ -224,6 +224,17 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                 <span className="sm:hidden">Totem</span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
+              disabled={isSubmitting}
+              className="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold bg-[#635bff] hover:bg-[#5851ea] text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-[0.98]"
+              title="Accedi istantaneamente alla piattaforma in modalità Demo"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
+              <span>Accedi come Demo Mode</span>
+            </button>
           </div>
         </div>
       </header>
@@ -541,6 +552,33 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       <span>Entra nel Portale Bollette</span>
                       <ArrowRight className="h-4 w-4" />
                     </button>
+
+                    {/* Quick Demo Customer Selector */}
+                    <div className="pt-3 border-t border-slate-100 space-y-2">
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
+                        Oppure accedi come demo mode:
+                      </span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDirectDemoLogin('customer', 'user-cust-1')}
+                          disabled={isSubmitting}
+                          className="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition-all cursor-pointer shadow-2xs"
+                        >
+                          <span className="font-bold text-xs text-[#0a2540] block">👤 Andrea Moretti</span>
+                          <span className="text-[10px] text-slate-500 block">Privato (Luce & Gas)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDirectDemoLogin('customer', 'user-cust-2')}
+                          disabled={isSubmitting}
+                          className="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition-all cursor-pointer shadow-2xs"
+                        >
+                          <span className="font-bold text-xs text-[#0a2540] block">🏢 La Terrazza Srl</span>
+                          <span className="text-[10px] text-slate-500 block">Business P.IVA</span>
+                        </button>
+                      </div>
+                    </div>
                   </form>
                 ) : (
                   <form onSubmit={handleCustomerRegister} className="space-y-3">
@@ -700,6 +738,47 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                     <Lock className="h-4 w-4 text-[#00d4aa]" />
                     <span>Accedi al CRM & Backend Operativo</span>
                   </button>
+
+                  {/* Quick Operator Demo Selector */}
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
+                      Oppure accedi come demo mode:
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
+                        disabled={isSubmitting}
+                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
+                      >
+                        👑 Admin
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDirectDemoLogin('broker', 'user-op-3')}
+                        disabled={isSubmitting}
+                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
+                      >
+                        💼 Broker
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDirectDemoLogin('operator', 'user-op-2')}
+                        disabled={isSubmitting}
+                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
+                      >
+                        🎧 Operatore
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDirectDemoLogin('call_center', 'user-cc-4')}
+                        disabled={isSubmitting}
+                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
+                      >
+                        📞 Call Center
+                      </button>
+                    </div>
+                  </div>
                 </form>
               </div>
             )}
