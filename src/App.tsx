@@ -189,14 +189,15 @@ function UnifiedApp() {
       const isAdmin = user.role === 'admin';
       const isBroker = user.role === 'operator' || user.role === 'broker';
 
-      // Impersonation tracking: if current logged user is staff and selects a customer
+      // Impersonation tracking: only if an authenticated staff user who is currently logged in (gate closed) selects a customer
       const isSwitchingFromStaffToCustomer = 
+        !isGateOpen &&
         currentUser && 
         ['admin', 'call_center', 'operator', 'broker'].includes(currentUser.role) && 
         user.role === 'customer';
       if (isSwitchingFromStaffToCustomer) {
         setImpersonatingStaffUser(currentUser);
-      } else if (user.role !== 'customer') {
+      } else if (user.role !== 'customer' || isGateOpen) {
         setImpersonatingStaffUser(null);
       }
 
@@ -311,7 +312,7 @@ function UnifiedApp() {
         addToast('Accesso non completato', error instanceof Error ? error.message : 'Dati non disponibili.', 'warning');
       }
     }
-  }, [marketIndex, addToast]);
+  }, [marketIndex, addToast, isGateOpen, currentUser]);
 
   // Carica indici di mercato live dal feed GME all'avvio
   useEffect(() => {
@@ -1111,6 +1112,10 @@ export function App() {
       }
     };
 
+    const demoState = typeof dbService !== 'undefined' ? dbService.load() : { customers: [], bills: [] };
+    const demoCustomer = demoState.customers?.[0] || null;
+    const demoBills = demoState.bills || [];
+
     return (
       <React.Suspense fallback={<Fallback />}>
         <div className="min-h-screen flex flex-col">
@@ -1128,7 +1133,7 @@ export function App() {
               <span>← Torna al Backend CRM</span>
             </button>
           </div>
-          <CustomerApp onReturnToBackend={handleReturnToCrm} />
+          <CustomerApp onReturnToBackend={handleReturnToCrm} customer={demoCustomer} bills={demoBills} />
         </div>
       </React.Suspense>
     );

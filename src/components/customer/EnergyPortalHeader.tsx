@@ -21,10 +21,10 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-3">
         {/* Brand Logo */}
         <div 
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-2.5 sm:gap-3 cursor-pointer shrink-0"
           onClick={() => onSelectView('offers')}
         >
           <div className="h-9 w-9 rounded-xl bg-[#635bff] flex items-center justify-center text-white shadow-xs shrink-0">
@@ -46,31 +46,31 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
         </div>
 
         {/* Navigation & Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* View toggle (Offerte / Le mie forniture) */}
-          <nav className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold" aria-label="Navigazione portale">
+          <nav className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold shrink-0" aria-label="Navigazione portale">
             <button
               type="button"
               onClick={() => onSelectView('offers')}
-              className={`min-h-[36px] px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
+              className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
                 activeView === 'offers'
                   ? 'bg-white text-[#0a2540] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#635bff]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
               <span>Confronta Offerte</span>
             </button>
             <button
               type="button"
               onClick={() => onSelectView('supplies')}
-              className={`min-h-[36px] px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
+              className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
                 activeView === 'supplies'
                   ? 'bg-white text-[#0a2540] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-[#635bff]" />
+              <FileText className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
               <span>Le mie bollette</span>
             </button>
           </nav>
@@ -94,11 +94,12 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             <button
               type="button"
               onClick={onReturnToBackend}
-              className="min-h-[36px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-[#635bff]/40 active:scale-95"
+              className="min-h-[36px] flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-[#635bff]/40 active:scale-95 shrink-0"
               title="Sessione operatore: torna al gestionale CRM"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#635bff]" />
-              <span>Torna al Backend CRM</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
+              <span className="hidden sm:inline">Torna al Backend CRM</span>
+              <span className="sm:hidden">CRM</span>
             </button>
           )}
         </div>

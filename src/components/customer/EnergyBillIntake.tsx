@@ -163,6 +163,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
       asOf: new Date().toISOString().split('T')[0],
     };
 
+    setUploadError(null);
     onManualInput(input);
   };
 
@@ -217,11 +218,14 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
       </div>
 
       {/* Mode Tabs */}
-      <div className="flex border-b border-slate-200 text-xs font-bold bg-white px-4 sm:px-6 pt-3 gap-6">
+      <div className="flex border-b border-slate-200 text-xs font-bold bg-white px-4 sm:px-6 pt-3 gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap">
         <button
           type="button"
-          onClick={() => setActiveMode('profile')}
-          className={`pb-3 relative transition cursor-pointer ${
+          onClick={() => {
+            setActiveMode('profile');
+            setUploadError(null);
+          }}
+          className={`pb-3 relative transition cursor-pointer shrink-0 ${
             activeMode === 'profile' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -233,8 +237,11 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveMode('upload')}
-          className={`pb-3 relative transition cursor-pointer ${
+          onClick={() => {
+            setActiveMode('upload');
+            setUploadError(null);
+          }}
+          className={`pb-3 relative transition cursor-pointer shrink-0 ${
             activeMode === 'upload' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -246,8 +253,11 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveMode('manual')}
-          className={`pb-3 relative transition cursor-pointer ${
+          onClick={() => {
+            setActiveMode('manual');
+            setUploadError(null);
+          }}
+          className={`pb-3 relative transition cursor-pointer shrink-0 ${
             activeMode === 'manual' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -460,6 +470,12 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
         {/* Mode 3: Manual Input */}
         {activeMode === 'manual' && (
           <form onSubmit={handleManualSubmit} className="space-y-4">
+            {uploadError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">

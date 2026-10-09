@@ -77,6 +77,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   useEffect(() => {
     if (activeCustomer?.utilityPoints && activeCustomer.utilityPoints.length > 0) {
       setComparisonInput((prev) => {
+        if (prev.source === 'manual' || prev.source === 'bill-reviewed') return prev;
         const points = activeCustomer.utilityPoints || [];
         const match = points.find((p) => p.type === prev.utilityType) || points[0];
         return {
