@@ -5,9 +5,7 @@ import {
   Sparkles, 
   ArrowRight, 
   Lock, 
-  CheckCircle2, 
   User, 
-  Monitor, 
   Briefcase 
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
@@ -34,19 +32,11 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   onToast,
   onOpenTotem,
 }) => {
-  // Check URL params for initial portal selection or invite
-  const searchParams = new URLSearchParams(window.location.search);
-  const initialPortal = searchParams.get('portal') === 'operator' ? 'operator' : 'customer';
-  const initialInvite = searchParams.get('invite');
-  const initialEmail = searchParams.get('email') || '';
+  const [activePortal, setActivePortal] = useState<'customer' | 'operator'>('customer');
+  const [customerMode, setCustomerMode] = useState<'login' | 'register'>('login');
 
-  const [activePortal, setActivePortal] = useState<'customer' | 'operator'>(initialPortal);
-  
   // Customer Auth State
-  const [customerMode, setCustomerMode] = useState<'login' | 'register'>(
-    initialInvite ? 'register' : 'login'
-  );
-  const [customerIdentifier, setCustomerIdentifier] = useState(initialEmail);
+  const [customerIdentifier, setCustomerIdentifier] = useState('andrea.moretti@email.it');
   const [customerPassword, setCustomerPassword] = useState('');
 
   // Customer Self-Registration State
@@ -191,37 +181,35 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   return (
     <div className="min-h-screen bg-[#f6f9fc] flex flex-col justify-between text-[#0a2540] relative overflow-x-hidden selection:bg-[#635bff] selection:text-white font-sans">
       
-      {/* Stripe-grade ambient background lighting */}
-      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-indigo-50/70 via-slate-50/40 to-transparent pointer-events-none" />
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#635bff]/6 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-64 -left-32 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle Stripe-style diagonal background mesh gradient */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-40"
+        style={{
+          background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 91, 255, 0.15), transparent 70%)',
+        }}
+      />
 
-      {/* Top Navbar */}
-      <header className="relative z-10 border-b border-[#e3e8ee]/80 bg-white/70 backdrop-blur-md px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-[#635bff] flex items-center justify-center text-white shadow-xs">
-              <Zap className="h-5 w-5 fill-white text-white" />
+      {/* Top Navigation Bar: Minimalist & Clean */}
+      <header className="relative z-10 px-4 sm:px-8 py-5">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-[#635bff] flex items-center justify-center text-white shadow-xs">
+              <Zap className="h-4 w-4 fill-white text-white" />
             </div>
-            <div>
-              <span className="font-extrabold text-lg text-[#0a2540] tracking-tight">Volta Energia</span>
-              <span className="text-[10px] text-[#635bff] font-bold uppercase tracking-wider block -mt-0.5">
-                Piattaforma Trasparenza & Gestione
-              </span>
-            </div>
+            <span className="font-extrabold text-base tracking-tight text-[#0a2540]">
+              Volta Energia
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2">
             {onOpenTotem && (
               <button
                 type="button"
                 onClick={onOpenTotem}
-                className="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold bg-[#0a2540] hover:bg-[#081d33] text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-[0.98]"
-                title="Avvia la modalità Totem Touchscreen per punti vendita"
+                className="px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer shadow-2xs"
+                title="Apri modalità Totem Kiosk per showroom e fiere"
               >
-                <Monitor className="h-3.5 w-3.5 text-[#00d4aa]" />
-                <span className="hidden sm:inline">Modalità Totem Kiosk</span>
-                <span className="sm:hidden">Totem</span>
+                <span>🖥️ Modalità Totem</span>
               </button>
             )}
 
@@ -229,574 +217,342 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               type="button"
               onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
               disabled={isSubmitting}
-              className="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold bg-[#635bff] hover:bg-[#5851ea] text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-[0.98]"
-              title="Accedi istantaneamente alla piattaforma in modalità Demo"
+              className="px-3.5 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+              title="Accedi istantaneamente come Admin in Demo Mode"
             >
-              <Sparkles className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
+              <Sparkles className="h-3 w-3 text-amber-300 fill-amber-300" />
               <span>Accedi come Demo Mode</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-4 max-w-5xl mx-auto w-full space-y-6">
+      {/* Main Single Centered Stripe Card */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-lg mx-auto w-full">
         
-        {/* ⚡ 1-CLICK DEMO ACCESS BAR (Stripe Sandbox style — ALWAYS available) */}
-        <section 
-          aria-label="Accesso rapido demo" 
-          className="w-full bg-white rounded-2xl border border-[#e3e8ee] p-5 shadow-[0_2px_8px_rgba(10,37,64,0.04)]"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2.5">
-              <span className="px-2.5 py-0.5 rounded-md bg-[#635bff]/10 text-[#635bff] font-extrabold text-xs tracking-wide flex items-center gap-1 border border-[#635bff]/20">
-                <Sparkles className="h-3 w-3" /> DEMO 1-CLICK
-              </span>
-              <div>
-                <h2 className="text-xs sm:text-sm font-bold text-[#0a2540]">
-                  Accesso Immediato a Qualsiasi Ruolo (Senza Password)
-                </h2>
-                <p className="text-[11px] text-slate-500">
-                  Clicca un ruolo per entrare istantaneamente con un profilo preconfigurato:
-                </p>
-              </div>
-            </div>
-            <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 shrink-0">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Ambiente Demo Attivo</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
-            {/* 1. Admin */}
-            <button
-              type="button"
-              onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
-              disabled={isSubmitting}
-              className="p-3 rounded-xl bg-slate-50 hover:bg-[#635bff] border border-slate-200 hover:border-[#635bff] text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-xs flex flex-col justify-between min-h-[76px]"
-            >
-              <div>
-                <span className="text-base mb-0.5 block">👑</span>
-                <span className="font-bold text-xs text-[#0a2540] block group-hover:text-white">Admin CRM</span>
-                <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 block truncate">Matteo Riva</span>
-              </div>
-              <span className="mt-1.5 text-[10px] font-bold text-[#635bff] group-hover:text-white flex items-center gap-0.5">
-                Entra →
-              </span>
-            </button>
-
-            {/* 2. Broker */}
-            <button
-              type="button"
-              onClick={() => handleDirectDemoLogin('broker', 'user-op-3')}
-              disabled={isSubmitting}
-              className="p-3 rounded-xl bg-slate-50 hover:bg-[#635bff] border border-slate-200 hover:border-[#635bff] text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-xs flex flex-col justify-between min-h-[76px]"
-            >
-              <div>
-                <span className="text-base mb-0.5 block">💼</span>
-                <span className="font-bold text-xs text-[#0a2540] block group-hover:text-white">Broker</span>
-                <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 block truncate">Valentina Neri</span>
-              </div>
-              <span className="mt-1.5 text-[10px] font-bold text-[#635bff] group-hover:text-white flex items-center gap-0.5">
-                Entra →
-              </span>
-            </button>
-
-            {/* 3. Operatore */}
-            <button
-              type="button"
-              onClick={() => handleDirectDemoLogin('operator', 'user-op-2')}
-              disabled={isSubmitting}
-              className="p-3 rounded-xl bg-slate-50 hover:bg-[#635bff] border border-slate-200 hover:border-[#635bff] text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-xs flex flex-col justify-between min-h-[76px]"
-            >
-              <div>
-                <span className="text-base mb-0.5 block">🎧</span>
-                <span className="font-bold text-xs text-[#0a2540] block group-hover:text-white">Operatore</span>
-                <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 block truncate">Chiara Bianchi</span>
-              </div>
-              <span className="mt-1.5 text-[10px] font-bold text-[#635bff] group-hover:text-white flex items-center gap-0.5">
-                Entra →
-              </span>
-            </button>
-
-            {/* 4. Call Center */}
-            <button
-              type="button"
-              onClick={() => handleDirectDemoLogin('call_center', 'user-cc-4')}
-              disabled={isSubmitting}
-              className="p-3 rounded-xl bg-slate-50 hover:bg-[#635bff] border border-slate-200 hover:border-[#635bff] text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-xs flex flex-col justify-between min-h-[76px]"
-            >
-              <div>
-                <span className="text-base mb-0.5 block">📞</span>
-                <span className="font-bold text-xs text-[#0a2540] block group-hover:text-white">Call Center</span>
-                <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 block truncate">Marco Rossi</span>
-              </div>
-              <span className="mt-1.5 text-[10px] font-bold text-[#635bff] group-hover:text-white flex items-center gap-0.5">
-                Entra →
-              </span>
-            </button>
-
-            {/* 5. Cliente Privato */}
-            <button
-              type="button"
-              onClick={() => handleDirectDemoLogin('customer', 'user-cust-1')}
-              disabled={isSubmitting}
-              className="p-3 rounded-xl bg-slate-50 hover:bg-emerald-600 border border-slate-200 hover:border-emerald-600 text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-xs flex flex-col justify-between min-h-[76px]"
-            >
-              <div>
-                <span className="text-base mb-0.5 block">👤</span>
-                <span className="font-bold text-xs text-[#0a2540] block group-hover:text-white">Cliente Privato</span>
-                <span className="text-[10px] text-slate-500 group-hover:text-emerald-100 block truncate">Andrea Moretti</span>
-              </div>
-              <span className="mt-1.5 text-[10px] font-bold text-emerald-600 group-hover:text-white flex items-center gap-0.5">
-                Entra →
-              </span>
-            </button>
-
-            {/* 6. Cliente B2B */}
-            <button
-              type="button"
-              onClick={() => handleDirectDemoLogin('customer', 'user-cust-2')}
-              disabled={isSubmitting}
-              className="p-3 rounded-xl bg-slate-50 hover:bg-emerald-600 border border-slate-200 hover:border-emerald-600 text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-xs flex flex-col justify-between min-h-[76px]"
-            >
-              <div>
-                <span className="text-base mb-0.5 block">🏢</span>
-                <span className="font-bold text-xs text-[#0a2540] block group-hover:text-white">Cliente B2B</span>
-                <span className="text-[10px] text-slate-500 group-hover:text-emerald-100 block truncate">La Terrazza Srl</span>
-              </div>
-              <span className="mt-1.5 text-[10px] font-bold text-emerald-600 group-hover:text-white flex items-center gap-0.5">
-                Entra →
-              </span>
-            </button>
-
-            {/* 7. Totem Point */}
-            <button
-              type="button"
-              onClick={() => {
-                if (onOpenTotem) {
-                  onOpenTotem();
-                } else {
-                  window.location.search = '?app=totem';
-                }
-              }}
-              className="p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left transition-all cursor-pointer group hover:scale-[1.02] shadow-xs flex flex-col justify-between min-h-[76px] col-span-2 sm:col-span-2 lg:col-span-1"
-            >
-              <div>
-                <span className="text-base mb-0.5 block">🖥️</span>
-                <span className="font-bold text-xs text-white block">Totem Kiosk</span>
-                <span className="text-[10px] text-slate-400 block truncate">Touchscreen</span>
-              </div>
-              <span className="mt-1.5 text-[10px] font-bold text-[#00d4aa] flex items-center gap-0.5">
-                Avvia →
-              </span>
-            </button>
-          </div>
-        </section>
-
-        {/* STRIPE-STYLE MAIN AUTH CARD */}
-        <div className="w-full max-w-4xl bg-white rounded-3xl border border-[#e3e8ee] shadow-[0_20px_60px_rgba(10,37,64,0.07)] overflow-hidden grid grid-cols-1 md:grid-cols-12">
+        {/* The Card */}
+        <div className="w-full bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_20px_60px_rgba(10,37,64,0.08)] p-6 sm:p-8 space-y-6">
           
-          {/* Left Column: Architectural Branding Narrative */}
-          <div className="md:col-span-5 bg-[#0a2540] p-8 text-white flex flex-col justify-between relative overflow-hidden">
-            <div className="space-y-4 relative z-10">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-emerald-400 text-xs font-semibold backdrop-blur-xs border border-white/10">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Sicurezza & Trasparenza Garantita</span>
-              </div>
-
-              <h2 className="text-2xl font-black tracking-tight leading-snug">
-                {activePortal === 'customer' ? (
-                  <>Confronto trasparente delle tue <span className="text-[#00d4aa]">bollette luce e gas</span>.</>
-                ) : (
-                  <>Suite operativa per <span className="text-[#635bff]">Consulenti & Call Center</span>.</>
-                )}
-              </h2>
-
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {activePortal === 'customer' ? (
-                  'Carica la bolletta o inserisci i tuoi consumi, confronta le tariffe all\'ingrosso PUN/PSV e ricevi stime reali senza calcoli gonfiati.'
-                ) : (
-                  'Gestione lead commerciali, firma contratti FEA, calcolo provvigionale automatico e monitoraggio forniture clienti.'
-                )}
-              </p>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-white/10 space-y-2.5 text-[11px] text-slate-300 relative z-10">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-[#00d4aa] shrink-0" />
-                <span>Nessun costo nascosto né vincoli contrattuali</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-[#00d4aa] shrink-0" />
-                <span>Confronto matematico onesto basato su indici GME</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-[#00d4aa] shrink-0" />
-                <span>Accesso rapido demo sempre abilitato per test</span>
-              </div>
-            </div>
-
-            {/* Subtle glow */}
-            <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-[#635bff]/25 rounded-full blur-3xl pointer-events-none" />
+          {/* Card Header */}
+          <div className="text-center space-y-1.5">
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#0a2540]">
+              Accedi al tuo account
+            </h1>
+            <p className="text-xs text-slate-500">
+              Seleziona il portale clienti o l'area riservata staff
+            </p>
           </div>
 
-          {/* Right Column: High-Precision Stripe Form */}
-          <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between space-y-6">
-            
-            {/* Segmented Pill Selector (Stripe style) */}
-            <div className="p-1 rounded-xl bg-slate-100 border border-[#e3e8ee] grid grid-cols-2 gap-1 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setActivePortal('customer')}
-                className={`min-h-[40px] py-2 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  activePortal === 'customer'
-                    ? 'bg-white text-[#0a2540] shadow-xs'
-                    : 'text-slate-500 hover:text-[#0a2540]'
-                }`}
-              >
-                <User className="h-4 w-4 text-[#635bff]" />
-                <span>Area Clienti</span>
-              </button>
+          {/* Segmented Control Switcher (Stripe style) */}
+          <div className="p-1 rounded-xl bg-slate-100 border border-[#e3e8ee] grid grid-cols-2 gap-1 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setActivePortal('customer')}
+              className={`min-h-[38px] py-2 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activePortal === 'customer'
+                  ? 'bg-white text-[#0a2540] shadow-xs'
+                  : 'text-slate-500 hover:text-[#0a2540]'
+              }`}
+            >
+              <User className="h-4 w-4 text-[#635bff]" />
+              <span>Portale Clienti</span>
+            </button>
 
+            <button
+              type="button"
+              onClick={() => setActivePortal('operator')}
+              className={`min-h-[38px] py-2 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activePortal === 'operator'
+                  ? 'bg-white text-[#0a2540] shadow-xs'
+                  : 'text-slate-500 hover:text-[#0a2540]'
+              }`}
+            >
+              <Briefcase className="h-4 w-4 text-[#635bff]" />
+              <span>Staff & Broker</span>
+            </button>
+          </div>
+
+          {/* ⚡ 1-Click Demo Sandbox Quick Strip */}
+          <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 space-y-2">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-[#635bff]" /> Accesso Rapido Demo 1-Click:
+              </span>
+              <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">
+                Attivo
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-1.5 text-[11px]">
               <button
                 type="button"
-                onClick={() => setActivePortal('operator')}
-                className={`min-h-[40px] py-2 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  activePortal === 'operator'
-                    ? 'bg-white text-[#0a2540] shadow-xs'
-                    : 'text-slate-500 hover:text-[#0a2540]'
-                }`}
+                onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
+                disabled={isSubmitting}
+                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
               >
-                <Briefcase className="h-4 w-4 text-[#635bff]" />
-                <span>Staff & Operatori</span>
+                👑 Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDirectDemoLogin('broker', 'user-op-3')}
+                disabled={isSubmitting}
+                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+              >
+                💼 Broker
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDirectDemoLogin('call_center', 'user-cc-4')}
+                disabled={isSubmitting}
+                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+              >
+                📞 Call Center
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDirectDemoLogin('operator', 'user-op-2')}
+                disabled={isSubmitting}
+                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+              >
+                🎧 Operatore
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDirectDemoLogin('customer', 'user-cust-1')}
+                disabled={isSubmitting}
+                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-emerald-800 font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+              >
+                👤 Privato
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDirectDemoLogin('customer', 'user-cust-2')}
+                disabled={isSubmitting}
+                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-emerald-800 font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+              >
+                🏢 Business
               </button>
             </div>
+          </div>
 
-            {/* 1. CUSTOMER PORTAL TAB */}
-            {activePortal === 'customer' && (
-              <div className="space-y-5 animate-in fade-in-50 duration-150">
-                
-                {/* Mode toggle */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          {/* Social / OAuth Buttons */}
+          <OAuthButtons
+            role={activePortal}
+            mode={customerMode}
+            onSuccess={activePortal === 'customer' ? onLoginCustomer : onLoginOperator}
+            onToast={onToast}
+          />
+
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">
+              oppure con credenziali
+            </span>
+          </div>
+
+          {/* 1. CUSTOMER PORTAL TAB */}
+          {activePortal === 'customer' && (
+            <div className="space-y-4">
+              {customerMode === 'login' ? (
+                <form onSubmit={handleCustomerLogin} className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-bold text-[#0a2540]">
-                      {customerMode === 'login' ? 'Accedi al tuo Portale' : 'Crea un nuovo account'}
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Visualizza le tue forniture e monitora il risparmio.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCustomerMode(m => m === 'login' ? 'register' : 'login')}
-                    className="text-xs font-bold text-[#635bff] hover:text-[#5851ea] cursor-pointer"
-                  >
-                    {customerMode === 'login' ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi'}
-                  </button>
-                </div>
-
-                {/* OAuth Social Login */}
-                <OAuthButtons
-                  role="customer"
-                  mode={customerMode}
-                  onSuccess={onLoginCustomer}
-                  onToast={onToast}
-                />
-
-                <div className="relative flex items-center justify-center">
-                  <div className="border-t border-slate-200 w-full" />
-                  <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">
-                    oppure con credenziali
-                  </span>
-                </div>
-
-                {customerMode === 'login' ? (
-                  <form onSubmit={handleCustomerLogin} className="space-y-4">
-                    <div>
-                      <label htmlFor="customer-identifier" className="block text-xs font-bold text-[#0a2540] mb-1.5">
-                        Email o Codice Fiscale
-                      </label>
-                      <input
-                        id="customer-identifier"
-                        type="text"
-                        value={customerIdentifier}
-                        onChange={(e) => setCustomerIdentifier(e.target.value)}
-                        placeholder="andrea.moretti@email.it oppure MRTNDR85M01H501Z"
-                        className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-medium"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label htmlFor="customer-password" className="block text-xs font-bold text-[#0a2540]">
-                          Password
-                        </label>
-                        <span className="text-[10px] text-slate-400 font-mono">Demo: qualsiasi o vuota</span>
-                      </div>
-                      <input
-                        id="customer-password"
-                        type="password"
-                        value={customerPassword}
-                        onChange={(e) => setCustomerPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
-                    >
-                      <span>Entra nel Portale Bollette</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-
-                    {/* Quick Demo Customer Selector */}
-                    <div className="pt-3 border-t border-slate-100 space-y-2">
-                      <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
-                        Oppure accedi come demo mode:
-                      </span>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleDirectDemoLogin('customer', 'user-cust-1')}
-                          disabled={isSubmitting}
-                          className="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition-all cursor-pointer shadow-2xs"
-                        >
-                          <span className="font-bold text-xs text-[#0a2540] block">👤 Andrea Moretti</span>
-                          <span className="text-[10px] text-slate-500 block">Privato (Luce & Gas)</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDirectDemoLogin('customer', 'user-cust-2')}
-                          disabled={isSubmitting}
-                          className="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition-all cursor-pointer shadow-2xs"
-                        >
-                          <span className="font-bold text-xs text-[#0a2540] block">🏢 La Terrazza Srl</span>
-                          <span className="text-[10px] text-slate-500 block">Business P.IVA</span>
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                ) : (
-                  <form onSubmit={handleCustomerRegister} className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-[#0a2540] mb-1">Nome e Cognome *</label>
-                        <input
-                          type="text"
-                          required
-                          value={regName}
-                          onChange={(e) => setRegName(e.target.value)}
-                          placeholder="Mario Rossi"
-                          className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-[#0a2540] mb-1">Codice Fiscale</label>
-                        <input
-                          type="text"
-                          value={regFiscalCode}
-                          onChange={(e) => setRegFiscalCode(e.target.value.toUpperCase())}
-                          placeholder="RSSMRA80A01H501U"
-                          className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs font-mono focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-[#0a2540] mb-1">Email *</label>
-                        <input
-                          type="email"
-                          required
-                          value={regEmail}
-                          onChange={(e) => setRegEmail(e.target.value)}
-                          placeholder="mario.rossi@email.it"
-                          className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-[#0a2540] mb-1">Cellulare *</label>
-                        <input
-                          type="tel"
-                          required
-                          value={regPhone}
-                          onChange={(e) => setRegPhone(e.target.value)}
-                          placeholder="+39 340 1234567"
-                          className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#0a2540] mb-1">Password</label>
-                      <input
-                        type="password"
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] mt-2"
-                    >
-                      <span>Crea Account e Accedi</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </form>
-                )}
-              </div>
-            )}
-
-            {/* 2. OPERATOR & STAFF TAB */}
-            {activePortal === 'operator' && (
-              <div className="space-y-5 animate-in fade-in-50 duration-150">
-                <div className="border-b border-slate-100 pb-3">
-                  <h3 className="text-sm font-bold text-[#0a2540]">
-                    Accesso Riservato Staff & Broker
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Include CRM, dialer call center, gestione mandati e liquidazione provvigioni.
-                  </p>
-                </div>
-
-                {/* OAuth for operators */}
-                <OAuthButtons
-                  role="operator"
-                  mode="login"
-                  onSuccess={onLoginOperator}
-                  onToast={onToast}
-                />
-
-                <div className="relative flex items-center justify-center">
-                  <div className="border-t border-slate-200 w-full" />
-                  <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">
-                    oppure con credenziali aziendali
-                  </span>
-                </div>
-
-                <form onSubmit={handleOperatorLogin} className="space-y-4">
-                  <div>
-                    <label htmlFor="operator-email" className="block text-xs font-bold text-[#0a2540] mb-1.5">
-                      Email Aziendale
+                    <label htmlFor="customer-identifier" className="block text-xs font-bold text-[#0a2540] mb-1.5">
+                      Email o Codice Fiscale
                     </label>
                     <input
-                      id="operator-email"
-                      type="email"
-                      value={operatorEmail}
-                      onChange={(e) => setOperatorEmail(e.target.value)}
-                      placeholder="m.riva@voltagroup.it"
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-mono"
+                      id="customer-identifier"
+                      type="text"
+                      value={customerIdentifier}
+                      onChange={(e) => setCustomerIdentifier(e.target.value)}
+                      placeholder="andrea.moretti@email.it oppure MRTNDR85M01H501Z"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-medium"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="operator-pwd" className="block text-xs font-bold text-[#0a2540] mb-1.5">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="customer-password" className="block text-xs font-bold text-[#0a2540]">
                         Password
                       </label>
-                      <input
-                        id="operator-pwd"
-                        type="password"
-                        value={operatorPassword}
-                        onChange={(e) => setOperatorPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all"
-                      />
+                      <span className="text-[10px] text-slate-400 font-mono">Demo: qualsiasi</span>
                     </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label htmlFor="operator-totp" className="block text-xs font-bold text-[#0a2540]">
-                          Codice 2FA (TOTP)
-                        </label>
-                        <span className="text-[10px] text-slate-400 font-mono">Demo: 123456</span>
-                      </div>
-                      <input
-                        id="operator-totp"
-                        type="text"
-                        maxLength={6}
-                        value={operatorTotp}
-                        onChange={(e) => setOperatorTotp(e.target.value)}
-                        placeholder="123456"
-                        className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-mono text-center tracking-widest font-bold"
-                      />
-                    </div>
+                    <input
+                      id="customer-password"
+                      type="password"
+                      value={customerPassword}
+                      onChange={(e) => setCustomerPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all"
+                    />
                   </div>
 
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0a2540] hover:bg-slate-800 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
-                    <Lock className="h-4 w-4 text-[#00d4aa]" />
-                    <span>Accedi al CRM & Backend Operativo</span>
+                    <span>Entra nel Portale Bollette</span>
+                    <ArrowRight className="h-4 w-4" />
                   </button>
-
-                  {/* Quick Operator Demo Selector */}
-                  <div className="pt-3 border-t border-slate-100 space-y-2">
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
-                      Oppure accedi come demo mode:
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
-                        disabled={isSubmitting}
-                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
-                      >
-                        👑 Admin
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDirectDemoLogin('broker', 'user-op-3')}
-                        disabled={isSubmitting}
-                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
-                      >
-                        💼 Broker
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDirectDemoLogin('operator', 'user-op-2')}
-                        disabled={isSubmitting}
-                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
-                      >
-                        🎧 Operatore
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDirectDemoLogin('call_center', 'user-cc-4')}
-                        disabled={isSubmitting}
-                        className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[11px] font-bold text-[#0a2540] text-center transition-all cursor-pointer shadow-2xs"
-                      >
-                        📞 Call Center
-                      </button>
+                </form>
+              ) : (
+                <form onSubmit={handleCustomerRegister} className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-[#0a2540] mb-1">Nome e Cognome *</label>
+                      <input
+                        type="text"
+                        required
+                        value={regName}
+                        onChange={(e) => setRegName(e.target.value)}
+                        placeholder="Mario Rossi"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#0a2540] mb-1">Codice Fiscale</label>
+                      <input
+                        type="text"
+                        value={regFiscalCode}
+                        onChange={(e) => setRegFiscalCode(e.target.value.toUpperCase())}
+                        placeholder="RSSMRA80A01H501U"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs font-mono focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      />
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-[#0a2540] mb-1">Email *</label>
+                      <input
+                        type="email"
+                        required
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        placeholder="mario.rossi@email.it"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#0a2540] mb-1">Cellulare *</label>
+                      <input
+                        type="tel"
+                        required
+                        value={regPhone}
+                        onChange={(e) => setRegPhone(e.target.value)}
+                        placeholder="+39 340 1234567"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#0a2540] mb-1">Password</label>
+                    <input
+                      type="password"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] mt-2"
+                  >
+                    <span>Crea Account e Accedi</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
                 </form>
+              )}
+
+              {/* Mode Toggle Link */}
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setCustomerMode(m => m === 'login' ? 'register' : 'login')}
+                  className="text-xs font-semibold text-[#635bff] hover:text-[#5851ea] cursor-pointer"
+                >
+                  {customerMode === 'login' 
+                    ? 'Non hai ancora un account? Registrati' 
+                    : 'Hai già un account? Accedi con le tue credenziali'}
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* 2. OPERATOR & STAFF TAB */}
+          {activePortal === 'operator' && (
+            <div className="space-y-4">
+              <form onSubmit={handleOperatorLogin} className="space-y-4">
+                <div>
+                  <label htmlFor="operator-email" className="block text-xs font-bold text-[#0a2540] mb-1.5">
+                    Email Aziendale
+                  </label>
+                  <input
+                    id="operator-email"
+                    type="email"
+                    value={operatorEmail}
+                    onChange={(e) => setOperatorEmail(e.target.value)}
+                    placeholder="m.riva@voltagroup.it"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="operator-pwd" className="block text-xs font-bold text-[#0a2540] mb-1.5">
+                      Password
+                    </label>
+                    <input
+                      id="operator-pwd"
+                      type="password"
+                      value={operatorPassword}
+                      onChange={(e) => setOperatorPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="operator-totp" className="block text-xs font-bold text-[#0a2540]">
+                        Codice 2FA (TOTP)
+                      </label>
+                      <span className="text-[10px] text-slate-400 font-mono">Demo: 123456</span>
+                    </div>
+                    <input
+                      id="operator-totp"
+                      type="text"
+                      maxLength={6}
+                      value={operatorTotp}
+                      onChange={(e) => setOperatorTotp(e.target.value)}
+                      placeholder="123456"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-mono text-center tracking-widest font-bold"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0a2540] hover:bg-slate-800 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  <Lock className="h-4 w-4 text-[#00d4aa]" />
+                  <span>Accedi al CRM & Backend Operativo</span>
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-[#e3e8ee]/80 py-5 px-6 text-center text-xs text-slate-500 bg-white/60">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-[#0a2540]">Volta Energia</span>
-            <span>• Piattaforma Trasparenza Tariffe & CRM Operativo</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Connessione crittografata HTTPS • Conforme Linee Guida ARERA</span>
-          </div>
+      {/* Minimal Footer */}
+      <footer className="relative z-10 py-6 px-4 text-center text-xs text-slate-400">
+        <div className="max-w-md mx-auto flex items-center justify-center gap-2">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <span>© Volta Energia • Connessione protetta SSL • Conforme ARERA & GDPR</span>
         </div>
       </footer>
     </div>
