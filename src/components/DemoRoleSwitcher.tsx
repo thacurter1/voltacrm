@@ -21,23 +21,42 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
 
   const handleSwitch = (userId: string, role: string) => {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+        localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+      } catch {}
+    }
     if (role === 'customer') {
       const cust = customers.find(c => c.id === userId) || customers[0];
       if (cust) {
-        onSelectUser({
+        const custUser = {
           id: `user-${cust.id}`,
           name: cust.name,
           email: cust.email,
-          role: 'customer',
+          role: 'customer' as const,
           customerId: cust.id,
           avatar: cust.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
           is2faEnabled: false,
-        });
+        };
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-cust-token-${cust.id}-${Date.now()}`);
+            localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(custUser));
+          } catch {}
+        }
+        onSelectUser(custUser);
       }
       return;
     }
 
     const matched = DEMO_USERS.find(u => u.id === userId) || DEMO_USERS[0];
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${matched.id}-${Date.now()}`);
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(matched));
+      } catch {}
+    }
     onSelectUser(matched);
   };
 

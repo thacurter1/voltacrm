@@ -55,6 +55,12 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   // 1-Click Demo Login: Entra istantaneamente in qualsiasi ruolo senza blocchi o redirect esterni
   const handleDirectDemoLogin = async (role: string, userId?: string) => {
     setIsSubmitting(true);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+        localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+      } catch {}
+    }
     try {
       if (api.auth?.demoLogin) {
         const res = await api.auth.demoLogin(role, userId);
@@ -76,6 +82,15 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
     // Fallback sicuro istantaneo su profili preconfigurati
     const fallbackProfile = INITIAL_PROFILES.find(p => (userId && p.id === userId) || p.role === role) || INITIAL_PROFILES[0];
+    if (typeof window !== 'undefined') {
+      try {
+        const token = fallbackProfile.role === 'customer'
+          ? `mock-cust-token-${fallbackProfile.id}-${Date.now()}`
+          : `mock-op-token-${fallbackProfile.id}-${Date.now()}`;
+        localStorage.setItem('VOLTA_AUTH_TOKEN', token);
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(fallbackProfile));
+      } catch {}
+    }
     onToast('Accesso Demo 1-Click', `Benvenuto ${fallbackProfile.name}`, 'success');
     if (fallbackProfile.role === 'customer') {
       onLoginCustomer(fallbackProfile);
@@ -113,6 +128,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       ) || customerProfiles[0];
       
       if (matched) {
+        if (typeof window !== 'undefined') {
+          try {
+            sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+            localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+            localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-cust-token-${matched.id}-${Date.now()}`);
+            localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(matched));
+          } catch {}
+        }
         onToast('Accesso Demo Cliente', `Benvenuto ${matched.name}`, 'success');
         onLoginCustomer(matched);
         return;
@@ -163,6 +186,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         if (operatorTotp === '123456') {
           const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase());
           if (matched) {
+            if (typeof window !== 'undefined') {
+              try {
+                sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+                localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+                localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${matched.id}-${Date.now()}`);
+                localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(matched));
+              } catch {}
+            }
             onLoginOperator(matched);
             return;
           }
@@ -171,6 +202,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       }
     } catch (_err) {
       const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase()) || INITIAL_PROFILES[0];
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+          localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+          localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${matched.id}-${Date.now()}`);
+          localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(matched));
+        } catch {}
+      }
       onToast('Accesso Demo Operatore', `Benvenuto ${matched.name}`, 'success');
       onLoginOperator(matched);
     } finally {

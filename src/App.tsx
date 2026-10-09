@@ -36,7 +36,7 @@ import { DemoRoleSwitcher } from './components/DemoRoleSwitcher';
 const TotemApp = React.lazy(() => import('./apps/TotemApp'));
 const CustomerApp = React.lazy(() => import('./apps/CustomerApp'));
 const CrmApp = React.lazy(() => import('./apps/CrmApp'));
-import { dbService, DEMO_USERS } from './services/db';
+import { dbService, DEMO_USERS, isDemoSessionActive } from './services/db';
 import { INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
 import { api, DEMO_MODE } from './api/client';
@@ -79,33 +79,53 @@ function createCustomerFromOcr(customerData: Partial<Customer>, accountManager: 
 }
 
 function UnifiedApp() {
+  const isDemo = isDemoSessionActive();
   const initialDb = dbService.load();
 
   // Auth & Session State
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
-    const selectedDemoId = DEMO_MODE && typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('demo_user')
-      : null;
-    return INITIAL_PROFILES.find(profile => profile.id === selectedDemoId)
-      || initialDb.currentUser
-      || INITIAL_PROFILES[0];
+    if (typeof window !== 'undefined') {
+      const selectedDemoId = new URLSearchParams(window.location.search).get('demo_user');
+      if (selectedDemoId) {
+        const found = INITIAL_PROFILES.find(profile => profile.id === selectedDemoId);
+        if (found) return found;
+      }
+      const stored = localStorage.getItem('VOLTA_CURRENT_USER');
+      if (stored) {
+        try { return JSON.parse(stored); } catch {}
+      }
+    }
+    return isDemo ? (initialDb.currentUser || INITIAL_PROFILES[0]) : INITIAL_PROFILES[0];
   });
-  const [isGateOpen, setIsGateOpen] = useState(!DEMO_MODE);
+  const [isGateOpen, setIsGateOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search;
+      if (search.includes('demo=true') || search.includes('demo_user')) return false;
+      const token = localStorage.getItem('VOLTA_AUTH_TOKEN');
+      if (token && (sessionStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true' || localStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true')) {
+        return false;
+      }
+      if (token && !token.startsWith('mock-')) {
+        return false;
+      }
+    }
+    return !isDemo;
+  });
   const [isTotemOpen, setIsTotemOpen] = useState(false);
-  const [profiles, setProfiles] = useState<UserProfile[]>(DEMO_MODE ? INITIAL_PROFILES : []);
+  const [profiles, setProfiles] = useState<UserProfile[]>(isDemo ? INITIAL_PROFILES : []);
 
   // Business Data State
-  const [customers, setCustomers] = useState<Customer[]>(DEMO_MODE ? initialDb.customers : []);
+  const [customers, setCustomers] = useState<Customer[]>(isDemo ? initialDb.customers : []);
   const customersRef = useRef(customers.length > 0 ? customers : initialDb.customers);
   useEffect(() => {
     customersRef.current = customers.length > 0 ? customers : initialDb.customers;
   }, [customers, initialDb.customers]);
-  const [leads, setLeads] = useState<Lead[]>(DEMO_MODE ? initialDb.leads : []);
-  const [appointments, setAppointments] = useState<Appointment[]>(DEMO_MODE ? initialDb.appointments : []);
-  const [bills, setBills] = useState<CustomerBill[]>(DEMO_MODE ? initialDb.bills : []);
+  const [leads, setLeads] = useState<Lead[]>(isDemo ? initialDb.leads : []);
+  const [appointments, setAppointments] = useState<Appointment[]>(isDemo ? initialDb.appointments : []);
+  const [bills, setBills] = useState<CustomerBill[]>(isDemo ? initialDb.bills : []);
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(initialDb.marketIndex);
-  const [securityLogs, setSecurityLogs] = useState<SecurityAuditLog[]>(DEMO_MODE ? initialDb.securityLogs : []);
-  const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(DEMO_MODE ? initialDb.customers : []));
+  const [securityLogs, setSecurityLogs] = useState<SecurityAuditLog[]>(isDemo ? initialDb.securityLogs : []);
+  const [audits, setAudits] = useState<SwitchAudit[]>(() => runQuarterlyAudit(isDemo ? initialDb.customers : []));
   const [convertingLead, setConvertingLead] = useState<Lead | null>(null);
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
@@ -148,9 +168,10 @@ function UnifiedApp() {
   const handleSelectUser = useCallback(async (_newUser?: UserProfile) => {
     try {
       let user: UserProfile;
+      const isDemoActive = isDemoSessionActive();
       if (_newUser) {
         user = _newUser;
-        if (!DEMO_MODE) {
+        if (!isDemoActive) {
           const verified = (await api.auth.me()).user;
           if (verified.id !== user.id || verified.role !== user.role) {
             throw new Error('Il profilo non corrisponde alla sessione autenticata.');
@@ -159,12 +180,12 @@ function UnifiedApp() {
         }
         if (typeof window !== 'undefined') {
           const existingToken = localStorage.getItem('VOLTA_AUTH_TOKEN');
-          if (!DEMO_MODE && (!existingToken || existingToken.startsWith('mock-'))) {
+          if (!isDemoActive && (!existingToken || existingToken.startsWith('mock-'))) {
             throw new Error('Sessione non valida. Accedi di nuovo.');
           }
           localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(user));
           const isMockOrMissing = !existingToken || existingToken.startsWith('mock-');
-          if (DEMO_MODE && isMockOrMissing) {
+          if (isDemoActive && isMockOrMissing) {
             if (user.role !== 'customer') {
               localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${user.id}-${Date.now()}`);
             } else {
@@ -215,7 +236,7 @@ function UnifiedApp() {
         isAdmin ? api.operations.listSecurityLogs() : Promise.resolve([]),
       ]);
 
-      if (!DEMO_MODE) {
+      if (!isDemoActive) {
         const failed = results.find(result => result.status === 'rejected');
         if (failed?.status === 'rejected') throw failed.reason;
       }
@@ -225,7 +246,7 @@ function UnifiedApp() {
       if (isCustomer) {
         if (results[0].status === 'fulfilled' && Array.isArray(results[0].value) && results[0].value.length > 0) {
           customerRows = results[0].value;
-        } else if (DEMO_MODE) {
+        } else if (isDemoActive) {
           const matched = (localState.customers || []).find(
             (c: Customer) => c.id === user.customerId || (user.email && c.email?.toLowerCase() === user.email.toLowerCase())
           );
@@ -248,7 +269,7 @@ function UnifiedApp() {
         billRows = isCustomer
           ? results[3].value.filter((b: CustomerBill) => b.customerId === user.customerId)
           : results[3].value;
-      } else if (DEMO_MODE) {
+      } else if (isDemoActive) {
         const demoBills = localState.bills || [];
         billRows = isCustomer
           ? demoBills.filter((b: CustomerBill) => b.customerId === user.customerId)
@@ -302,7 +323,7 @@ function UnifiedApp() {
       if (_newUser?.role === 'customer') {
         setCustomerPortalError(error instanceof Error ? error.message : 'Dati non disponibili.');
       }
-      if (DEMO_MODE && _newUser) {
+      if (isDemoSessionActive() && _newUser) {
         setCurrentUser(_newUser);
         setIsGateOpen(false);
         setActiveTab(getInitialTab(_newUser.role));
@@ -336,13 +357,25 @@ function UnifiedApp() {
 
   // Restore only a backend-validated session, never a local role selection.
   useEffect(() => {
-    if (DEMO_MODE || !localStorage.getItem('VOLTA_AUTH_TOKEN')) return;
+    const isDemo = isDemoSessionActive();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
+    if (!token) return;
+    if (isDemo) {
+      const stored = localStorage.getItem('VOLTA_CURRENT_USER');
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          handleSelectUser(user);
+          return;
+        } catch {}
+      }
+    }
     api.auth.me().then(({user})=>handleSelectUser(user)).catch(()=>{api.auth.logout();setIsGateOpen(true);});
   }, [handleSelectUser]);
 
   // Demo persistence only. Server data is reloaded on authenticated access.
   useEffect(() => {
-    if (!DEMO_MODE) return;
+    if (!isDemoSessionActive()) return;
     const timer = setTimeout(() => {
       dbService.save({
         customers,
@@ -664,7 +697,7 @@ function UnifiedApp() {
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
           <CustomerApp onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined} currentUser={currentUser} customer={customers[0] || null} bills={bills} isLoading={customerPortalLoading} loadError={customerPortalError} onReloadBills={handleReloadCustomerBills} />
         </React.Suspense>
-        {DEMO_MODE && (
+        {isDemoSessionActive() && (
           <DemoRoleSwitcher
             currentUser={currentUser}
             customers={customers}
@@ -1040,7 +1073,7 @@ function UnifiedApp() {
       <InstallAppBanner />
 
       {/* Barra persistente per cambiare ruolo demo in 1-click */}
-      {DEMO_MODE && (
+      {isDemoSessionActive() && (
         <DemoRoleSwitcher
           currentUser={currentUser}
           customers={customers}
@@ -1091,7 +1124,7 @@ export function App() {
   if (host.startsWith('totem.') || appParam === 'totem') {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
-  if (DEMO_MODE && (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer')) {
+  if ((DEMO_MODE || isDemoSessionActive()) && (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer')) {
     const handleReturnToCrm = () => {
       const adminUser = INITIAL_PROFILES[0];
       if (typeof window !== 'undefined') {
@@ -1138,7 +1171,7 @@ export function App() {
       </React.Suspense>
     );
   }
-  if (DEMO_MODE && (host.startsWith('crm.') || appParam === 'crm')) {
+  if ((DEMO_MODE || isDemoSessionActive()) && (host.startsWith('crm.') || appParam === 'crm')) {
     return <React.Suspense fallback={<Fallback />}><CrmApp /></React.Suspense>;
   }
 

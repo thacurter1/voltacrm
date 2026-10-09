@@ -68,6 +68,20 @@ export function evaluateApiConfiguration(hostname?: string, envApiUrl?: string):
   };
 }
 
+export const isDemoSessionActive = (): boolean => {
+  if (typeof window !== 'undefined') {
+    try {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true') return true;
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true') return true;
+      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
+      if (token && token.startsWith('mock-')) return true;
+      const search = window.location.search;
+      if (search && (search.includes('demo=true') || search.includes('demo_user'))) return true;
+    } catch {}
+  }
+  return typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEMO_MODE === 'true';
+};
+
 export const DEMO_MODE = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEMO_MODE === 'true';
 // The public demo is browser-only, even if a deploy accidentally receives API settings.
 export const apiConfigStatus: ApiConfigurationStatus = DEMO_MODE

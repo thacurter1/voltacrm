@@ -8,8 +8,8 @@ import { Customer, Lead, MarketIndex, SupplierOffer, SwitchAudit, CommissionReco
 import { dbService } from '../services/db';
 import { CURRENT_MARKET_INDEX, MARKET_OFFERS, runQuarterlyAudit } from '../services/energyEngine';
 import { INITIAL_PROFILES, profileService } from '../services/supabaseClient';
-import { API_BASE_URL, DEMO_MODE, isStandaloneDemo, request } from './transport';
-export { API_BASE_URL, DEMO_MODE, isStandaloneDemo, request, isNetworkError } from './transport';
+import { API_BASE_URL, isStandaloneDemo, request, isDemoSessionActive } from './transport';
+export { API_BASE_URL, DEMO_MODE, isStandaloneDemo, request, isNetworkError, isDemoSessionActive } from './transport';
 
 export const api = {
   // --- AUTHENTICATION ---
@@ -19,7 +19,13 @@ export const api = {
       token: string;
       user: UserProfile;
     }> {
-      if (!DEMO_MODE) throw new Error('Accesso demo non disponibile.');
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+          localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+        } catch {}
+      }
+
       if (API_BASE_URL) {
         try {
           const data = await request<{ success: boolean; token: string; user: any }>('/auth/demo-login', {
@@ -36,7 +42,6 @@ export const api = {
         }
       }
 
-      if (!DEMO_MODE) throw new Error('Accesso demo disattivato.');
       let targetProfile = userId ? INITIAL_PROFILES.find(p => p.id === userId) : undefined;
       if (!targetProfile && role) {
         targetProfile = INITIAL_PROFILES.find(p => p.role === role);
@@ -71,11 +76,11 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (!DEMO_MODE) throw err;
+          if (!isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per loginOperator:', err);
         }
       }
-      if (!DEMO_MODE) throw new Error('Servizio di autenticazione non configurato.');
+      if (!isDemoSessionActive()) throw new Error('Servizio di autenticazione non configurato.');
       const normalizedEmail = (email || '').trim().toLowerCase();
       const operatorProfiles = INITIAL_PROFILES.filter(p => p.role !== 'customer');
       const profile = operatorProfiles.find(p => p.email.toLowerCase() === normalizedEmail) || operatorProfiles[0];
@@ -110,11 +115,11 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (!DEMO_MODE) throw err;
+          if (!isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per loginCustomer:', err);
         }
       }
-      if (!DEMO_MODE) throw new Error('Servizio di autenticazione non configurato.');
+      if (!isDemoSessionActive()) throw new Error('Servizio di autenticazione non configurato.');
       const query = (identifier || '').trim().toLowerCase();
       const state = dbService.load();
       const customers = state.customers || [];
@@ -174,11 +179,11 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (!DEMO_MODE) throw err;
+          if (!isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per registerCustomer:', err);
         }
       }
-      if (!DEMO_MODE) throw new Error('Servizio di registrazione non configurato.');
+      if (!isDemoSessionActive()) throw new Error('Servizio di registrazione non configurato.');
       const state = dbService.load();
       const customerId = `cust-${Date.now()}`;
       const newCustomer: Customer = {
@@ -241,12 +246,12 @@ export const api = {
           }
           return data;
         } catch (err) {
-          if (!DEMO_MODE) throw err;
+          if (!isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per loginWithOAuth:', err);
         }
       }
 
-      if (!DEMO_MODE) throw new Error('Servizio OAuth non configurato.');
+      if (!isDemoSessionActive()) throw new Error('Servizio OAuth non configurato.');
       // Demo fallback
       const profile = await profileService.signInWithOAuth(provider, role, options);
       const mockToken = `mock-oauth-${provider}-${profile.id}-${Date.now()}`;
@@ -262,7 +267,7 @@ export const api = {
         try {
           return await request<{ success: boolean; user: any }>('/auth/me');
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per me():', err);
         }
       }
@@ -283,7 +288,7 @@ export const api = {
           const data = await request<{ success: boolean; profiles: any[] }>('/auth/profiles');
           return data.profiles;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per profiles():', err);
         }
       }
@@ -299,6 +304,8 @@ export const api = {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('VOLTA_AUTH_TOKEN');
         localStorage.removeItem('VOLTA_CURRENT_USER');
+        localStorage.removeItem('VOLTA_DEMO_ACTIVE');
+        sessionStorage.removeItem('VOLTA_DEMO_ACTIVE');
       }
     }
   },
@@ -308,8 +315,8 @@ export const api = {
     try {
       return await request<{ status: string; version: string; service: string }>('/health');
     } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
       return { status: 'offline-fallback', version: '1.0.0', service: 'Volta Local Engine' };
     }
   },
@@ -322,8 +329,8 @@ export const api = {
         const data = await request<{ success: boolean; leads: Lead[] }>('/leads');
         return data.leads;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Backend offline, fallback a db locale per Leads:', err);
         return dbService.load().leads;
       }
@@ -337,8 +344,8 @@ export const api = {
         });
         return data.lead;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Fallback locale per creazione Lead:', err);
         const state = dbService.load();
         const newLead: Lead = {
@@ -367,8 +374,8 @@ export const api = {
         });
         return data.leads || [];
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Fallback locale per bulkImport Leads:', err);
         const state = dbService.load();
         const created: Lead[] = importedLeads.map((item, idx) => ({
@@ -397,8 +404,8 @@ export const api = {
         });
         return data.lead;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Fallback locale per updateStatus Lead:', err);
         const state = dbService.load();
         const updatedLeads = state.leads.map((l: Lead) => {
@@ -425,8 +432,8 @@ export const api = {
         const data = await request<{ success: boolean; customers: Customer[] }>('/customers');
         return data.customers;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Fallback a db locale per Clienti:', err);
         return dbService.load().customers;
       }
@@ -438,8 +445,8 @@ export const api = {
         const data = await request<{ success: boolean; customer: Customer }>(`/customers/${id}`);
         return data.customer;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         return dbService.load().customers.find((c: Customer) => c.id === id);
       }
     },
@@ -453,8 +460,8 @@ export const api = {
         });
         return data.customer;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Fallback locale per aggiunta Cliente:', err);
         const state = dbService.load();
         const newCust: Customer = {
@@ -486,8 +493,8 @@ export const api = {
           if(data.token && typeof window !== 'undefined') localStorage.setItem('VOLTA_AUTH_TOKEN',data.token);
           return data.customer;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per updateContact:', err);
         }
       }
@@ -515,8 +522,8 @@ export const api = {
         const data = await request<{ success: boolean; marketIndex: MarketIndex }>('/switch/market-indices');
         return data.marketIndex;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         return CURRENT_MARKET_INDEX;
       }
     },
@@ -528,8 +535,8 @@ export const api = {
         });
         return data.marketIndex;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         return CURRENT_MARKET_INDEX;
       }
     },
@@ -539,8 +546,8 @@ export const api = {
         const data = await request<{ success: boolean; offers: SupplierOffer[] }>('/switch/offers');
         return data.offers;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         return MARKET_OFFERS;
       }
     },
@@ -551,8 +558,8 @@ export const api = {
         const data = await request<{ success: boolean; audits: SwitchAudit[] }>('/switch/audit');
         return data.audits;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Fallback locale per Switch Audit:', err);
         return runQuarterlyAudit(dbService.load().customers, CURRENT_MARKET_INDEX);
       }
@@ -564,8 +571,8 @@ export const api = {
           const data = await request<{success:boolean;signatures:any[]}>('/switch/signatures');
           return data.signatures;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per getSignatures:', err);
         }
       }
@@ -581,8 +588,8 @@ export const api = {
         try {
           return await request<{success:boolean;signatureReceipt:any;customer?:Customer;commissions?:any}>(`/switch/signatures/${encodeURIComponent(id)}/activate`,{method:'POST',body:JSON.stringify(payload)});
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per activateSignature:', err);
         }
       }
@@ -610,8 +617,8 @@ export const api = {
         try {
           return await request<{success:boolean;signatureReceipt:any}>('/switch/sign', {method:'POST',body:JSON.stringify(payload)});
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per signContract:', err);
         }
       }
@@ -663,8 +670,8 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Backend non raggiungibile, salvataggio locale Kiosk:', err);
         const estSavings = Math.round(payload.monthlyExpenseEur * 12 * 0.28);
         const state = dbService.load();
@@ -700,8 +707,8 @@ export const api = {
         const data = await request<{ success: boolean; notifications: any[]; unreadCount: number }>(`/notifications${query}`);
         return { notifications: data.notifications, unreadCount: data.unreadCount };
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Fallback locale per Notifiche:', err);
         return {
           notifications: [
@@ -738,8 +745,8 @@ export const api = {
         await request(`/notifications/${id}/read`, { method: 'PATCH' });
         return true;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         return true;
       }
     },
@@ -749,8 +756,8 @@ export const api = {
         await request(`/notifications/mark-all-read`, { method: 'POST' });
         return true;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         return true;
       }
     },
@@ -762,8 +769,8 @@ export const api = {
           body: JSON.stringify(notificationData)
         });
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         return { success: true, notification: { id: `notif-${Date.now()}`, ...notificationData, isRead: false } };
       }
     }
@@ -779,8 +786,8 @@ export const api = {
         });
         return data.result;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore chiamata OCR backend, attivo fallback locale:', err);
         const isGas = payload.fileName.toLowerCase().includes('gas');
         return {
@@ -822,8 +829,8 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore sendOtp backend, attivo fallback locale:', err);
         return {
           success: true,
@@ -843,8 +850,8 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore verifyOtp backend:', err);
         return {
           success: false,
@@ -867,8 +874,8 @@ export const api = {
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore sendOfferWhatsApp backend, fallback locale:', err);
         return {
           success: true,
@@ -887,8 +894,8 @@ export const api = {
           const data = await request<{ success: boolean; appointments: Appointment[] }>('/operations/appointments');
           return data.appointments;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per listAppointments:', err);
         }
       }
@@ -903,8 +910,8 @@ export const api = {
           });
           return data.appointment;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per saveAppointment:', err);
         }
       }
@@ -925,8 +932,8 @@ export const api = {
           });
           return data.appointment;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per updateAppointmentStatus:', err);
         }
       }
@@ -952,8 +959,8 @@ export const api = {
           const data = await request<{ success: boolean; logs: SecurityAuditLog[] }>('/operations/security-logs');
           return data.logs;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per listSecurityLogs:', err);
         }
       }
@@ -968,8 +975,8 @@ export const api = {
           });
           return data.log;
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per addSecurityLog:', err);
         }
       }
@@ -997,8 +1004,8 @@ export const api = {
         const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
         return data.summaries;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore getSummaries commissions, uso fallback locale:', err);
         return [
           {
@@ -1057,8 +1064,8 @@ export const api = {
         const data = await request<{ success: boolean; commissions: CommissionRecord[] }>(`/commissions${qs ? `?${qs}` : ''}`);
         return data.commissions;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore getAll commissions, uso fallback locale:', err);
         return [];
       }
@@ -1071,8 +1078,8 @@ export const api = {
         const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
         return data.batches;
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore getBatches commissions:', err);
         return [];
       }
@@ -1097,8 +1104,8 @@ export const api = {
         });
         return { records: data.records, totalEur: data.totalEur };
       } catch (err) {
-        if (API_BASE_URL && !DEMO_MODE) throw err;
-        if (!isStandaloneDemo && !DEMO_MODE) throw err;
+        if (API_BASE_URL && !isDemoSessionActive()) throw err;
+        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore generate commissions:', err);
         return { records: [], totalEur: 0 };
       }
@@ -1119,8 +1126,8 @@ export const api = {
           });
           return { batch: data.batch, updatedCount: data.updatedCount };
         } catch (err) {
-          if (API_BASE_URL && !DEMO_MODE) throw err;
-          if (!isStandaloneDemo && !DEMO_MODE) throw err;
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
           console.warn('[API Client] Fallback locale per settle commissions:', err);
         }
       }

@@ -251,7 +251,7 @@ export function runQuarterlyAudit(
   const audits: SwitchAudit[] = [];
 
   for (const customer of customers) {
-    for (const utility of customer.utilityPoints) {
+    for (const utility of (customer.utilityPoints || [])) {
       const comparison = findBestMarketOffer(utility, MARKET_OFFERS, marketIndex);
       
       // Calcolo giorni di attività dall'ultimo audit o inizio fornitura

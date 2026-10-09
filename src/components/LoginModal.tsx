@@ -71,6 +71,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   const handleQuickDemoClick = (demoUser: AuthUser) => {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+        localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+        const token = demoUser.role === 'customer'
+          ? `mock-cust-token-${demoUser.id}-${Date.now()}`
+          : `mock-op-token-${demoUser.id}-${Date.now()}`;
+        localStorage.setItem('VOLTA_AUTH_TOKEN', token);
+        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(demoUser));
+      } catch {}
+    }
     onSelectUser(demoUser);
     onClose();
   };

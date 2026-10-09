@@ -3,7 +3,22 @@ import { INITIAL_APPOINTMENTS, INITIAL_CUSTOMERS, INITIAL_LEADS } from './mockDa
 import { CURRENT_MARKET_INDEX } from './energyEngine';
 
 const STORAGE_KEY = 'VOLTA_ENERGY_CRM_DB_V3';
-const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
+export const isDemoSessionActive = (): boolean => {
+  if (typeof window !== 'undefined') {
+    try {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true') return true;
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true') return true;
+      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
+      if (token && token.startsWith('mock-')) return true;
+      const search = window.location.search;
+      if (search && (search.includes('demo=true') || search.includes('demo_user'))) return true;
+    } catch {}
+  }
+  return typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEMO_MODE === 'true';
+};
+
+export const DEMO_MODE = typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEMO_MODE === 'true';
 
 export const DEMO_USERS: AuthUser[] = [
   {
@@ -207,7 +222,7 @@ interface DbState {
 
 export const dbService = {
   load(): DbState {
-    if (!DEMO_MODE) {
+    if (!isDemoSessionActive()) {
       return {
         customers: [], leads: [], appointments: [], bills: [],
         marketIndex: CURRENT_MARKET_INDEX, currentUser: DEMO_USERS[0], securityLogs: [],
@@ -245,7 +260,7 @@ export const dbService = {
   },
 
   save(state: DbState): void {
-    if (!DEMO_MODE) return;
+    if (!isDemoSessionActive()) return;
     try {
       const json = JSON.stringify(state);
       localStorage.setItem(STORAGE_KEY, json);
