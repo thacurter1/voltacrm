@@ -102,12 +102,12 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
 
     const validation = await securityValidator.validateFile(file);
     if (!validation.isValid) {
-      setErrorMessage(validation.error || 'Formato non supportato o file non valido (ammessi PDF, JPG, PNG, WebP).');
+      setErrorMessage(validation.error || 'Formato non supportato o file non valido (ammessi PDF, JPG, PNG).');
       return;
     }
 
-    if (file.size > 15 * 1024 * 1024) {
-      setErrorMessage('La dimensione del file supera il limite massimo consentito di 15MB.');
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMessage('La dimensione del file supera il limite massimo consentito di 10MB.');
       return;
     }
 
@@ -269,7 +269,7 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
           type="file" 
           ref={fileInputRef} 
           onChange={handleFileInputChange} 
-          accept="application/pdf,image/png,image/jpeg,image/webp" 
+          accept="application/pdf,image/png,image/jpeg" 
           className="hidden" 
         />
 
@@ -300,7 +300,7 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
               Trascina qui la bolletta PDF o immagine oppure clicca per scegliere
             </span>
             <span className="text-[11px] text-[#425466] block mt-1">
-              Formati supportati: PDF, JPG, PNG, WebP (Max 15MB)
+              Formati supportati: PDF, JPG, PNG (Max 10MB)
             </span>
             <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e3e8ee] rounded-md text-[11px] font-semibold text-[#0a2540] shadow-2xs hover:border-[#635bff]">
               <FileUp className="h-3.5 w-3.5 text-[#635bff]" />
