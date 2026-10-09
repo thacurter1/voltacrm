@@ -1,7 +1,8 @@
 import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { decodeAndValidateBillFile } from '../utils/billFile.js';
-import { getCustomers, users } from '../services/dataStore.js';
+import { getCustomers, users, addLead } from '../services/dataStore.js';
+import { Lead } from '../types.js';
 import {
   MeterReadingInput,
   PortalUtilityType,
@@ -43,6 +44,9 @@ function resolveActor(req: AuthRequest): PortalActor {
 
 function resolveCustomer(req: AuthRequest, requestedCustomerId?: unknown) {
   const actor = resolveActor(req);
+  if (!actor.isStaff && typeof requestedCustomerId === 'string' && requestedCustomerId.trim() && requestedCustomerId.trim() !== actor.customerId) {
+    throw httpError('Accesso negato: non puoi operare per un altro cliente.', 403);
+  }
   const customerId = actor.isStaff
     ? (typeof requestedCustomerId === 'string' ? requestedCustomerId.trim() : '')
     : actor.customerId;
@@ -219,3 +223,49 @@ portalRouter.post('/readings', handlePortalRoute(async (req: AuthRequest, res: R
   });
   res.status(201).json({ success: true, reading });
 }));
+
+portalRouter.post('/consultations', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { customer } = resolveCustomer(req, req.body?.customerId);
+  const { offerId, offerName, supplier, utilityType, annualConsumption, notes, preferredContact } = req.body || {};
+
+  if (!offerId || typeof offerId !== 'string') {
+    throw httpError('Identificativo offerta obbligatorio.', 400);
+  }
+  if (!utilityType || !['luce', 'gas'].includes(utilityType)) {
+    throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
+  }
+
+  const safeConsumption = typeof annualConsumption === 'number' && annualConsumption > 0 ? annualConsumption : undefined;
+  const noteDetails = [
+    `[PORTALE CLIENTI] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
+    `Fornitura: ${utilityType.toUpperCase()}`,
+    safeConsumption ? `Consumo indicato: ${safeConsumption} ${utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
+    preferredContact ? `Canale preferito: ${preferredContact}` : null,
+    notes ? `Note cliente: ${String(notes).slice(0, 500)}` : null,
+  ].filter(Boolean).join(' • ');
+
+  const newLead: Lead = {
+    id: `lead-portal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    name: customer.name,
+    phone: customer.phone,
+    email: customer.email || `${customer.id}@cliente.volta.it`,
+    city: customer.city || 'Italia',
+    source: 'landing_page',
+    status: 'new',
+    notes: noteDetails,
+    createdAt: new Date().toISOString().split('T')[0],
+    estimatedConsumptionKwh: utilityType === 'luce' ? safeConsumption : undefined,
+    estimatedConsumptionSmc: utilityType === 'gas' ? safeConsumption : undefined,
+    assignedBrokerId: customer.assignedBrokerId,
+  };
+
+  await addLead(newLead);
+
+  res.status(201).json({
+    success: true,
+    leadId: newLead.id,
+    message: 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
+    lead: newLead,
+  });
+}));
+

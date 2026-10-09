@@ -155,4 +155,62 @@ export const portalApi = {
     }
     return newReading;
   },
+
+  async requestConsultation(input: {
+    customerId: string;
+    offerId: string;
+    offerName?: string;
+    supplier?: string;
+    utilityType: 'luce' | 'gas';
+    annualConsumption?: number;
+    notes?: string;
+    preferredContact?: 'phone' | 'email' | 'whatsapp';
+  }): Promise<{ success: boolean; leadId: string; message: string }> {
+    if (API_BASE_URL) {
+      try {
+        const response = await request<{ success: true; leadId: string; message: string }>('/portal/consultations', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        });
+        return response;
+      } catch (err) {
+        if (!isDemoSessionActive()) throw err;
+        console.warn('[portalApi] Backend non raggiungibile, fallback locale per richiesta consulenza:', err);
+      }
+    }
+    if (!isDemoSessionActive()) throw new Error('Servizio consulenza non configurato.');
+    const state = dbService.load();
+    const cust = (state.customers || []).find(c => c.id === input.customerId);
+    const leadId = `lead-portal-${Date.now()}`;
+    const safeConsumption = typeof input.annualConsumption === 'number' && input.annualConsumption > 0 ? input.annualConsumption : undefined;
+    const noteDetails = [
+      `[PORTALE CLIENTI] Richiesta assistenza per offerta: ${input.offerName || input.offerId} (${input.supplier || 'Partner'})`,
+      `Fornitura: ${input.utilityType.toUpperCase()}`,
+      safeConsumption ? `Consumo: ${safeConsumption} ${input.utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
+      input.preferredContact ? `Contatto preferito: ${input.preferredContact}` : null,
+      input.notes ? `Note: ${input.notes}` : null,
+    ].filter(Boolean).join(' • ');
+
+    const newLead: any = {
+      id: leadId,
+      name: cust?.name || 'Cliente Portale',
+      phone: cust?.phone || '+39 300 0000000',
+      email: cust?.email || `${input.customerId}@cliente.volta.it`,
+      city: cust?.city || 'Italia',
+      source: 'landing_page',
+      status: 'new',
+      notes: noteDetails,
+      createdAt: new Date().toISOString().split('T')[0],
+      estimatedConsumptionKwh: input.utilityType === 'luce' ? safeConsumption : undefined,
+      estimatedConsumptionSmc: input.utilityType === 'gas' ? safeConsumption : undefined,
+      assignedBrokerId: cust?.assignedBrokerId,
+    };
+    dbService.save({ ...state, leads: [newLead, ...(state.leads || [])] });
+    return {
+      success: true,
+      leadId,
+      message: 'Richiesta di consulenza registrata con successo (modalità demo attiva).'
+    };
+  },
 };
+

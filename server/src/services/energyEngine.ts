@@ -3,7 +3,7 @@ import { Customer, MarketIndex, SupplierOffer, SwitchAudit, UtilityPoint } from 
 export const CURRENT_MARKET_INDEX: MarketIndex = {
   punEurKwh: 0.1145, // Prezzo Unico Nazionale medio aggiornato
   psvEurSmc: 0.3850, // Punto di Scambio Virtuale gas
-  lastUpdated: new Date().toISOString().split('T')[0],
+  lastUpdated: 'Benchmark di riferimento comparativo (Q1 2026)',
   punTrend: 'down',
   psvTrend: 'stable',
 };
@@ -20,7 +20,7 @@ export const MARKET_OFFERS: SupplierOffer[] = [
     fixedAnnualFee: 96.0,
     durationMonths: 12,
     greenCertified: true,
-    tag: 'Miglior Prezzo',
+    tag: 'Prezzo Fisso Competitivo',
   },
   {
     id: 'off-luce-2',
@@ -82,7 +82,7 @@ export const MARKET_OFFERS: SupplierOffer[] = [
     fixedAnnualFee: 108.0,
     durationMonths: 12,
     greenCertified: false,
-    tag: 'Miglior Prezzo',
+    tag: 'Spread Competitivo',
   },
   {
     id: 'off-gas-2',

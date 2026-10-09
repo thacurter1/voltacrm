@@ -181,7 +181,7 @@ export function snapshotOffer(offer: SupplierOffer): OfferedPointSnapshot {
     fixedAnnualFee: offer.fixedAnnualFee,
     durationMonths: offer.durationMonths,
     greenCertified: offer.greenCertified,
-    tag: offer.tag
+    tag: offer.tag || ''
   };
 }
 

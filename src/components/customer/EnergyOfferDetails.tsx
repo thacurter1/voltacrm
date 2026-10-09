@@ -18,7 +18,7 @@ export interface EnergyOfferDetailsProps {
   comparison: ComparisonResult;
   currentInput: ComparisonInput;
   onClose: () => void;
-  onRequestConsultation: (offer: SupplierOffer) => void;
+  onRequestConsultation: (offer: SupplierOffer, notes?: string) => void | Promise<void>;
 }
 
 export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
@@ -30,6 +30,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   const { offer, annualCost, currentAnnualCost, savingsEur, savingsPercent } = comparison;
   const isLuce = offer.energyType === 'luce';
   const unitLabel = isLuce ? '€/kWh' : '€/Smc';
+  const [customerNotes, setCustomerNotes] = React.useState('');
 
   return (
     <div 
@@ -203,6 +204,21 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
               </li>
             </ul>
           </div>
+
+          {/* Optional Notes for Consultation */}
+          <div className="space-y-1.5 pt-1">
+            <label htmlFor="consultation-notes" className="block text-xs font-bold text-slate-700">
+              Note o preferenze per il consulente (opzionale)
+            </label>
+            <input
+              id="consultation-notes"
+              type="text"
+              value={customerNotes}
+              onChange={(e) => setCustomerNotes(e.target.value)}
+              placeholder="Es. Richiamare preferibilmente nel pomeriggio..."
+              className="w-full min-h-[44px] px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#635bff] text-slate-800"
+            />
+          </div>
         </div>
 
         {/* Footer Actions */}
@@ -219,7 +235,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             type="button"
             onClick={() => {
               onClose();
-              onRequestConsultation(offer);
+              onRequestConsultation(offer, customerNotes);
             }}
             className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
           >

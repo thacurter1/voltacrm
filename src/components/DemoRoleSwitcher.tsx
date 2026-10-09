@@ -18,7 +18,10 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
   onOpenTotem,
   onLogout,
 }) => {
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 640;
+  });
 
   const handleSwitch = (userId: string, role: string) => {
     if (typeof window !== 'undefined') {

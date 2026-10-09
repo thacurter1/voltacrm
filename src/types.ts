@@ -109,7 +109,7 @@ export interface SupplierOffer {
   fixedAnnualFee: number; // Quota fissa di commercializzazione CCV/PCV (€/anno)
   durationMonths: number;
   greenCertified: boolean;
-  tag: 'Miglior Prezzo' | 'Prezzo Bloccato' | '100% Green' | 'Broker Choice';
+  tag: 'Miglior Prezzo' | 'Prezzo Bloccato' | '100% Green' | 'Broker Choice' | 'Prezzo Fisso Competitivo' | 'Spread Competitivo' | string;
 }
 
 export interface SwitchAudit {

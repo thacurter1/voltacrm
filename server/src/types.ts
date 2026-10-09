@@ -112,7 +112,7 @@ export interface SupplierOffer {
   fixedAnnualFee: number;
   durationMonths: number;
   greenCertified: boolean;
-  tag: 'Miglior Prezzo' | 'Prezzo Bloccato' | '100% Green' | 'Broker Choice';
+  tag: 'Miglior Prezzo' | 'Prezzo Bloccato' | '100% Green' | 'Broker Choice' | 'Prezzo Fisso Competitivo' | 'Spread Competitivo' | string;
 }
 
 export interface SwitchAudit {
