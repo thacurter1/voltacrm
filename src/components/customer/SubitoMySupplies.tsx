@@ -24,7 +24,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Forniture Attive & Certificate</span>
+            <span>Forniture Attive Registrate</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-[#0a2540]">
             {customer.name}

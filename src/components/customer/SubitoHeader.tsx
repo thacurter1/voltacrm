@@ -51,7 +51,7 @@ export const SubitoHeader: React.FC<SubitoHeaderProps> = ({
             </div>
           </div>
           <span className="hidden md:inline-block text-xs text-slate-400 border-l border-slate-200 pl-3">
-            Il marketplace delle migliori tariffe luce e gas certificate
+            Confronto trasparente tariffe luce e gas per clienti finali
           </span>
         </div>
 
