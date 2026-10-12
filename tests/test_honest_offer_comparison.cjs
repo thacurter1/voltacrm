@@ -2,6 +2,26 @@ process.env.NODE_ENV = 'test';
 process.env.VOLTA_DEMO_MODE = 'true';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ts = require('typescript');
+
+function loadTs(relativePath, dependencies = {}) {
+  const filePath = path.join(__dirname, '..', relativePath);
+  const source = fs.readFileSync(filePath, 'utf8');
+  const js = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true }
+  }).outputText;
+  const module = { exports: {} };
+  new Function('require', 'module', 'exports', js)(
+    id => dependencies[id] || (id.includes('energyEngine') ? require('../server/dist/services/energyEngine.js') : require(id)),
+    module,
+    module.exports
+  );
+  return module.exports;
+}
+
+const { estimateLifestyleConsumption } = loadTs('src/services/offerComparison.ts');
 
 console.log('=== TEST SUITE: HONEST ENERGY OFFER COMPARISON SCENARIOS (TDD) ===');
 
@@ -172,4 +192,60 @@ for (let i = 0; i < sortedLuce.length - 1; i++) {
 }
 console.log('✔ Scenario 5: Filter and sort by annual cost verified');
 
+// SCENARIO 6: Monthly calculation and monthly fixed quota
+assert.strictEqual(typeof cheapOffer.fixedAnnualFee, 'number');
+const monthlyQuota = Math.round((cheapOffer.fixedAnnualFee / 12) * 100) / 100;
+assert.strictEqual(monthlyQuota, 8, 'Monthly fixed quota should be fixedAnnualFee / 12 (€8/mese)');
+
+const monthlyEstimated = Math.round(res1.annualCost / 12);
+assert.strictEqual(monthlyEstimated, Math.round(747.6 / 12), 'Monthly estimated cost should be Math.round(annualCost / 12)');
+console.log(`✔ Scenario 6: Monthly calculation verified (Cost: €${monthlyEstimated}/mese, Quota fissa: €${monthlyQuota}/mese)`);
+
+// SCENARIO 7: Lifestyle Consumption Estimation (Facile.it-style wizard)
+assert.strictEqual(typeof estimateLifestyleConsumption, 'function', 'estimateLifestyleConsumption must be exported from src/services/offerComparison.ts');
+
+// Single Luce without appliances returns 1500
+const singleLuce = estimateLifestyleConsumption({
+  householdSize: 'single',
+  utilityType: 'luce'
+});
+assert.strictEqual(singleLuce, 1500, 'Single Luce without appliances should be 1500 kWh');
+
+// Couple Luce with AC returns 2800 (2400 + 400)
+const coupleLuceAc = estimateLifestyleConsumption({
+  householdSize: 'couple',
+  utilityType: 'luce',
+  hasHeatPumpOrAc: true
+});
+assert.strictEqual(coupleLuceAc, 2800, 'Couple Luce with AC should be 2800 kWh');
+
+// Family Luce with AC, Boiler, Induction returns 4950 (3400 + 400 + 800 + 350)
+const familyLuceAll = estimateLifestyleConsumption({
+  householdSize: 'family',
+  utilityType: 'luce',
+  hasHeatPumpOrAc: true,
+  hasElectricBoiler: true,
+  hasInduction: true
+});
+assert.strictEqual(familyLuceAll, 4950, 'Family Luce with AC, Boiler, Induction should be 4950 kWh');
+
+// Couple Gas returns 950
+const coupleGas = estimateLifestyleConsumption({
+  householdSize: 'couple',
+  utilityType: 'gas'
+});
+assert.strictEqual(coupleGas, 950, 'Couple Gas should be 950 Smc');
+
+// Gas should not add electric increments
+const coupleGasWithAppliances = estimateLifestyleConsumption({
+  householdSize: 'couple',
+  utilityType: 'gas',
+  hasHeatPumpOrAc: true,
+  hasElectricBoiler: true,
+  hasInduction: true
+});
+assert.strictEqual(coupleGasWithAppliances, 950, 'Gas consumption should ignore electric appliance flags');
+console.log('✔ Scenario 7: Lifestyle consumption estimation verified (Luce & Gas base + appliance increments)');
+
 console.log('🎉 ALL HONEST COMPARISON SCENARIOS PASSED!');
+

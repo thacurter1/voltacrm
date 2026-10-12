@@ -32,6 +32,51 @@ export interface ComparisonResult {
   reasonUnavailable?: string;
 }
 
+export interface LifestyleEstimateParams {
+  householdSize: 'single' | 'couple' | 'family';
+  utilityType: UtilityType;
+  hasHeatPumpOrAc?: boolean;
+  hasElectricBoiler?: boolean;
+  hasInduction?: boolean;
+}
+
+export function estimateLifestyleConsumption(params: LifestyleEstimateParams): number {
+  if (params.utilityType === 'luce') {
+    let consumption = 0;
+    switch (params.householdSize) {
+      case 'single':
+        consumption = 1500;
+        break;
+      case 'couple':
+        consumption = 2400;
+        break;
+      case 'family':
+        consumption = 3400;
+        break;
+      default:
+        consumption = 2400;
+    }
+
+    if (params.hasHeatPumpOrAc) consumption += 400;
+    if (params.hasElectricBoiler) consumption += 800;
+    if (params.hasInduction) consumption += 350;
+
+    return consumption;
+  }
+
+  // gas: electric appliance increments do not apply
+  switch (params.householdSize) {
+    case 'single':
+      return 600;
+    case 'couple':
+      return 950;
+    case 'family':
+      return 1300;
+    default:
+      return 950;
+  }
+}
+
 export function validateBillUploadFile(file: { name: string; size: number; type?: string } | null | undefined): {
   valid: boolean;
   error?: string;
