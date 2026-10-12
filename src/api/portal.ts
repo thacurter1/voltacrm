@@ -1,6 +1,6 @@
 import { request, API_BASE_URL, isDemoSessionActive } from './client';
 import type { CustomerBill } from '../types';
-import { dbService } from '../services/db';
+import { dbService, DEMO_USERS } from '../services/db';
 
 export interface MeterReadingValues {
   f1?: number;
@@ -27,6 +27,22 @@ async function fileToBase64(file: File): Promise<string> {
     binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
   }
   return btoa(binary);
+}
+
+export interface ConsultationRequestInput {
+  customerId?: string;
+  offerId: string;
+  offerName: string;
+  supplier: string;
+  utilityType: 'luce' | 'gas';
+  annualConsumption?: number;
+  notes?: string;
+  preferredContact?: string;
+  // Guest fields
+  customerName?: string;
+  phone?: string;
+  email?: string;
+  privacyConsent?: boolean;
 }
 
 export const portalApi = {
@@ -156,21 +172,14 @@ export const portalApi = {
     return newReading;
   },
 
-  async requestConsultation(input: {
-    customerId: string;
-    offerId: string;
-    offerName?: string;
-    supplier?: string;
-    utilityType: 'luce' | 'gas';
-    annualConsumption?: number;
-    notes?: string;
-    preferredContact?: 'phone' | 'email' | 'whatsapp';
-  }): Promise<{ success: boolean; leadId: string; message: string }> {
+  async requestConsultation(input: ConsultationRequestInput): Promise<{ success: boolean; leadId: string; message: string }> {
+    const isGuest = !input.customerId || Boolean(input.customerName || input.phone);
     if (API_BASE_URL) {
       try {
         const response = await request<{ success: true; leadId: string; message: string }>('/portal/consultations', {
           method: 'POST',
           body: JSON.stringify(input),
+          ...(isGuest ? { headers: { Authorization: '' } } : {}),
         });
         return response;
       } catch (err) {
@@ -180,11 +189,13 @@ export const portalApi = {
     }
     if (!isDemoSessionActive()) throw new Error('Servizio consulenza non configurato.');
     const state = dbService.load();
-    const cust = (state.customers || []).find(c => c.id === input.customerId);
-    const leadId = `lead-portal-${Date.now()}`;
+    const cust = input.customerId ? (state.customers || []).find(c => c.id === input.customerId) : undefined;
+    const leadId = isGuest ? `lead-guest-${Date.now()}` : `lead-portal-${Date.now()}`;
     const safeConsumption = typeof input.annualConsumption === 'number' && input.annualConsumption > 0 ? input.annualConsumption : undefined;
     const noteDetails = [
-      `[PORTALE CLIENTI] Richiesta assistenza per offerta: ${input.offerName || input.offerId} (${input.supplier || 'Partner'})`,
+      isGuest
+        ? `[COMPARATORE PUBBLICO] Richiesta assistenza per offerta: ${input.offerName || input.offerId} (${input.supplier || 'Partner'})`
+        : `[PORTALE CLIENTI] Richiesta assistenza per offerta: ${input.offerName || input.offerId} (${input.supplier || 'Partner'})`,
       `Fornitura: ${input.utilityType.toUpperCase()}`,
       safeConsumption ? `Consumo: ${safeConsumption} ${input.utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
       input.preferredContact ? `Contatto preferito: ${input.preferredContact}` : null,
@@ -193,23 +204,29 @@ export const portalApi = {
 
     const newLead: any = {
       id: leadId,
-      name: cust?.name || 'Cliente Portale',
-      phone: cust?.phone || '+39 300 0000000',
-      email: cust?.email || `${input.customerId}@cliente.volta.it`,
-      city: cust?.city || 'Italia',
-      source: 'landing_page',
+      name: isGuest ? (input.customerName || 'Visitatore Comparatore') : (cust?.name || 'Cliente Portale'),
+      phone: isGuest ? (input.phone || '+39 300 0000000') : (cust?.phone || '+39 300 0000000'),
+      email: isGuest
+        ? (input.email || `${(input.phone || 'guest').replace(/\s+/g, '')}@lead.volta.it`)
+        : (cust?.email || `${input.customerId}@cliente.volta.it`),
+      city: isGuest ? 'Italia' : (cust?.city || 'Italia'),
+      source: isGuest ? 'public_comparator' : 'landing_page',
       status: 'new',
       notes: noteDetails,
       createdAt: new Date().toISOString().split('T')[0],
       estimatedConsumptionKwh: input.utilityType === 'luce' ? safeConsumption : undefined,
       estimatedConsumptionSmc: input.utilityType === 'gas' ? safeConsumption : undefined,
-      assignedBrokerId: cust?.assignedBrokerId,
+      assignedBrokerId: isGuest
+        ? (DEMO_USERS.find(u => u.role === 'broker' || u.role === 'operator')?.id || 'user-op-2')
+        : cust?.assignedBrokerId,
     };
     dbService.save({ ...state, leads: [newLead, ...(state.leads || [])] });
     return {
       success: true,
       leadId,
-      message: 'Richiesta di consulenza registrata con successo (modalità demo attiva).'
+      message: isGuest
+        ? 'Richiesta di consulenza registrata con successo nel CRM (modalità demo attiva).'
+        : 'Richiesta di consulenza registrata con successo (modalità demo attiva).'
     };
   },
 };

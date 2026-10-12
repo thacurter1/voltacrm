@@ -13,13 +13,27 @@ import {
 } from 'lucide-react';
 import { SupplierOffer } from '../../types';
 import { ComparisonInput, ComparisonResult } from '../../services/offerComparison';
+import { portalApi } from '../../api/portal';
+
+export interface GuestConsultationData {
+  customerName: string;
+  phone: string;
+  email?: string;
+  preferredContact?: string;
+  privacyConsent: boolean;
+}
 
 export interface EnergyOfferDetailsProps {
   comparison: ComparisonResult;
   isDemoCatalog: boolean;
   currentInput: ComparisonInput;
   onClose: () => void;
-  onRequestConsultation: (offer: SupplierOffer, notes?: string) => Promise<boolean>;
+  onRequestConsultation: (
+    offer: SupplierOffer,
+    notes?: string,
+    guestData?: GuestConsultationData
+  ) => Promise<boolean>;
+  isGuest?: boolean;
 }
 
 export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
@@ -28,13 +42,21 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   currentInput,
   onClose,
   onRequestConsultation,
+  isGuest,
 }) => {
   const { offer, annualCost, currentAnnualCost, savingsEur, savingsPercent } = comparison;
   const isLuce = offer.energyType === 'luce';
   const unitLabel = isLuce ? '€/kWh' : '€/Smc';
   const monthlyCost = annualCost !== null ? Math.round(annualCost / 12) : null;
   const currentMonthlyCost = currentAnnualCost !== null ? Math.round(currentAnnualCost / 12) : null;
+  const isGuestMode = isGuest !== undefined ? isGuest : (!currentInput.source || currentInput.source !== 'account');
   const [customerNotes, setCustomerNotes] = React.useState('');
+  const [guestName, setGuestName] = React.useState('');
+  const [guestPhone, setGuestPhone] = React.useState('');
+  const [guestEmail, setGuestEmail] = React.useState('');
+  const [preferredTime, setPreferredTime] = React.useState<'Mattina (9-13)' | 'Pomeriggio (14-18)' | 'Qualsiasi'>('Qualsiasi');
+  const [privacyConsent, setPrivacyConsent] = React.useState(false);
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -100,18 +122,135 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
   const submitConsultation = async () => {
     if (isSubmitting) return;
-    setIsSubmitting(true);
     setSubmitError(null);
+
+    if (isGuestMode) {
+      const trimmedName = guestName.trim();
+      if (!trimmedName) {
+        setSubmitError('Inserisci nome e cognome per richiedere la consulenza.');
+        return;
+      }
+
+      const trimmedPhone = guestPhone.trim();
+      const phoneDigits = trimmedPhone.replace(/\D/g, '');
+      if (!trimmedPhone || phoneDigits.length < 8) {
+        setSubmitError('Inserisci un recapito telefonico valido (almeno 8 cifre) per essere ricontattato.');
+        return;
+      }
+
+      if (!privacyConsent) {
+        setSubmitError("È necessario accettare l'informativa sulla privacy per procedere con la consulenza.");
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
     try {
-      const saved = await onRequestConsultation(offer, customerNotes);
-      if (saved) onClose();
-      else setSubmitError('Non siamo riusciti a inviare la richiesta. Riprova senza perdere le tue note.');
+      const guestData: GuestConsultationData | undefined = isGuestMode
+        ? {
+            customerName: guestName.trim(),
+            phone: guestPhone.trim(),
+            email: guestEmail.trim() || undefined,
+            preferredContact: preferredTime,
+            privacyConsent,
+          }
+        : undefined;
+
+      const notesPayload = [
+        customerNotes.trim() || null,
+        isGuestMode && preferredTime ? `Fascia oraria preferita: ${preferredTime}` : null,
+      ].filter(Boolean).join(' • ') || undefined;
+
+      let saved = await onRequestConsultation(offer, notesPayload, guestData);
+      if (!saved && isGuestMode && guestData) {
+        try {
+          const fallbackRes = await portalApi.requestConsultation({
+            offerId: offer.id,
+            offerName: offer.name,
+            supplier: offer.supplier,
+            utilityType: currentInput.utilityType,
+            annualConsumption: currentInput.annualConsumption > 0 ? currentInput.annualConsumption : undefined,
+            notes: notesPayload,
+            customerName: guestData.customerName,
+            phone: guestData.phone,
+            email: guestData.email,
+            privacyConsent: guestData.privacyConsent,
+            preferredContact: guestData.preferredContact,
+          });
+          saved = fallbackRes.success;
+        } catch {
+          // ignore fallback error
+        }
+      }
+
+      if (saved) {
+        if (isGuestMode) {
+          setIsSubmitted(true);
+        } else {
+          onClose();
+        }
+      } else {
+        setSubmitError('Non siamo riusciti a inviare la richiesta. Riprova senza perdere le tue note.');
+      }
     } catch {
       setSubmitError('Non siamo riusciti a inviare la richiesta. Riprova senza perdere le tue note.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="offer-success-title"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') onClose();
+        }}
+      >
+        <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden p-6 sm:p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+            <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 id="offer-success-title" className="text-xl sm:text-2xl font-black text-[#0a2540]">
+              Richiesta inviata con successo!
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+              Un consulente Volta Energia ti ricontatterà al <strong className="text-slate-900">{guestPhone || 'tuo recapito'}</strong> entro 24 ore per illustrarti tutti i dettagli dell'offerta <strong className="text-slate-900">{offer.name}</strong> ({offer.supplier}) e guidarti senza impegno nel confronto.
+            </p>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 text-left space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Offerta:</span>
+              <span className="font-bold text-slate-900">{offer.name}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Fornitore:</span>
+              <span className="font-semibold text-slate-800">{offer.supplier}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Fascia oraria preferita:</span>
+              <span className="font-semibold text-slate-800">{preferredTime}</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
+          >
+            <span>Torna al confronto</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -365,20 +504,136 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             </ul>
           </details>
 
-          {/* Optional Notes for Consultation */}
-          <div className="space-y-1.5 pt-1">
-            <label htmlFor="consultation-notes" className="block text-sm font-semibold text-slate-700">
-              Note o preferenze per il consulente (opzionale)
-            </label>
-            <input
-              id="consultation-notes"
-              type="text"
-              value={customerNotes}
-              onChange={(e) => setCustomerNotes(e.target.value)}
-              placeholder="Es. Richiamare preferibilmente nel pomeriggio..."
-              className="w-full min-h-[48px] px-3.5 py-2 text-base bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
-            />
-          </div>
+          {/* Consultation Intake Section */}
+          {isGuestMode ? (
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <PhoneCall className="w-4 h-4 text-[#635bff]" />
+                <h3 className="font-bold text-sm text-[#0a2540]">
+                  Richiedi consulenza gratuita con un esperto Volta
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Nessun vincolo né costo. Ti ricontattiamo per chiarire ogni voce della tariffa e guidarti nel passaggio se decidi di procedere.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="guest-name" className="block text-xs font-bold text-slate-700 mb-1">
+                    Nome e Cognome <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="guest-name"
+                    type="text"
+                    required
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="Mario Rossi"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="guest-phone" className="block text-xs font-bold text-slate-700 mb-1">
+                    Numero di Telefono <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="guest-phone"
+                    type="tel"
+                    required
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    placeholder="+39 347 1234567"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="guest-email" className="block text-xs font-bold text-slate-700 mb-1">
+                  Email (opzionale)
+                </label>
+                <input
+                  id="guest-email"
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="mario.rossi@email.it"
+                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div>
+                <span className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Orario di ricontatto preferito
+                </span>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Orario di ricontatto preferito">
+                  {(['Mattina (9-13)', 'Pomeriggio (14-18)', 'Qualsiasi'] as const).map((timeOption) => {
+                    const isSelected = preferredTime === timeOption;
+                    return (
+                      <button
+                        key={timeOption}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => setPreferredTime(timeOption)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#635bff] text-white border-[#635bff] shadow-xs'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        {timeOption}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="consultation-notes" className="block text-xs font-bold text-slate-700">
+                  Note o preferenze per il consulente (opzionale)
+                </label>
+                <input
+                  id="consultation-notes"
+                  type="text"
+                  value={customerNotes}
+                  onChange={(e) => setCustomerNotes(e.target.value)}
+                  placeholder="Es. Richiamare preferibilmente su WhatsApp..."
+                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="pt-1">
+                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={privacyConsent}
+                    onChange={(e) => setPrivacyConsent(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-[#635bff] border-slate-300 focus:ring-[#635bff] cursor-pointer"
+                    required
+                  />
+                  <span>
+                    Dichiaro di aver preso visione dell'informativa privacy e acconsento al trattamento dei dati per la consulenza gratuita sulle offerte Volta Energia. <span className="text-red-500 font-bold">*</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5 pt-1">
+              <label htmlFor="consultation-notes" className="block text-sm font-semibold text-slate-700">
+                Note o preferenze per il consulente (opzionale)
+              </label>
+              <input
+                id="consultation-notes"
+                type="text"
+                value={customerNotes}
+                onChange={(e) => setCustomerNotes(e.target.value)}
+                placeholder="Es. Richiamare preferibilmente nel pomeriggio..."
+                className="w-full min-h-[48px] px-3.5 py-2 text-base bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
+              />
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}
@@ -399,7 +654,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
           >
             <PhoneCall className="w-4 h-4" />
-            <span>{isSubmitting ? 'Invio richiesta...' : 'Richiedi consulenza'}</span>
+            <span>{isSubmitting ? 'Invio richiesta...' : (isGuestMode ? 'Richiedi consulenza gratuita' : 'Richiedi consulenza')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
