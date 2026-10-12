@@ -1,5 +1,5 @@
 import { request, API_BASE_URL, isDemoSessionActive } from './client';
-import type { CustomerBill, Lead } from '../types';
+import type { CustomerBill, Lead, AppNotification } from '../types';
 import { dbService, DEMO_USERS } from '../services/db';
 
 export interface MeterReadingValues {
@@ -138,10 +138,24 @@ export const portalApi = {
       assignedBrokerId: cust?.assignedBrokerId || assignedBroker,
     };
 
+    const newNotif: AppNotification = {
+      id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: 'bill_uploaded',
+      title: 'Nuova Bolletta Caricata dal Comparatore',
+      message: `${customerDisplayName} ha caricato "${newBill.fileName}" per ${input.utilityType.toUpperCase()}. Analisi richiesta.`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      priority: 'urgent',
+      targetRole: 'call_center',
+      actionTab: 'leads',
+      meta: { leadId: newLead.id, billId: newBill.id, fileName: newBill.fileName }
+    };
+
     dbService.save({
       ...state,
       bills: [newBill, ...(state.bills || [])],
       leads: [newLead, ...(state.leads || [])],
+      notifications: [newNotif, ...(state.notifications || [])],
     });
     return newBill;
   },
@@ -260,7 +274,25 @@ export const portalApi = {
         ? (DEMO_USERS.find(u => u.role === 'broker' || u.role === 'operator')?.id || 'user-op-2')
         : cust?.assignedBrokerId,
     };
-    dbService.save({ ...state, leads: [newLead, ...(state.leads || [])] });
+
+    const newNotif: AppNotification = {
+      id: `notif-consultation-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: 'consultation_requested',
+      title: 'Nuova Richiesta Consulenza dal Comparatore',
+      message: `${newLead.name} (${input.utilityType.toUpperCase()}) richiede assistenza per l'offerta ${input.offerName || input.offerId}.`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      priority: 'urgent',
+      targetRole: 'call_center',
+      actionTab: 'leads',
+      meta: { leadId: newLead.id, phone: newLead.phone, customerName: newLead.name }
+    };
+
+    dbService.save({
+      ...state,
+      leads: [newLead, ...(state.leads || [])],
+      notifications: [newNotif, ...(state.notifications || [])],
+    });
     return {
       success: true,
       leadId,

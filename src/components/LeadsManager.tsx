@@ -6,6 +6,7 @@ import {
   CalendarPlus, 
   Flame, 
   Zap, 
+  MessageCircle,
   X
 } from 'lucide-react';
 import { Lead, LeadSource, LeadStatus } from '../types';
@@ -262,7 +263,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
               </div>
 
               {/* Mobile Action Buttons */}
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-100 flex-wrap" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   onClick={() => onOpenCallScript(lead)}
@@ -272,10 +273,21 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   <span>Chiama</span>
                 </button>
 
+                <a
+                  href={`https://wa.me/${lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Gentile ${lead.name}, ti contattiamo da Volta Energia per l'analisi della tua fornitura.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-h-[44px] px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  title="Contatta su WhatsApp"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-600" />
+                  <span>WhatsApp</span>
+                </a>
+
                 <button
                   type="button"
                   onClick={() => onOpenScheduleModal(lead)}
-                  className="flex-1 min-h-[44px] px-3 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.99] transition-all cursor-pointer"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.99] transition-all cursor-pointer"
                 >
                   <CalendarPlus className="h-4 w-4" />
                   <span>Fissa Appuntamento</span>
@@ -372,6 +384,17 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                           <Phone className="h-3 w-3 text-emerald-600" />
                           Chiama
                         </button>
+
+                        <a
+                          href={`https://wa.me/${lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Gentile ${lead.name}, ti contattiamo da Volta Energia per l'analisi della tua fornitura.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-xs inline-flex items-center gap-1 cursor-pointer transition-colors"
+                          title="Contatta su WhatsApp"
+                        >
+                          <MessageCircle className="h-3 w-3 text-emerald-600" />
+                          WhatsApp
+                        </a>
 
                         <button
                           onClick={() => onOpenScheduleModal(lead)}

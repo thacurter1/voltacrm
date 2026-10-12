@@ -219,7 +219,8 @@ export type NotificationType =
   | 'bill_uploaded'
   | 'signature_completed'
   | 'price_drop'
-  | 'security_alert';
+  | 'security_alert'
+  | 'consultation_requested';
 
 export type NotificationPriority = 'urgent' | 'high' | 'normal' | 'info';
 
@@ -239,6 +240,9 @@ export interface AppNotification {
     savingsEur?: number;
     phone?: string;
     auditId?: string;
+    billId?: string;
+    fileName?: string;
+    customerName?: string;
   };
 }
 

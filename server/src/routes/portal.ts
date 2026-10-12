@@ -1,7 +1,7 @@
 import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { decodeAndValidateBillFile } from '../utils/billFile.js';
-import { getCustomers, users, addLead } from '../services/dataStore.js';
+import { getCustomers, users, addLead, addNotification } from '../services/dataStore.js';
 import { Lead } from '../types.js';
 import {
   MeterReadingInput,
@@ -126,6 +126,19 @@ portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute
 
     await addLead(newLead);
 
+    await addNotification({
+      id: `notif-consultation-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: 'consultation_requested',
+      title: 'Nuova Richiesta Consulenza dal Comparatore',
+      message: `${customer.name} (${utilityType.toUpperCase()}) richiede assistenza per l'offerta ${offerName || offerId}.`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      priority: 'urgent',
+      targetRole: 'call_center',
+      actionTab: 'leads',
+      meta: { leadId: newLead.id, phone: newLead.phone, customerName: customer.name }
+    });
+
     res.status(201).json({
       success: true,
       leadId: newLead.id,
@@ -215,6 +228,19 @@ portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute
 
   await addLead(newLead);
 
+  await addNotification({
+    id: `notif-consultation-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    type: 'consultation_requested',
+    title: 'Nuova Richiesta Consulenza dal Comparatore',
+    message: `${customerName} (${utilityType.toUpperCase()}) richiede assistenza per l'offerta ${offerName || offerId}.`,
+    timestamp: new Date().toISOString(),
+    isRead: false,
+    priority: 'urgent',
+    targetRole: 'call_center',
+    actionTab: 'leads',
+    meta: { leadId: newLead.id, phone: newLead.phone, customerName }
+  });
+
   res.status(201).json({
     success: true,
     leadId: newLead.id,
@@ -255,6 +281,19 @@ portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (
       assignedBrokerId: customer.assignedBrokerId || 'user-op-2',
     };
     await addLead(newLead);
+
+    await addNotification({
+      id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: 'bill_uploaded',
+      title: 'Nuova Bolletta Caricata dal Comparatore',
+      message: `${customer.name} ha caricato "${bill.fileName}" per ${utilityType.toUpperCase()}. Analisi richiesta.`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      priority: 'urgent',
+      targetRole: 'call_center',
+      actionTab: 'leads',
+      meta: { leadId: newLead.id, billId: bill.id, fileName: bill.fileName, customerId: customer.id }
+    });
 
     res.status(201).json({ success: true, bill, leadId: newLead.id, lead: newLead });
     return;
@@ -319,6 +358,19 @@ portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (
     assignedBrokerId: 'user-op-2',
   };
   await addLead(newLead);
+
+  await addNotification({
+    id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    type: 'bill_uploaded',
+    title: 'Nuova Bolletta Caricata dal Comparatore',
+    message: `${customerName} ha caricato "${bill.fileName}" per ${utilityType.toUpperCase()}. Analisi richiesta.`,
+    timestamp: new Date().toISOString(),
+    isRead: false,
+    priority: 'urgent',
+    targetRole: 'call_center',
+    actionTab: 'leads',
+    meta: { leadId: newLead.id, billId: bill.id, fileName: bill.fileName }
+  });
 
   res.status(201).json({
     success: true,

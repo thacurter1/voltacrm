@@ -1,4 +1,4 @@
-import { Appointment, AuthUser, Customer, CustomerBill, Lead, MarketIndex, SecurityAuditLog, SecurityCheckItem } from '../types';
+import { Appointment, AuthUser, Customer, CustomerBill, Lead, MarketIndex, SecurityAuditLog, SecurityCheckItem, AppNotification } from '../types';
 import { INITIAL_APPOINTMENTS, INITIAL_CUSTOMERS, INITIAL_LEADS } from './mockData';
 import { CURRENT_MARKET_INDEX } from './energyEngine';
 
@@ -219,6 +219,7 @@ interface DbState {
   marketIndex: MarketIndex;
   currentUser: AuthUser;
   securityLogs: SecurityAuditLog[];
+  notifications?: AppNotification[];
 }
 
 export const dbService = {
@@ -227,6 +228,7 @@ export const dbService = {
       return {
         customers: [], leads: [], appointments: [], bills: [],
         marketIndex: CURRENT_MARKET_INDEX, currentUser: DEMO_USERS[0], securityLogs: [],
+        notifications: [],
       };
     }
     try {
@@ -241,6 +243,7 @@ export const dbService = {
           marketIndex: parsed.marketIndex || CURRENT_MARKET_INDEX,
           currentUser: parsed.currentUser || DEMO_USERS[0],
           securityLogs: Array.isArray(parsed.securityLogs) ? parsed.securityLogs : INITIAL_SECURITY_LOGS,
+          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
         };
       }
     } catch (e) {
@@ -255,6 +258,7 @@ export const dbService = {
       marketIndex: CURRENT_MARKET_INDEX,
       currentUser: DEMO_USERS[0],
       securityLogs: INITIAL_SECURITY_LOGS,
+      notifications: [],
     };
     try { this.save(defaultState); } catch { /* Keep the demo readable when browser storage is unavailable. */ }
     return defaultState;
