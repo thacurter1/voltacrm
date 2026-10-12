@@ -32,3 +32,6 @@ server/.env.*
 *.njsproj
 *.sln
 *.sw?
+
+# Superpowers temporary workspace
+.superpowers/
