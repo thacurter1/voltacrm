@@ -109,6 +109,14 @@ function UnifiedApp() {
     }
     return true;
   });
+  const [isStaffGateOpen, setIsStaffGateOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search;
+      const params = new URLSearchParams(search);
+      return params.get('portal') === 'staff' || params.get('login') === 'true';
+    }
+    return false;
+  });
   const openTotem = () => { window.location.href = '/?portal=totem'; };
   const [profiles, setProfiles] = useState<UserProfile[]>(isDemo ? INITIAL_PROFILES : []);
 
@@ -137,6 +145,7 @@ function UnifiedApp() {
     api.auth.logout();
     setCustomerPortalLoading(false);
     setIsGateOpen(true);
+    setIsStaffGateOpen(true);
   };
 
   const getInitialTab = (role: string) => {
@@ -315,6 +324,7 @@ function UnifiedApp() {
       setAudits(runQuarterlyAudit(resolvedCustomers, marketIndex));
       setCurrentUser(user); 
       setIsGateOpen(false);
+      setIsStaffGateOpen(false);
       setActiveTab(getInitialTab(user.role));
       setCustomerPortalLoading(false);
 
@@ -337,10 +347,12 @@ function UnifiedApp() {
       if (isDemoSessionActive() && _newUser) {
         setCurrentUser(_newUser);
         setIsGateOpen(false);
+        setIsStaffGateOpen(false);
         setActiveTab(getInitialTab(_newUser.role));
       } else {
         api.auth.logout();
         setIsGateOpen(true);
+        setIsStaffGateOpen(true);
         addToast('Accesso non completato', error instanceof Error ? error.message : 'Dati non disponibili.', 'warning');
       }
     }
@@ -680,13 +692,25 @@ function UnifiedApp() {
   const portalRoleMismatch = (portalParam === 'customer' && currentUser.role !== 'customer') ||
     (portalParam === 'staff' && currentUser.role === 'customer');
 
-  // Each portal has its own entry screen; a stored session for another role
-  // must never put that user directly into the wrong portal.
-  if (isGateOpen || portalRoleMismatch) {
+  const isExplicitStaffLogin = portalParam === 'staff' || portalParams.get('login') === 'true' || isStaffGateOpen;
+
+  const handleReturnToBackend = () => {
+    const returnTarget = impersonatingStaffUser || profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
+    setImpersonatingStaffUser(null);
+    handleSelectUser(returnTarget);
+  };
+
+  // 1. Explicit PortalHome
+  if (portalParam === 'home') {
+    return <PortalHome />;
+  }
+
+  // 2. Explicit Staff Login Gate: when portal=staff, login=true, or user clicked Area Staff & Broker
+  if (isExplicitStaffLogin && (isGateOpen || portalRoleMismatch)) {
     return (
       <>
-        {!portalParam ? <PortalHome /> : <PortalGate
-          portal={portalParam === 'staff' ? 'staff' : 'customer'}
+        <PortalGate
+          portal="staff"
           onLoginCustomer={handleSelectUser}
           onLoginOperator={handleSelectUser}
           onRequire2FA={handleRequire2FA}
@@ -694,7 +718,8 @@ function UnifiedApp() {
           profiles={profiles}
           onToast={addToast}
           onOpenTotem={openTotem}
-        />}
+          onBackToPublic={() => setIsStaffGateOpen(false)}
+        />
         <TwoFactorModal
           isOpen={!!pending2FAUser}
           user={pending2FAUser}
@@ -706,12 +731,36 @@ function UnifiedApp() {
     );
   }
 
+  // 3. Public unauthenticated root landing: renders CustomerApp comparator directly
+  if (isGateOpen) {
+    return (
+      <div className="min-h-screen bg-[#f7f7f8] flex flex-col font-sans">
+        <NetworkStatusBanner />
+        <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Comparatore Tariffe...</div>}>
+          <CustomerApp
+            isPublicVisitor={true}
+            isGuest={true}
+            customer={null}
+            bills={[]}
+            onOpenStaffLogin={() => setIsStaffGateOpen(true)}
+            onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined}
+          />
+        </React.Suspense>
+        {isDemoSessionActive() && (
+          <DemoRoleSwitcher
+            currentUser={currentUser}
+            customers={customers}
+            onSelectUser={handleSelectUser}
+            onOpenTotem={openTotem}
+            onLogout={logout}
+          />
+        )}
+        <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
+      </div>
+    );
+  }
+
   if (currentUser.role === 'customer') {
-    const handleReturnToBackend = () => {
-      const returnTarget = impersonatingStaffUser || profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
-      setImpersonatingStaffUser(null);
-      handleSelectUser(returnTarget);
-    };
 
     const handleReloadCustomerBills = async () => {
       if (!currentUser.customerId) return;

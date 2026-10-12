@@ -40,6 +40,9 @@ export interface CustomerAppProps {
   onReloadBills?: () => void | Promise<void>;
   onReturnToBackend?: () => void;
   onLogout?: () => void;
+  isPublicVisitor?: boolean;
+  isGuest?: boolean;
+  onOpenStaffLogin?: () => void;
 }
 
 export const CustomerApp: React.FC<CustomerAppProps> = ({
@@ -51,6 +54,9 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   onReloadBills,
   onReturnToBackend,
   onLogout,
+  isPublicVisitor = false,
+  isGuest = false,
+  onOpenStaffLogin,
 }) => {
   const activeCustomer = customer;
   const myBills = bills;
@@ -251,8 +257,8 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     );
   }
 
-  // Null customer recovery view
-  if (!activeCustomer) {
+  // Null customer recovery view (for authenticated sessions with missing customer record)
+  if (!activeCustomer && !isPublicVisitor && !isGuest) {
     return (
       <div className="min-h-screen bg-[#f6f9fc] flex flex-col items-center justify-center p-6 text-center font-sans">
         <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 shadow-xs space-y-4">
@@ -295,10 +301,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
       <EnergyPortalHeader
         activeView={activeView}
         onSelectView={setActiveView}
-        customerName={activeCustomer.name || 'Cliente'}
+        customerName={activeCustomer?.name || 'Visitatore'}
         onToast={addToast}
         onReturnToBackend={onReturnToBackend}
         onLogout={onLogout}
+        isPublicVisitor={isPublicVisitor || isGuest || !activeCustomer}
+        onOpenStaffLogin={onOpenStaffLogin}
       />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 sm:pb-24 space-y-6">
@@ -582,15 +590,17 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
           </div>
         ) : (
           /* "Le mie forniture e bollette" View */
-          <SubitoMySupplies
-            customer={activeCustomer}
-            bills={myBills.filter((b) => b.customerId === activeCustomer.id)}
-            onUploadBill={() => {
-              setActiveView('offers');
-              setCurrentStep('intake');
-            }}
-            onOpenBillDetails={setSelectedBill}
-          />
+          activeCustomer ? (
+            <SubitoMySupplies
+              customer={activeCustomer}
+              bills={myBills.filter((b) => b.customerId === activeCustomer.id)}
+              onUploadBill={() => {
+                setActiveView('offers');
+                setCurrentStep('intake');
+              }}
+              onOpenBillDetails={setSelectedBill}
+            />
+          ) : null
         )}
       </main>
 
@@ -602,6 +612,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
           comparison={activeComparisonForDetails}
           isDemoCatalog={isDemoCatalog}
           currentInput={comparisonInput}
+          isGuest={isPublicVisitor || isGuest || !activeCustomer}
           onClose={() => setActiveComparisonForDetails(null)}
           onRequestConsultation={handleRequestConsultation}
         />

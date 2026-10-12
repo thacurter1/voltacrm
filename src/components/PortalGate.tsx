@@ -22,6 +22,7 @@ interface PortalGateProps {
   profiles: UserProfile[];
   onToast: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
   onOpenTotem?: () => void;
+  onBackToPublic?: () => void;
 }
 
 export const PortalGate: React.FC<PortalGateProps> = ({
@@ -33,6 +34,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   profiles: _profiles,
   onToast,
   onOpenTotem,
+  onBackToPublic,
 }) => {
   const [activePortal, setActivePortal] = useState<'customer' | 'operator'>(portal === 'staff' ? 'operator' : 'customer');
   const selectedPortal = portal === 'staff' ? 'operator' : portal === 'customer' ? 'customer' : activePortal;
@@ -328,7 +330,26 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             </button>
           </div>}
 
-          {portal && <a href="/?portal=home" className="inline-flex items-center gap-2 text-xs font-semibold text-[#635bff] hover:underline">← Scegli un altro portale</a>}
+          <div className="flex items-center justify-between text-xs font-semibold">
+            {onBackToPublic ? (
+              <button
+                type="button"
+                onClick={onBackToPublic}
+                className="inline-flex items-center gap-1.5 text-[#635bff] hover:text-[#5851ea] hover:underline cursor-pointer"
+              >
+                ← Torna al comparatore pubblico
+              </button>
+            ) : portal ? (
+              <a href="/" className="inline-flex items-center gap-1.5 text-[#635bff] hover:underline">
+                ← Torna al comparatore pubblico
+              </a>
+            ) : null}
+            {portal && (
+              <a href="/?portal=home" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-700 hover:underline">
+                Tutti i portali
+              </a>
+            )}
+          </div>
 
           {/* ⚡ 1-Click Demo Sandbox Quick Strip */}
           {DEMO_MODE && <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 space-y-2">

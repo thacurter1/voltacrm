@@ -26,7 +26,7 @@ import {
 } from '../../services/offerComparison';
 
 export interface EnergyBillIntakeProps {
-  customer: Customer;
+  customer?: Customer | null;
   onUploaded: (bill: CustomerBill) => void;
   onManualInput: (input: ComparisonInput) => void;
   selectedUtilityType?: UtilityType;
@@ -41,7 +41,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   selectedUtilityType = 'luce',
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const customerPoints = customer.utilityPoints || [];
+  const customerPoints = customer?.utilityPoints || [];
   const hasProfilePoints = customerPoints.length > 0;
   const [activeMode, setActiveMode] = useState<IntakeMode>(() => (hasProfilePoints ? 'profile' : 'wizard'));
   const [utilityType, setUtilityType] = useState<UtilityType>(selectedUtilityType);
@@ -152,7 +152,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
     try {
       const uploadedBill = await portalApi.uploadBill({
-        customerId: customer.id,
+        customerId: customer?.id || 'guest-visitor',
         file: selectedFile,
         fileName: selectedFile.name,
         utilityType,

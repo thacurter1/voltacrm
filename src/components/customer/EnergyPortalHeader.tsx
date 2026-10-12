@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, FileText, Sparkles, ShieldCheck, LogOut } from 'lucide-react';
+import { Zap, FileText, Sparkles, ShieldCheck, LogOut, Lock } from 'lucide-react';
 import { NotificationCenter } from '../NotificationCenter';
 
 export interface EnergyPortalHeaderProps {
@@ -10,6 +10,8 @@ export interface EnergyPortalHeaderProps {
   onToast?: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
   onReturnToBackend?: () => void;
   onLogout?: () => void;
+  isPublicVisitor?: boolean;
+  onOpenStaffLogin?: () => void;
 }
 
 export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
@@ -20,6 +22,8 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
   onToast,
   onReturnToBackend,
   onLogout,
+  isPublicVisitor = false,
+  onOpenStaffLogin,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
@@ -40,11 +44,11 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
                 Volta Energia
               </span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25">
-                PORTALE BOLLETTE
+                {isPublicVisitor ? 'Comparatore Ufficiale' : 'PORTALE BOLLETTE'}
               </span>
             </div>
             <span className="hidden sm:block text-[11px] text-slate-500 font-medium">
-              Confronto guidato e trasparente tariffe luce e gas
+              Confronto tariffe luce e gas • Trasparente, gratuito e senza vincoli
             </span>
           </div>
         </button>
@@ -52,34 +56,49 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
         {/* Navigation & Actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* View toggle (Offerte / Le mie forniture) */}
-          <nav className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold shrink-0" aria-label="Navigazione portale">
-            <button
-              type="button"
-              onClick={() => onSelectView('offers')}
-              className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
-                activeView === 'offers'
-                  ? 'bg-white text-[#0a2540] shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
-              <span>Confronta Offerte</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectView('supplies')}
-              className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
-                activeView === 'supplies'
-                  ? 'bg-white text-[#0a2540] shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
-              <span>Le mie bollette</span>
-            </button>
-          </nav>
+          {!isPublicVisitor && (
+            <nav className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold shrink-0" aria-label="Navigazione portale">
+              <button
+                type="button"
+                onClick={() => onSelectView('offers')}
+                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                  activeView === 'offers'
+                    ? 'bg-white text-[#0a2540] shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
+                <span>Confronta Offerte</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectView('supplies')}
+                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                  activeView === 'supplies'
+                    ? 'bg-white text-[#0a2540] shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
+                <span>Le mie bollette</span>
+              </button>
+            </nav>
+          )}
 
-          {onToast && (
+          {/* Area Staff & Broker button for public landing */}
+          {onOpenStaffLogin && (
+            <button
+              type="button"
+              onClick={onOpenStaffLogin}
+              className="min-h-[36px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-slate-700 active:scale-95 shrink-0"
+              title="Area riservata per consulenti, broker e staff"
+            >
+              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
+              <span>Area Staff & Broker</span>
+            </button>
+          )}
+
+          {onToast && !isPublicVisitor && (
             <NotificationCenter
               userRole="customer"
               onToast={onToast}
@@ -87,7 +106,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             />
           )}
 
-          {onLogout && (
+          {onLogout && !isPublicVisitor && (
             <button type="button" onClick={onLogout} className="min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#635bff] flex items-center gap-1.5 cursor-pointer">
               <LogOut className="w-4 h-4" aria-hidden="true" />
               <span>Esci</span>
@@ -95,10 +114,12 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
           )}
 
           {/* User badge */}
-          <div className="hidden md:flex items-center gap-1.5 pl-2 border-l border-slate-200 text-xs">
-            <span className="text-slate-400">Utente:</span>
-            <span className="font-bold text-[#0a2540]">{customerName.split(' ')[0]}</span>
-          </div>
+          {!isPublicVisitor && (
+            <div className="hidden md:flex items-center gap-1.5 pl-2 border-l border-slate-200 text-xs">
+              <span className="text-slate-400">Utente:</span>
+              <span className="font-bold text-[#0a2540]">{customerName.split(' ')[0]}</span>
+            </div>
+          )}
 
           {/* Return to CRM button: ONLY visible when staff is impersonating */}
           {onReturnToBackend && (
