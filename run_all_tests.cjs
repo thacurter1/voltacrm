@@ -70,7 +70,7 @@ async function main() {
     serverProc.stdout.on('data', chunk => { serverOutput += chunk; });
     serverProc.stderr.on('data', chunk => { serverOutput += chunk; });
 
-    let retries = 25;
+    let retries = 35;
     while (retries > 0) {
       await new Promise(r => setTimeout(r, 400));
       isRunning = await checkServer();
@@ -130,7 +130,8 @@ async function main() {
     path.join('tests', 'test_public_landing_routing.cjs'),
     path.join('tests', 'test_public_launch_funnel.cjs'),
     path.join('tests', 'test_bill_upload_lead_intake.cjs'),
-    path.join('tests', 'test_legal_compliance_and_transparency.cjs')
+    path.join('tests', 'test_legal_compliance_and_transparency.cjs'),
+    path.join('tests', 'test_production_hardening_and_seo.cjs')
   ];
 
   let passed = 0;
