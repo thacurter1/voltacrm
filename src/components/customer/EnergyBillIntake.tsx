@@ -10,14 +10,19 @@ import {
   Sliders, 
   ArrowRight,
   ShieldCheck,
-  Info
+  Info,
+  User,
+  Users,
+  Home,
+  Check
 } from 'lucide-react';
 import { Customer, CustomerBill, UtilityPoint } from '../../types';
 import { portalApi } from '../../api/portal';
 import { 
   ComparisonInput, 
   UtilityType, 
-  validateBillUploadFile 
+  validateBillUploadFile,
+  estimateLifestyleConsumption
 } from '../../services/offerComparison';
 
 export interface EnergyBillIntakeProps {
@@ -27,6 +32,8 @@ export interface EnergyBillIntakeProps {
   selectedUtilityType?: UtilityType;
 }
 
+export type IntakeMode = 'profile' | 'wizard' | 'upload' | 'manual';
+
 export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   customer,
   onUploaded,
@@ -34,8 +41,16 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   selectedUtilityType = 'luce',
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeMode, setActiveMode] = useState<'profile' | 'upload' | 'manual'>('profile');
+  const customerPoints = customer.utilityPoints || [];
+  const hasProfilePoints = customerPoints.length > 0;
+  const [activeMode, setActiveMode] = useState<IntakeMode>(() => (hasProfilePoints ? 'profile' : 'wizard'));
   const [utilityType, setUtilityType] = useState<UtilityType>(selectedUtilityType);
+
+  // Wizard state (Stima da profilo casa)
+  const [householdSize, setHouseholdSize] = useState<'single' | 'couple' | 'family'>('couple');
+  const [hasHeatPumpOrAc, setHasHeatPumpOrAc] = useState<boolean>(false);
+  const [hasElectricBoiler, setHasElectricBoiler] = useState<boolean>(false);
+  const [hasInduction, setHasInduction] = useState<boolean>(false);
 
   // Upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -54,8 +69,26 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   const [manualSupplier, setManualSupplier] = useState<string>('');
   const [manualPricingType, setManualPricingType] = useState<'fixed' | 'indexed'>('fixed');
 
-  const customerPoints = customer.utilityPoints || [];
   const matchingPoints = customerPoints.filter((p) => p.type === utilityType);
+
+  // Computed consumption for lifestyle wizard
+  const estimatedConsumption = estimateLifestyleConsumption({
+    householdSize,
+    utilityType,
+    hasHeatPumpOrAc: utilityType === 'luce' ? hasHeatPumpOrAc : false,
+    hasElectricBoiler: utilityType === 'luce' ? hasElectricBoiler : false,
+    hasInduction: utilityType === 'luce' ? hasInduction : false,
+  });
+
+  const handleWizardSubmit = () => {
+    onManualInput({
+      utilityType,
+      annualConsumption: estimatedConsumption,
+      powerKw: utilityType === 'luce' ? 3 : undefined,
+      source: 'manual',
+      asOf: 'Stima Abitudini Q1 2026',
+    });
+  };
 
   // Handle selecting an existing profile point directly
   const handleSelectExistingPoint = (point: UtilityPoint) => {
@@ -226,51 +259,74 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
       {/* Choice of data source: each option changes the form beneath it. */}
       <div className="p-5 sm:p-7 pb-0 sm:pb-0">
         <h3 className="text-lg font-bold text-[#0a2540] mb-3">Come vuoi iniziare?</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Scegli i dati da usare">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveMode('profile');
-            setUploadError(null);
-          }}
-          aria-pressed={activeMode === 'profile'}
-          className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
-            activeMode === 'profile' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
-          }`}
+        <div
+          className={`grid grid-cols-1 ${hasProfilePoints ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}
+          role="group"
+          aria-label="Scegli i dati da usare"
         >
-          <span className="block text-sm font-bold">Usa la mia fornitura</span>
-          <span className="block text-xs text-slate-600 mt-1">{matchingPoints.length} {matchingPoints.length === 1 ? 'fornitura disponibile' : 'forniture disponibili'}</span>
-        </button>
+          {hasProfilePoints && (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMode('profile');
+                setUploadError(null);
+              }}
+              aria-pressed={activeMode === 'profile'}
+              className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                activeMode === 'profile' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+              }`}
+            >
+              <span className="block text-sm font-bold">Usa la mia fornitura</span>
+              <span className="block text-xs text-slate-600 mt-1">
+                {matchingPoints.length} {matchingPoints.length === 1 ? 'fornitura disponibile' : 'forniture disponibili'}
+              </span>
+            </button>
+          )}
 
-        <button
-          type="button"
-          onClick={() => {
-            setActiveMode('upload');
-            setUploadError(null);
-          }}
-          aria-pressed={activeMode === 'upload'}
-          className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
-            activeMode === 'upload' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
-          }`}
-        >
-          <span className="block text-sm font-bold">Carica una bolletta</span>
-          <span className="block text-xs text-slate-600 mt-1">PDF, JPG o PNG · max 10 MB</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('wizard');
+              setUploadError(null);
+            }}
+            aria-pressed={activeMode === 'wizard'}
+            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+              activeMode === 'wizard' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+            }`}
+          >
+            <span className="block text-sm font-bold">Stima da profilo casa</span>
+            <span className="block text-xs text-slate-600 mt-1">Senza bolletta · Calcolo guidato</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setActiveMode('manual');
-            setUploadError(null);
-          }}
-          aria-pressed={activeMode === 'manual'}
-          className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
-            activeMode === 'manual' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
-          }`}
-        >
-          <span className="block text-sm font-bold">Inserisci i consumi</span>
-          <span className="block text-xs text-slate-600 mt-1">Se hai i dati già a portata di mano</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('upload');
+              setUploadError(null);
+            }}
+            aria-pressed={activeMode === 'upload'}
+            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+              activeMode === 'upload' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+            }`}
+          >
+            <span className="block text-sm font-bold">Carica una bolletta</span>
+            <span className="block text-xs text-slate-600 mt-1">PDF, JPG o PNG · max 10 MB</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('manual');
+              setUploadError(null);
+            }}
+            aria-pressed={activeMode === 'manual'}
+            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+              activeMode === 'manual' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+            }`}
+          >
+            <span className="block text-sm font-bold">Inserisci i consumi</span>
+            <span className="block text-xs text-slate-600 mt-1">Se hai i dati già a portata di mano</span>
+          </button>
         </div>
       </div>
 
@@ -284,11 +340,18 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 <p className="text-xs text-slate-600 font-medium">
                   Nessuna fornitura {utilityType.toUpperCase()} registrata attualmente nel tuo profilo.
                 </p>
-                <div className="flex justify-center gap-3">
+                <div className="flex flex-wrap justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMode('wizard')}
+                    className="px-4 py-2 bg-[#635bff] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#5851ea] transition cursor-pointer"
+                  >
+                    Stima profilo casa
+                  </button>
                   <button
                     type="button"
                     onClick={() => setActiveMode('upload')}
-                    className="px-4 py-2 bg-[#635bff] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#5851ea] transition cursor-pointer"
+                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition cursor-pointer"
                   >
                     Carica bolletta
                   </button>
@@ -376,6 +439,253 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Mode: Wizard (Stima da profilo casa) */}
+        {activeMode === 'wizard' && (
+          <div className="space-y-6">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-1">
+              <div className="flex items-center gap-2 font-bold text-slate-900">
+                <Info className="w-4 h-4 text-[#635bff]" />
+                <span>Stima guidata basata sul tuo stile di vita</span>
+              </div>
+              <p>
+                Non hai la bolletta a portata di mano? Seleziona il numero di persone in casa e gli elettrodomestici principali per ottenere una stima affidabile dei consumi annuali {utilityType === 'luce' ? 'elettrici' : 'del gas'}.
+              </p>
+            </div>
+
+            {/* Household size selection */}
+            <div className="space-y-2.5">
+              <label className="block text-sm font-bold text-[#0a2540]">
+                Quante persone vivono nell'abitazione?
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4" role="radiogroup" aria-label="Componenti nucleo familiare">
+                {/* Single */}
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={householdSize === 'single'}
+                  onClick={() => setHouseholdSize('single')}
+                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                    householdSize === 'single'
+                      ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540] shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-[#635bff]/50 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        householdSize === 'single' ? 'bg-[#635bff] text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <User className="w-4 h-4" />
+                    </div>
+                    {householdSize === 'single' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#635bff]/10 text-[#635bff]">
+                        Selezionato
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-[#0a2540]">1 Persona</span>
+                    <span className="block text-xs text-slate-500 mt-0.5">
+                      Base {utilityType === 'luce' ? '1.500 kWh' : '600 Smc'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Couple */}
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={householdSize === 'couple'}
+                  onClick={() => setHouseholdSize('couple')}
+                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                    householdSize === 'couple'
+                      ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540] shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-[#635bff]/50 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        householdSize === 'couple' ? 'bg-[#635bff] text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <Users className="w-4 h-4" />
+                    </div>
+                    {householdSize === 'couple' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#635bff]/10 text-[#635bff]">
+                        Selezionato
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-[#0a2540]">Coppia</span>
+                    <span className="block text-xs text-slate-500 mt-0.5">
+                      Base {utilityType === 'luce' ? '2.400 kWh' : '950 Smc'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Family */}
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={householdSize === 'family'}
+                  onClick={() => setHouseholdSize('family')}
+                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                    householdSize === 'family'
+                      ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540] shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-[#635bff]/50 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        householdSize === 'family' ? 'bg-[#635bff] text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <Home className="w-4 h-4" />
+                    </div>
+                    {householdSize === 'family' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#635bff]/10 text-[#635bff]">
+                        Selezionato
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-[#0a2540]">Famiglia (3+)</span>
+                    <span className="block text-xs text-slate-500 mt-0.5">
+                      Base {utilityType === 'luce' ? '3.400 kWh' : '1.300 Smc'}
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Appliance toggles (when utilityType === 'luce') */}
+            {utilityType === 'luce' && (
+              <div className="space-y-3 pt-1">
+                <div>
+                  <span className="block text-sm font-bold text-[#0a2540]">
+                    Elettrodomestici ad alto assorbimento
+                  </span>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Seleziona gli apparecchi presenti in casa per affinare la stima del consumo annuo.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2.5" role="group" aria-label="Elettrodomestici ad alto assorbimento">
+                  <button
+                    type="button"
+                    onClick={() => setHasHeatPumpOrAc(!hasHeatPumpOrAc)}
+                    aria-pressed={hasHeatPumpOrAc}
+                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                      hasHeatPumpOrAc
+                        ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#635bff]/50'
+                    }`}
+                  >
+                    {hasHeatPumpOrAc ? (
+                      <Check className="w-4 h-4 text-[#635bff]" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-slate-300" />
+                    )}
+                    <span>Climatizzatore / Pompa di calore</span>
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                      +400 kWh
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setHasElectricBoiler(!hasElectricBoiler)}
+                    aria-pressed={hasElectricBoiler}
+                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                      hasElectricBoiler
+                        ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#635bff]/50'
+                    }`}
+                  >
+                    {hasElectricBoiler ? (
+                      <Check className="w-4 h-4 text-[#635bff]" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-slate-300" />
+                    )}
+                    <span>Scaldabagno elettrico</span>
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                      +800 kWh
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setHasInduction(!hasInduction)}
+                    aria-pressed={hasInduction}
+                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                      hasInduction
+                        ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#635bff]/50'
+                    }`}
+                  >
+                    {hasInduction ? (
+                      <Check className="w-4 h-4 text-[#635bff]" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-slate-300" />
+                    )}
+                    <span>Piano a induzione</span>
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                      +350 kWh
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Real-time calculation card and CTA */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Stima Consumo Annuo
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Stima Abitudini Q1 2026
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-extrabold font-mono text-[#0a2540]">
+                    {estimatedConsumption.toLocaleString('it-IT')}
+                  </span>
+                  <span className="text-base font-bold text-slate-600">
+                    {utilityType === 'luce' ? 'kWh/anno' : 'Smc/anno'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {utilityType === 'luce'
+                    ? `Profilo ${householdSize === 'single' ? '1 persona' : householdSize === 'couple' ? 'coppia' : 'famiglia'}${
+                        (hasHeatPumpOrAc || hasElectricBoiler || hasInduction)
+                          ? ` con elettrodomestici extra (+${
+                              (hasHeatPumpOrAc ? 400 : 0) +
+                              (hasElectricBoiler ? 800 : 0) +
+                              (hasInduction ? 350 : 0)
+                            } kWh)`
+                          : ''
+                      }`
+                    : `Profilo standard ${householdSize === 'single' ? '1 persona' : householdSize === 'couple' ? 'coppia' : 'famiglia'} (riscaldamento + cottura cibi)`}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleWizardSubmit}
+                className="min-h-[44px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs shrink-0"
+              >
+                <span>Confronta offerte con questa stima</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
