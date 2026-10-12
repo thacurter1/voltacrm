@@ -33,6 +33,7 @@ export interface EnergyBillIntakeProps {
   onUploaded: (bill: CustomerBill) => void;
   onManualInput: (input: ComparisonInput) => void;
   selectedUtilityType?: UtilityType;
+  onOpenPrivacy?: () => void;
 }
 
 export type IntakeMode = 'profile' | 'wizard' | 'upload' | 'manual';
@@ -42,6 +43,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   onUploaded,
   onManualInput,
   selectedUtilityType = 'luce',
+  onOpenPrivacy,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const customerPoints = customer?.utilityPoints || [];
@@ -1192,7 +1194,19 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                         required
                       />
                       <span>
-                        Dichiaro di aver preso visione dell'informativa privacy e acconsento al trattamento dei dati per la consulenza gratuita sulle offerte Volta Energia. <span className="text-red-500 font-bold">*</span>
+                        Dichiaro di aver preso visione dell'{' '}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onOpenPrivacy?.();
+                          }}
+                          className="text-[#635bff] font-semibold underline hover:text-[#534be5] cursor-pointer"
+                        >
+                          informativa privacy
+                        </button>{' '}
+                        e acconsento al trattamento dei dati per la consulenza gratuita sulle offerte Volta Energia. <span className="text-red-500 font-bold">*</span>
                       </span>
                     </label>
                   </div>

@@ -34,6 +34,7 @@ export interface EnergyOfferDetailsProps {
     guestData?: GuestConsultationData
   ) => Promise<boolean>;
   isGuest?: boolean;
+  onOpenPrivacy?: () => void;
 }
 
 export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
@@ -43,6 +44,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   onClose,
   onRequestConsultation,
   isGuest,
+  onOpenPrivacy,
 }) => {
   const { offer, annualCost, currentAnnualCost, savingsEur, savingsPercent } = comparison;
   const isLuce = offer.energyType === 'luce';
@@ -614,7 +616,19 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                     required
                   />
                   <span>
-                    Dichiaro di aver preso visione dell'informativa privacy e acconsento al trattamento dei dati per la consulenza gratuita sulle offerte Volta Energia. <span className="text-red-500 font-bold">*</span>
+                    Dichiaro di aver preso visione dell'{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onOpenPrivacy?.();
+                      }}
+                      className="text-[#635bff] font-semibold underline hover:text-[#534be5] cursor-pointer"
+                    >
+                      informativa privacy (GDPR)
+                    </button>{' '}
+                    e acconsento al trattamento dei dati per la consulenza gratuita sulle offerte Volta Energia. <span className="text-red-500 font-bold">*</span>
                   </span>
                 </label>
               </div>

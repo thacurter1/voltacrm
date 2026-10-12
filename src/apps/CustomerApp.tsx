@@ -6,6 +6,9 @@ import { EnergyOfferDetails } from '../components/customer/EnergyOfferDetails';
 import { SubitoMySupplies } from '../components/customer/SubitoMySupplies';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 import { ToastContainer } from '../components/ToastContainer';
+import { LegalFooter } from '../components/common/LegalFooter';
+import { LegalModal, type LegalTab } from '../components/common/LegalModal';
+import { CookieBanner } from '../components/common/CookieBanner';
 import { api } from '../api/client';
 import { portalApi } from '../api/portal';
 import { MARKET_OFFERS, CURRENT_MARKET_INDEX } from '../services/energyEngine';
@@ -127,6 +130,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   // Details Modal
   const [activeComparisonForDetails, setActiveComparisonForDetails] = useState<ComparisonResult | null>(null);
   const [selectedBill, setSelectedBill] = useState<CustomerBill | null>(null);
+  const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
 
   // Toast notifications
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
@@ -393,6 +397,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     selectedUtilityType={comparisonInput.utilityType}
                     onUploaded={handleBillUploaded}
                     onManualInput={handleManualInputApplied}
+                    onOpenPrivacy={() => setLegalModalTab('privacy')}
                   />
                   <aside className="lg:sticky lg:top-24 border-t-2 border-[#635bff] pt-5 text-sm text-slate-600" aria-label="Come funziona il confronto">
                     <h2 className="text-lg font-bold text-[#0a2540]">Come funziona</h2>
@@ -615,6 +620,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
           isGuest={isPublicVisitor || isGuest || !activeCustomer}
           onClose={() => setActiveComparisonForDetails(null)}
           onRequestConsultation={handleRequestConsultation}
+          onOpenPrivacy={() => setLegalModalTab('privacy')}
         />
       )}
 
@@ -638,22 +644,18 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 px-6 text-center text-xs text-slate-500 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[#0a2540]">Volta Energia</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/20">
-              Trasparenza Tariffe
-            </span>
-            <span>• Confronto tariffe luce e gas per clienti finali</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-slate-600 text-xs">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Tariffe e stime a scopo comparativo basate su benchmark indicativi PUN/PSV (Q1 2026). Condizioni definitive verificate prima della sottoscrizione.</span>
-          </div>
-        </div>
-      </footer>
+      {/* Institutional Legal Footer & Compliance */}
+      <LegalFooter onOpenLegal={(tab) => setLegalModalTab(tab)} />
+
+      {/* Technical Cookie Notice */}
+      <CookieBanner onOpenLegal={(tab) => setLegalModalTab(tab)} />
+
+      {/* Legal & Compliance Modal (GDPR, ARERA, Terms) */}
+      <LegalModal
+        isOpen={legalModalTab !== null}
+        initialTab={legalModalTab || 'privacy'}
+        onClose={() => setLegalModalTab(null)}
+      />
 
       <ToastContainer toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
     </div>
