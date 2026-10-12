@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { decodeAndValidateBillFile } from '../utils/billFile.js';
 import { getCustomers, users, addLead } from '../services/dataStore.js';
@@ -12,7 +12,14 @@ import { canActorAccessCustomer, isBrokerAssigned } from '../services/customerOw
 
 export const portalRouter = Router();
 
-portalRouter.use(authenticateToken);
+function optionalAuthenticateToken(req: AuthRequest, res: Response, next: NextFunction): void {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) {
+    return next();
+  }
+  authenticateToken(req, res, next);
+}
 
 type PortalActor =
   | { isStaff: true; customerId?: string }
@@ -79,6 +86,144 @@ function handlePortalRoute(fn: AsyncPortalHandler) {
     }
   };
 }
+
+portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  // 1. Authenticated customer flow (existing behavior)
+  if (req.user) {
+    const { customer } = resolveCustomer(req, req.body?.customerId);
+    const { offerId, offerName, supplier, utilityType, annualConsumption, notes, preferredContact } = req.body || {};
+
+    if (!offerId || typeof offerId !== 'string') {
+      throw httpError('Identificativo offerta obbligatorio.', 400);
+    }
+    if (!utilityType || !['luce', 'gas'].includes(utilityType)) {
+      throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
+    }
+
+    const safeConsumption = typeof annualConsumption === 'number' && annualConsumption > 0 ? annualConsumption : undefined;
+    const noteDetails = [
+      `[PORTALE CLIENTI] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
+      `Fornitura: ${utilityType.toUpperCase()}`,
+      safeConsumption ? `Consumo indicato: ${safeConsumption} ${utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
+      preferredContact ? `Canale preferito: ${preferredContact}` : null,
+      notes ? `Note cliente: ${String(notes).slice(0, 500)}` : null,
+    ].filter(Boolean).join(' • ');
+
+    const newLead: Lead = {
+      id: `lead-portal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email || `${customer.id}@cliente.volta.it`,
+      city: customer.city || 'Italia',
+      source: 'landing_page',
+      status: 'new',
+      notes: noteDetails,
+      createdAt: new Date().toISOString().split('T')[0],
+      estimatedConsumptionKwh: utilityType === 'luce' ? safeConsumption : undefined,
+      estimatedConsumptionSmc: utilityType === 'gas' ? safeConsumption : undefined,
+      assignedBrokerId: customer.assignedBrokerId,
+    };
+
+    await addLead(newLead);
+
+    res.status(201).json({
+      success: true,
+      leadId: newLead.id,
+      message: 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
+      lead: newLead,
+    });
+    return;
+  }
+
+  // 2. Unauthenticated / Guest public funnel flow
+  const body = req.body || {};
+  const customerNameRaw = body.customerName ?? body.name;
+  const hasGuestContact =
+    body.isGuest === true ||
+    typeof customerNameRaw === 'string' ||
+    body.phone !== undefined ||
+    body.privacyConsent !== undefined;
+
+  if (!hasGuestContact) {
+    throw httpError('Autenticazione richiesta.', 401);
+  }
+
+  const {
+    phone,
+    privacyConsent,
+    offerId,
+    offerName,
+    supplier,
+    utilityType,
+    annualConsumption,
+    notes,
+    preferredContact,
+    preferredTime,
+    email,
+    city,
+  } = body;
+
+  if (privacyConsent !== true) {
+    throw httpError('Il consenso alla privacy è obbligatorio per richiedere una consulenza.', 400);
+  }
+
+  const trimmedPhone = typeof phone === 'string' ? phone.trim() : '';
+  const digitsOnly = trimmedPhone.replace(/\D/g, '');
+  if (!trimmedPhone || digitsOnly.length < 8) {
+    throw httpError('Recapito telefonico obbligatorio per essere ricontattato.', 400);
+  }
+
+  const customerName = typeof customerNameRaw === 'string' ? customerNameRaw.trim() : '';
+  if (!customerName) {
+    throw httpError('Nome obbligatorio.', 400);
+  }
+
+  if (!offerId || typeof offerId !== 'string') {
+    throw httpError('Identificativo offerta obbligatorio.', 400);
+  }
+  if (!utilityType || !['luce', 'gas'].includes(utilityType)) {
+    throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
+  }
+
+  const safeConsumption = typeof annualConsumption === 'number' && annualConsumption > 0 ? annualConsumption : undefined;
+  const noteDetails = [
+    `[COMPARATORE PUBBLICO] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
+    `Fornitura: ${utilityType.toUpperCase()}`,
+    safeConsumption ? `Consumo indicato: ${safeConsumption} ${utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
+    preferredContact ? `Canale preferito: ${preferredContact}` : null,
+    preferredTime ? `Fascia oraria preferita: ${preferredTime}` : null,
+    notes ? `Note visitatore: ${String(notes).slice(0, 500)}` : null,
+  ].filter(Boolean).join(' • ');
+
+  const defaultBroker = users.find((u) => u.role === 'broker' || u.role === 'operator');
+  const assignedBrokerId = defaultBroker?.id || 'user-op-2';
+
+  const newLead: Lead = {
+    id: `lead-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    name: customerName,
+    phone: trimmedPhone,
+    email: (email && typeof email === 'string' && email.trim()) || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
+    city: (typeof city === 'string' && city.trim()) || 'Italia',
+    source: 'public_comparator',
+    status: 'new',
+    notes: noteDetails,
+    createdAt: new Date().toISOString().split('T')[0],
+    estimatedConsumptionKwh: utilityType === 'luce' ? safeConsumption : undefined,
+    estimatedConsumptionSmc: utilityType === 'gas' ? safeConsumption : undefined,
+    assignedBrokerId,
+  };
+
+  await addLead(newLead);
+
+  res.status(201).json({
+    success: true,
+    leadId: newLead.id,
+    message: 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
+    lead: newLead,
+  });
+}));
+
+portalRouter.use(authenticateToken);
 
 portalRouter.get('/bills', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const actor = resolveActor(req);
@@ -224,48 +369,4 @@ portalRouter.post('/readings', handlePortalRoute(async (req: AuthRequest, res: R
   res.status(201).json({ success: true, reading });
 }));
 
-portalRouter.post('/consultations', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
-  const { customer } = resolveCustomer(req, req.body?.customerId);
-  const { offerId, offerName, supplier, utilityType, annualConsumption, notes, preferredContact } = req.body || {};
-
-  if (!offerId || typeof offerId !== 'string') {
-    throw httpError('Identificativo offerta obbligatorio.', 400);
-  }
-  if (!utilityType || !['luce', 'gas'].includes(utilityType)) {
-    throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
-  }
-
-  const safeConsumption = typeof annualConsumption === 'number' && annualConsumption > 0 ? annualConsumption : undefined;
-  const noteDetails = [
-    `[PORTALE CLIENTI] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
-    `Fornitura: ${utilityType.toUpperCase()}`,
-    safeConsumption ? `Consumo indicato: ${safeConsumption} ${utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
-    preferredContact ? `Canale preferito: ${preferredContact}` : null,
-    notes ? `Note cliente: ${String(notes).slice(0, 500)}` : null,
-  ].filter(Boolean).join(' • ');
-
-  const newLead: Lead = {
-    id: `lead-portal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    name: customer.name,
-    phone: customer.phone,
-    email: customer.email || `${customer.id}@cliente.volta.it`,
-    city: customer.city || 'Italia',
-    source: 'landing_page',
-    status: 'new',
-    notes: noteDetails,
-    createdAt: new Date().toISOString().split('T')[0],
-    estimatedConsumptionKwh: utilityType === 'luce' ? safeConsumption : undefined,
-    estimatedConsumptionSmc: utilityType === 'gas' ? safeConsumption : undefined,
-    assignedBrokerId: customer.assignedBrokerId,
-  };
-
-  await addLead(newLead);
-
-  res.status(201).json({
-    success: true,
-    leadId: newLead.id,
-    message: 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
-    lead: newLead,
-  });
-}));
 
