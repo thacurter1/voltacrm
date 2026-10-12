@@ -223,6 +223,112 @@ portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute
   });
 }));
 
+portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  // 1. Authenticated customer flow
+  if (req.user) {
+    const { customer } = resolveCustomer(req, req.body?.customerId);
+    const utilityType = req.body?.utilityType as PortalUtilityType;
+    if (!['luce', 'gas'].includes(utilityType)) {
+      throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
+    }
+
+    const bill = await portalService.uploadBill({
+      customerId: customer.id,
+      customerName: customer.name,
+      fileName: typeof req.body?.fileName === 'string' ? req.body.fileName : 'bolletta',
+      mimeType: typeof req.body?.mimeType === 'string' ? req.body.mimeType : '',
+      bytes: decodeAndValidateBillFile(req.body?.base64Data, req.body?.mimeType),
+      utilityType,
+      notes: typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 1000) : undefined,
+    });
+
+    const newLead: Lead = {
+      id: `lead-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email || `${customer.id}@cliente.volta.it`,
+      city: customer.city || 'Italia',
+      source: 'bill_upload',
+      status: 'new',
+      notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Cliente registrato: ${customer.id}${req.body?.notes ? ` • Note: ${String(req.body.notes).slice(0, 500)}` : ''}`,
+      createdAt: new Date().toISOString().split('T')[0],
+      assignedBrokerId: customer.assignedBrokerId || 'user-op-2',
+    };
+    await addLead(newLead);
+
+    res.status(201).json({ success: true, bill, leadId: newLead.id, lead: newLead });
+    return;
+  }
+
+  // 2. Unauthenticated / Guest public funnel flow
+  const body = req.body || {};
+  const customerNameRaw = body.customerName ?? body.name;
+  const hasGuestContact =
+    body.isGuest === true ||
+    typeof customerNameRaw === 'string' ||
+    body.phone !== undefined ||
+    body.privacyConsent !== undefined;
+
+  if (!hasGuestContact) {
+    throw httpError('Autenticazione richiesta.', 401);
+  }
+
+  const { phone, privacyConsent, preferredContact, notes, email, city } = body;
+  const customerName = typeof customerNameRaw === 'string' ? customerNameRaw.trim() : '';
+  if (!customerName) {
+    throw httpError('Nome e cognome obbligatori per richiedere l\'analisi della bolletta.', 400);
+  }
+  if (typeof phone !== 'string' || !phone.trim()) {
+    throw httpError('Numero di telefono obbligatorio per essere ricontattati dal consulente.', 400);
+  }
+  const trimmedPhone = phone.trim();
+  const digitsOnly = trimmedPhone.replace(/\D/g, '');
+  if (digitsOnly.length < 8) {
+    throw httpError('Numero di telefono non valido (minimo 8 cifre).', 400);
+  }
+  if (privacyConsent !== true) {
+    throw httpError('È necessario accettare l\'informativa sulla privacy per procedere.', 400);
+  }
+
+  const utilityType = body.utilityType as PortalUtilityType;
+  if (!utilityType || !['luce', 'gas'].includes(utilityType)) {
+    throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
+  }
+
+  const bytes = decodeAndValidateBillFile(body.base64Data, body.mimeType);
+  const bill = await portalService.uploadBill({
+    customerId: `guest-${Date.now()}`,
+    customerName,
+    fileName: typeof body.fileName === 'string' ? body.fileName : 'bolletta',
+    mimeType: typeof body.mimeType === 'string' ? body.mimeType : '',
+    bytes,
+    utilityType,
+    notes: typeof notes === 'string' ? notes.slice(0, 1000) : undefined,
+  });
+
+  const newLead: Lead = {
+    id: `lead-bill-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    name: customerName,
+    phone: trimmedPhone,
+    email: (email && typeof email === 'string' && email.trim()) || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
+    city: (typeof city === 'string' && city.trim()) || 'Italia',
+    source: 'bill_upload',
+    status: 'new',
+    notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Richiesta analisi broker.${preferredContact ? ` • Orario preferito: ${preferredContact}` : ''}${notes ? ` • Note: ${String(notes).slice(0, 500)}` : ''}`,
+    createdAt: new Date().toISOString().split('T')[0],
+    assignedBrokerId: 'user-op-2',
+  };
+  await addLead(newLead);
+
+  res.status(201).json({
+    success: true,
+    bill,
+    leadId: newLead.id,
+    lead: newLead,
+    message: 'Bolletta caricata e richiesta di analisi registrata nel CRM.',
+  });
+}));
+
 portalRouter.use(authenticateToken);
 
 portalRouter.get('/bills', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
@@ -254,25 +360,6 @@ portalRouter.get('/bills', handlePortalRoute(async (req: AuthRequest, res: Respo
   }
 
   res.json({ success: true, bills });
-}));
-
-portalRouter.post('/bills', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
-  const { customer } = resolveCustomer(req, req.body?.customerId);
-  const utilityType = req.body?.utilityType as PortalUtilityType;
-  if (!customer.utilityPoints.some((point: any) => point.type === utilityType)) {
-    throw httpError('La fornitura selezionata non appartiene al cliente.', 400);
-  }
-
-  const bill = await portalService.uploadBill({
-    customerId: customer.id,
-    customerName: customer.name,
-    fileName: typeof req.body?.fileName === 'string' ? req.body.fileName : 'bolletta',
-    mimeType: typeof req.body?.mimeType === 'string' ? req.body.mimeType : '',
-    bytes: decodeAndValidateBillFile(req.body?.base64Data, req.body?.mimeType),
-    utilityType,
-    notes: typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 1000) : undefined,
-  });
-  res.status(201).json({ success: true, bill });
 }));
 
 portalRouter.get('/bills/:id/download', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {

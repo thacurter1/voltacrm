@@ -80,6 +80,10 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
 
   const getSourceBadge = (source: LeadSource) => {
     switch (source) {
+      case 'bill_upload':
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200/50">Bolletta Caricata</span>;
+      case 'public_comparator':
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/50">Comparatore</span>;
       case 'facebook_ads':
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200/50">Meta Ads</span>;
       case 'google_ads':
@@ -179,6 +183,8 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
             className="px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:outline-none focus:border-[#635bff] cursor-pointer"
           >
             <option value="all">Tutti i Canali</option>
+            <option value="bill_upload">Bolletta Caricata</option>
+            <option value="public_comparator">Comparatore Pubblico</option>
             <option value="facebook_ads">Meta Lead Ads</option>
             <option value="google_ads">Google Ads</option>
             <option value="landing_page">Landing Page</option>

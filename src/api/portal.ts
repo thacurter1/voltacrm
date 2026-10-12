@@ -1,5 +1,5 @@
 import { request, API_BASE_URL, isDemoSessionActive } from './client';
-import type { CustomerBill } from '../types';
+import type { CustomerBill, Lead } from '../types';
 import { dbService, DEMO_USERS } from '../services/db';
 
 export interface MeterReadingValues {
@@ -45,6 +45,20 @@ export interface ConsultationRequestInput {
   privacyConsent?: boolean;
 }
 
+export interface BillUploadInput {
+  customerId: string;
+  file: File;
+  fileName: string;
+  utilityType: 'luce' | 'gas';
+  notes?: string;
+  isGuest?: boolean;
+  customerName?: string;
+  phone?: string;
+  email?: string;
+  privacyConsent?: boolean;
+  preferredContact?: string;
+}
+
 export const portalApi = {
   async listBills(customerId?: string): Promise<CustomerBill[]> {
     if (API_BASE_URL) {
@@ -62,17 +76,14 @@ export const portalApi = {
     return customerId ? allBills.filter(b => b.customerId === customerId) : allBills;
   },
 
-  async uploadBill(input: {
-    customerId: string;
-    file: File;
-    fileName: string;
-    utilityType: 'luce' | 'gas';
-    notes?: string;
-  }): Promise<CustomerBill> {
+  async uploadBill(input: BillUploadInput): Promise<CustomerBill> {
+    const isGuestCall = Boolean(input.isGuest || input.customerName || input.phone);
     if (API_BASE_URL) {
       try {
+        const headers = isGuestCall && !localStorage.getItem('VOLTA_AUTH_TOKEN') ? { Authorization: '' } : undefined;
         const response = await request<{ success: true; bill: CustomerBill }>('/portal/bills', {
           method: 'POST',
+          headers,
           body: JSON.stringify({
             customerId: input.customerId,
             fileName: input.fileName,
@@ -80,6 +91,12 @@ export const portalApi = {
             base64Data: await fileToBase64(input.file),
             utilityType: input.utilityType,
             notes: input.notes,
+            isGuest: input.isGuest,
+            customerName: input.customerName,
+            phone: input.phone,
+            email: input.email,
+            privacyConsent: input.privacyConsent,
+            preferredContact: input.preferredContact,
           }),
         });
         return response.bill;
@@ -91,10 +108,11 @@ export const portalApi = {
     if (!isDemoSessionActive()) throw new Error('Servizio bollette non configurato.');
     const state = dbService.load();
     const cust = (state.customers || []).find(c => c.id === input.customerId);
+    const customerDisplayName = isGuestCall ? (input.customerName || 'Visitatore Portale') : (cust?.name || 'Cliente Portale');
     const newBill: CustomerBill = {
       id: `bill-${Date.now()}`,
-      customerId: input.customerId,
-      customerName: cust?.name || 'Cliente Portale',
+      customerId: isGuestCall ? `guest-${Date.now()}` : input.customerId,
+      customerName: customerDisplayName,
       fileName: input.fileName,
       uploadDate: new Date().toISOString().split('T')[0],
       fileSizeKb: Math.max(1, Math.round(input.file.size / 1024)),
@@ -102,7 +120,29 @@ export const portalApi = {
       status: 'in_review',
       notes: input.notes || 'Caricata da interfaccia portale clienti'
     };
-    dbService.save({ ...state, bills: [newBill, ...(state.bills || [])] });
+
+    // Generate direct CRM lead for Admin & Broker
+    const assignedBroker = (DEMO_USERS || []).find(u => u.role === 'broker' || u.role === 'operator')?.id || 'user-op-2';
+    const guestPhone = input.phone?.trim() || cust?.phone || '+39 347 0000000';
+    const guestEmail = input.email?.trim() || cust?.email || `${guestPhone.replace(/\D/g, '')}@lead.volta.it`;
+    const newLead: Lead = {
+      id: `lead-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: customerDisplayName,
+      phone: guestPhone,
+      email: guestEmail,
+      city: cust?.city || 'Italia',
+      source: 'bill_upload',
+      status: 'new',
+      notes: `[BOLLETTA CARICATA] File: ${input.fileName} (${newBill.fileSizeKb} KB) • Fornitura: ${input.utilityType.toUpperCase()}${input.preferredContact ? ` • Orario preferito: ${input.preferredContact}` : ''}${input.notes ? ` • Note: ${input.notes}` : ''}`,
+      createdAt: new Date().toISOString().split('T')[0],
+      assignedBrokerId: cust?.assignedBrokerId || assignedBroker,
+    };
+
+    dbService.save({
+      ...state,
+      bills: [newBill, ...(state.bills || [])],
+      leads: [newLead, ...(state.leads || [])],
+    });
     return newBill;
   },
 

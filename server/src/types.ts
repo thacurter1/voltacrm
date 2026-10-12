@@ -18,7 +18,7 @@ export interface UserProfile {
   createdAt?: string;
 }
 
-export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator' | 'public_comparator';
+export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator' | 'public_comparator' | 'bill_upload';
 
 export type LeadStatus = 
   | 'new' 

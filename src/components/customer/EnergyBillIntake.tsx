@@ -14,7 +14,10 @@ import {
   User,
   Users,
   Home,
-  Check
+  Check,
+  PhoneCall,
+  X,
+  Clock
 } from 'lucide-react';
 import { Customer, CustomerBill, UtilityPoint } from '../../types';
 import { portalApi } from '../../api/portal';
@@ -57,6 +60,17 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<CustomerBill | null>(null);
+
+  // Guest lead intake modal state
+  const isGuest = !customer || !customer.id;
+  const [isGuestModalOpen, setIsGuestModalOpen] = useState<boolean>(false);
+  const [guestName, setGuestName] = useState<string>('');
+  const [guestPhone, setGuestPhone] = useState<string>('');
+  const [guestEmail, setGuestEmail] = useState<string>('');
+  const [guestPreferredContact, setGuestPreferredContact] = useState<'Mattina (9-13)' | 'Pomeriggio (14-18)' | 'Qualsiasi'>('Pomeriggio (14-18)');
+  const [guestPrivacyConsent, setGuestPrivacyConsent] = useState<boolean>(false);
+  const [guestSubmitError, setGuestSubmitError] = useState<string | null>(null);
+  const [guestSuccess, setGuestSuccess] = useState<boolean>(false);
 
   // Manual input state
   const [manualConsumption, setManualConsumption] = useState<string>('');
@@ -133,7 +147,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
     setSelectedFile(file);
   };
 
-  // Handle bill upload
+  // Handle bill upload (or prompt guest modal)
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
@@ -147,12 +161,20 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
       return;
     }
 
+    // For unauthenticated guest visitors: open contact intake modal
+    if (isGuest) {
+      setUploadError(null);
+      setGuestSubmitError(null);
+      setIsGuestModalOpen(true);
+      return;
+    }
+
     setIsUploading(true);
     setUploadError(null);
 
     try {
       const uploadedBill = await portalApi.uploadBill({
-        customerId: customer?.id || 'guest-visitor',
+        customerId: customer.id,
         file: selectedFile,
         fileName: selectedFile.name,
         utilityType,
@@ -166,6 +188,56 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Errore imprevisto durante il caricamento del file.';
       setUploadError(message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Handle guest consultation + bill upload submit
+  const handleGuestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      setGuestSubmitError('Nessun file selezionato.');
+      return;
+    }
+    if (!guestName.trim()) {
+      setGuestSubmitError('Inserisci nome e cognome per richiedere l\'analisi.');
+      return;
+    }
+    const digits = guestPhone.replace(/\D/g, '');
+    if (digits.length < 8) {
+      setGuestSubmitError('Inserisci un numero di telefono valido di almeno 8 cifre per consentire al consulente di ricontattarti.');
+      return;
+    }
+    if (!guestPrivacyConsent) {
+      setGuestSubmitError('È necessario accettare il trattamento dei dati personali per ricevere l\'analisi gratuita.');
+      return;
+    }
+
+    setIsUploading(true);
+    setGuestSubmitError(null);
+
+    try {
+      const uploadedBill = await portalApi.uploadBill({
+        customerId: 'guest-visitor',
+        file: selectedFile,
+        fileName: selectedFile.name,
+        utilityType,
+        isGuest: true,
+        customerName: guestName.trim(),
+        phone: guestPhone.trim(),
+        email: guestEmail.trim() || undefined,
+        preferredContact: guestPreferredContact,
+        privacyConsent: true,
+        notes: `Caricata dal comparatore pubblico per analisi ${utilityType.toUpperCase()}`,
+      });
+
+      setGuestSuccess(true);
+      setUploadSuccess(uploadedBill);
+      onUploaded(uploadedBill);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Errore imprevisto durante l\'invio della richiesta.';
+      setGuestSubmitError(message);
     } finally {
       setIsUploading(false);
     }
@@ -776,7 +848,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               ) : (
                 <>
                   <Upload className="w-4 h-4" />
-                  <span>Conferma e Salva Bolletta</span>
+                  <span>{isGuest ? 'Richiedi analisi gratuita della bolletta' : 'Conferma e Salva Bolletta'}</span>
                 </>
               )}
             </button>
@@ -957,6 +1029,217 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
           </form>
         )}
       </div>
+
+      {/* Modal Raccolta Contatti per Visitatore Ospite */}
+      {isGuestModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="guest-bill-modal-title"
+          className="fixed inset-0 z-50 bg-[#0a2540]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 my-8">
+            <button
+              type="button"
+              onClick={() => {
+                setIsGuestModalOpen(false);
+                setGuestSuccess(false);
+                setGuestSubmitError(null);
+              }}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              aria-label="Chiudi"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {guestSuccess ? (
+              <div className="text-center py-4 space-y-4">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0a2540]">
+                  Bolletta Inviata con Successo!
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
+                  Un broker o consulente energetico Volta analizzerà la tua tariffa e ti ricontatterà al numero{' '}
+                  <strong className="text-slate-900 font-mono">{guestPhone}</strong> entro 24 ore lavorative con la proposta più conveniente.
+                </p>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 text-left space-y-1">
+                  <div className="flex items-center gap-2 font-semibold text-slate-800">
+                    <FileText className="w-4 h-4 text-[#635bff]" />
+                    <span>Fornitura {utilityType.toUpperCase()}: {uploadSuccess?.fileName || 'Bolletta'}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Orario di ricontatto preferito: <strong>{guestPreferredContact}</strong>
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGuestModalOpen(false);
+                      setGuestSuccess(false);
+                    }}
+                    className="w-full py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-sm transition cursor-pointer shadow-xs"
+                  >
+                    Torna al confronto
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleGuestSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Analisi Gratuita e Senza Impegno</span>
+                  </div>
+                  <h3 id="guest-bill-modal-title" className="text-xl font-bold text-[#0a2540]">
+                    Ricevi l'analisi della tua bolletta
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Lascia i tuoi recapiti: un consulente dedicato verificherà se stai pagando troppo e calcolerà il tuo risparmio reale.
+                  </p>
+                </div>
+
+                {selectedFile && (
+                  <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
+                    <FileText className="w-4 h-4 text-[#635bff] shrink-0" />
+                    <span className="font-semibold truncate">{selectedFile.name}</span>
+                    <span className="text-slate-400 text-[10px] shrink-0">
+                      ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB • {utilityType.toUpperCase()})
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <label htmlFor="guest-bill-name" className="block text-xs font-bold text-slate-700 mb-1">
+                      Nome e Cognome <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="guest-bill-name"
+                      type="text"
+                      required
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Mario Rossi"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-bill-phone" className="block text-xs font-bold text-slate-700 mb-1">
+                      Numero di Telefono <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="guest-bill-phone"
+                      type="tel"
+                      required
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="+39 347 1234567"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-bill-email" className="block text-xs font-semibold text-slate-700 mb-1">
+                      Email (opzionale per ricevere il preventivo in PDF)
+                    </label>
+                    <input
+                      id="guest-bill-email"
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="mario.rossi@email.it"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Fascia oraria preferita di ricontatto
+                    </label>
+                    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Fascia oraria di ricontatto">
+                      {(['Mattina (9-13)', 'Pomeriggio (14-18)', 'Qualsiasi'] as const).map((timeSlot) => (
+                        <button
+                          key={timeSlot}
+                          type="button"
+                          role="radio"
+                          aria-checked={guestPreferredContact === timeSlot}
+                          onClick={() => setGuestPreferredContact(timeSlot)}
+                          className={`min-h-[38px] px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition cursor-pointer flex items-center justify-center gap-1 ${
+                            guestPreferredContact === timeSlot
+                              ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-2xs'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{timeSlot}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* GDPR Privacy Consent */}
+                  <div className="pt-1">
+                    <label className="flex items-start gap-2.5 text-xs text-slate-600 leading-tight cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={guestPrivacyConsent}
+                        onChange={(e) => setGuestPrivacyConsent(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 rounded text-[#635bff] border-slate-300 focus:ring-[#635bff] cursor-pointer"
+                        required
+                      />
+                      <span>
+                        Dichiaro di aver preso visione dell'informativa privacy e acconsento al trattamento dei dati per la consulenza gratuita sulle offerte Volta Energia. <span className="text-red-500 font-bold">*</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {guestSubmitError && (
+                  <div role="alert" className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{guestSubmitError}</span>
+                  </div>
+                )}
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGuestModalOpen(false);
+                      setGuestSubmitError(null);
+                    }}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploading}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:cursor-not-allowed"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Invio in corso...</span>
+                      </>
+                    ) : (
+                      <>
+                        <PhoneCall className="w-4 h-4" />
+                        <span>Invia Bolletta e Richiedi Analisi</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
