@@ -8,7 +8,8 @@ import {
   CheckCircle2, 
   AlertTriangle,
   ArrowRight,
-  PhoneCall
+  PhoneCall,
+  PieChart
 } from 'lucide-react';
 import { SupplierOffer } from '../../types';
 import { ComparisonInput, ComparisonResult } from '../../services/offerComparison';
@@ -31,10 +32,65 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   const { offer, annualCost, currentAnnualCost, savingsEur, savingsPercent } = comparison;
   const isLuce = offer.energyType === 'luce';
   const unitLabel = isLuce ? '€/kWh' : '€/Smc';
+  const monthlyCost = annualCost !== null ? Math.round(annualCost / 12) : null;
+  const currentMonthlyCost = currentAnnualCost !== null ? Math.round(currentAnnualCost / 12) : null;
   const [customerNotes, setCustomerNotes] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  // ARERA 4-component breakdown percentages (~55% luce, ~60% gas etc.)
+  const areraBreakdown = React.useMemo(() => {
+    const percentages = isLuce
+      ? { materia: 55, trasporto: 18, oneri: 12, imposte: 15 }
+      : { materia: 60, trasporto: 15, oneri: 8, imposte: 17 };
+
+    const calculateAmount = (pct: number) => {
+      if (annualCost === null) return null;
+      return Math.round((annualCost * pct) / 100);
+    };
+
+    return [
+      {
+        id: 'materia',
+        name: isLuce ? 'Spesa Materia Energia' : 'Spesa Materia Gas Naturale',
+        percentage: percentages.materia,
+        annualAmount: calculateAmount(percentages.materia),
+        description: isLuce
+          ? "Acquisto energia, dispacciamento e commercializzazione al dettaglio"
+          : 'Approvvigionamento gas all’ingrosso e commercializzazione al dettaglio',
+        badgeBg: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        barBg: 'bg-[#635bff]',
+      },
+      {
+        id: 'trasporto',
+        name: 'Spesa Trasporto e Gestione Contatore',
+        percentage: percentages.trasporto,
+        annualAmount: calculateAmount(percentages.trasporto),
+        description: 'Servizi di trasmissione, distribuzione e misura su rete locale',
+        badgeBg: 'bg-sky-50 text-sky-700 border-sky-200',
+        barBg: 'bg-sky-500',
+      },
+      {
+        id: 'oneri',
+        name: 'Spesa Oneri di Sistema',
+        percentage: percentages.oneri,
+        annualAmount: calculateAmount(percentages.oneri),
+        description: 'Costi per attività di interesse generale del sistema energetico',
+        badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
+        barBg: 'bg-amber-500',
+      },
+      {
+        id: 'imposte',
+        name: 'Imposte stimate (IVA e accise)',
+        percentage: percentages.imposte,
+        annualAmount: calculateAmount(percentages.imposte),
+        description: 'Accise erariali sul consumo e imposta sul valore aggiunto (IVA)',
+        badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        barBg: 'bg-emerald-500',
+      },
+    ];
+  }, [isLuce, annualCost]);
 
   React.useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -104,11 +160,11 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
         {/* Body */}
         <div className="p-5 sm:p-6 space-y-7 max-h-[70vh] overflow-y-auto text-sm text-slate-700">
-          {/* Box Economico Stima */}
+          {/* Sintesi Economica della Stima */}
           <div className="space-y-4">
             <h3 className="font-bold text-base text-[#0a2540] flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#635bff]" />
-              <span>La tua stima</span>
+              <span>Sintesi Economica della Stima</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
@@ -116,10 +172,18 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                 <span className="text-sm font-semibold text-slate-600 block">
                   Con questa offerta
                 </span>
-                <span className="text-3xl font-extrabold text-[#0a2540] block mt-1">
-                  {annualCost !== null ? `~€${Math.round(annualCost)}` : 'Non calcolabile'}
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-3xl font-extrabold text-[#0a2540]">
+                    {monthlyCost !== null ? `~€${monthlyCost}` : 'Non calcolabile'}
+                  </span>
+                  {monthlyCost !== null && (
+                    <span className="text-sm font-semibold text-slate-500">/mese</span>
+                  )}
+                </div>
+                <span className="text-slate-600 block text-xs mt-1 font-medium">
+                  {annualCost !== null ? `~€${Math.round(annualCost)}/anno` : 'Spesa annua non calcolabile'}
                 </span>
-                <span className="text-slate-600 block text-xs mt-1">
+                <span className="text-slate-500 block text-xs mt-0.5">
                   Spesa annua stimata, incluse le componenti considerate nel calcolo
                 </span>
               </div>
@@ -128,10 +192,18 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                 <span className="text-sm font-semibold text-slate-600 block">
                   Con la tua tariffa attuale
                 </span>
-                <span className="text-3xl font-extrabold text-slate-700 block mt-1">
-                  {currentAnnualCost !== null ? `~€${Math.round(currentAnnualCost)}` : 'Dato non inserito'}
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-3xl font-extrabold text-slate-700">
+                    {currentMonthlyCost !== null ? `~€${currentMonthlyCost}` : 'Dato non inserito'}
+                  </span>
+                  {currentMonthlyCost !== null && (
+                    <span className="text-sm font-semibold text-slate-500">/mese</span>
+                  )}
+                </div>
+                <span className="text-slate-600 block text-xs mt-1 font-medium">
+                  {currentAnnualCost !== null ? `~€${Math.round(currentAnnualCost)}/anno` : 'Tariffa attuale non indicata'}
                 </span>
-                <span className="text-slate-600 block text-xs mt-1">
+                <span className="text-slate-500 block text-xs mt-0.5">
                   {currentAnnualCost !== null
                     ? `Basato sulla tariffa ${currentInput.currentPricingType || 'in uso'}`
                     : 'Tariffa attuale non indicata'}
@@ -163,6 +235,70 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                 </span>
               </div>
             )}
+          </div>
+
+          {/* Scomposizione Spesa Bolletta (Standard ARERA) */}
+          <div className="space-y-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-bold text-sm text-[#0a2540] flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-[#635bff]" />
+                <span>Scomposizione Spesa Stimata (Standard ARERA)</span>
+              </h3>
+              <span className="text-xs text-slate-500 hidden sm:inline">
+                4 componenti standard ARERA
+              </span>
+            </div>
+
+            {/* Visual breakdown bar */}
+            <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-slate-100 p-0.5 gap-0.5" role="progressbar" aria-label="Ripartizione componenti ARERA">
+              {areraBreakdown.map((item) => (
+                <div
+                  key={item.id}
+                  className={`h-full rounded-xs ${item.barBg} transition-all duration-300`}
+                  style={{ width: `${item.percentage}%` }}
+                  title={`${item.name}: ~${item.percentage}%`}
+                />
+              ))}
+            </div>
+
+            {/* Component cards grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {areraBreakdown.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between gap-2 hover:border-slate-300 transition"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-bold text-xs text-slate-900 block truncate">
+                        {item.name}
+                      </span>
+                      <p className="text-[11px] text-slate-600 line-clamp-2 mt-0.5">
+                        {item.description}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs font-black px-2 py-0.5 rounded-md border shrink-0 ${item.badgeBg}`}
+                    >
+                      ~{item.percentage}%
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/80 flex items-baseline justify-between">
+                    <span className="text-[11px] text-slate-600">Stima annua:</span>
+                    <span className="font-extrabold text-sm text-[#0a2540]">
+                      {item.annualAmount !== null
+                        ? `~€${item.annualAmount}/anno`
+                        : '—'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-[11px] text-slate-500 italic">
+              * La ripartizione percentuale riflette le stime standard ARERA ({isLuce ? '~55% materia, ~18% trasporto, ~12% oneri, ~15% imposte' : '~60% materia, ~15% trasporto, ~8% oneri, ~17% imposte'}) per forniture domestiche tipo.
+            </p>
           </div>
 
           {/* Dettaglio Condizioni Economiche */}
