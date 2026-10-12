@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, Flame, FileText, Upload, CheckCircle2, Phone, ArrowUpRight } from 'lucide-react';
+import { Zap, Flame, FileText, Upload, ArrowUpRight } from 'lucide-react';
 import { Customer, CustomerBill, UtilityPoint } from '../../types';
 
 interface SubitoMySuppliesProps {
@@ -22,16 +22,9 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
       {/* Overview Card */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Forniture Attive Registrate</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-[#0a2540]">
-            {customer.name}
-          </h2>
-          <p className="text-xs text-slate-500 max-w-xl">
-            Codice Fiscale: <span className="font-mono text-[#0a2540] font-semibold">{customer.fiscalCode}</span> • Città: {customer.city}
-          </p>
+          <h2 className="text-2xl font-bold text-[#0a2540]">Le tue forniture e bollette</h2>
+          <p className="text-sm font-medium text-slate-700">{customer.name}</p>
+          <p className="text-sm text-slate-600">Qui trovi i punti di fornitura e lo stato delle bollette caricate.</p>
         </div>
 
         {/* Action button */}
@@ -196,15 +189,9 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {bill.extractedSavingsEur ? (
-                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                        Risparmio: €{Math.round(bill.extractedSavingsEur)}/anno
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                        In analisi
-                      </span>
-                    )}
+                    <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">
+                      {bill.status === 'analyzed' ? 'Analizzata' : bill.status === 'archived' ? 'Archiviata' : 'In verifica'}
+                    </span>
                     <ArrowUpRight className="w-4 h-4 text-slate-400" />
                   </div>
                 </button>
@@ -214,28 +201,6 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
         </div>
       )}
 
-      {/* Dedicated Consultant Banner */}
-      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-        <div className="flex items-center gap-3 text-slate-700">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-800">
-            MR
-          </div>
-          <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-bold">Consulente Energetico Assegnato</span>
-            <span className="font-bold text-slate-900">{customer.accountManager || 'Matteo Riva (Broker Dedicato)'}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <a
-            href="tel:+393471122334"
-            className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold flex items-center gap-1.5"
-          >
-            <Phone className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Contatta Consulente</span>
-          </a>
-        </div>
-      </div>
     </div>
   );
 };

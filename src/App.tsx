@@ -25,17 +25,18 @@ import { CallScriptDrawer } from './components/CallScriptDrawer';
 import { TeamProfilesManager } from './components/TeamProfilesManager';
 import { InvitationActivation } from './components/InvitationActivation';
 import { PortalGate } from './components/PortalGate';
+import { PortalHome } from './components/PortalHome';
+import { createOperationGuard } from './services/operationGuard';
+import { mergeRecords } from './services/mergeRecords';
 import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 import { SignatureActivationPanel } from './components/SignatureActivationPanel';
 import { CommissionManager } from './components/CommissionManager';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
-import { TotemKioskMode } from './components/TotemKioskMode';
 import { DemoRoleSwitcher } from './components/DemoRoleSwitcher';
 const TotemApp = React.lazy(() => import('./apps/TotemApp'));
 const CustomerApp = React.lazy(() => import('./apps/CustomerApp'));
-const CrmApp = React.lazy(() => import('./apps/CrmApp'));
 import { dbService, DEMO_USERS, isDemoSessionActive } from './services/db';
 import { INITIAL_PROFILES } from './services/supabaseClient';
 import { runQuarterlyAudit } from './services/energyEngine';
@@ -86,7 +87,7 @@ function UnifiedApp() {
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
     if (typeof window !== 'undefined') {
       const selectedDemoId = new URLSearchParams(window.location.search).get('demo_user');
-      if (selectedDemoId) {
+      if (selectedDemoId && isDemoSessionActive()) {
         const found = INITIAL_PROFILES.find(profile => profile.id === selectedDemoId);
         if (found) return found;
       }
@@ -100,18 +101,15 @@ function UnifiedApp() {
   const [isGateOpen, setIsGateOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       const search = window.location.search;
-      if (search.includes('demo=true') || search.includes('demo_user')) return false;
+      if (isDemoSessionActive() && (search.includes('demo=true') || search.includes('demo_user'))) return false;
       const token = localStorage.getItem('VOLTA_AUTH_TOKEN');
-      if (token && (sessionStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true' || localStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true')) {
-        return false;
-      }
-      if (token && !token.startsWith('mock-')) {
+      if (token && isDemoSessionActive() && (sessionStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true' || localStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true')) {
         return false;
       }
     }
-    return !isDemo;
+    return true;
   });
-  const [isTotemOpen, setIsTotemOpen] = useState(false);
+  const openTotem = () => { window.location.href = '/?portal=totem'; };
   const [profiles, setProfiles] = useState<UserProfile[]>(isDemo ? INITIAL_PROFILES : []);
 
   // Business Data State
@@ -132,6 +130,14 @@ function UnifiedApp() {
   const [customerPortalLoading, setCustomerPortalLoading] = useState(false);
   const [customerPortalError, setCustomerPortalError] = useState<string | null>(null);
   const [impersonatingStaffUser, setImpersonatingStaffUser] = useState<UserProfile | null>(null);
+  const sessionRestoredRef = useRef(false);
+  const userSelectionGuard = useRef(createOperationGuard());
+  const logout = () => {
+    userSelectionGuard.current.invalidate();
+    api.auth.logout();
+    setCustomerPortalLoading(false);
+    setIsGateOpen(true);
+  };
 
   const getInitialTab = (role: string) => {
     if (role === 'customer') return 'customer_overview';
@@ -166,6 +172,7 @@ function UnifiedApp() {
 
   // Switch User Profile / Role
   const handleSelectUser = useCallback(async (_newUser?: UserProfile) => {
+    const selection = userSelectionGuard.current.begin();
     try {
       let user: UserProfile;
       const isDemoActive = isDemoSessionActive();
@@ -173,6 +180,7 @@ function UnifiedApp() {
         user = _newUser;
         if (!isDemoActive) {
           const verified = (await api.auth.me()).user;
+          if (!userSelectionGuard.current.isCurrent(selection)) return;
           if (verified.id !== user.id || verified.role !== user.role) {
             throw new Error('Il profilo non corrisponde alla sessione autenticata.');
           }
@@ -203,6 +211,7 @@ function UnifiedApp() {
         }
       } else {
         const meRes = await api.auth.me();
+        if (!userSelectionGuard.current.isCurrent(selection)) return;
         user = meRes.user;
       }
 
@@ -235,6 +244,7 @@ function UnifiedApp() {
         isCustomer ? Promise.resolve([]) : api.operations.listAppointments(),
         isAdmin ? api.operations.listSecurityLogs() : Promise.resolve([]),
       ]);
+      if (!userSelectionGuard.current.isCurrent(selection)) return;
 
       if (!isDemoActive) {
         const failed = results.find(result => result.status === 'rejected');
@@ -318,6 +328,7 @@ function UnifiedApp() {
         }
       }
     } catch(error) {
+      if (!userSelectionGuard.current.isCurrent(selection)) return;
       console.warn('[VoltaCRM] Errore in handleSelectUser:', error);
       setCustomerPortalLoading(false);
       if (_newUser?.role === 'customer') {
@@ -355,9 +366,20 @@ function UnifiedApp() {
     };
   }, []);
 
-  // Restore only a backend-validated session, never a local role selection.
+  // Restore once on mount. handleSelectUser changes currentUser, which changes
+  // its callback identity; rerunning this effect would start an endless reload.
   useEffect(() => {
+    if (sessionRestoredRef.current) return;
+    sessionRestoredRef.current = true;
     const isDemo = isDemoSessionActive();
+    if (isDemo && typeof window !== 'undefined') {
+      const selectedDemoId = new URLSearchParams(window.location.search).get('demo_user');
+      const selectedProfile = INITIAL_PROFILES.find(profile => profile.id === selectedDemoId);
+      if (selectedProfile) {
+        void handleSelectUser(selectedProfile);
+        return;
+      }
+    }
     const token = typeof window !== 'undefined' ? localStorage.getItem('VOLTA_AUTH_TOKEN') : null;
     if (!token) return;
     if (isDemo) {
@@ -365,31 +387,50 @@ function UnifiedApp() {
       if (stored) {
         try {
           const user = JSON.parse(stored);
-          handleSelectUser(user);
+          void handleSelectUser(user);
           return;
         } catch {}
       }
     }
-    api.auth.me().then(({user})=>handleSelectUser(user)).catch(()=>{api.auth.logout();setIsGateOpen(true);});
+    const restoration = userSelectionGuard.current.begin();
+    api.auth.me().then(({ user }) => {
+      if (userSelectionGuard.current.isCurrent(restoration)) void handleSelectUser(user);
+    }).catch(() => {
+      if (userSelectionGuard.current.isCurrent(restoration)) {
+        api.auth.logout();
+        setIsGateOpen(true);
+      }
+    });
   }, [handleSelectUser]);
+
+  const demoStorageWarningShown = useRef(false);
 
   // Demo persistence only. Server data is reloaded on authenticated access.
   useEffect(() => {
     if (!isDemoSessionActive()) return;
     const timer = setTimeout(() => {
-      dbService.save({
-        customers,
-        leads,
-        appointments,
-        bills,
-        marketIndex,
-        currentUser,
-        securityLogs,
-      });
+      try {
+        const stored = dbService.load();
+        dbService.save({
+          customers: mergeRecords(stored.customers, customers),
+          leads: mergeRecords(stored.leads, leads),
+          appointments: mergeRecords(stored.appointments, appointments),
+          bills: mergeRecords(stored.bills, bills),
+          marketIndex,
+          currentUser,
+          securityLogs: mergeRecords(stored.securityLogs, securityLogs),
+        });
+        demoStorageWarningShown.current = false;
+      } catch (error) {
+        if (!demoStorageWarningShown.current) {
+          demoStorageWarningShown.current = true;
+          addToast('Dati demo non salvati', error instanceof Error ? error.message : 'Archiviazione del browser non disponibile.', 'warning');
+        }
+      }
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [customers, leads, appointments, bills, marketIndex, currentUser, securityLogs]);
+  }, [customers, leads, appointments, bills, marketIndex, currentUser, securityLogs, addToast]);
 
 
   // Helper per logging sicurezza
@@ -462,7 +503,8 @@ function UnifiedApp() {
       const saved = await api.leads.create(newLead);
       setLeads(prev=>[saved,...prev]);
       addToast('Lead registrato',saved.name,'success');
-    } catch(error) {addToast('Salvataggio non riuscito',error instanceof Error?error.message:'Riprova.','warning');}
+      return true;
+    } catch(error) {addToast('Salvataggio non riuscito',error instanceof Error?error.message:'Riprova.','warning');return false;}
   };
 
   const handleUpdateLeadStatus = async (leadId:string,status:LeadStatus,note?:string) => {
@@ -625,38 +667,30 @@ function UnifiedApp() {
     }
   };
 
-  // Se è attiva la modalità Totem Kiosk per negozi e centri commerciali
-  if (isTotemOpen) {
-    return (
-      <TotemKioskMode
-        isOpen={isTotemOpen}
-        onExitTotem={() => setIsTotemOpen(false)}
-        onLeadCaptured={(newLead) => {
-          handleAddLead(newLead);
-          recordSecurityLog(
-            'gdpr_consent_logged', 
-            'safe', 
-            `Lead registrato da Totem Point touch: ${newLead.phone} (${newLead.notes})`
-          );
-        }}
-        onToast={addToast}
-      />
-    );
-  }
+  const portalParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const legacyPortal = portalParams.get('app') || portalParams.get('mode');
+  const portalHost = typeof window !== 'undefined' ? window.location.hostname : '';
+  const portalParam = portalParams.get('portal') ||
+    (portalHost.startsWith('cliente.') || legacyPortal === 'cliente' || legacyPortal === 'customer' ? 'customer' :
+      portalHost.startsWith('crm.') || legacyPortal === 'crm' ? 'staff' : null);
+  const portalRoleMismatch = (portalParam === 'customer' && currentUser.role !== 'customer') ||
+    (portalParam === 'staff' && currentUser.role === 'customer');
 
-  // Se l'utente non è autenticato o ha scelto "Esci", mostra la schermata di selezione portale / login
-  if (isGateOpen) {
+  // Each portal has its own entry screen; a stored session for another role
+  // must never put that user directly into the wrong portal.
+  if (isGateOpen || portalRoleMismatch) {
     return (
       <>
-        <PortalGate
+        {!portalParam ? <PortalHome /> : <PortalGate
+          portal={portalParam === 'staff' ? 'staff' : 'customer'}
           onLoginCustomer={handleSelectUser}
           onLoginOperator={handleSelectUser}
           onRequire2FA={handleRequire2FA}
           customers={customers}
           profiles={profiles}
           onToast={addToast}
-          onOpenTotem={() => setIsTotemOpen(true)}
-        />
+          onOpenTotem={openTotem}
+        />}
         <TwoFactorModal
           isOpen={!!pending2FAUser}
           user={pending2FAUser}
@@ -695,18 +729,15 @@ function UnifiedApp() {
           />
         )}
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
-          <CustomerApp onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined} currentUser={currentUser} customer={customers[0] || null} bills={bills} isLoading={customerPortalLoading} loadError={customerPortalError} onReloadBills={handleReloadCustomerBills} />
+          <CustomerApp onLogout={logout} key={currentUser.customerId || currentUser.id} onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined} currentUser={currentUser} customer={customers[0] || null} bills={bills} isLoading={customerPortalLoading} loadError={customerPortalError} onReloadBills={handleReloadCustomerBills} />
         </React.Suspense>
         {isDemoSessionActive() && (
           <DemoRoleSwitcher
             currentUser={currentUser}
             customers={customers}
             onSelectUser={handleSelectUser}
-            onOpenTotem={() => setIsTotemOpen(true)}
-            onLogout={() => {
-              api.auth.logout();
-              setIsGateOpen(true);
-            }}
+            onOpenTotem={openTotem}
+            onLogout={logout}
           />
         )}
         <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
@@ -736,8 +767,8 @@ function UnifiedApp() {
         onOpenMarketSimulator={() => setIsMarketSimulatorOpen(true)}
         onOpenBillOcr={() => setIsBillOcrOpen(true)}
         onOpenAddCustomer={() => setIsAddCustomerModalOpen(true)}
-        onOpenLogin={() => setIsGateOpen(true)}
-        onOpenTotem={() => setIsTotemOpen(true)}
+        onOpenLogin={logout}
+        onOpenTotem={openTotem}
         onRefreshMarketIndex={handleRefreshMarketIndices}
         isRefreshingMarketIndex={isRefreshingMarketIndex}
       />
@@ -1078,11 +1109,8 @@ function UnifiedApp() {
           currentUser={currentUser}
           customers={customers}
           onSelectUser={handleSelectUser}
-          onOpenTotem={() => setIsTotemOpen(true)}
-          onLogout={() => {
-            api.auth.logout();
-            setIsGateOpen(true);
-          }}
+          onOpenTotem={openTotem}
+          onLogout={logout}
         />
       )}
 
@@ -1120,59 +1148,13 @@ export function App() {
   const inviteToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.hash.slice(1)).get('invite') : null;
 
   if (inviteToken) return <InvitationActivation token={inviteToken} />;
+  if (searchParams.get('portal') === 'home') return <PortalHome />;
 
-  if (host.startsWith('totem.') || appParam === 'totem') {
+  if (host.startsWith('totem.') || (DEMO_MODE && (appParam === 'totem' || searchParams.get('portal') === 'totem'))) {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
-  if ((DEMO_MODE || isDemoSessionActive()) && (host.startsWith('cliente.') || appParam === 'cliente' || appParam === 'customer')) {
-    const handleReturnToCrm = () => {
-      const adminUser = INITIAL_PROFILES[0];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(adminUser));
-        localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-admin-${Date.now()}`);
-        try {
-          const raw = localStorage.getItem('VOLTA_ENERGY_CRM_DB_V3');
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            parsed.currentUser = adminUser;
-            localStorage.setItem('VOLTA_ENERGY_CRM_DB_V3', JSON.stringify(parsed));
-          }
-        } catch {}
-        const url = new URL(window.location.href);
-        url.searchParams.delete('app');
-        url.searchParams.delete('mode');
-        window.location.href = url.pathname || '/';
-      }
-    };
-
-    const demoState = typeof dbService !== 'undefined' ? dbService.load() : { customers: [], bills: [] };
-    const demoCustomer = demoState.customers?.[0] || null;
-    const demoBills = demoState.bills || [];
-
-    return (
-      <React.Suspense fallback={<Fallback />}>
-        <div className="min-h-screen flex flex-col">
-          <div className="bg-[#0a2540] text-white px-4 py-2 flex items-center justify-between text-xs font-semibold shadow-sm z-50 border-b border-slate-700">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Portale Clienti Subito Energia • Volta Energia CRM</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleReturnToCrm}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
-              title="Ritorna alla dashboard gestionale Volta Energia"
-            >
-              <span>← Torna al Backend CRM</span>
-            </button>
-          </div>
-          <CustomerApp onReturnToBackend={handleReturnToCrm} customer={demoCustomer} bills={demoBills} />
-        </div>
-      </React.Suspense>
-    );
-  }
-  if ((DEMO_MODE || isDemoSessionActive()) && (host.startsWith('crm.') || appParam === 'crm')) {
-    return <React.Suspense fallback={<Fallback />}><CrmApp /></React.Suspense>;
+  if (appParam === 'totem' || searchParams.get('portal') === 'totem') {
+    return <main className="min-h-[100dvh] bg-[#f6f9fc] px-6 py-24 text-center text-[#0a2540]"><h1 className="text-3xl font-black">Totem riservato alla postazione dedicata</h1><p className="mx-auto mt-4 max-w-lg text-slate-600">Questa modalità non è disponibile dal portale pubblico.</p><a href="/" className="mt-7 inline-block font-bold text-[#635bff] underline">Torna alla scelta dei portali</a></main>;
   }
 
   return <UnifiedApp />;

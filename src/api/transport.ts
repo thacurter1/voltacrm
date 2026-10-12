@@ -69,6 +69,7 @@ export function evaluateApiConfiguration(hostname?: string, envApiUrl?: string):
 }
 
 export const isDemoSessionActive = (): boolean => {
+  if ((import.meta as any).env?.VITE_DEMO_MODE !== 'true') return false;
   if (typeof window !== 'undefined') {
     try {
       if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true') return true;
@@ -98,12 +99,34 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers as Record<string, string> || {}),
   };
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(body.message || `Errore HTTP ${response.status}: ${response.statusText}`);
+  const controller = new AbortController();
+  const callerSignal = options.signal;
+  if (callerSignal?.aborted) throw callerSignal.reason || new Error('Richiesta annullata.');
+  let rejectAborted: (reason: unknown) => void = () => {};
+  const aborted = new Promise<never>((_resolve, reject) => { rejectAborted = reject; });
+  const abort = (reason: unknown) => {
+    controller.abort(reason);
+    rejectAborted(reason);
+  };
+  const onCallerAbort = () => abort(callerSignal?.reason || new Error('Richiesta annullata.'));
+  callerSignal?.addEventListener('abort', onCallerAbort, { once: true });
+  // The Free backend can take over 50 seconds to wake after inactivity.
+  const timer = setTimeout(() => abort(new Error('Il servizio non risponde entro il tempo previsto. Riprova; prima di reinviare controlla se la richiesta è stata registrata.')), 90000);
+  try {
+    const operation = async (): Promise<T> => {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, signal: controller.signal });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || `Errore HTTP ${response.status}: ${response.statusText}`);
+      }
+      return await response.json() as T;
+    };
+    // Bound both connection and body reads; never automatically retry mutations.
+    return await Promise.race([operation(), aborted]);
+  } finally {
+    clearTimeout(timer);
+    callerSignal?.removeEventListener('abort', onCallerAbort);
   }
-  return response.json() as Promise<T>;
 }
 
 export function isNetworkError(error: unknown): boolean {

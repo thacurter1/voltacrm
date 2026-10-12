@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { DEMO_USERS } from '../services/db';
+import { DEMO_USERS, dbService } from '../services/db';
+import { INITIAL_CUSTOMERS } from '../services/mockData';
 import { AuthUser, Customer } from '../types';
 import { Sparkles, ChevronDown, ChevronUp, LogOut, Monitor } from 'lucide-react';
 
@@ -28,11 +29,23 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
       try {
         sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
         localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('portal')) {
+          url.searchParams.set('portal', role === 'customer' ? 'customer' : 'staff');
+        }
+        if (url.searchParams.has('demo_user')) {
+          url.searchParams.set('demo_user', role === 'customer' ? `user-${userId}` : userId);
+        }
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
       } catch {}
     }
     if (role === 'customer') {
-      const cust = customers.find(c => c.id === userId) || customers[0];
+      const stored = dbService.load();
+      const cust = customers.find(c => c.id === userId) || stored.customers.find(c => c.id === userId) || INITIAL_CUSTOMERS.find(c => c.id === userId);
       if (cust) {
+        if (!stored.customers.some(c => c.id === cust.id)) {
+          dbService.save({ ...stored, customers: [...stored.customers, cust] });
+        }
         const custUser = {
           id: `user-${cust.id}`,
           name: cust.name,

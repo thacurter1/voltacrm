@@ -27,8 +27,7 @@ import {
   Flame, 
   ShieldCheck, 
   Filter, 
-  Sliders, 
-  ArrowRight
+  Sliders
 } from 'lucide-react';
 
 export interface CustomerAppProps {
@@ -39,6 +38,7 @@ export interface CustomerAppProps {
   loadError?: string | null;
   onReloadBills?: () => void | Promise<void>;
   onReturnToBackend?: () => void;
+  onLogout?: () => void;
 }
 
 export const CustomerApp: React.FC<CustomerAppProps> = ({
@@ -49,6 +49,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   loadError = null,
   onReloadBills,
   onReturnToBackend,
+  onLogout,
 }) => {
   const activeCustomer = customer;
   const myBills = bills;
@@ -58,9 +59,11 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
   // Stepper state: 'intake' (Step 1) | 'comparison' (Step 2)
   const defaultPoint = activeCustomer?.utilityPoints?.[0];
-  const [currentStep, setCurrentStep] = useState<'intake' | 'comparison'>(() => {
-    return defaultPoint && defaultPoint.annualConsumption && defaultPoint.annualConsumption > 0 ? 'comparison' : 'intake';
-  });
+  const [currentStep, setCurrentStep] = useState<'intake' | 'comparison'>('intake');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeView, currentStep]);
 
   // Intake / Comparison Input (honestly initialized without fake 2700/1000 default)
   const [comparisonInput, setComparisonInput] = useState<ComparisonInput>(() => ({
@@ -75,7 +78,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     currentUnitCost: defaultPoint?.currentUnitCost,
     currentFixedFeeYear: defaultPoint?.currentFixedFeeYear,
     source: defaultPoint?.annualConsumption ? 'account' : 'manual',
-    asOf: 'Benchmark Q1 2026',
+    asOf: undefined,
   }));
 
   // Sync if customer props arrive later
@@ -105,12 +108,15 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
   // Catalog offers & Market indices
   const [offers, setOffers] = useState<SupplierOffer[]>(MARKET_OFFERS);
+  // The backend currently serves the same static sample catalog as the local fallback.
+  const isDemoCatalog = true;
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(CURRENT_MARKET_INDEX);
   const [pricingFilter, setPricingFilter] = useState<'all' | 'fixed' | 'indexed'>('all');
   const [sortBy, setSortBy] = useState<'cost_asc' | 'savings_desc'>('cost_asc');
 
   // Details Modal
   const [activeComparisonForDetails, setActiveComparisonForDetails] = useState<ComparisonResult | null>(null);
+  const [selectedBill, setSelectedBill] = useState<CustomerBill | null>(null);
 
   // Toast notifications
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
@@ -131,7 +137,9 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     let isMounted = true;
     api.switch.getOffers()
       .then((loaded) => {
-        if (isMounted && loaded && loaded.length > 0) setOffers(loaded);
+        if (isMounted && loaded && loaded.length > 0) {
+          setOffers(loaded);
+        }
       })
       .catch((err) => console.warn('[CustomerApp] Uso catalogo locale:', err));
 
@@ -159,10 +167,10 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
       .map((offer) => compareOffer(comparisonInput, offer, marketIndex))
       .sort((a, b) => {
         if (sortBy === 'cost_asc') {
-          return (a.annualCost || Infinity) - (b.annualCost || Infinity);
+          return (a.annualCost ?? Infinity) - (b.annualCost ?? Infinity);
         }
         if (sortBy === 'savings_desc') {
-          return (b.savingsEur || -Infinity) - (a.savingsEur || -Infinity);
+          return (b.savingsEur ?? -Infinity) - (a.savingsEur ?? -Infinity);
         }
         return 0;
       });
@@ -173,15 +181,18 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     if (onReloadBills) {
       onReloadBills();
     }
-    setComparisonInput((prev) => ({
-      ...prev,
+    // Upload and analysis are separate operations. Never use parameters from a
+    // different utility as if they had been extracted from this bill.
+    setComparisonInput((prev) => prev.utilityType === uploadedBill.utilityType ? prev : {
       utilityType: uploadedBill.utilityType,
-      source: 'bill-reviewed',
-    }));
-    setCurrentStep('comparison');
+      annualConsumption: 0,
+      powerKw: uploadedBill.utilityType === 'luce' ? 3 : undefined,
+      source: 'manual',
+    });
+    setCurrentStep('intake');
     addToast(
       'Bolletta Caricata con Successo',
-      `Fattura ${uploadedBill.fileName} registrata nel tuo archivio. Parametri aggiornati per il confronto ${uploadedBill.utilityType.toUpperCase()}.`,
+      `Fattura ${uploadedBill.fileName} salvata. È in verifica: per confrontare subito le offerte, seleziona una fornitura già registrata o inserisci i consumi.`,
       'success'
     );
   };
@@ -198,8 +209,8 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   };
 
   // Handle consultation request with real persistence
-  const handleRequestConsultation = async (offer: SupplierOffer, notes?: string) => {
-    if (!activeCustomer) return;
+  const handleRequestConsultation = async (offer: SupplierOffer, notes?: string): Promise<boolean> => {
+    if (!activeCustomer) return false;
     try {
       const result = await portalApi.requestConsultation({
         customerId: activeCustomer.id,
@@ -216,9 +227,11 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         `Pratica #${result.leadId.slice(-8).toUpperCase()} registrata con successo nel CRM. Il tuo consulente Volta ti ricontatterà al ${activeCustomer.phone || 'tuo recapito'}.`,
         'success'
       );
+      return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Errore durante la registrazione della richiesta.';
       addToast('Errore Registrazione', msg, 'warning');
+      return false;
     }
   };
 
@@ -246,6 +259,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             {loadError || 'Non è stata trovata alcuna fornitura energetica associata al tuo profilo. Verifica le tue credenziali o contatta l\'assistenza clienti Volta Energia.'}
           </p>
           <div className="pt-2 flex flex-col gap-2">
+            {onLogout && <button type="button" onClick={onLogout} className="min-h-[44px] rounded-xl border border-slate-200 text-sm font-bold cursor-pointer">Esci</button>}
             {onReturnToBackend && (
               <button
                 type="button"
@@ -272,8 +286,6 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
   return (
     <div className="min-h-screen bg-[#f6f9fc] text-slate-900 flex flex-col font-sans">
-      <InstallAppBanner />
-
       {/* Modern Volta Energy Portal Header */}
       <EnergyPortalHeader
         activeView={activeView}
@@ -281,16 +293,21 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         customerName={activeCustomer.name || 'Cliente'}
         onToast={addToast}
         onReturnToBackend={onReturnToBackend}
+        onLogout={onLogout}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-32 sm:pb-24 space-y-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 sm:pb-24 space-y-6">
         {activeView === 'offers' ? (
           <div className="space-y-6">
             {/* Guided Journey Stepper (Facile.it inspired, Volta branded) */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs">
+            <div className="border-b border-slate-200 pb-4">
+              <div className="sm:hidden mb-4" aria-live="polite">
+                <p className="text-sm font-semibold text-[#0a2540]">Passaggio {currentStep === 'intake' ? '1' : '2'} di 2</p>
+                <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden" aria-hidden="true"><div className={`h-full rounded-full bg-[#635bff] transition-all ${currentStep === 'intake' ? 'w-1/2' : 'w-full'}`} /></div>
+              </div>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 {/* Steps indicator */}
-                <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 md:pb-0" role="navigation" aria-label="Percorso guidato tariffe">
+                <div className="hidden sm:flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 md:pb-0" role="navigation" aria-label="Percorso guidato tariffe">
                   <button
                     type="button"
                     onClick={() => setCurrentStep('intake')}
@@ -333,20 +350,10 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     </span>
                   </button>
 
-                  <span className="text-slate-300">→</span>
-
-                  <div className="flex items-center gap-2 shrink-0 p-1 text-slate-400">
-                    <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0">
-                      3
-                    </span>
-                    <span className="text-xs font-semibold">
-                      3. Consulenza & Attivazione
-                    </span>
-                  </div>
                 </div>
 
                 {/* Dual Fuel Disablement Explanation */}
-                <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shrink-0">
+                <div className="hidden sm:flex items-center gap-2 text-xs text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-lg shrink-0">
                   <span className="text-slate-400">Opzione Luce + Gas:</span>
                   <span className="font-semibold text-slate-700">
                     Gestita con consulenza dedicata
@@ -357,83 +364,44 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
             {/* STEP 1: Intake & Data Entry (Caricamento bolletta o inserimento reale) */}
             {currentStep === 'intake' ? (
-              <div className="space-y-6">
-                {/* Profile quick-select banner if customer has saved utility points */}
-                {activeCustomer?.utilityPoints && activeCustomer.utilityPoints.length > 0 && (
-                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-[#635bff]/20 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#635bff] bg-white px-2 py-0.5 rounded border border-[#635bff]/20">
-                          Dati Profilo Volta Rilevati
-                        </span>
-                        <span className="text-xs text-slate-600 font-medium">
-                          {activeCustomer.utilityPoints[0].type === 'luce' ? 'Fornitura Luce' : 'Fornitura Gas'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-700">
-                        Punto POD/PDR: <strong className="font-bold text-[#0a2540]">{activeCustomer.utilityPoints[0].podOrPdr}</strong>
-                        {activeCustomer.utilityPoints[0].annualConsumption ? ` • Consumo registrato: ${activeCustomer.utilityPoints[0].annualConsumption} ${activeCustomer.utilityPoints[0].type === 'luce' ? 'kWh' : 'Smc'}/anno` : ''}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const pt = activeCustomer.utilityPoints![0];
-                        setComparisonInput({
-                          utilityType: pt.type,
-                          annualConsumption: pt.annualConsumption || (pt.type === 'gas' ? 1000 : 2700),
-                          powerKw: pt.powerKw || 3,
-                          f1Kwh: pt.f1Kwh,
-                          f2Kwh: pt.f2Kwh,
-                          f3Kwh: pt.f3Kwh,
-                          currentSupplier: pt.currentSupplier,
-                          currentPricingType: pt.currentTariffType === 'fixed' ? 'fixed' : 'indexed',
-                          currentUnitCost: pt.currentUnitCost,
-                          currentFixedFeeYear: pt.currentFixedFeeYear,
-                          source: 'account',
-                          asOf: 'Benchmark Q1 2026',
-                        });
-                        setCurrentStep('comparison');
-                        addToast('Dati Profilo Caricati', `Utilizzati i parametri contrattuali registrati per ${pt.type.toUpperCase()}.`, 'info');
-                      }}
-                      className="min-h-[44px] px-5 py-2.5 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shrink-0 shadow-xs"
-                    >
-                      <span>Usa fornitura salvata</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                {/* EnergyBillIntake Form as the primary intake screen */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#635bff] bg-[#635bff]/10 border border-[#635bff]/25 px-2 py-0.5 rounded">
-                      Fase 1 di 3 • Inserimento Fornitura
-                    </span>
-                    <h2 className="text-lg sm:text-xl font-black text-[#0a2540]">
-                      Carica la bolletta o specifica i tuoi consumi reali
-                    </h2>
-                    <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
-                      Come nel percorso di comparazione Facile.it, puoi caricare la tua ultima fattura energetica (PDF, JPEG, PNG fino a 10MB) per far analizzare i dati o inserire manualmente il consumo annuo. I risultati del confronto saranno generati esclusivamente sulla base dei parametri che confermi.
-                    </p>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100">
-                    <EnergyBillIntake
-                      customer={activeCustomer}
-                      selectedUtilityType={comparisonInput.utilityType}
-                      onUploaded={handleBillUploaded}
-                      onManualInput={handleManualInputApplied}
-                    />
-                  </div>
+              <section className="space-y-7" aria-labelledby="intake-title">
+                <div className="max-w-3xl space-y-3 pt-1">
+                  <p className="text-sm font-bold text-[#635bff]">Confronto luce e gas</p>
+                  <h1 id="intake-title" className="text-[2rem] sm:text-[2.75rem] font-extrabold tracking-tight leading-[1.12] text-[#0a2540]">
+                    Trova l'offerta giusta per i tuoi consumi.
+                  </h1>
+                  <p className="text-base leading-relaxed text-slate-600 max-w-2xl">
+                    Usa la tua fornitura, carica una bolletta oppure inserisci i consumi. Vedrai come viene calcolata ogni stima.
+                  </p>
                 </div>
-              </div>
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-6 lg:gap-8 items-start">
+                  <EnergyBillIntake
+                    customer={activeCustomer}
+                    selectedUtilityType={comparisonInput.utilityType}
+                    onUploaded={handleBillUploaded}
+                    onManualInput={handleManualInputApplied}
+                  />
+                  <aside className="lg:sticky lg:top-24 border-t-2 border-[#635bff] pt-5 text-sm text-slate-600" aria-label="Come funziona il confronto">
+                    <h2 className="text-lg font-bold text-[#0a2540]">Come funziona</h2>
+                    <ol className="mt-5 space-y-5">
+                      <li className="flex gap-3"><span className="font-bold text-[#635bff]">01</span><span>Partiamo dai consumi della tua fornitura.</span></li>
+                      <li className="flex gap-3"><span className="font-bold text-[#635bff]">02</span><span>Confronti i costi annui stimati e le condizioni.</span></li>
+                      <li className="flex gap-3"><span className="font-bold text-[#635bff]">03</span><span>Se ti interessa un'offerta, chiedi una consulenza.</span></li>
+                    </ol>
+                    <p className="mt-6 pt-5 border-t border-slate-200 text-xs leading-relaxed">Nessun contratto viene attivato durante il confronto.</p>
+                  </aside>
+                </div>
+              </section>
             ) : (
               /* STEP 2: Offers Comparison View */
-              <div className="space-y-6">
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-[#635bff]">Risultati del confronto</p>
+                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0a2540]">Le offerte per te</h1>
+                  <p className="text-sm sm:text-base text-slate-600">{comparisons.length} {comparisons.length === 1 ? 'offerta' : 'offerte'} per {comparisonInput.annualConsumption.toLocaleString('it-IT')} {comparisonInput.utilityType === 'luce' ? 'kWh' : 'Smc'} annui.</p>
+                </div>
                 {/* Editable Summary Panel */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
@@ -444,8 +412,8 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                           (Origine: {comparisonInput.source === 'account' ? 'Dati Profilo' : comparisonInput.source === 'bill-reviewed' ? 'Bolletta Caricata' : 'Inserimento Manuale'})
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-black text-[#0a2540]">
-                        Riepilogo consumi per il confronto offerte
+                      <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                        {comparisonInput.utilityType === 'luce' ? 'Luce' : 'Gas'} · {comparisonInput.annualConsumption.toLocaleString('it-IT')} {comparisonInput.utilityType === 'luce' ? 'kWh' : 'Smc'} all'anno
                       </h2>
                     </div>
 
@@ -455,12 +423,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       className="min-h-[44px] px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
                     >
                       <Sliders className="w-4 h-4 text-[#635bff]" />
-                      <span>Modifica dati o carica altra bolletta</span>
+                      <span>Modifica dati</span>
                     </button>
                   </div>
 
                   {/* Current parameter pills */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
                     <div>
                       <span className="text-[11px] text-slate-500 block font-semibold">Tipologia Fornitura</span>
                       <span className="font-bold text-slate-900 capitalize flex items-center gap-1 mt-0.5">
@@ -493,11 +461,11 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                   </div>
 
                   {/* Honest Benchmark Disclosure Banner */}
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-900">
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-relaxed text-slate-700">
                     <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold">Catalogo Dimostrativo • Benchmark Indicativo Q1 2026:</span>{' '}
-                      Le tariffe e i risparmi indicati rappresentano stime a scopo comparativo calcolate sui parametri PUN/PSV di riferimento. Nessuna attivazione automatica: le schede di confrontabilità ufficiali e i contratti definitivi vengono illustrati da un consulente Volta dedicato prima di qualsiasi firma.
+                      <span className="font-bold">{isDemoCatalog ? 'Catalogo dimostrativo' : 'Offerte dal catalogo Volta'} · benchmark PUN/PSV Q1 2026.</span>{' '}
+                      Le cifre sono stime comparative, non condizioni contrattuali definitive. Un consulente verifica schede e contratto prima della firma.
                     </div>
                   </div>
                 </div>
@@ -512,6 +480,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     <button
                       type="button"
                       onClick={() => setPricingFilter('all')}
+                      aria-pressed={pricingFilter === 'all'}
                       className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                         pricingFilter === 'all'
                           ? 'bg-[#0a2540] text-white shadow-xs'
@@ -523,6 +492,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     <button
                       type="button"
                       onClick={() => setPricingFilter('fixed')}
+                      aria-pressed={pricingFilter === 'fixed'}
                       className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                         pricingFilter === 'fixed'
                           ? 'bg-[#0a2540] text-white shadow-xs'
@@ -534,6 +504,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     <button
                       type="button"
                       onClick={() => setPricingFilter('indexed')}
+                      aria-pressed={pricingFilter === 'indexed'}
                       className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                         pricingFilter === 'indexed'
                           ? 'bg-[#0a2540] text-white shadow-xs'
@@ -545,11 +516,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2 justify-end">
-                    <span className="text-xs font-semibold text-slate-600">Ordina:</span>
+                    <label htmlFor="offer-sort" className="text-sm font-semibold text-slate-600">Ordina:</label>
                     <select
+                      id="offer-sort"
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
-                      className="min-h-[44px] bg-slate-50 border border-slate-200 text-xs text-slate-800 font-bold rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#635bff] cursor-pointer"
+                      onChange={(e) => setSortBy(e.target.value as 'cost_asc' | 'savings_desc')}
+                      className="min-h-[44px] max-w-full bg-white border border-slate-300 text-sm text-slate-800 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#635bff] cursor-pointer"
                     >
                       <option value="cost_asc">Costo annuo stimato (più conveniente)</option>
                       <option value="savings_desc">Risparmio stimato (maggiore)</option>
@@ -581,6 +553,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       <EnergyOfferCard
                         key={comp.offer.id}
                         comparison={comp}
+                        isDemoCatalog={isDemoCatalog}
                         onViewDetails={(c) => setActiveComparisonForDetails(c)}
                       />
                     ))
@@ -598,28 +571,42 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               setActiveView('offers');
               setCurrentStep('intake');
             }}
-            onOpenBillDetails={(bill) => {
-              const savingsText = bill.extractedSavingsEur
-                ? ` • Risparmio stimato da verifica: €${Math.round(bill.extractedSavingsEur)}/anno`
-                : '';
-              addToast(
-                'Dettaglio Bolletta',
-                `${bill.fileName} (${bill.utilityType.toUpperCase()}) caricata il ${bill.uploadDate}${savingsText}. Stato: ${bill.status === 'analyzed' ? 'Analizzata' : 'In verifica'}.`,
-                'info'
-              );
-            }}
+            onOpenBillDetails={setSelectedBill}
           />
         )}
       </main>
+
+      <InstallAppBanner inline />
 
       {/* Offer Details Modal */}
       {activeComparisonForDetails && (
         <EnergyOfferDetails
           comparison={activeComparisonForDetails}
+          isDemoCatalog={isDemoCatalog}
           currentInput={comparisonInput}
           onClose={() => setActiveComparisonForDetails(null)}
           onRequestConsultation={handleRequestConsultation}
         />
+      )}
+
+      {selectedBill && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 p-4 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="bill-details-title" onKeyDown={(event) => { if (event.key === 'Escape') setSelectedBill(null); }}>
+          <div className="w-full max-w-lg bg-white rounded-2xl p-6 sm:p-8 space-y-5 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-[#635bff]">La tua bolletta</p>
+                <h2 id="bill-details-title" className="text-xl font-bold text-[#0a2540] break-all">{selectedBill.fileName}</h2>
+              </div>
+              <button type="button" onClick={() => setSelectedBill(null)} className="min-h-[44px] px-3 rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#635bff]" aria-label="Chiudi dettagli bolletta">Chiudi</button>
+            </div>
+            <dl className="divide-y divide-slate-200 border-y border-slate-200 text-sm">
+              <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Fornitura</dt><dd className="font-semibold capitalize">{selectedBill.utilityType}</dd></div>
+              <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Caricata il</dt><dd className="font-semibold">{selectedBill.uploadDate}</dd></div>
+              <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Stato</dt><dd className="font-semibold">{selectedBill.status === 'analyzed' ? 'Analizzata' : selectedBill.status === 'archived' ? 'Archiviata' : 'In verifica'}</dd></div>
+            </dl>
+            <p className="text-sm leading-relaxed text-slate-600">{selectedBill.status === 'in_review' ? 'Il team Volta deve ancora verificare i dati di questa bolletta. Per un confronto immediato puoi inserire i consumi a mano.' : 'L’analisi è stata registrata. Per dettagli sul documento contatta il team Volta.'}</p>
+          </div>
+        </div>
       )}
 
       {/* Footer */}

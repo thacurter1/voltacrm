@@ -649,6 +649,12 @@ export const api = {
 
   // --- TOTEM KIOSK ---
   kiosk: {
+    async verifyDevice(key: string): Promise<boolean> {
+      const result = await request<{ success: boolean }>('/kiosk/device-status', {
+        headers: { 'x-kiosk-device-key': key },
+      });
+      return result.success === true;
+    },
     async submitLead(payload: {
       name?: string;
       phone: string;
@@ -662,11 +668,14 @@ export const api = {
         return await request<{
           success: boolean;
           leadId: string;
-          estimatedSavingsAnnualEur: number;
+          estimatedSavingsAnnualEur: number | null;
           advice: string;
           capturedAt: string;
         }>('/kiosk/lead', {
           method: 'POST',
+          headers: !isStandaloneDemo && typeof window !== 'undefined'
+            ? { 'x-kiosk-device-key': localStorage.getItem('VOLTA_KIOSK_DEVICE_KEY') || '' }
+            : undefined,
           body: JSON.stringify(payload)
         });
       } catch (err) {

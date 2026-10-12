@@ -138,16 +138,19 @@ export const oauthAuthSchema = z.object({
 }).strict();
 
 export const kioskLeadSchema = z.object({
-  phone: z.string().min(1),
-  name: z.string().optional(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  email: z.string().optional(),
-  city: z.string().optional(),
-  totemId: z.string().optional(),
-  mallLocation: z.string().optional(),
-  monthlyExpenseEur: z.number().optional(),
-  supplyType: z.string().optional(),
+  phone: z.string().trim().max(32).regex(/^\+?[\d\s().-]+$/).refine(value => {
+    const count = value.replace(/\D/g, '').length;
+    return count >= 9 && count <= 15;
+  }, 'Numero di telefono non valido.'),
+  name: z.string().trim().max(150).optional(),
+  firstName: z.string().trim().max(100).optional(),
+  lastName: z.string().trim().max(100).optional(),
+  email: z.union([z.string().email().max(254), z.literal('')]).optional(),
+  city: z.string().trim().max(150).optional(),
+  totemId: z.string().trim().max(100).optional(),
+  mallLocation: z.string().trim().max(150).optional(),
+  monthlyExpenseEur: z.number().positive().max(100000),
+  supplyType: z.enum(['luce', 'gas', 'luce+gas']),
 }).strict();
 
 export const signContractSchema = z.object({

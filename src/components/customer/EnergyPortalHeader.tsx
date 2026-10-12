@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, FileText, Sparkles, ShieldCheck } from 'lucide-react';
+import { Zap, FileText, Sparkles, ShieldCheck, LogOut } from 'lucide-react';
 import { NotificationCenter } from '../NotificationCenter';
 
 export interface EnergyPortalHeaderProps {
@@ -9,6 +9,7 @@ export interface EnergyPortalHeaderProps {
   onUploadBill?: () => void;
   onToast?: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
   onReturnToBackend?: () => void;
+  onLogout?: () => void;
 }
 
 export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
@@ -18,13 +19,16 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
   onUploadBill: _onUploadBill,
   onToast,
   onReturnToBackend,
+  onLogout,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-3">
         {/* Brand Logo */}
-        <div 
-          className="flex items-center gap-2.5 sm:gap-3 cursor-pointer shrink-0"
+        <button
+          type="button"
+          aria-label="Volta Energia, torna al confronto"
+          className="flex items-center gap-2.5 sm:gap-3 cursor-pointer shrink-0 text-left rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
           onClick={() => onSelectView('offers')}
         >
           <div className="h-9 w-9 rounded-xl bg-[#635bff] flex items-center justify-center text-white shadow-xs shrink-0">
@@ -43,7 +47,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
               Confronto guidato e trasparente tariffe luce e gas
             </span>
           </div>
-        </div>
+        </button>
 
         {/* Navigation & Actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -81,6 +85,13 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
               onToast={onToast}
               onNavigateTab={(tab) => onSelectView(tab === 'supplies' || tab === 'inbox_bills' ? 'supplies' : 'offers')}
             />
+          )}
+
+          {onLogout && (
+            <button type="button" onClick={onLogout} className="min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#635bff] flex items-center gap-1.5 cursor-pointer">
+              <LogOut className="w-4 h-4" aria-hidden="true" />
+              <span>Esci</span>
+            </button>
           )}
 
           {/* User badge */}

@@ -9,11 +9,12 @@ import {
   Briefcase 
 } from 'lucide-react';
 import { Customer, UserProfile } from '../types';
-import { api } from '../api/client';
+import { api, DEMO_MODE } from '../api/client';
 import { INITIAL_PROFILES } from '../services/supabaseClient';
 import { OAuthButtons } from './OAuthButtons';
 
 interface PortalGateProps {
+  portal?: 'customer' | 'staff';
   onLoginOperator: (user: UserProfile) => void;
   onLoginCustomer: (user: UserProfile) => void;
   onRequire2FA: (user: UserProfile) => void;
@@ -24,6 +25,7 @@ interface PortalGateProps {
 }
 
 export const PortalGate: React.FC<PortalGateProps> = ({
+  portal,
   onLoginOperator,
   onLoginCustomer,
   onRequire2FA: _onRequire2FA,
@@ -32,11 +34,12 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   onToast,
   onOpenTotem,
 }) => {
-  const [activePortal, setActivePortal] = useState<'customer' | 'operator'>('customer');
+  const [activePortal, setActivePortal] = useState<'customer' | 'operator'>(portal === 'staff' ? 'operator' : 'customer');
+  const selectedPortal = portal === 'staff' ? 'operator' : portal === 'customer' ? 'customer' : activePortal;
   const [customerMode, setCustomerMode] = useState<'login' | 'register'>('login');
 
   // Customer Auth State
-  const [customerIdentifier, setCustomerIdentifier] = useState('andrea.moretti@email.it');
+  const [customerIdentifier, setCustomerIdentifier] = useState('');
   const [customerPassword, setCustomerPassword] = useState('');
 
   // Customer Self-Registration State
@@ -47,13 +50,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const [regPassword, setRegPassword] = useState('');
 
   // Operator Auth State
-  const [operatorEmail, setOperatorEmail] = useState('m.riva@voltagroup.it');
-  const [operatorPassword, setOperatorPassword] = useState('admin123');
-  const [operatorTotp, setOperatorTotp] = useState('123456');
+  const [operatorEmail, setOperatorEmail] = useState('');
+  const [operatorPassword, setOperatorPassword] = useState('');
+  const [operatorTotp, setOperatorTotp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 1-Click Demo Login: Entra istantaneamente in qualsiasi ruolo senza blocchi o redirect esterni
   const handleDirectDemoLogin = async (role: string, userId?: string) => {
+    if (!DEMO_MODE) return;
     setIsSubmitting(true);
     if (typeof window !== 'undefined') {
       try {
@@ -103,7 +107,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = customerIdentifier.trim();
-    const pwd = customerPassword.trim();
+    const pwd = customerPassword;
 
     if (!query) {
       onToast('Dati Mancanti', 'Inserisci la tua email o Codice Fiscale.', 'warning');
@@ -112,6 +116,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
     setIsSubmitting(true);
     try {
+      if (!pwd && !DEMO_MODE) throw new Error('Inserisci la password.');
       const authRes = await api.auth.loginCustomer(query, pwd || 'customer123');
       if (authRes?.success && authRes.user) {
         onToast('Accesso Eseguito', `Benvenuto ${authRes.user.name}`, 'success');
@@ -120,7 +125,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       }
     } catch (err) {
       // In modalità demo o fallback, accetta il profilo corrispondente
-      const customerProfiles = INITIAL_PROFILES.filter(p => p.role === 'customer');
+      const customerProfiles = DEMO_MODE ? INITIAL_PROFILES.filter(p => p.role === 'customer') : [];
       const matched = customerProfiles.find(p =>
         p.email.toLowerCase() === query.toLowerCase() ||
         (p.fiscalCode && p.fiscalCode.toLowerCase() === query.toLowerCase()) ||
@@ -149,11 +154,19 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   // Customer Registration Handler
   const handleCustomerRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName || !regEmail || !regPhone) {
+    if (!regName.trim() || !regEmail.trim() || !regPhone.trim() || !regFiscalCode.trim() || !regPassword) {
       onToast('Dati Incompleti', 'Compila tutti i campi obbligatori.', 'warning');
       return;
     }
 
+    if (!/^(?:[A-Za-z0-9]{16}|[0-9]{11})$/.test(regFiscalCode.trim())) {
+      onToast('Codice fiscale non valido', 'Inserisci 16 caratteri oppure una partita IVA di 11 cifre.', 'warning');
+      return;
+    }
+    if (regPassword.length < 12 || regPassword.length > 72) {
+      onToast('Password non valida', 'Usa una password da 12 a 72 caratteri.', 'warning');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const result = await api.auth.registerCustomer({
@@ -161,7 +174,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         email: regEmail,
         phone: regPhone,
         fiscalCode: regFiscalCode,
-        password: regPassword || 'customer123',
+        password: regPassword,
       });
 
       onToast('Registrazione Completata!', 'Il tuo profilo cliente è attivo.', 'success');
@@ -183,7 +196,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         onLoginOperator(result.user);
         return;
       } else if (result.require2FA) {
-        if (operatorTotp === '123456') {
+        if (DEMO_MODE && operatorTotp === '123456') {
           const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase());
           if (matched) {
             if (typeof window !== 'undefined') {
@@ -201,6 +214,10 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         onToast('Richiesta 2FA', result.message || 'Inserisci il codice TOTP a 6 cifre.', 'info');
       }
     } catch (_err) {
+      if (!DEMO_MODE) {
+        onToast('Accesso non riuscito', _err instanceof Error ? _err.message : 'Controlla le credenziali e riprova.', 'warning');
+        return;
+      }
       const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase()) || INITIAL_PROFILES[0];
       if (typeof window !== 'undefined') {
         try {
@@ -241,7 +258,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {onOpenTotem && (
+            {DEMO_MODE && !portal && onOpenTotem && (
               <button
                 type="button"
                 onClick={onOpenTotem}
@@ -252,7 +269,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               </button>
             )}
 
-            <button
+            {DEMO_MODE && !portal && <button
               type="button"
               onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
               disabled={isSubmitting}
@@ -261,7 +278,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             >
               <Sparkles className="h-3 w-3 text-amber-300 fill-amber-300" />
               <span>Accedi come Demo Mode</span>
-            </button>
+            </button>}
           </div>
         </div>
       </header>
@@ -275,15 +292,15 @@ export const PortalGate: React.FC<PortalGateProps> = ({
           {/* Card Header */}
           <div className="text-center space-y-1.5">
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#0a2540]">
-              Accedi al tuo account
+              {selectedPortal === 'customer' ? 'Accedi alle tue bollette' : 'Accedi all’area operativa'}
             </h1>
             <p className="text-xs text-slate-500">
-              Seleziona il portale clienti o l'area riservata staff
+              {selectedPortal === 'customer' ? 'Usa il tuo account cliente per gestire forniture e documenti.' : 'Accesso riservato a staff e broker autorizzati.'}
             </p>
           </div>
 
           {/* Segmented Control Switcher (Stripe style) */}
-          <div className="p-1 rounded-xl bg-slate-100 border border-[#e3e8ee] grid grid-cols-2 gap-1 text-xs font-semibold">
+          {!portal && <div className="p-1 rounded-xl bg-slate-100 border border-[#e3e8ee] grid grid-cols-2 gap-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setActivePortal('customer')}
@@ -309,10 +326,12 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               <Briefcase className="h-4 w-4 text-[#635bff]" />
               <span>Staff & Broker</span>
             </button>
-          </div>
+          </div>}
+
+          {portal && <a href="/?portal=home" className="inline-flex items-center gap-2 text-xs font-semibold text-[#635bff] hover:underline">← Scegli un altro portale</a>}
 
           {/* ⚡ 1-Click Demo Sandbox Quick Strip */}
-          <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 space-y-2">
+          {DEMO_MODE && <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 space-y-2">
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3 text-[#635bff]" /> Accesso Rapido Demo 1-Click:
@@ -323,74 +342,67 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             </div>
             
             <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-              <button
+              {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
                 disabled={isSubmitting}
                 className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
               >
                 👑 Admin
-              </button>
-              <button
+              </button>}
+              {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('broker', 'user-op-3')}
                 disabled={isSubmitting}
                 className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
               >
                 💼 Broker
-              </button>
-              <button
+              </button>}
+              {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('call_center', 'user-cc-4')}
                 disabled={isSubmitting}
                 className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
               >
                 📞 Call Center
-              </button>
-              <button
+              </button>}
+              {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('operator', 'user-op-2')}
                 disabled={isSubmitting}
                 className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
               >
                 🎧 Operatore
-              </button>
-              <button
+              </button>}
+              {portal !== 'staff' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('customer', 'user-cust-1')}
                 disabled={isSubmitting}
                 className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-emerald-800 font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
               >
                 👤 Privato
-              </button>
-              <button
+              </button>}
+              {portal !== 'staff' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('customer', 'user-cust-2')}
                 disabled={isSubmitting}
                 className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-emerald-800 font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
               >
                 🏢 Business
-              </button>
+              </button>}
             </div>
-          </div>
+          </div>}
 
           {/* Social / OAuth Buttons */}
           <OAuthButtons
-            role={activePortal}
+            role={selectedPortal}
             mode={customerMode}
-            onSuccess={activePortal === 'customer' ? onLoginCustomer : onLoginOperator}
+            onSuccess={selectedPortal === 'customer' ? onLoginCustomer : onLoginOperator}
             onToast={onToast}
           />
 
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-slate-200 w-full" />
-            <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider absolute">
-              oppure con credenziali
-            </span>
-          </div>
-
           {/* 1. CUSTOMER PORTAL TAB */}
-          {activePortal === 'customer' && (
+          {selectedPortal === 'customer' && (
             <div className="space-y-4">
               {customerMode === 'login' ? (
                 <form onSubmit={handleCustomerLogin} className="space-y-4">
@@ -413,7 +425,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       <label htmlFor="customer-password" className="block text-xs font-bold text-[#0a2540]">
                         Password
                       </label>
-                      <span className="text-[10px] text-slate-400 font-mono">Demo: qualsiasi</span>
+                      {DEMO_MODE && <span className="text-[10px] text-slate-400 font-mono">Demo: qualsiasi</span>}
                     </div>
                     <input
                       id="customer-password"
@@ -449,9 +461,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[#0a2540] mb-1">Codice Fiscale</label>
+                      <label htmlFor="register-fiscal-code" className="block text-xs font-bold text-[#0a2540] mb-1">Codice fiscale / Partita IVA *</label>
                       <input
                         type="text"
+                        id="register-fiscal-code"
+                        required
+                        maxLength={16}
+                        pattern="(?:[A-Za-z0-9]{16}|[0-9]{11})"
+                        title="Codice fiscale di 16 caratteri o partita IVA di 11 cifre"
                         value={regFiscalCode}
                         onChange={(e) => setRegFiscalCode(e.target.value.toUpperCase())}
                         placeholder="RSSMRA80A01H501U"
@@ -486,9 +503,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-[#0a2540] mb-1">Password</label>
+                    <label htmlFor="register-password" className="block text-xs font-bold text-[#0a2540] mb-1">Password * — da 12 a 72 caratteri</label>
                     <input
                       type="password"
+                      id="register-password"
+                      autoComplete="new-password"
+                      required
+                      minLength={12}
+                      maxLength={72}
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       placeholder="••••••••••••"
@@ -523,7 +545,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
           )}
 
           {/* 2. OPERATOR & STAFF TAB */}
-          {activePortal === 'operator' && (
+          {selectedPortal === 'operator' && (
             <div className="space-y-4">
               <form onSubmit={handleOperatorLogin} className="space-y-4">
                 <div>
@@ -559,7 +581,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       <label htmlFor="operator-totp" className="block text-xs font-bold text-[#0a2540]">
                         Codice 2FA (TOTP)
                       </label>
-                      <span className="text-[10px] text-slate-400 font-mono">Demo: 123456</span>
+                      {DEMO_MODE && <span className="text-[10px] text-slate-400 font-mono">Demo: 123456</span>}
                     </div>
                     <input
                       id="operator-totp"
@@ -591,7 +613,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       <footer className="relative z-10 py-6 px-4 text-center text-xs text-slate-400">
         <div className="max-w-md mx-auto flex items-center justify-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>© Volta Energia • Connessione protetta SSL • Conforme ARERA & GDPR</span>
+          <span>© Volta Energia • Portale clienti e area operativa</span>
         </div>
       </footer>
     </div>

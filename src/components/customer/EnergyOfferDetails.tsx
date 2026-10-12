@@ -3,7 +3,6 @@ import {
   X, 
   Zap, 
   Flame, 
-  Leaf, 
   HelpCircle, 
   ShieldCheck, 
   CheckCircle2, 
@@ -16,13 +15,15 @@ import { ComparisonInput, ComparisonResult } from '../../services/offerCompariso
 
 export interface EnergyOfferDetailsProps {
   comparison: ComparisonResult;
+  isDemoCatalog: boolean;
   currentInput: ComparisonInput;
   onClose: () => void;
-  onRequestConsultation: (offer: SupplierOffer, notes?: string) => void | Promise<void>;
+  onRequestConsultation: (offer: SupplierOffer, notes?: string) => Promise<boolean>;
 }
 
 export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   comparison,
+  isDemoCatalog,
   currentInput,
   onClose,
   onRequestConsultation,
@@ -31,6 +32,30 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   const isLuce = offer.energyType === 'luce';
   const unitLabel = isLuce ? '€/kWh' : '€/Smc';
   const [customerNotes, setCustomerNotes] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+    return () => previousFocus?.focus();
+  }, []);
+
+  const submitConsultation = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const saved = await onRequestConsultation(offer, customerNotes);
+      if (saved) onClose();
+      else setSubmitError('Non siamo riusciti a inviare la richiesta. Riprova senza perdere le tue note.');
+    } catch {
+      setSubmitError('Non siamo riusciti a inviare la richiesta. Riprova senza perdere le tue note.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div 
@@ -38,6 +63,9 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="offer-details-title"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && !isSubmitting) onClose();
+      }}
     >
       <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
@@ -55,12 +83,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   {offer.supplier}
                 </span>
-                {offer.greenCertified && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                    <Leaf className="w-3 h-3" />
-                    100% Green
-                  </span>
-                )}
+                {isDemoCatalog && <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-200 text-slate-700">Catalogo demo</span>}
               </div>
               <h2 id="offer-details-title" className="text-lg sm:text-xl font-black text-[#0a2540]">
                 {offer.name}
@@ -69,6 +92,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
           </div>
 
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition cursor-pointer"
@@ -79,35 +103,35 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto text-xs text-slate-700">
+        <div className="p-5 sm:p-6 space-y-7 max-h-[70vh] overflow-y-auto text-sm text-slate-700">
           {/* Box Economico Stima */}
-          <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3">
-            <h3 className="font-bold text-sm text-[#0a2540] flex items-center gap-2">
+          <div className="space-y-4">
+            <h3 className="font-bold text-base text-[#0a2540] flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#635bff]" />
-              <span>Sintesi Economica della Stima</span>
+              <span>La tua stima</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              <div className="bg-white p-3.5 rounded-lg border border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                  Costo Annuo Nuova Offerta
+              <div className="border-l-2 border-[#635bff] pl-4">
+                <span className="text-sm font-semibold text-slate-600 block">
+                  Con questa offerta
                 </span>
-                <span className="text-2xl font-black text-[#0a2540]">
+                <span className="text-3xl font-extrabold text-[#0a2540] block mt-1">
                   {annualCost !== null ? `~€${Math.round(annualCost)}` : 'Non calcolabile'}
                 </span>
-                <span className="text-slate-500 block text-[11px] mt-0.5">
-                  Spesa totale stimata comprensiva di materia prima, fissa e oneri
+                <span className="text-slate-600 block text-xs mt-1">
+                  Spesa annua stimata, incluse le componenti considerate nel calcolo
                 </span>
               </div>
 
-              <div className="bg-white p-3.5 rounded-lg border border-slate-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                  Costo Annuo Attuale Stimato
+              <div className="border-l-2 border-slate-200 pl-4">
+                <span className="text-sm font-semibold text-slate-600 block">
+                  Con la tua tariffa attuale
                 </span>
-                <span className="text-2xl font-black text-slate-700">
+                <span className="text-3xl font-extrabold text-slate-700 block mt-1">
                   {currentAnnualCost !== null ? `~€${Math.round(currentAnnualCost)}` : 'Dato non inserito'}
                 </span>
-                <span className="text-slate-500 block text-[11px] mt-0.5">
+                <span className="text-slate-600 block text-xs mt-1">
                   {currentAnnualCost !== null
                     ? `Basato sulla tariffa ${currentInput.currentPricingType || 'in uso'}`
                     : 'Tariffa attuale non indicata'}
@@ -182,14 +206,14 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
           </div>
 
           {/* Metodologia e Ipotesi */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-[11px] text-slate-500">
-            <div className="flex items-center gap-1.5 font-bold text-slate-700">
-              <HelpCircle className="w-3.5 h-3.5 text-[#635bff]" />
-              <span>Metodologia del Calcolo e Ipotesi Applicate</span>
-            </div>
-            <ul className="list-disc pl-4 space-y-1">
+          <details className="border-y border-slate-200 py-4 text-sm text-slate-600">
+            <summary className="flex items-center gap-2 font-semibold text-[#0a2540] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#635bff]">
+              <HelpCircle className="w-4 h-4 text-[#635bff]" />
+              <span>Come abbiamo calcolato la stima</span>
+            </summary>
+            <ul className="list-disc pl-5 mt-3 space-y-2 leading-relaxed">
               <li>
-                Consumo di riferimento considerato: <strong>{currentInput.annualConsumption} {isLuce ? 'kWh' : 'Smc'}/anno</strong> (provenienza: {currentInput.source}).
+                Consumo di riferimento: <strong>{currentInput.annualConsumption} {isLuce ? 'kWh' : 'Smc'}/anno</strong> ({currentInput.source === 'account' ? 'dati del profilo' : currentInput.source === 'bill-reviewed' ? 'bolletta verificata' : 'dati inseriti da te'}).
               </li>
               {isLuce && (
                 <li>
@@ -203,11 +227,11 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                 Questa elaborazione è uno strumento informativo e non costituisce un preventivo vincolante. Il plico contrattuale ufficiale e le schede di confrontabilità fornitore saranno forniti per presa visione prima di ogni richiesta definitiva.
               </li>
             </ul>
-          </div>
+          </details>
 
           {/* Optional Notes for Consultation */}
           <div className="space-y-1.5 pt-1">
-            <label htmlFor="consultation-notes" className="block text-xs font-bold text-slate-700">
+            <label htmlFor="consultation-notes" className="block text-sm font-semibold text-slate-700">
               Note o preferenze per il consulente (opzionale)
             </label>
             <input
@@ -216,7 +240,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
               value={customerNotes}
               onChange={(e) => setCustomerNotes(e.target.value)}
               placeholder="Es. Richiamare preferibilmente nel pomeriggio..."
-              className="w-full min-h-[44px] px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#635bff] text-slate-800"
+              className="w-full min-h-[48px] px-3.5 py-2 text-base bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
             />
           </div>
         </div>
@@ -231,16 +255,15 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             Chiudi
           </button>
 
+          {submitError && <p role="alert" className="w-full text-sm font-medium text-red-700">{submitError}</p>}
           <button
             type="button"
-            onClick={() => {
-              onClose();
-              onRequestConsultation(offer, customerNotes);
-            }}
-            className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
+            onClick={submitConsultation}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
           >
             <PhoneCall className="w-4 h-4" />
-            <span>Richiedi assistenza per questa offerta</span>
+            <span>{isSubmitting ? 'Invio richiesta...' : 'Richiedi consulenza'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

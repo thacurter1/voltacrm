@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
+const ts = require('typescript');
 
 console.log('--- RUNNING CUSTOMER TO BACKEND NAVIGATION TEST ---');
 
@@ -48,9 +49,17 @@ assert(
 );
 
 // Verify CustomerApp is passed onReturnToBackend in embedded mode
-assert(
-  appContent.includes('<CustomerApp onReturnToBackend='),
-  'App.tsx must pass onReturnToBackend when mounting CustomerApp'
-);
+const appTree = ts.createSourceFile('App.tsx', appContent, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+let customerMounts = 0;
+function inspect(node) {
+  if ((ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) && node.tagName.getText(appTree) === 'CustomerApp') {
+    customerMounts++;
+    assert(node.attributes.properties.some(attribute => ts.isJsxAttribute(attribute) && attribute.name.getText(appTree) === 'onReturnToBackend'),
+      'App.tsx must pass onReturnToBackend when mounting CustomerApp');
+  }
+  ts.forEachChild(node, inspect);
+}
+inspect(appTree);
+assert(customerMounts > 0, 'The customer portal must remain mounted');
 
 console.log('✅ ALL CUSTOMER TO BACKEND NAVIGATION CHECKS PASSED!');

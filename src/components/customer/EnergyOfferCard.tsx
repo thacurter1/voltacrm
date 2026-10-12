@@ -1,14 +1,16 @@
 import React from 'react';
-import { Zap, Flame, Leaf, ArrowRight, Info } from 'lucide-react';
+import { ArrowRight, Info } from 'lucide-react';
 import { ComparisonResult } from '../../services/offerComparison';
 
 export interface EnergyOfferCardProps {
   comparison: ComparisonResult;
+  isDemoCatalog: boolean;
   onViewDetails: (comparison: ComparisonResult) => void;
 }
 
 export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
   comparison,
+  isDemoCatalog,
   onViewDetails,
 }) => {
   const { offer, annualCost, savingsEur, currentAnnualCost } = comparison;
@@ -21,43 +23,25 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
   const isMoreExpensive = hasSavingsCalc && savingsEur < 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 hover:border-[#635bff]/50 shadow-xs hover:shadow-sm transition-all duration-200 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+    <article className="bg-white rounded-2xl border border-slate-200 hover:border-[#635bff]/60 hover:shadow-[0_10px_30px_rgba(10,37,64,0.06)] transition-all p-5 sm:p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
       {/* Colonna Sinistra: Icona Fornitura e Dettagli Offerta */}
-      <div className="flex items-start gap-4 flex-1">
-        <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-            isLuce ? 'bg-amber-50 text-amber-600 border border-amber-200' : 'bg-blue-50 text-blue-600 border border-blue-200'
-          }`}
-          aria-hidden="true"
-        >
-          {isLuce ? <Zap className="w-6 h-6" /> : <Flame className="w-6 h-6" />}
-        </div>
-
-        <div className="space-y-1.5 flex-1">
+      <div className="flex-1 min-w-0">
+        <div className="space-y-2 flex-1">
           {/* Badge fornitore e caratteristiche reali */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-sm font-semibold text-slate-600">
               {offer.supplier}
             </span>
-            {offer.tag && (
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                {offer.tag}
-              </span>
-            )}
-            {offer.greenCertified && (
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                <Leaf className="w-3 h-3" />
-                100% Green
-              </span>
-            )}
+            {isDemoCatalog && <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">Catalogo demo</span>}
           </div>
 
-          <h3 className="text-base sm:text-lg font-black text-[#0a2540] leading-snug">
+          <h3 className="text-xl font-bold text-[#0a2540] leading-snug">
             {offer.name}
           </h3>
 
           {/* Dettagli tariffari trasparenti */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 pt-0.5">
+          <p className="text-sm font-semibold text-[#0a2540]">{offer.pricingType === 'fixed' ? 'Prezzo fisso' : 'Prezzo indicizzato'}</p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-600 pt-1">
             <div>
               Prezzo materia prima:{' '}
               <strong className="text-slate-900 font-bold">
@@ -85,10 +69,10 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
       </div>
 
       {/* Colonna Destra: Costo Annuo Stimato, Risparmio Reale e Azione */}
-      <div className="flex md:flex-col items-center md:items-end justify-between w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 gap-3 shrink-0">
-        <div className="text-left md:text-right">
-          <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
-            Costo Annuo Stimato
+      <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between w-full lg:w-auto border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100 gap-4 shrink-0">
+        <div className="text-left lg:text-right">
+          <span className="text-xs font-semibold text-slate-600 block">
+            Spesa annua stimata
           </span>
 
           {annualCost !== null ? (
@@ -96,7 +80,7 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
               <span className="text-2xl sm:text-3xl font-black text-[#0a2540]">
                 ~€{Math.round(annualCost)}
               </span>
-              <span className="text-xs font-semibold text-slate-500">/ anno</span>
+              <span className="text-sm font-semibold text-slate-500">/anno</span>
             </div>
           ) : (
             <div className="text-sm font-semibold text-slate-500">
@@ -106,7 +90,7 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
 
           {/* Risparmio o Differenza Matematica */}
           {hasSavingsCalc ? (
-            <div className="mt-0.5 text-xs">
+            <div className="mt-1 text-sm">
               {isCheaper && (
                 <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded inline-block">
                   Risparmio stimato: ~€{Math.round(savingsEur)}/anno ({comparison.savingsPercent}%)
@@ -124,9 +108,9 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
               )}
             </div>
           ) : (
-            <div className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
-              <Info className="w-3 h-3 text-slate-400" />
-              <span>Inserisci la spesa attuale per calcolare il risparmio</span>
+            <div className="mt-1 flex items-start gap-1 text-xs text-slate-600 max-w-[220px]">
+              <Info className="w-4 h-4 text-slate-500 shrink-0" />
+              <span>Risparmio personale non disponibile senza il costo attuale</span>
             </div>
           )}
         </div>
@@ -135,12 +119,12 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
         <button
           type="button"
           onClick={() => onViewDetails(comparison)}
-          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
+          className="w-full sm:w-auto min-h-[48px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
         >
           <span>Dettagli e condizioni</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-    </div>
+    </article>
   );
 };

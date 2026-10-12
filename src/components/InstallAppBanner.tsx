@@ -6,7 +6,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export const InstallAppBanner: React.FC = () => {
+export const InstallAppBanner: React.FC<{ inline?: boolean }> = ({ inline = false }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isDismissed, setIsDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -51,7 +51,7 @@ export const InstallAppBanner: React.FC = () => {
   };
 
   return (
-    <aside aria-label="Installa applicazione" className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-40 animate-in slide-in-from-bottom-5 duration-200">
+    <aside aria-label="Installa applicazione" className={inline ? 'w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4' : 'fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-40 animate-in slide-in-from-bottom-5 duration-200'}>
       <div className="bg-white text-[#0a2540] p-4 rounded-2xl shadow-xl border border-[#e3e8ee] flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-[#635bff] flex items-center justify-center text-white shrink-0 shadow-xs">

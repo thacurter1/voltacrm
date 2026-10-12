@@ -44,7 +44,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState<CustomerBill | null>(null);
 
   // Manual input state
-  const [manualConsumption, setManualConsumption] = useState<string>('2700');
+  const [manualConsumption, setManualConsumption] = useState<string>('');
   const [manualPowerKw, setManualPowerKw] = useState<string>('3.0');
   const [manualF1, setManualF1] = useState<string>('');
   const [manualF2, setManualF2] = useState<string>('');
@@ -59,9 +59,15 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
   // Handle selecting an existing profile point directly
   const handleSelectExistingPoint = (point: UtilityPoint) => {
+    if (!point.annualConsumption || point.annualConsumption <= 0) {
+      setUtilityType(point.type);
+      setActiveMode('manual');
+      setUploadError('Questa fornitura non ha un consumo annuo registrato. Inseriscilo per confrontare le offerte.');
+      return;
+    }
     const input: ComparisonInput = {
       utilityType: point.type,
-      annualConsumption: point.annualConsumption || (point.type === 'luce' ? 2700 : 1000),
+      annualConsumption: point.annualConsumption,
       powerKw: point.powerKw || 3,
       f1Kwh: point.f1Kwh,
       f2Kwh: point.f2Kwh,
@@ -71,7 +77,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
       currentUnitCost: point.currentUnitCost,
       currentFixedFeeYear: point.currentFixedFeeYear,
       source: 'account',
-      asOf: new Date().toISOString().split('T')[0],
+      asOf: undefined,
     };
     onManualInput(input);
   };
@@ -168,30 +174,29 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_12px_32px_rgba(10,37,64,0.04)]">
       {/* Utility Type Selector */}
-      <div className="p-4 sm:p-6 bg-slate-50 border-b border-slate-200">
+      <div className="p-5 sm:p-7 border-b border-slate-200">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#635bff]">
-              Passo 1: Seleziona Fornitura
-            </span>
-            <h3 className="text-lg font-black text-[#0a2540] mt-0.5">
-              Cosa desideri confrontare oggi?
-            </h3>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
+              Quale fornitura vuoi confrontare?
+            </h2>
+            <p className="text-sm text-slate-600 mt-1">Puoi cambiare scelta prima di vedere i risultati.</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto" role="group" aria-label="Tipo di fornitura">
             <button
               type="button"
               onClick={() => {
                 setUtilityType('luce');
-                if (manualConsumption === '1000') setManualConsumption('2700');
+                setManualConsumption('');
               }}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
+              aria-pressed={utilityType === 'luce'}
+              className={`min-h-[48px] px-5 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
                 utilityType === 'luce'
-                  ? 'bg-[#635bff] text-white shadow-xs'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                  ? 'bg-[#635bff] text-white'
+                  : 'bg-white text-slate-700 border border-slate-300 hover:border-[#635bff]'
               }`}
             >
               <Zap className="w-4 h-4" />
@@ -202,12 +207,13 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               type="button"
               onClick={() => {
                 setUtilityType('gas');
-                if (manualConsumption === '2700') setManualConsumption('1000');
+                setManualConsumption('');
               }}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
+              aria-pressed={utilityType === 'gas'}
+              className={`min-h-[48px] px-5 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
                 utilityType === 'gas'
-                  ? 'bg-[#635bff] text-white shadow-xs'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                  ? 'bg-[#635bff] text-white'
+                  : 'bg-white text-slate-700 border border-slate-300 hover:border-[#635bff]'
               }`}
             >
               <Flame className="w-4 h-4" />
@@ -217,22 +223,23 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
         </div>
       </div>
 
-      {/* Mode Tabs */}
-      <div className="flex border-b border-slate-200 text-xs font-bold bg-white px-4 sm:px-6 pt-3 gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap">
+      {/* Choice of data source: each option changes the form beneath it. */}
+      <div className="p-5 sm:p-7 pb-0 sm:pb-0">
+        <h3 className="text-lg font-bold text-[#0a2540] mb-3">Come vuoi iniziare?</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Scegli i dati da usare">
         <button
           type="button"
           onClick={() => {
             setActiveMode('profile');
             setUploadError(null);
           }}
-          className={`pb-3 relative transition cursor-pointer shrink-0 ${
-            activeMode === 'profile' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
+          aria-pressed={activeMode === 'profile'}
+          className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+            activeMode === 'profile' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
           }`}
         >
-          <span>La mia fornitura registrata ({matchingPoints.length})</span>
-          {activeMode === 'profile' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#635bff] rounded-full" />
-          )}
+          <span className="block text-sm font-bold">Usa la mia fornitura</span>
+          <span className="block text-xs text-slate-600 mt-1">{matchingPoints.length} {matchingPoints.length === 1 ? 'fornitura disponibile' : 'forniture disponibili'}</span>
         </button>
 
         <button
@@ -241,14 +248,13 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             setActiveMode('upload');
             setUploadError(null);
           }}
-          className={`pb-3 relative transition cursor-pointer shrink-0 ${
-            activeMode === 'upload' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
+          aria-pressed={activeMode === 'upload'}
+          className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+            activeMode === 'upload' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
           }`}
         >
-          <span>Carica bolletta (PDF, JPG, PNG)</span>
-          {activeMode === 'upload' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#635bff] rounded-full" />
-          )}
+          <span className="block text-sm font-bold">Carica una bolletta</span>
+          <span className="block text-xs text-slate-600 mt-1">PDF, JPG o PNG · max 10 MB</span>
         </button>
 
         <button
@@ -257,18 +263,18 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             setActiveMode('manual');
             setUploadError(null);
           }}
-          className={`pb-3 relative transition cursor-pointer shrink-0 ${
-            activeMode === 'manual' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
+          aria-pressed={activeMode === 'manual'}
+          className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+            activeMode === 'manual' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
           }`}
         >
-          <span>Inserisci consumi a mano</span>
-          {activeMode === 'manual' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#635bff] rounded-full" />
-          )}
+          <span className="block text-sm font-bold">Inserisci i consumi</span>
+          <span className="block text-xs text-slate-600 mt-1">Se hai i dati già a portata di mano</span>
         </button>
+        </div>
       </div>
 
-      <div className="p-4 sm:p-6">
+      <div className="p-5 sm:p-7">
         {/* Mode 1: Existing Profile Point */}
         {activeMode === 'profile' && (
           <div className="space-y-4">
@@ -300,7 +306,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 {matchingPoints.map((point) => (
                   <div
                     key={point.id}
-                    className="border border-slate-200 rounded-xl p-4 hover:border-[#635bff] transition space-y-3 relative group"
+                    className="border border-slate-200 rounded-xl p-5 hover:border-[#635bff] transition space-y-5 relative group"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
@@ -314,10 +320,10 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                           {point.type === 'luce' ? <Zap className="w-4 h-4" /> : <Flame className="w-4 h-4" />}
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                            Punto di Prelievo
+                          <span className="text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                            {point.type === 'luce' ? 'POD · Fornitura luce' : 'PDR · Fornitura gas'}
                           </span>
-                          <h4 className="text-xs font-mono font-black text-[#0a2540]">
+                          <h4 className="text-sm font-mono font-bold text-[#0a2540] break-all">
                             {point.podOrPdr}
                           </h4>
                         </div>
@@ -327,22 +333,22 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600 bg-slate-50 p-4 rounded-lg">
                       <div>
-                        <span className="text-[10px] text-slate-400 block">Consumo Annuo</span>
+                        <span className="text-xs text-slate-600 block">Consumo annuo</span>
                         <span className="font-bold text-slate-900">
                           {point.annualConsumption || 0} {point.type === 'luce' ? 'kWh' : 'Smc'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 block">Fornitore Attuale</span>
+                        <span className="text-xs text-slate-600 block">Fornitore attuale</span>
                         <span className="font-semibold text-slate-800 truncate block">
                           {point.currentSupplier || 'Non specificato'}
                         </span>
                       </div>
                       {point.currentUnitCost !== undefined && (
                         <div>
-                          <span className="text-[10px] text-slate-400 block">Costo Materia Prima</span>
+                          <span className="text-xs text-slate-600 block">Prezzo materia prima</span>
                           <span className="font-bold text-slate-900">
                             {point.currentUnitCost.toFixed(4)} {point.type === 'luce' ? '€/kWh' : '€/Smc'}
                           </span>
@@ -350,7 +356,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       )}
                       {point.currentFixedFeeYear !== undefined && (
                         <div>
-                          <span className="text-[10px] text-slate-400 block">Quota Fissa</span>
+                          <span className="text-xs text-slate-600 block">Quota fissa</span>
                           <span className="font-bold text-slate-900">
                             {point.currentFixedFeeYear} €/anno
                           </span>
@@ -361,7 +367,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSelectExistingPoint(point)}
-                      className="w-full py-2 px-3 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      className="w-full min-h-[48px] py-2 px-3 bg-[#635bff] hover:bg-[#5851ea] text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <span>Usa questi dati per il confronto</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -478,10 +484,11 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="annual-consumption" className="block text-sm font-semibold text-slate-700 mb-1">
                   Consumo Annuo Stimato ({utilityType === 'luce' ? 'kWh' : 'Smc'}) *
                 </label>
                 <input
+                  id="annual-consumption"
                   type="number"
                   step="any"
                   min="1"
@@ -489,7 +496,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   value={manualConsumption}
                   onChange={(e) => setManualConsumption(e.target.value)}
                   placeholder={utilityType === 'luce' ? 'es. 2700' : 'es. 1000'}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff]"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
                 />
                 <span className="text-[10px] text-slate-400 mt-0.5 block">
                   Media nazionale: {utilityType === 'luce' ? '~2.700 kWh/anno' : '~1.000 Smc/anno'}
@@ -498,10 +505,11 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
               {utilityType === 'luce' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label htmlFor="power-kw" className="block text-sm font-semibold text-slate-700 mb-1">
                     Potenza Impegnata (kW)
                   </label>
                   <input
+                    id="power-kw"
                     type="number"
                     step="0.5"
                     min="1"
@@ -509,7 +517,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     value={manualPowerKw}
                     onChange={(e) => setManualPowerKw(e.target.value)}
                     placeholder="es. 3.0"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff]"
+                    className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
                   />
                   <span className="text-[10px] text-slate-400 mt-0.5 block">
                     Residenziale tipico: 3.0 kW (o 4.5 kW)
@@ -518,30 +526,32 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="current-supplier" className="block text-sm font-semibold text-slate-700 mb-1">
                   Fornitore Attuale (facoltativo)
                 </label>
                 <input
+                  id="current-supplier"
                   type="text"
                   value={manualSupplier}
                   onChange={(e) => setManualSupplier(e.target.value)}
                   placeholder="es. Enel, Eni, A2A, Hera"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff]"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="current-unit-cost" className="block text-sm font-semibold text-slate-700 mb-1">
                   Costo Materia Prima Attuale ({utilityType === 'luce' ? '€/kWh' : '€/Smc'})
                 </label>
                 <input
+                  id="current-unit-cost"
                   type="number"
                   step="0.0001"
                   min="0"
                   value={manualUnitCost}
                   onChange={(e) => setManualUnitCost(e.target.value)}
                   placeholder={utilityType === 'luce' ? 'es. 0.1850' : 'es. 0.5500'}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff]"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
                 />
                 <span className="text-[10px] text-slate-400 mt-0.5 block">
                   Necessario per calcolare il risparmio personalizzato
@@ -549,17 +559,18 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="current-fixed-fee" className="block text-sm font-semibold text-slate-700 mb-1">
                   Quota Fissa Annuale (€/anno)
                 </label>
                 <input
+                  id="current-fixed-fee"
                   type="number"
                   step="1"
                   min="0"
                   value={manualFixedFeeYear}
                   onChange={(e) => setManualFixedFeeYear(e.target.value)}
                   placeholder="es. 120"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff]"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
                 />
                 <span className="text-[10px] text-slate-400 mt-0.5 block">
                   Commercializzazione e vendita (€/anno)
@@ -567,13 +578,14 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="current-pricing-type" className="block text-sm font-semibold text-slate-700 mb-1">
                   Tipologia Tariffa Attuale
                 </label>
                 <select
+                  id="current-pricing-type"
                   value={manualPricingType}
                   onChange={(e) => setManualPricingType(e.target.value as 'fixed' | 'indexed')}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff]"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
                 >
                   <option value="fixed">Prezzo Fisso</option>
                   <option value="indexed">Prezzo Indicizzato (PUN / PSV)</option>
@@ -589,33 +601,36 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 </span>
                 <div className="grid grid-cols-3 gap-3 max-w-md">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">F1 (Picco)</label>
+                    <label htmlFor="manual-f1" className="block text-sm font-semibold text-slate-600 mb-1">F1 (Picco)</label>
                     <input
+                      id="manual-f1"
                       type="number"
                       value={manualF1}
                       onChange={(e) => setManualF1(e.target.value)}
                       placeholder="kWh"
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                      className="w-full min-h-11 px-3 py-2 bg-white border border-slate-300 rounded-lg text-base"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">F2 (Intermedia)</label>
+                    <label htmlFor="manual-f2" className="block text-sm font-semibold text-slate-600 mb-1">F2 (Intermedia)</label>
                     <input
+                      id="manual-f2"
                       type="number"
                       value={manualF2}
                       onChange={(e) => setManualF2(e.target.value)}
                       placeholder="kWh"
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                      className="w-full min-h-11 px-3 py-2 bg-white border border-slate-300 rounded-lg text-base"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">F3 (Fuori picco)</label>
+                    <label htmlFor="manual-f3" className="block text-sm font-semibold text-slate-600 mb-1">F3 (Fuori picco)</label>
                     <input
+                      id="manual-f3"
                       type="number"
                       value={manualF3}
                       onChange={(e) => setManualF3(e.target.value)}
                       placeholder="kWh"
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                      className="w-full min-h-11 px-3 py-2 bg-white border border-slate-300 rounded-lg text-base"
                     />
                   </div>
                 </div>

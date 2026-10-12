@@ -5,6 +5,7 @@ import { CURRENT_MARKET_INDEX } from './energyEngine';
 const STORAGE_KEY = 'VOLTA_ENERGY_CRM_DB_V3';
 
 export const isDemoSessionActive = (): boolean => {
+  if ((import.meta as any).env?.VITE_DEMO_MODE !== 'true') return false;
   if (typeof window !== 'undefined') {
     try {
       if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('VOLTA_DEMO_ACTIVE') === 'true') return true;
@@ -255,7 +256,7 @@ export const dbService = {
       currentUser: DEMO_USERS[0],
       securityLogs: INITIAL_SECURITY_LOGS,
     };
-    this.save(defaultState);
+    try { this.save(defaultState); } catch { /* Keep the demo readable when browser storage is unavailable. */ }
     return defaultState;
   },
 
@@ -264,11 +265,11 @@ export const dbService = {
     try {
       const json = JSON.stringify(state);
       localStorage.setItem(STORAGE_KEY, json);
-      // Demo fixtures are stored locally for convenience; this is not encryption at rest.
-      localStorage.removeItem(STORAGE_KEY + '_ENCRYPTED_AES256');
     } catch (e) {
-      console.error('Errore salvataggio database localStorage', e);
+      throw new Error('Impossibile salvare i dati demo nel browser. Libera spazio o abilita l’archiviazione del sito.', { cause: e });
     }
+    // Legacy cleanup is best effort after a successful write.
+    try { localStorage.removeItem(STORAGE_KEY + '_ENCRYPTED_AES256'); } catch {}
   },
 
   reset(): DbState {

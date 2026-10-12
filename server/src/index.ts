@@ -36,7 +36,7 @@ const allowedOrigins = rawOrigins.split(',').map(o => o.trim()).filter(Boolean);
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Client-Version']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Kiosk-Device-Key', 'X-Client-Version']
 }));
 
 app.use(express.json({ limit: '25mb' }));
