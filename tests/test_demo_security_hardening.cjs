@@ -1,7 +1,6 @@
 const assert = require('node:assert/strict');
-const path = require('node:path');
 
-const { isDemoAllowed, authenticateToken } = require('../server/dist/middleware/auth.js');
+const { isDemoAllowed } = require('../server/dist/middleware/auth.js');
 
 // --- 1. Unit Test: isDemoAllowed matrix ---
 const origEnv = { ...process.env };

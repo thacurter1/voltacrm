@@ -19,6 +19,11 @@ interface LoginModalProps {
   customers: Customer[];
 }
 
+function generateDemoToken(demoUser: AuthUser): string {
+  const prefix = demoUser.role === 'customer' ? 'mock-cust-token' : 'mock-op-token';
+  return `${prefix}-${demoUser.id}-${Date.now()}`;
+}
+
 export const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
@@ -38,8 +43,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
 
   const handleCustomerLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,9 +78,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       try {
         sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
         localStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
-        const token = demoUser.role === 'customer'
-          ? `mock-cust-token-${demoUser.id}-${Date.now()}`
-          : `mock-op-token-${demoUser.id}-${Date.now()}`;
+        const token = generateDemoToken(demoUser);
         localStorage.setItem('VOLTA_AUTH_TOKEN', token);
         localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(demoUser));
       } catch {}
@@ -99,6 +100,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     onSelectUser(authUser);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div 

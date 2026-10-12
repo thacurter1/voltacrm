@@ -100,6 +100,12 @@ assert.ok(
   'CustomerApp main container must have pb-28 or pb-32 to prevent DemoRoleSwitcher overlap on mobile'
 );
 
+// RED CHECK 4.4: CustomerApp must provide onlyGreen state and toggle with Leaf icon
+assert.ok(
+  customerAppSrc.includes('onlyGreen') && customerAppSrc.includes('Solo 100% Green'),
+  'CustomerApp must include onlyGreen filter toggle with Solo 100% Green label'
+);
+
 // -----------------------------------------------------------------------------
 // 5. Mobile Polish: DemoRoleSwitcher starts minimized on mobile screens
 // -----------------------------------------------------------------------------

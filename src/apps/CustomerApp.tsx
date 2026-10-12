@@ -27,7 +27,8 @@ import {
   Flame, 
   ShieldCheck, 
   Filter, 
-  Sliders
+  Sliders,
+  Leaf
 } from 'lucide-react';
 
 export interface CustomerAppProps {
@@ -84,24 +85,26 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   // Sync if customer props arrive later
   useEffect(() => {
     if (activeCustomer?.utilityPoints && activeCustomer.utilityPoints.length > 0) {
-      setComparisonInput((prev) => {
-        if (prev.source === 'manual' || prev.source === 'bill-reviewed') return prev;
-        const points = activeCustomer.utilityPoints || [];
-        const match = points.find((p) => p.type === prev.utilityType) || points[0];
-        return {
-          ...prev,
-          utilityType: match.type,
-          annualConsumption: match.annualConsumption || prev.annualConsumption,
-          powerKw: match.powerKw || 3,
-          f1Kwh: match.f1Kwh,
-          f2Kwh: match.f2Kwh,
-          f3Kwh: match.f3Kwh,
-          currentSupplier: match.currentSupplier,
-          currentPricingType: match.currentTariffType === 'fixed' ? 'fixed' : 'indexed',
-          currentUnitCost: match.currentUnitCost,
-          currentFixedFeeYear: match.currentFixedFeeYear,
-          source: match.annualConsumption ? 'account' : prev.source,
-        };
+      queueMicrotask(() => {
+        setComparisonInput((prev) => {
+          if (prev.source === 'manual' || prev.source === 'bill-reviewed') return prev;
+          const points = activeCustomer.utilityPoints || [];
+          const match = points.find((p) => p.type === prev.utilityType) || points[0];
+          return {
+            ...prev,
+            utilityType: match.type,
+            annualConsumption: match.annualConsumption || prev.annualConsumption,
+            powerKw: match.powerKw || 3,
+            f1Kwh: match.f1Kwh,
+            f2Kwh: match.f2Kwh,
+            f3Kwh: match.f3Kwh,
+            currentSupplier: match.currentSupplier,
+            currentPricingType: match.currentTariffType === 'fixed' ? 'fixed' : 'indexed',
+            currentUnitCost: match.currentUnitCost,
+            currentFixedFeeYear: match.currentFixedFeeYear,
+            source: match.annualConsumption ? 'account' : prev.source,
+          };
+        });
       });
     }
   }, [activeCustomer]);
@@ -112,6 +115,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   const isDemoCatalog = true;
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(CURRENT_MARKET_INDEX);
   const [pricingFilter, setPricingFilter] = useState<'all' | 'fixed' | 'indexed'>('all');
+  const [onlyGreen, setOnlyGreen] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<'cost_asc' | 'savings_desc'>('cost_asc');
 
   // Details Modal
@@ -158,6 +162,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   const comparisons: ComparisonResult[] = useMemo(() => {
     return offers
       .filter((offer) => offer.energyType === comparisonInput.utilityType)
+      .filter((offer) => !onlyGreen || offer.greenCertified)
       .filter((offer) => {
         if (pricingFilter === 'all') return true;
         if (pricingFilter === 'fixed') return offer.pricingType === 'fixed';
@@ -174,7 +179,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         }
         return 0;
       });
-  }, [offers, comparisonInput, marketIndex, pricingFilter, sortBy]);
+  }, [offers, comparisonInput, marketIndex, pricingFilter, sortBy, onlyGreen]);
 
   // Handle bill uploaded
   const handleBillUploaded = (uploadedBill: CustomerBill) => {
@@ -512,6 +517,19 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       }`}
                     >
                       Indicizzato (PUN/PSV)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOnlyGreen(!onlyGreen)}
+                      aria-pressed={onlyGreen}
+                      className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        onlyGreen
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-white text-emerald-800 border border-emerald-200 hover:bg-emerald-50'
+                      }`}
+                    >
+                      <Leaf className="w-3.5 h-3.5" />
+                      <span>Solo 100% Green</span>
                     </button>
                   </div>
 

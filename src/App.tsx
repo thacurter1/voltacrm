@@ -376,7 +376,9 @@ function UnifiedApp() {
       const selectedDemoId = new URLSearchParams(window.location.search).get('demo_user');
       const selectedProfile = INITIAL_PROFILES.find(profile => profile.id === selectedDemoId);
       if (selectedProfile) {
-        void handleSelectUser(selectedProfile);
+        queueMicrotask(() => {
+          void handleSelectUser(selectedProfile);
+        });
         return;
       }
     }
@@ -387,7 +389,9 @@ function UnifiedApp() {
       if (stored) {
         try {
           const user = JSON.parse(stored);
-          void handleSelectUser(user);
+          queueMicrotask(() => {
+            void handleSelectUser(user);
+          });
           return;
         } catch {}
       }

@@ -247,5 +247,13 @@ const coupleGasWithAppliances = estimateLifestyleConsumption({
 assert.strictEqual(coupleGasWithAppliances, 950, 'Gas consumption should ignore electric appliance flags');
 console.log('✔ Scenario 7: Lifestyle consumption estimation verified (Luce & Gas base + appliance increments)');
 
+// SCENARIO 8: Solo 100% Green Certified Filter
+const allGasOffers = MARKET_OFFERS.filter(o => o.energyType === 'gas');
+const greenGasOffers = allGasOffers.filter(o => o.greenCertified);
+assert.strictEqual(allGasOffers.length, 3, 'Sample catalog must have 3 gas offers');
+assert.strictEqual(greenGasOffers.length, 1, 'Sample catalog must have exactly 1 green-certified gas offer');
+assert.strictEqual(greenGasOffers[0].greenCertified, true, 'Filtered offer must be green certified');
+console.log('✔ Scenario 8: Green certified filter verified (1/3 gas offers green certified)');
+
 console.log('🎉 ALL HONEST COMPARISON SCENARIOS PASSED!');
 
