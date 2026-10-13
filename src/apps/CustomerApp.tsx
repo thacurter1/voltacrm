@@ -9,7 +9,7 @@ import { ToastContainer } from '../components/ToastContainer';
 import { LegalFooter } from '../components/common/LegalFooter';
 import { LegalModal, type LegalTab } from '../components/common/LegalModal';
 import { CookieBanner } from '../components/common/CookieBanner';
-import { api } from '../api/client';
+import { api, isDemoSessionActive } from '../api/client';
 import { portalApi } from '../api/portal';
 import { MARKET_OFFERS, CURRENT_MARKET_INDEX } from '../services/energyEngine';
 import { 
@@ -131,8 +131,8 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
   // Catalog offers & Market indices
   const [offers, setOffers] = useState<SupplierOffer[]>(MARKET_OFFERS);
-  // The backend currently serves the same static sample catalog as the local fallback.
-  const isDemoCatalog = true;
+  // Catalog reflects live provider catalog unless in active demo mode
+  const isDemoCatalog = isDemoSessionActive();
   const [marketIndex, setMarketIndex] = useState<MarketIndex>(CURRENT_MARKET_INDEX);
   const [pricingFilter, setPricingFilter] = useState<'all' | 'fixed' | 'indexed'>('all');
   const [onlyGreen, setOnlyGreen] = useState<boolean>(false);

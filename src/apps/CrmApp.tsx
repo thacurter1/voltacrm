@@ -1,3 +1,7 @@
+/**
+ * @deprecated Questo componente è un prototipo standalone storico.
+ * L'architettura unificata e autoritativa per l'applicazione staff e clienti è implementata in `src/App.tsx` (UnifiedApp).
+ */
 import React, { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
 import { DashboardOverview } from '../components/DashboardOverview';

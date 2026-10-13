@@ -300,16 +300,13 @@ function UnifiedApp() {
 
       const resolvedCustomers = isBroker
         ? customerRows.filter(c => {
-            const brokerName = user.name.split(' (')[0].trim();
-            return (
-              c.assignedBrokerId === user.id ||
-              (c.accountManager && (
-                c.accountManager === user.name ||
-                c.accountManager === brokerName ||
-                user.name.includes(c.accountManager) ||
-                c.accountManager.includes(brokerName)
-              ))
-            );
+            if (c.assignedBrokerId) {
+              return c.assignedBrokerId === user.id;
+            }
+            if (!c.accountManager) return false;
+            const brokerSimpleName = user.name.split(' (')[0].trim().toLowerCase();
+            const mgrSimpleName = c.accountManager.split(' (')[0].trim().toLowerCase();
+            return mgrSimpleName === brokerSimpleName || c.accountManager.toLowerCase() === user.name.toLowerCase();
           })
         : user.role === 'call_center'
         ? []

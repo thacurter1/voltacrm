@@ -5,7 +5,7 @@ import { validate, createLeadSchema, bulkImportLeadsSchema, updateLeadStatusSche
 import { Lead } from '../types.js';
 
 export const leadsRouter = Router();
-const allowedSources = new Set(['totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page']);
+const allowedSources = new Set(['totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page', 'public_comparator', 'bill_upload']);
 function canAccessLead(lead: Lead, actor: any): boolean {
   if (!actor) return false;
   if (actor.role === 'admin' || actor.role === 'call_center') return true;

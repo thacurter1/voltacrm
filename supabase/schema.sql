@@ -78,7 +78,7 @@ create table if not exists public.leads (
   phone text not null,
   email text,
   city text default 'Milano',
-  source text not null check (source in ('totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page')) default 'totem_kiosk',
+  source text not null check (source in ('totem_kiosk', 'facebook_ads', 'google_ads', 'referral', 'manual', 'website_calculator', 'landing_page', 'public_comparator', 'bill_upload')) default 'totem_kiosk',
   status text not null check (status in ('new', 'call_center_queue', 'contacted', 'appointment_booked', 'in_negotiation', 'contract_signed', 'unreachable', 'won', 'lost')) default 'new',
   assigned_call_center_agent text,
   assigned_broker_id text,
@@ -129,13 +129,13 @@ create table if not exists public.signature_logs (
 create table if not exists public.notifications (
   id text primary key,
   user_id text,
-  type text not null check (type in ('totem_lead', 'switch_due', 'bill_uploaded', 'signature_completed', 'security_alert', 'market_trend')),
+  type text not null check (type in ('totem_lead', 'switch_due', 'bill_uploaded', 'signature_completed', 'security_alert', 'market_trend', 'consultation_requested', 'price_drop')),
   title text not null,
   message text not null,
   timestamp timestamp with time zone default timezone('utc'::text, now()) not null,
   is_read boolean default false not null,
   priority text not null check (priority in ('low', 'normal', 'high', 'urgent', 'info')) default 'normal',
-  target_role text not null check (target_role in ('all', 'admin', 'call_center', 'customer')) default 'all',
+  target_role text not null check (target_role in ('all', 'admin', 'call_center', 'customer', 'broker', 'operator')) default 'all',
   action_tab text,
   meta jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -222,7 +222,7 @@ as $$
 begin
   return exists (
     select 1 from public.profiles
-    where id = auth.uid() and role in ('admin', 'operator', 'call_center')
+    where id = auth.uid() and role in ('admin', 'operator', 'call_center', 'broker')
   );
 end;
 $$;
