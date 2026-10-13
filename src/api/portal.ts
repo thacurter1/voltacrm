@@ -43,6 +43,10 @@ export interface ConsultationRequestInput {
   phone?: string;
   email?: string;
   privacyConsent?: boolean;
+  // Marketing UTM attribution
+  utmSource?: string;
+  utmCampaign?: string;
+  utmMedium?: string;
 }
 
 export interface BillUploadInput {
@@ -57,6 +61,10 @@ export interface BillUploadInput {
   email?: string;
   privacyConsent?: boolean;
   preferredContact?: string;
+  // Marketing UTM attribution
+  utmSource?: string;
+  utmCampaign?: string;
+  utmMedium?: string;
 }
 
 export const portalApi = {
@@ -97,6 +105,9 @@ export const portalApi = {
             email: input.email,
             privacyConsent: input.privacyConsent,
             preferredContact: input.preferredContact,
+            utmSource: input.utmSource,
+            utmCampaign: input.utmCampaign,
+            utmMedium: input.utmMedium,
           }),
         });
         return response.bill;
@@ -125,6 +136,9 @@ export const portalApi = {
     const assignedBroker = (DEMO_USERS || []).find(u => u.role === 'broker' || u.role === 'operator')?.id || 'user-op-2';
     const guestPhone = input.phone?.trim() || cust?.phone || '+39 347 0000000';
     const guestEmail = input.email?.trim() || cust?.email || `${guestPhone.replace(/\D/g, '')}@lead.volta.it`;
+    const utmDetail = input.utmSource
+      ? ` • Campagna ADV: ${input.utmSource}${input.utmCampaign ? ` (${input.utmCampaign})` : ''}${input.utmMedium ? ` [${input.utmMedium}]` : ''}`
+      : '';
     const newLead: Lead = {
       id: `lead-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       name: customerDisplayName,
@@ -133,7 +147,7 @@ export const portalApi = {
       city: cust?.city || 'Italia',
       source: 'bill_upload',
       status: 'new',
-      notes: `[BOLLETTA CARICATA] File: ${input.fileName} (${newBill.fileSizeKb} KB) • Fornitura: ${input.utilityType.toUpperCase()}${input.preferredContact ? ` • Orario preferito: ${input.preferredContact}` : ''}${input.notes ? ` • Note: ${input.notes}` : ''}`,
+      notes: `[BOLLETTA CARICATA] File: ${input.fileName} (${newBill.fileSizeKb} KB) • Fornitura: ${input.utilityType.toUpperCase()}${input.preferredContact ? ` • Orario preferito: ${input.preferredContact}` : ''}${input.notes ? ` • Note: ${input.notes}` : ''}${utmDetail}`,
       createdAt: new Date().toISOString().split('T')[0],
       assignedBrokerId: cust?.assignedBrokerId || assignedBroker,
     };
@@ -246,6 +260,9 @@ export const portalApi = {
     const cust = input.customerId ? (state.customers || []).find(c => c.id === input.customerId) : undefined;
     const leadId = isGuest ? `lead-guest-${Date.now()}` : `lead-portal-${Date.now()}`;
     const safeConsumption = typeof input.annualConsumption === 'number' && input.annualConsumption > 0 ? input.annualConsumption : undefined;
+    const utmDetail = input.utmSource
+      ? `Campagna ADV: ${input.utmSource}${input.utmCampaign ? ` (${input.utmCampaign})` : ''}${input.utmMedium ? ` [${input.utmMedium}]` : ''}`
+      : null;
     const noteDetails = [
       isGuest
         ? `[COMPARATORE PUBBLICO] Richiesta assistenza per offerta: ${input.offerName || input.offerId} (${input.supplier || 'Partner'})`
@@ -253,10 +270,11 @@ export const portalApi = {
       `Fornitura: ${input.utilityType.toUpperCase()}`,
       safeConsumption ? `Consumo: ${safeConsumption} ${input.utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
       input.preferredContact ? `Contatto preferito: ${input.preferredContact}` : null,
+      utmDetail,
       input.notes ? `Note: ${input.notes}` : null,
     ].filter(Boolean).join(' • ');
 
-    const newLead: any = {
+    const newLead: Lead = {
       id: leadId,
       name: isGuest ? (input.customerName || 'Visitatore Comparatore') : (cust?.name || 'Cliente Portale'),
       phone: isGuest ? (input.phone || '+39 300 0000000') : (cust?.phone || '+39 300 0000000'),

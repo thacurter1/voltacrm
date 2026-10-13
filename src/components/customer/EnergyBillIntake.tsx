@@ -34,6 +34,11 @@ export interface EnergyBillIntakeProps {
   onManualInput: (input: ComparisonInput) => void;
   selectedUtilityType?: UtilityType;
   onOpenPrivacy?: () => void;
+  utmParams?: {
+    utmSource?: string;
+    utmCampaign?: string;
+    utmMedium?: string;
+  };
 }
 
 export type IntakeMode = 'profile' | 'wizard' | 'upload' | 'manual';
@@ -44,6 +49,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   onManualInput,
   selectedUtilityType = 'luce',
   onOpenPrivacy,
+  utmParams,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const customerPoints = customer?.utilityPoints || [];
@@ -181,6 +187,9 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
         fileName: selectedFile.name,
         utilityType,
         notes: `Caricata dal portale clienti per confronto ${utilityType.toUpperCase()}`,
+        utmSource: utmParams?.utmSource,
+        utmCampaign: utmParams?.utmCampaign,
+        utmMedium: utmParams?.utmMedium,
       });
 
       setUploadSuccess(uploadedBill);
@@ -232,6 +241,9 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
         preferredContact: guestPreferredContact,
         privacyConsent: true,
         notes: `Caricata dal comparatore pubblico per analisi ${utilityType.toUpperCase()}`,
+        utmSource: utmParams?.utmSource,
+        utmCampaign: utmParams?.utmCampaign,
+        utmMedium: utmParams?.utmMedium,
       });
 
       setGuestSuccess(true);

@@ -174,6 +174,9 @@ portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute
     preferredTime,
     email,
     city,
+    utmSource,
+    utmCampaign,
+    utmMedium,
   } = body;
 
   if (privacyConsent !== true) {
@@ -199,12 +202,16 @@ portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute
   }
 
   const safeConsumption = typeof annualConsumption === 'number' && annualConsumption > 0 ? annualConsumption : undefined;
+  const utmAdvNote = typeof utmSource === 'string' && utmSource.trim()
+    ? `Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`
+    : null;
   const noteDetails = [
     `[COMPARATORE PUBBLICO] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
     `Fornitura: ${utilityType.toUpperCase()}`,
     safeConsumption ? `Consumo indicato: ${safeConsumption} ${utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
     preferredContact ? `Canale preferito: ${preferredContact}` : null,
     preferredTime ? `Fascia oraria preferita: ${preferredTime}` : null,
+    utmAdvNote,
     notes ? `Note visitatore: ${String(notes).slice(0, 500)}` : null,
   ].filter(Boolean).join(' • ');
 
@@ -312,7 +319,7 @@ portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (
     throw httpError('Autenticazione richiesta.', 401);
   }
 
-  const { phone, privacyConsent, preferredContact, notes, email, city } = body;
+  const { phone, privacyConsent, preferredContact, notes, email, city, utmSource, utmCampaign, utmMedium } = body;
   const customerName = typeof customerNameRaw === 'string' ? customerNameRaw.trim() : '';
   if (!customerName) {
     throw httpError('Nome e cognome obbligatori per richiedere l\'analisi della bolletta.', 400);
@@ -345,6 +352,10 @@ portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (
     notes: typeof notes === 'string' ? notes.slice(0, 1000) : undefined,
   });
 
+  const utmAdvNote = typeof utmSource === 'string' && utmSource.trim()
+    ? ` • Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`
+    : '';
+
   const newLead: Lead = {
     id: `lead-bill-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     name: customerName,
@@ -353,7 +364,7 @@ portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (
     city: (typeof city === 'string' && city.trim()) || 'Italia',
     source: 'bill_upload',
     status: 'new',
-    notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Richiesta analisi broker.${preferredContact ? ` • Orario preferito: ${preferredContact}` : ''}${notes ? ` • Note: ${String(notes).slice(0, 500)}` : ''}`,
+    notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Richiesta analisi broker.${preferredContact ? ` • Orario preferito: ${preferredContact}` : ''}${utmAdvNote}${notes ? ` • Note: ${String(notes).slice(0, 500)}` : ''}`,
     createdAt: new Date().toISOString().split('T')[0],
     assignedBrokerId: 'user-op-2',
   };

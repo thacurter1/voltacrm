@@ -64,6 +64,17 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   const activeCustomer = customer;
   const myBills = bills;
 
+  // Marketing UTM Campaign Attribution Parsing
+  const utmParams = useMemo(() => {
+    if (typeof window === 'undefined') return undefined;
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get('utm_source') || undefined;
+    const utmCampaign = params.get('utm_campaign') || undefined;
+    const utmMedium = params.get('utm_medium') || undefined;
+    if (!utmSource && !utmCampaign && !utmMedium) return undefined;
+    return { utmSource, utmCampaign, utmMedium };
+  }, []);
+
   // View state: 'offers' | 'supplies'
   const [activeView, setActiveView] = useState<'offers' | 'supplies'>('offers');
 
@@ -236,6 +247,9 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         annualConsumption: comparisonInput.annualConsumption > 0 ? comparisonInput.annualConsumption : undefined,
         notes: notes || 'Richiesta di consulenza e assistenza dal portale clienti',
         preferredContact: 'phone',
+        utmSource: utmParams?.utmSource,
+        utmCampaign: utmParams?.utmCampaign,
+        utmMedium: utmParams?.utmMedium,
       });
       addToast(
         'Richiesta Assistenza Registrata',
@@ -398,6 +412,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     onUploaded={handleBillUploaded}
                     onManualInput={handleManualInputApplied}
                     onOpenPrivacy={() => setLegalModalTab('privacy')}
+                    utmParams={utmParams}
                   />
                   <aside className="lg:sticky lg:top-24 border-t-2 border-[#635bff] pt-5 text-sm text-slate-600" aria-label="Come funziona il confronto">
                     <h2 className="text-lg font-bold text-[#0a2540]">Come funziona</h2>
@@ -621,6 +636,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
           onClose={() => setActiveComparisonForDetails(null)}
           onRequestConsultation={handleRequestConsultation}
           onOpenPrivacy={() => setLegalModalTab('privacy')}
+          utmParams={utmParams}
         />
       )}
 

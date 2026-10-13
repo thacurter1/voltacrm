@@ -9,7 +9,9 @@ import {
   AlertTriangle,
   ArrowRight,
   PhoneCall,
-  PieChart
+  PieChart,
+  Share2,
+  Check
 } from 'lucide-react';
 import { SupplierOffer } from '../../types';
 import { ComparisonInput, ComparisonResult } from '../../services/offerComparison';
@@ -35,6 +37,11 @@ export interface EnergyOfferDetailsProps {
   ) => Promise<boolean>;
   isGuest?: boolean;
   onOpenPrivacy?: () => void;
+  utmParams?: {
+    utmSource?: string;
+    utmCampaign?: string;
+    utmMedium?: string;
+  };
 }
 
 export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
@@ -45,6 +52,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   onRequestConsultation,
   isGuest,
   onOpenPrivacy,
+  utmParams,
 }) => {
   const { offer, annualCost, currentAnnualCost, savingsEur, savingsPercent } = comparison;
   const isLuce = offer.energyType === 'luce';
@@ -58,6 +66,36 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
   const [guestEmail, setGuestEmail] = React.useState('');
   const [preferredTime, setPreferredTime] = React.useState<'Mattina (9-13)' | 'Pomeriggio (14-18)' | 'Qualsiasi'>('Qualsiasi');
   const [privacyConsent, setPrivacyConsent] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+
+  const handleShare = async () => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const shareTitle = `Volta Energia - Stima ${offer.name} (${offer.supplier})`;
+    const shareText = `Ho confrontato l'offerta ${offer.name} di ${offer.supplier}: stima ${monthlyCost !== null ? `~€${monthlyCost}/mese` : ''} su Volta Energia!`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err: unknown) {
+        if ((err as Error)?.name === 'AbortError') return;
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch (err) {
+        console.warn('Clipboard write failed:', err);
+      }
+    }
+  };
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -178,6 +216,9 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             email: guestData.email,
             privacyConsent: guestData.privacyConsent,
             preferredContact: guestData.preferredContact,
+            utmSource: utmParams?.utmSource,
+            utmCampaign: utmParams?.utmCampaign,
+            utmMedium: utmParams?.utmMedium,
           });
           saved = fallbackRes.success;
         } catch {
@@ -288,15 +329,37 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             </div>
           </div>
 
-          <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition cursor-pointer"
-            aria-label="Chiudi dettagli offerta"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleShare}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition cursor-pointer"
+              title="Condividi stima offerta"
+              aria-label="Condividi stima"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span className="text-emerald-700 font-medium">Copiato!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4 text-slate-600" />
+                  <span className="hidden sm:inline">Condividi Stima</span>
+                </>
+              )}
+            </button>
+
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition cursor-pointer"
+              aria-label="Chiudi dettagli offerta"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
