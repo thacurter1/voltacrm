@@ -20,6 +20,7 @@ dist-ssr
 server/.env
 server/.env.*
 !server/.env.example
+!server/.env.production.example
 
 
 # Editor directories and files

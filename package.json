@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "node run_all_tests.cjs",
+    "verify:prod": "node scripts/verify_production_readiness.cjs",
     "server:dev": "npm run dev --prefix server",
     "server:build": "npm run build --prefix server",
     "server:start": "npm run start --prefix server"
