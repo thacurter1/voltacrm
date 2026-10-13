@@ -37,6 +37,7 @@ server/.env.*
 # Superpowers temporary workspace
 .superpowers/
 
-# Exported archives
+# Exported archives & LLM dumps
 export_zips/
 *.zip
+voltacrm_full_codebase.txt
