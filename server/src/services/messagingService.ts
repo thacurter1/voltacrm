@@ -38,6 +38,12 @@ export interface SendOfferPayload {
 // Map per memorizzare gli OTP in attesa (TTL 5 minuti)
 const pendingOtps = new Map<string, PendingOtp>();
 
+function maskPhone(phone: string): string {
+  const digits = phone.trim();
+  if (digits.length <= 4) return '***';
+  return digits.slice(0, Math.min(6, digits.length - 4)) + '***' + digits.slice(-3);
+}
+
 /**
  * Pulisce i codici OTP scaduti dalla memoria per evitare accumulation/memory leaks
  */
@@ -123,7 +129,7 @@ export async function sendOtp(
 
       if (response.ok) {
         const data = (await response.json()) as { sid: string };
-        console.log(`[Twilio ${channel.toUpperCase()}] OTP inviato con successo a ${cleanPhone}. SID: ${data.sid}`);
+        console.log(`[Twilio ${channel.toUpperCase()}] OTP inviato con successo a ${maskPhone(cleanPhone)}. SID: ${data.sid}`);
         return {
           success: true,
           messageId: data.sid,
@@ -165,7 +171,7 @@ export async function sendOtp(
       if (response.ok) {
         const data = (await response.json()) as { messages?: Array<{ id: string }> };
         const msgId = data.messages?.[0]?.id || `meta-${Date.now()}`;
-        console.log(`[Meta WhatsApp] OTP inviato con successo a ${cleanPhone}. ID: ${msgId}`);
+        console.log(`[Meta WhatsApp] OTP inviato con successo a ${maskPhone(cleanPhone)}. ID: ${msgId}`);
         return {
           success: true,
           messageId: msgId,
@@ -189,7 +195,7 @@ export async function sendOtp(
   // Dev Sandbox Fallback Mode (solo sviluppo / test)
   console.log(`\n======================================================`);
   console.log(`📲 [DEV SANDBOX ${channel.toUpperCase()}] OTP Generato`);
-  console.log(`Destinatario: ${cleanPhone}`);
+  console.log(`Destinatario: ${maskPhone(cleanPhone)}`);
   console.log(`Scadenza:     ${expiresAtIso} (5 minuti)`);
   console.log(`======================================================\n`);
 
@@ -198,7 +204,7 @@ export async function sendOtp(
     id: `notif-otp-${Date.now()}`,
     type: 'signature_completed',
     title: `Nuovo OTP Richiesto (${channel.toUpperCase()})`,
-    message: `Richiesto codice OTP per ${cleanPhone}. Valido per 5 minuti.`,
+    message: `Richiesto codice OTP per ${maskPhone(cleanPhone)}. Valido per 5 minuti.`,
     timestamp: new Date().toISOString(),
     isRead: false,
     priority: 'info',

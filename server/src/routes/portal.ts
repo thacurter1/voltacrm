@@ -9,6 +9,7 @@ import {
   portalService,
 } from '../services/portalService.js';
 import { canActorAccessCustomer, isBrokerAssigned } from '../services/customerOwnership.js';
+import { publicFunnelLimiter } from '../middleware/rateLimiter.js';
 
 export const portalRouter = Router();
 
@@ -87,7 +88,7 @@ function handlePortalRoute(fn: AsyncPortalHandler) {
   };
 }
 
-portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateToken, handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   // 1. Authenticated customer flow (existing behavior)
   if (req.user) {
     const { customer } = resolveCustomer(req, req.body?.customerId);
@@ -256,7 +257,7 @@ portalRouter.post('/consultations', optionalAuthenticateToken, handlePortalRoute
   });
 }));
 
-portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   // 1. Authenticated customer flow
   if (req.user) {
     const { customer } = resolveCustomer(req, req.body?.customerId);
@@ -356,6 +357,9 @@ portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (
     ? ` • Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`
     : '';
 
+  const defaultBroker = users.find((u) => u.role === 'broker' || u.role === 'operator');
+  const assignedBrokerId = defaultBroker?.id || 'user-op-2';
+
   const newLead: Lead = {
     id: `lead-bill-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     name: customerName,
@@ -366,7 +370,7 @@ portalRouter.post('/bills', optionalAuthenticateToken, handlePortalRoute(async (
     status: 'new',
     notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Richiesta analisi broker.${preferredContact ? ` • Orario preferito: ${preferredContact}` : ''}${utmAdvNote}${notes ? ` • Note: ${String(notes).slice(0, 500)}` : ''}`,
     createdAt: new Date().toISOString().split('T')[0],
-    assignedBrokerId: 'user-op-2',
+    assignedBrokerId,
   };
   await addLead(newLead);
 

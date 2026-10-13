@@ -41,3 +41,4 @@ server/.env.*
 export_zips/
 *.zip
 voltacrm_full_codebase.txt
+voltacrm_part*.txt
