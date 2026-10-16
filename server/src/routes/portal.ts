@@ -202,7 +202,8 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
     throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
   }
 
-  const safeConsumption = typeof annualConsumption === 'number' && annualConsumption > 0 ? annualConsumption : undefined;
+  const parsedConsumption = Number(annualConsumption);
+  const safeConsumption = Number.isFinite(parsedConsumption) && parsedConsumption > 0 ? parsedConsumption : undefined;
   const utmAdvNote = typeof utmSource === 'string' && utmSource.trim()
     ? `Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`
     : null;

@@ -73,16 +73,15 @@ export const CrmApp: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>(() => {
     if (isCallCenter) return [];
     if (isBroker) {
-      const brokerName = currentUser.name.split(' (')[0].trim();
-      return initialDb.customers.filter(c =>
-        c.assignedBrokerId === currentUser.id ||
-        (c.accountManager && (
-          c.accountManager === currentUser.name ||
-          c.accountManager === brokerName ||
-          currentUser.name.includes(c.accountManager) ||
-          c.accountManager.includes(brokerName)
-        ))
-      );
+      const brokerName = currentUser.name.split(' (')[0].trim().toLowerCase();
+      const actorFullName = currentUser.name.trim().toLowerCase();
+      return initialDb.customers.filter(c => {
+        if (c.assignedBrokerId && c.assignedBrokerId === currentUser.id) return true;
+        if (c.assignedBrokerId && c.assignedBrokerId !== currentUser.id) return false;
+        const manager = (c.accountManager || '').trim().toLowerCase();
+        if (!manager) return false;
+        return manager === actorFullName || (brokerName.length > 0 && manager === brokerName);
+      });
     }
     return initialDb.customers;
   });

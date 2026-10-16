@@ -715,7 +715,17 @@ function UnifiedApp() {
           profiles={profiles}
           onToast={addToast}
           onOpenTotem={openTotem}
-          onBackToPublic={() => setIsStaffGateOpen(false)}
+          onBackToPublic={() => {
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('portal');
+              url.searchParams.delete('login');
+              url.searchParams.delete('app');
+              url.searchParams.delete('mode');
+              window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+            }
+            setIsStaffGateOpen(false);
+          }}
         />
         <TwoFactorModal
           isOpen={!!pending2FAUser}
@@ -811,7 +821,7 @@ function UnifiedApp() {
         marketIndex={marketIndex}
         pendingSwitchesCount={pendingSwitches.length}
         pendingBillsCount={pendingBills.length}
-        pendingCommissionsCount={2}
+        pendingCommissionsCount={audits.filter(a => a.status === 'signed' || a.status === 'switched').length}
         currentUser={currentUser}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenMarketSimulator={() => setIsMarketSimulatorOpen(true)}
@@ -872,11 +882,9 @@ function UnifiedApp() {
                     id: data.id || `app-${Date.now()}`
                   } as Appointment;
                   handleScheduleAppointment(fullApp);
-                  api.operations.saveAppointment(fullApp).catch(e => console.warn(e));
                 }}
                 onUpdateAppointmentStatus={(id, st) => {
                   handleUpdateAppointmentStatus(id, st);
-                  api.operations.updateAppointmentStatus(id, st).catch(e => console.warn(e));
                 }}
                 onConvertToCustomer={handleConvertToCustomer}
                 onBulkImportSuccess={() => {
@@ -929,8 +937,11 @@ function UnifiedApp() {
                   customers={customers}
                   onProfilesUpdated={setProfiles}
                   onCustomerCreated={(newCust) => {
-                    setCustomers(prev => [newCust, ...prev]);
-                    setAudits(runQuarterlyAudit([newCust, ...customers]));
+                    setCustomers(prev => {
+                      const updated = [newCust, ...prev];
+                      setAudits(runQuarterlyAudit(updated, marketIndex));
+                      return updated;
+                    });
                   }}
                   onToast={addToast}
                 />
