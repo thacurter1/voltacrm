@@ -114,7 +114,15 @@ function UnifiedApp() {
       const search = window.location.search;
       const params = new URLSearchParams(search);
       const host = window.location.hostname;
-      return params.get('portal') === 'staff' || params.get('login') === 'true' || host.startsWith('staff.') || host.startsWith('crm.');
+      const pathname = window.location.pathname.toLowerCase();
+      return (
+        params.get('portal') === 'staff' ||
+        params.get('login') === 'true' ||
+        host.startsWith('staff.') ||
+        host.startsWith('crm.') ||
+        pathname === '/staff' ||
+        pathname === '/crm'
+      );
     }
     return false;
   });
@@ -123,7 +131,14 @@ function UnifiedApp() {
       const search = window.location.search;
       const params = new URLSearchParams(search);
       const host = window.location.hostname;
-      return params.get('login') === 'customer' || host.startsWith('clienti.') || host.startsWith('cliente.');
+      const pathname = window.location.pathname.toLowerCase();
+      return (
+        params.get('login') === 'customer' ||
+        host.startsWith('clienti.') ||
+        host.startsWith('cliente.') ||
+        pathname === '/clienti' ||
+        pathname === '/cliente'
+      );
     }
     return false;
   });
@@ -701,8 +716,9 @@ function UnifiedApp() {
   const portalParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const legacyPortal = portalParams.get('app') || portalParams.get('mode');
   const portalHost = typeof window !== 'undefined' ? window.location.hostname : '';
-  const isCustomerSubdomain = portalHost.startsWith('clienti.') || portalHost.startsWith('cliente.');
-  const isStaffSubdomain = portalHost.startsWith('staff.') || portalHost.startsWith('crm.');
+  const portalPathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '/';
+  const isCustomerSubdomain = portalHost.startsWith('clienti.') || portalHost.startsWith('cliente.') || portalPathname === '/clienti' || portalPathname === '/cliente';
+  const isStaffSubdomain = portalHost.startsWith('staff.') || portalHost.startsWith('crm.') || portalPathname === '/staff' || portalPathname === '/crm';
   const portalParam = portalParams.get('portal') ||
     (isCustomerSubdomain || legacyPortal === 'cliente' || legacyPortal === 'customer' ? 'customer' :
       isStaffSubdomain || legacyPortal === 'crm' || legacyPortal === 'staff' ? 'staff' : null);
@@ -719,7 +735,8 @@ function UnifiedApp() {
       url.searchParams.delete('login');
       url.searchParams.delete('app');
       url.searchParams.delete('mode');
-      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+      const cleanPath = ['/clienti', '/cliente', '/staff', '/crm'].includes(url.pathname.toLowerCase()) ? '/' : url.pathname;
+      window.history.replaceState({}, '', cleanPath + url.search + url.hash);
     }
   };
 
