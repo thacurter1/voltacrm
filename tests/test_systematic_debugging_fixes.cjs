@@ -92,6 +92,38 @@ test('portal.ts: guest consultation route coerces numeric string annualConsumpti
   );
 });
 
+const ownershipPath = path.join(__dirname, '..', 'server', 'src', 'services', 'customerOwnership.ts');
+const customersRoutePath = path.join(__dirname, '..', 'server', 'src', 'routes', 'customers.ts');
+const switchRoutePath = path.join(__dirname, '..', 'server', 'src', 'routes', 'switch.ts');
+
+const ownershipSrc = fs.readFileSync(ownershipPath, 'utf8');
+const customersRouteSrc = fs.readFileSync(customersRoutePath, 'utf8');
+const switchRouteSrc = fs.readFileSync(switchRoutePath, 'utf8');
+
+// 7. customerOwnership.ts exports centralized getAccessibleCustomersForActor and switch.ts / customers.ts reuse it
+test('customerOwnership.ts & routes: centralized getAccessibleCustomersForActor & canActorAccessCustomer eliminate duplicated RBAC branching', () => {
+  assert.ok(
+    ownershipSrc.includes('export function getAccessibleCustomersForActor'),
+    'customerOwnership.ts must export getAccessibleCustomersForActor'
+  );
+  assert.ok(
+    customersRouteSrc.includes('canActorAccessCustomer'),
+    'customers.ts must reuse canActorAccessCustomer instead of manual per-role branching'
+  );
+  assert.ok(
+    switchRouteSrc.includes('getAccessibleCustomersForActor'),
+    'switch.ts must reuse getAccessibleCustomersForActor for /audit and /signatures'
+  );
+});
+
+// 8. portal.ts centralizes UTM attribution formatting and default broker lookup
+test('portal.ts: centralizes formatUtmNote and resolveDefaultBrokerId helpers', () => {
+  assert.ok(
+    portalRoute.includes('function formatUtmNote') && portalRoute.includes('function resolveDefaultBrokerId'),
+    'portal.ts should use shared formatUtmNote and resolveDefaultBrokerId helpers across guest endpoints'
+  );
+});
+
 console.log(`\n📊 Risultato Systematic Debugging Suite: ${passed} passati, ${failed} falliti.`);
 if (failed > 0) {
   process.exit(1);

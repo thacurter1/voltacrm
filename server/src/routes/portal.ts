@@ -74,6 +74,16 @@ function resolveCustomer(req: AuthRequest, requestedCustomerId?: unknown) {
 
 type AsyncPortalHandler = (req: AuthRequest, res: Response) => Promise<void>;
 
+function formatUtmNote(utmSource?: unknown, utmCampaign?: unknown, utmMedium?: unknown): string | null {
+  if (typeof utmSource !== 'string' || !utmSource.trim()) return null;
+  return `Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`;
+}
+
+function resolveDefaultBrokerId(): string {
+  const defaultBroker = users.find((u) => u.role === 'broker' || u.role === 'operator');
+  return defaultBroker?.id || 'user-op-2';
+}
+
 function handlePortalRoute(fn: AsyncPortalHandler) {
   return async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -204,9 +214,7 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
 
   const parsedConsumption = Number(annualConsumption);
   const safeConsumption = Number.isFinite(parsedConsumption) && parsedConsumption > 0 ? parsedConsumption : undefined;
-  const utmAdvNote = typeof utmSource === 'string' && utmSource.trim()
-    ? `Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`
-    : null;
+  const utmAdvNote = formatUtmNote(utmSource, utmCampaign, utmMedium);
   const noteDetails = [
     `[COMPARATORE PUBBLICO] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
     `Fornitura: ${utilityType.toUpperCase()}`,
@@ -217,8 +225,7 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
     notes ? `Note visitatore: ${String(notes).slice(0, 500)}` : null,
   ].filter(Boolean).join(' • ');
 
-  const defaultBroker = users.find((u) => u.role === 'broker' || u.role === 'operator');
-  const assignedBrokerId = defaultBroker?.id || 'user-op-2';
+  const assignedBrokerId = resolveDefaultBrokerId();
 
   const newLead: Lead = {
     id: `lead-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -354,12 +361,9 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
     notes: typeof notes === 'string' ? notes.slice(0, 1000) : undefined,
   });
 
-  const utmAdvNote = typeof utmSource === 'string' && utmSource.trim()
-    ? ` • Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`
-    : '';
-
-  const defaultBroker = users.find((u) => u.role === 'broker' || u.role === 'operator');
-  const assignedBrokerId = defaultBroker?.id || 'user-op-2';
+  const utmClause = formatUtmNote(utmSource, utmCampaign, utmMedium);
+  const utmAdvNote = utmClause ? ` • ${utmClause}` : '';
+  const assignedBrokerId = resolveDefaultBrokerId();
 
   const newLead: Lead = {
     id: `lead-bill-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,

@@ -5,50 +5,33 @@ import { validate, createCustomerSchema, createUtilityPointSchema, updateCustome
 import { Customer, UtilityPoint } from '../types.js';
 
 export const customersRouter = Router();
-import { isBrokerAssigned } from '../services/customerOwnership.js';
+import { canActorAccessCustomer, isBrokerAssigned } from '../services/customerOwnership.js';
 
 // GET /api/customers (Filtro rigoroso in base al ruolo RBAC)
 customersRouter.get('/', authenticateToken, (req: any, res: Response): void => {
-  const user = req.user;
-  const actor = users.find(u => u.id === user?.userId);
+  const actor = users.find(u => u.id === req.user?.userId);
   if (!actor) {
     res.status(403).json({ success: false, message: 'Utente non autorizzato.' });
     return;
   }
 
-  // 1. Admin: visibilità totale su tutti i clienti dell'agenzia
-  if (actor.role === 'admin') {
-    res.json({ success: true, customers: getCustomers() });
-    return;
-  }
-
-  // 2. Broker / Operatore Consulente: visibilità rigorosamente isolata sui soli clienti assegnati
-  if (actor.role === 'operator' || actor.role === 'broker') {
-    const brokerCustomers = getCustomers().filter((c: Customer) => isBrokerAssigned(c, actor));
-    res.json({ success: true, customers: brokerCustomers });
-    return;
-  }
-
-  // 3. Cliente Finale: visibilità solo sulla propria utenza
-  if (actor.role === 'customer') {
-    const customer = getCustomers().find((c: Customer) => c.id === actor.customerId || c.id === actor.id);
-    res.json({ success: true, customers: customer ? [customer] : [] });
-    return;
-  }
-
-  // 4. Call Center: non consulta anagrafiche massive per preservare la privacy; opera sulla coda lead
   if (actor.role === 'call_center') {
     res.json({ success: true, customers: [] });
     return;
   }
 
-  res.status(403).json({ success: false, message: 'Ruolo non autorizzato.' });
+  if (!['admin', 'operator', 'broker', 'customer'].includes(actor.role)) {
+    res.status(403).json({ success: false, message: 'Ruolo non autorizzato.' });
+    return;
+  }
+
+  const customers = getCustomers().filter((c: Customer) => canActorAccessCustomer(c, actor));
+  res.json({ success: true, customers });
 });
 
 // GET /api/customers/:id (Dettaglio cliente con prevenzione IDOR)
 customersRouter.get('/:id', authenticateToken, (req: any, res: Response): void => {
-  const user = req.user;
-  const actor = users.find(u => u.id === user?.userId);
+  const actor = users.find(u => u.id === req.user?.userId);
   if (!actor) {
     res.status(403).json({ success: false, message: 'Utente non autorizzato.' });
     return;
@@ -60,42 +43,25 @@ customersRouter.get('/:id', authenticateToken, (req: any, res: Response): void =
     return;
   }
 
-  if (actor.role === 'admin') {
-    res.json({ success: true, customer });
+  if (!canActorAccessCustomer(customer, actor)) {
+    const message =
+      actor.role === 'operator' || actor.role === 'broker'
+        ? 'Accesso negato. È possibile consultare esclusivamente la propria clientela assegnata.'
+        : actor.role === 'customer'
+          ? 'Accesso negato. È possibile consultare esclusivamente la propria anagrafica.'
+          : actor.role === 'call_center'
+            ? 'Accesso negato. Il Call Center opera esclusivamente sulla coda lead.'
+            : 'Accesso non autorizzato.';
+    res.status(403).json({ success: false, message });
     return;
   }
 
-  if (actor.role === 'operator' || actor.role === 'broker') {
-    if (!isBrokerAssigned(customer, actor)) {
-      res.status(403).json({ success: false, message: 'Accesso negato. È possibile consultare esclusivamente la propria clientela assegnata.' });
-      return;
-    }
-    res.json({ success: true, customer });
-    return;
-  }
-
-  if (actor.role === 'customer') {
-    const isOwner = actor.id === req.params.id || (actor.customerId && actor.customerId === req.params.id);
-    if (!isOwner) {
-      res.status(403).json({ success: false, message: 'Accesso negato. È possibile consultare esclusivamente la propria anagrafica.' });
-      return;
-    }
-    res.json({ success: true, customer });
-    return;
-  }
-
-  if (actor.role === 'call_center') {
-    res.status(403).json({ success: false, message: 'Accesso negato. Il Call Center opera esclusivamente sulla coda lead.' });
-    return;
-  }
-
-  res.status(403).json({ success: false, message: 'Accesso non autorizzato.' });
+  res.json({ success: true, customer });
 });
 
 // PATCH /api/customers/:id
 customersRouter.patch('/:id', authenticateToken, validate(updateCustomerContactSchema), async (req: any, res: Response): Promise<void> => {
-  const authUser = req.user;
-  const actor = users.find(user => user.id === authUser?.userId);
+  const actor = users.find(user => user.id === req.user?.userId);
   if (!actor) {
     res.status(403).json({ success: false, message: 'Utente non autorizzato.' });
     return;
@@ -107,10 +73,7 @@ customersRouter.patch('/:id', authenticateToken, validate(updateCustomerContactS
     return;
   }
 
-  const isAdmin = actor.role === 'admin';
-  const isBrokerOwner = (actor.role === 'operator' || actor.role === 'broker') && isBrokerAssigned(targetCustomer, actor);
-  const isCustomerSelf = actor.role === 'customer' && (actor.customerId === req.params.id || actor.id === req.params.id);
-  if (!isAdmin && !isBrokerOwner && !isCustomerSelf) {
+  if (!canActorAccessCustomer(targetCustomer, actor)) {
     res.status(403).json({ success: false, message: 'Accesso negato alla modifica del cliente.' });
     return;
   }

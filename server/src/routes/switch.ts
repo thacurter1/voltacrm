@@ -6,8 +6,8 @@ import { getLiveMarketIndices, refreshMarketIndices } from '../services/gmeFeedS
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, signContractSchema } from '../middleware/validate.js';
 import { verifyOtp } from '../services/messagingService.js';
-import { Customer, UtilityPoint } from '../types.js';
-import { canActorAccessCustomer, isBrokerAssigned } from '../services/customerOwnership.js';
+import { UtilityPoint } from '../types.js';
+import { canActorAccessCustomer, getAccessibleCustomersForActor } from '../services/customerOwnership.js';
 import {
   activateSignedSignature,
   activateSignedSignatureWithCommissions,
@@ -62,17 +62,8 @@ switchRouter.post('/refresh-indices', authenticateToken, requireRole('admin'), a
 switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const authUser = (req as any).user;
-    const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
-    
-    let customerList: Customer[] = getCustomers();
-    if (authUser?.role === 'broker' || authUser?.role === 'operator') {
-      const brokerUser = users.find(u => u.id === authUser.userId);
-      customerList = customerList.filter(c => isBrokerAssigned(c, brokerUser));
-    } else if (!isStaff) {
-      const userProfile = users.find(u => u.id === authUser?.userId);
-      const userCustId = userProfile?.customerId;
-      customerList = customerList.filter(c => c.id === userCustId || c.id === authUser?.userId);
-    }
+    const actor = users.find(u => u.id === authUser?.userId) || { id: authUser?.userId, role: authUser?.role };
+    const customerList = getAccessibleCustomersForActor(getCustomers(), actor, authUser?.userId);
 
     const liveIndex = await getLiveMarketIndices();
     const audits = runQuarterlyAudit(customerList, liveIndex);
@@ -318,18 +309,17 @@ switchRouter.post(
 // GET /api/switch/signatures (Filtrato per ruolo: i clienti e i broker vedono solo i propri record)
 switchRouter.get('/signatures', authenticateToken, (req: Request, res: Response): void => {
   const authUser = (req as any).user;
-  const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
-  
+  const actor = users.find(u => u.id === authUser?.userId) || { id: authUser?.userId, role: authUser?.role };
+
   let signatures = getSignatureLogs();
-  if (authUser?.role === 'broker' || authUser?.role === 'operator') {
-    const brokerUser = users.find(u => u.id === authUser.userId);
-    const brokerCustomers = getCustomers().filter(c => isBrokerAssigned(c, brokerUser));
-    const brokerCustIds = new Set(brokerCustomers.map(c => c.id));
-    signatures = signatures.filter(s => brokerCustIds.has(s.customerId));
-  } else if (!isStaff) {
-    const userProfile = users.find(u => u.id === authUser?.userId);
-    const userCustId = userProfile?.customerId;
-    signatures = signatures.filter(s => s.customerId === userCustId || s.customerId === authUser?.userId);
+  if (actor.role !== 'admin' && actor.role !== 'call_center') {
+    const allowedCustIds = new Set(
+      getAccessibleCustomersForActor(getCustomers(), actor, authUser?.userId).map(c => c.id)
+    );
+    if (actor.role === 'customer' && authUser?.userId) {
+      allowedCustIds.add(authUser.userId);
+    }
+    signatures = signatures.filter(s => allowedCustIds.has(s.customerId));
   }
 
   res.json({
@@ -337,3 +327,4 @@ switchRouter.get('/signatures', authenticateToken, (req: Request, res: Response)
     signatures
   });
 });
+

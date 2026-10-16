@@ -52,3 +52,21 @@ export function canActorAccessCustomer(customer: Customer, actor: any): boolean 
   // 4. Call Center: privacy preservation; call center operates on qualified leads
   return false;
 }
+
+/**
+ * Returns the subset of customers visible to the given actor/authUser for switch audits and signature logs.
+ * Admin and Call Center see all records in switch/signature workflows; Broker/Operator see only assigned customers;
+ * Customer sees only their own record.
+ */
+export function getAccessibleCustomersForActor(customers: Customer[], actor: any, fallbackUserId?: string): Customer[] {
+  const role = actor?.role;
+  if (role === 'admin' || role === 'call_center') {
+    return customers;
+  }
+  if (role === 'broker' || role === 'operator') {
+    return customers.filter(c => isBrokerAssigned(c, actor));
+  }
+  const ownedCustomerId = actor?.customerId || fallbackUserId || actor?.id;
+  return customers.filter(c => c.id === ownedCustomerId || c.id === fallbackUserId);
+}
+
