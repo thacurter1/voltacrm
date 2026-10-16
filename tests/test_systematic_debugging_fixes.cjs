@@ -62,7 +62,8 @@ test('App.tsx: PortalGate onBackToPublic clears portal/login URL query params so
   const portalGateBlock = portalGateSectionMatch[0];
 
   assert.ok(
-    portalGateBlock.includes('replaceState') || appTsx.includes('handleBackToPublic'),
+    (portalGateBlock.includes('replaceState') || portalGateBlock.includes('clearLoginQueryParams') || appTsx.includes('handleBackToPublic')) &&
+    appTsx.includes('window.history.replaceState'),
     'onBackToPublic must clear URL query parameters (portal, login) via history.replaceState in addition to setIsStaffGateOpen(false)'
   );
 });

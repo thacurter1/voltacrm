@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, FileText, Sparkles, ShieldCheck, LogOut, Lock } from 'lucide-react';
+import { Zap, FileText, Sparkles, ShieldCheck, LogOut, Lock, User } from 'lucide-react';
 import { NotificationCenter } from '../NotificationCenter';
 
 export interface EnergyPortalHeaderProps {
@@ -11,6 +11,7 @@ export interface EnergyPortalHeaderProps {
   onReturnToBackend?: () => void;
   onLogout?: () => void;
   isPublicVisitor?: boolean;
+  onOpenCustomerLogin?: () => void;
   onOpenStaffLogin?: () => void;
 }
 
@@ -23,6 +24,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
   onReturnToBackend,
   onLogout,
   isPublicVisitor = false,
+  onOpenCustomerLogin,
   onOpenStaffLogin,
 }) => {
   return (
@@ -83,6 +85,19 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
                 <span>Le mie bollette</span>
               </button>
             </nav>
+          )}
+
+          {/* Area Clienti login button for public landing */}
+          {onOpenCustomerLogin && (
+            <button
+              type="button"
+              onClick={onOpenCustomerLogin}
+              className="min-h-[36px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-95 shrink-0"
+              title="Accedi o registrati all'Area Clienti per vedere bollette e forniture"
+            >
+              <User className="w-3.5 h-3.5 text-white shrink-0" aria-hidden="true" />
+              <span>Area Clienti</span>
+            </button>
           )}
 
           {/* Area Staff & Broker button for public landing */}

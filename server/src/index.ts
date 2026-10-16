@@ -30,11 +30,40 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-const rawOrigins = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173';
+const rawOrigins = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173,http://clienti.localhost:5173,http://cliente.localhost:5173,http://staff.localhost:5173,http://crm.localhost:5173';
 const allowedOrigins = rawOrigins.split(',').map(o => o.trim()).filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    try {
+      const parsed = new URL(origin);
+      const isLocalSubdomain = parsed.hostname === 'localhost' || parsed.hostname.endsWith('.localhost');
+      const isAllowedProdSubdomain = allowedOrigins.some(allowed => {
+        try {
+          const base = new URL(allowed);
+          const rootDomain = base.hostname.replace(/^(www|clienti|cliente|staff|crm)\./, '');
+          return parsed.protocol === base.protocol && (
+            parsed.hostname === rootDomain ||
+            parsed.hostname === `clienti.${rootDomain}` ||
+            parsed.hostname === `cliente.${rootDomain}` ||
+            parsed.hostname === `staff.${rootDomain}` ||
+            parsed.hostname === `crm.${rootDomain}`
+          );
+        } catch {
+          return false;
+        }
+      });
+      if (isLocalSubdomain || isAllowedProdSubdomain) {
+        callback(null, true);
+        return;
+      }
+    } catch {}
+    callback(null, false);
+  },
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Kiosk-Device-Key', 'X-Client-Version']
 }));

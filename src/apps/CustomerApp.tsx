@@ -45,6 +45,7 @@ export interface CustomerAppProps {
   onLogout?: () => void;
   isPublicVisitor?: boolean;
   isGuest?: boolean;
+  onOpenCustomerLogin?: () => void;
   onOpenStaffLogin?: () => void;
 }
 
@@ -59,6 +60,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   onLogout,
   isPublicVisitor = false,
   isGuest = false,
+  onOpenCustomerLogin,
   onOpenStaffLogin,
 }) => {
   const activeCustomer = customer;
@@ -324,6 +326,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         onReturnToBackend={onReturnToBackend}
         onLogout={onLogout}
         isPublicVisitor={isPublicVisitor || isGuest || !activeCustomer}
+        onOpenCustomerLogin={onOpenCustomerLogin}
         onOpenStaffLogin={onOpenStaffLogin}
       />
 

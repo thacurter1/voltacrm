@@ -113,7 +113,17 @@ function UnifiedApp() {
     if (typeof window !== 'undefined') {
       const search = window.location.search;
       const params = new URLSearchParams(search);
-      return params.get('portal') === 'staff' || params.get('login') === 'true';
+      const host = window.location.hostname;
+      return params.get('portal') === 'staff' || params.get('login') === 'true' || host.startsWith('staff.') || host.startsWith('crm.');
+    }
+    return false;
+  });
+  const [isCustomerGateOpen, setIsCustomerGateOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search;
+      const params = new URLSearchParams(search);
+      const host = window.location.hostname;
+      return params.get('login') === 'customer' || host.startsWith('clienti.') || host.startsWith('cliente.');
     }
     return false;
   });
@@ -145,7 +155,14 @@ function UnifiedApp() {
     api.auth.logout();
     setCustomerPortalLoading(false);
     setIsGateOpen(true);
-    setIsStaffGateOpen(true);
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    if (host.startsWith('clienti.') || host.startsWith('cliente.') || currentUser.role === 'customer') {
+      setIsCustomerGateOpen(true);
+      setIsStaffGateOpen(false);
+    } else {
+      setIsStaffGateOpen(true);
+      setIsCustomerGateOpen(false);
+    }
   };
 
   const getInitialTab = (role: string) => {
@@ -322,6 +339,7 @@ function UnifiedApp() {
       setCurrentUser(user); 
       setIsGateOpen(false);
       setIsStaffGateOpen(false);
+      setIsCustomerGateOpen(false);
       setActiveTab(getInitialTab(user.role));
       setCustomerPortalLoading(false);
 
@@ -683,13 +701,27 @@ function UnifiedApp() {
   const portalParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const legacyPortal = portalParams.get('app') || portalParams.get('mode');
   const portalHost = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isCustomerSubdomain = portalHost.startsWith('clienti.') || portalHost.startsWith('cliente.');
+  const isStaffSubdomain = portalHost.startsWith('staff.') || portalHost.startsWith('crm.');
   const portalParam = portalParams.get('portal') ||
-    (portalHost.startsWith('cliente.') || legacyPortal === 'cliente' || legacyPortal === 'customer' ? 'customer' :
-      portalHost.startsWith('crm.') || legacyPortal === 'crm' ? 'staff' : null);
+    (isCustomerSubdomain || legacyPortal === 'cliente' || legacyPortal === 'customer' ? 'customer' :
+      isStaffSubdomain || legacyPortal === 'crm' || legacyPortal === 'staff' ? 'staff' : null);
   const portalRoleMismatch = (portalParam === 'customer' && currentUser.role !== 'customer') ||
     (portalParam === 'staff' && currentUser.role === 'customer');
 
   const isExplicitStaffLogin = portalParam === 'staff' || portalParams.get('login') === 'true' || isStaffGateOpen;
+  const isExplicitCustomerLogin = portalParams.get('login') === 'customer' || isCustomerGateOpen;
+
+  const clearLoginQueryParams = () => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('portal');
+      url.searchParams.delete('login');
+      url.searchParams.delete('app');
+      url.searchParams.delete('mode');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    }
+  };
 
   const handleReturnToBackend = () => {
     const returnTarget = impersonatingStaffUser || profiles.find(p => p.role === 'admin' || p.role === 'call_center') || DEMO_USERS[0];
@@ -702,7 +734,7 @@ function UnifiedApp() {
     return <PortalHome />;
   }
 
-  // 2. Explicit Staff Login Gate: when portal=staff, login=true, or user clicked Area Staff & Broker
+  // 2. Explicit Staff Login Gate: when staff subdomain, portal=staff, login=true, or user clicked Area Staff & Broker
   if (isExplicitStaffLogin && (isGateOpen || portalRoleMismatch)) {
     return (
       <>
@@ -716,14 +748,7 @@ function UnifiedApp() {
           onToast={addToast}
           onOpenTotem={openTotem}
           onBackToPublic={() => {
-            if (typeof window !== 'undefined') {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('portal');
-              url.searchParams.delete('login');
-              url.searchParams.delete('app');
-              url.searchParams.delete('mode');
-              window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-            }
+            clearLoginQueryParams();
             setIsStaffGateOpen(false);
           }}
         />
@@ -732,6 +757,29 @@ function UnifiedApp() {
           user={pending2FAUser}
           onClose={() => setPending2FAUser(null)}
           onVerified={handle2FAVerified}
+        />
+        <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    );
+  }
+
+  // 2b. Explicit Customer Login Gate: when clienti.*/cliente.* subdomain, login=customer, or user clicked Area Clienti
+  if (isExplicitCustomerLogin && (isGateOpen || portalRoleMismatch)) {
+    return (
+      <>
+        <PortalGate
+          portal="customer"
+          onLoginCustomer={handleSelectUser}
+          onLoginOperator={handleSelectUser}
+          onRequire2FA={handleRequire2FA}
+          customers={customers}
+          profiles={profiles}
+          onToast={addToast}
+          onOpenTotem={openTotem}
+          onBackToPublic={() => {
+            clearLoginQueryParams();
+            setIsCustomerGateOpen(false);
+          }}
         />
         <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
       </>
@@ -749,6 +797,7 @@ function UnifiedApp() {
             isGuest={true}
             customer={null}
             bills={[]}
+            onOpenCustomerLogin={() => setIsCustomerGateOpen(true)}
             onOpenStaffLogin={() => setIsStaffGateOpen(true)}
             onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined}
           />
