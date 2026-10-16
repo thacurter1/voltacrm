@@ -7,6 +7,7 @@ import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { validate, signContractSchema } from '../middleware/validate.js';
 import { verifyOtp } from '../services/messagingService.js';
 import { Customer, UtilityPoint } from '../types.js';
+import { canActorAccessCustomer, isBrokerAssigned } from '../services/customerOwnership.js';
 import {
   activateSignedSignature,
   activateSignedSignatureWithCommissions,
@@ -64,13 +65,9 @@ switchRouter.get('/audit', authenticateToken, async (req: Request, res: Response
     const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
     
     let customerList: Customer[] = getCustomers();
-    if (authUser?.role === 'broker') {
+    if (authUser?.role === 'broker' || authUser?.role === 'operator') {
       const brokerUser = users.find(u => u.id === authUser.userId);
-      const brokerName = (brokerUser?.name || '').split(' (')[0].trim().toLowerCase();
-      customerList = customerList.filter(c => 
-        c.assignedBrokerId === authUser.userId || 
-        (c.accountManager && c.accountManager.toLowerCase().includes(brokerName))
-      );
+      customerList = customerList.filter(c => isBrokerAssigned(c, brokerUser));
     } else if (!isStaff) {
       const userProfile = users.find(u => u.id === authUser?.userId);
       const userCustId = userProfile?.customerId;
@@ -122,6 +119,15 @@ switchRouter.post('/sign', authenticateToken, enforceSignatureOwnership, validat
 
     const customer = getCustomers().find(item => item.id === effectiveCustomerId);
     if (!customer) throw new SignatureValidationError('Anagrafica cliente non trovata.');
+
+    if (authUser?.role === 'broker' || authUser?.role === 'operator') {
+      const actorProfile = users.find(user => user.id === authUser.userId);
+      if (!canActorAccessCustomer(customer, actorProfile)) {
+        res.status(403).json({ success: false, message: 'Accesso negato. Non puoi firmare contratti per clienti non assegnati.' });
+        return;
+      }
+    }
+
     const identity = {
       customerId: customer.id,
       customerName: customer.name,
@@ -236,6 +242,17 @@ switchRouter.post(
         throw new SignatureValidationError('Riferimento di conferma e data di attivazione sono obbligatori.');
       }
       const authUser = (req as any).user;
+      if (authUser.role === 'operator' || authUser.role === 'broker') {
+        const targetSignature = getSignatureLogs().find(item => item.id === req.params.id);
+        if (targetSignature) {
+          const sigCustomer = getCustomers().find(c => c.id === targetSignature.customerId);
+          const actorProfile = users.find(u => u.id === authUser.userId);
+          if (!sigCustomer || !canActorAccessCustomer(sigCustomer, actorProfile)) {
+            res.status(403).json({ success: false, message: 'Accesso negato. Non puoi attivare firme per clienti non assegnati.' });
+            return;
+          }
+        }
+      }
       const activationInput = {
         signatureId: req.params.id,
         confirmationReference,
@@ -304,13 +321,9 @@ switchRouter.get('/signatures', authenticateToken, (req: Request, res: Response)
   const isStaff = authUser && (authUser.role === 'admin' || authUser.role === 'call_center' || authUser.role === 'operator' || authUser.role === 'broker');
   
   let signatures = getSignatureLogs();
-  if (authUser?.role === 'broker') {
+  if (authUser?.role === 'broker' || authUser?.role === 'operator') {
     const brokerUser = users.find(u => u.id === authUser.userId);
-    const brokerName = (brokerUser?.name || '').split(' (')[0].trim().toLowerCase();
-    const brokerCustomers = getCustomers().filter(c =>
-      c.assignedBrokerId === authUser.userId ||
-      (c.accountManager && c.accountManager.toLowerCase().includes(brokerName))
-    );
+    const brokerCustomers = getCustomers().filter(c => isBrokerAssigned(c, brokerUser));
     const brokerCustIds = new Set(brokerCustomers.map(c => c.id));
     signatures = signatures.filter(s => brokerCustIds.has(s.customerId));
   } else if (!isStaff) {

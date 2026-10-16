@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Customer, UserProfile } from '../types';
-import { dbService } from './db';
+import { dbService, isDemoSessionActive } from './db';
 import { DEMO_MODE, request } from '../api/transport';
 
 // Credenziali lette dalle variabili d'ambiente (configurabili su Vercel e in locale)
@@ -333,7 +333,7 @@ class ProfileService {
     role: 'customer' | 'operator' | 'broker' | 'call_center' = 'customer',
     options?: { email?: string; name?: string; idToken?: string }
   ): Promise<UserProfile> {
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured && supabase && !isDemoSessionActive() && !options?.email) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as 'google' | 'apple',
         options: {

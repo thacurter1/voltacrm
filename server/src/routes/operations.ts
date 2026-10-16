@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest, requireRole } from '../middleware/auth.js';
+import { users, getLeads } from '../services/dataStore.js';
 import {
   addSecurityLog, listAppointments, listSecurityLogs, saveAppointment, updateAppointmentStatus,
   AppointmentRecord, AppointmentStatus,
@@ -26,8 +27,40 @@ function parseAppointment(body: any): AppointmentRecord {
   return { ...body, notes: typeof body.notes === 'string' ? body.notes.slice(0, 2000) : '' };
 }
 
-operationsRouter.get('/appointments', async (_req, res: Response) => {
-  res.json({ success: true, appointments: await listAppointments() });
+function canActorAccessAppointment(appt: AppointmentRecord, actor: any): boolean {
+  if (!actor) return false;
+  if (actor.role === 'admin' || actor.role === 'call_center') return true;
+  if (actor.role !== 'operator' && actor.role !== 'broker') return false;
+
+  const actorName = (actor.name || '').trim();
+  const actorSimpleName = actorName.split(' (')[0].trim().toLowerCase();
+  const apptAgent = (appt.agentName || '').trim();
+  const apptSimpleAgent = apptAgent.split(' (')[0].trim().toLowerCase();
+
+  if (apptAgent === actor.id || (actorSimpleName && apptSimpleAgent === actorSimpleName)) {
+    return true;
+  }
+
+  const linkedLead = getLeads().find(l => l.id === appt.leadId);
+  if (linkedLead) {
+    return (
+      linkedLead.assignedBrokerId === actor.id ||
+      linkedLead.assignedBrokerId === actorName ||
+      linkedLead.assignedAgent === actor.id ||
+      linkedLead.assignedAgent === actorName
+    );
+  }
+
+  return false;
+}
+
+operationsRouter.get('/appointments', async (req: AuthRequest, res: Response) => {
+  const actor = users.find(u => u.id === req.user?.userId);
+  const all = await listAppointments();
+  const filtered = (actor && (actor.role === 'broker' || actor.role === 'operator'))
+    ? all.filter(appt => canActorAccessAppointment(appt, actor))
+    : all;
+  res.json({ success: true, appointments: filtered });
 });
 
 operationsRouter.post('/appointments', async (req: AuthRequest, res: Response) => {
@@ -38,6 +71,21 @@ operationsRouter.post('/appointments', async (req: AuthRequest, res: Response) =
 operationsRouter.patch('/appointments/:id/status', async (req: AuthRequest, res: Response) => {
   const status = req.body?.status as AppointmentStatus;
   if (!appointmentStatuses.has(status)) throw badRequest('Stato appuntamento non valido.');
+
+  const actor = users.find(u => u.id === req.user?.userId);
+  if (actor && (actor.role === 'broker' || actor.role === 'operator')) {
+    const all = await listAppointments();
+    const target = all.find(a => a.id === req.params.id);
+    if (!target) {
+      res.status(404).json({ success: false, message: 'Appuntamento non trovato.' });
+      return;
+    }
+    if (!canActorAccessAppointment(target, actor)) {
+      res.status(403).json({ success: false, message: 'Accesso negato: non puoi modificare appuntamenti assegnati ad altri consulenti.' });
+      return;
+    }
+  }
+
   res.json({ success: true, appointment: await updateAppointmentStatus(req.params.id, status) });
 });
 
