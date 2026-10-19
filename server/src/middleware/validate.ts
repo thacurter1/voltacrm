@@ -174,6 +174,9 @@ export const triggerNotificationSchema = z.object({
   type: z.string().min(1),
   priority: z.enum(['low', 'normal', 'high', 'urgent', 'info']).optional(),
   targetRole: z.string().optional(),
+  targetUserId: z.string().min(1).optional(),
+  targetCustomerId: z.string().min(1).optional(),
   actionTab: z.string().optional(),
   meta: z.any().optional(),
 }).strict();
+

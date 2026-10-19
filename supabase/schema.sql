@@ -97,6 +97,8 @@ create table if not exists public.leads (
 );
 
 create index if not exists idx_leads_assigned_broker on public.leads (assigned_broker_id);
+create unique index if not exists idx_leads_idempotency_key on public.leads (idempotency_key) where idempotency_key is not null;
+
 
 -- 6. Tabella Log Firme Digitali & Mandati di Brokeraggio (Anti-Tamper SHA-256)
 create table if not exists public.signature_logs (

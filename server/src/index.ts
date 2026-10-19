@@ -65,7 +65,7 @@ app.use(cors({
     callback(null, false);
   },
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Kiosk-Device-Key', 'X-Client-Version']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Totem-Token', 'X-Kiosk-Device-Key', 'X-Client-Version', 'X-Idempotency-Key']
 }));
 
 app.use(express.json({ limit: '25mb' }));

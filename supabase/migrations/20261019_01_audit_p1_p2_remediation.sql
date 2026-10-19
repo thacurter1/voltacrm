@@ -34,4 +34,36 @@ alter table if exists public.leads
   add column if not exists privacy_policy_version text,
   add column if not exists idempotency_key text;
 
-create index if not exists idx_leads_idempotency_key on public.leads (idempotency_key);
+drop index if exists public.idx_leads_idempotency_key;
+create unique index if not exists idx_leads_idempotency_key
+  on public.leads (idempotency_key)
+  where idempotency_key is not null;
+
+create or replace function public.append_notification_reader(
+  p_ids text[],
+  p_user_id text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if p_user_id is null or length(trim(p_user_id)) = 0 then
+    return;
+  end if;
+
+  update public.notifications
+  set
+    read_by = case
+      when coalesce(read_by, '[]'::jsonb) ? p_user_id then coalesce(read_by, '[]'::jsonb)
+      else coalesce(read_by, '[]'::jsonb) || to_jsonb(p_user_id)
+    end,
+    is_read = case
+      when target_user_id is not null or target_customer_id is not null or (meta is not null and meta ? 'customerId') then true
+      else is_read
+    end
+  where id = any(p_ids);
+end;
+$$;
+

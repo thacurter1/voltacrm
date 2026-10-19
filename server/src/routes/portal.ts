@@ -117,11 +117,30 @@ function extractIdempotencyKey(req: AuthRequest): string | undefined {
   return undefined;
 }
 
+interface InFlightGuestLead {
+  fingerprint: string;
+  promise: Promise<{ lead: Lead; bill?: any }>;
+}
+const inFlightGuestLeads = new Map<string, InFlightGuestLead>();
+
+function buildLeadFingerprint(source: Lead['source'], phone: string, marker: string): string {
+  return `${source}|${phone}|${marker}`;
+}
+
+function assertIdempotencyFingerprint(lead: Lead, source: Lead['source'], phone: string, marker: string): void {
+  if (lead.source !== source || lead.phone !== phone || !lead.notes.includes(marker)) {
+    throw httpError('Chiave di idempotenza già utilizzata per una richiesta differente.', 409);
+  }
+}
+
 function findIdempotentLead(idempotencyKey: string | undefined, phone: string, source: Lead['source'], marker: string): Lead | undefined {
   const existing = getLeads();
   if (idempotencyKey) {
     const byKey = existing.find((l) => l.idempotencyKey === idempotencyKey);
-    if (byKey) return byKey;
+    if (byKey) {
+      assertIdempotencyFingerprint(byKey, source, phone, marker);
+      return byKey;
+    }
   }
   const nowMs = Date.now();
   return existing.find((l) => {
@@ -262,8 +281,12 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
     throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
   }
 
+  const marker = String(offerName || offerId);
   const idempotencyKey = extractIdempotencyKey(req);
-  const existingLead = findIdempotentLead(idempotencyKey, trimmedPhone, 'public_comparator', String(offerName || offerId));
+  const fingerprint = buildLeadFingerprint('public_comparator', trimmedPhone, marker);
+  const lockKey = idempotencyKey ? `key:${idempotencyKey}` : `win:public_comparator:${trimmedPhone}:${marker}`;
+
+  const existingLead = findIdempotentLead(idempotencyKey, trimmedPhone, 'public_comparator', marker);
   if (existingLead) {
     res.status(200).json({
       success: true,
@@ -275,65 +298,99 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
     return;
   }
 
-  const parsedConsumption = Number(annualConsumption);
-  const safeConsumption = Number.isFinite(parsedConsumption) && parsedConsumption > 0 ? parsedConsumption : undefined;
-  const utmAdvNote = formatUtmNote(utmSource, utmCampaign, utmMedium);
-  const consentTimestamp = new Date().toISOString();
-  const resolvedPolicyVersion =
-    typeof privacyPolicyVersion === 'string' && privacyPolicyVersion.trim() ? privacyPolicyVersion.trim() : '2026.10';
-  const noteDetails = [
-    `[COMPARATORE PUBBLICO] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
-    `Fornitura: ${utilityType.toUpperCase()}`,
-    safeConsumption ? `Consumo indicato: ${safeConsumption} ${utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
-    preferredContact ? `Canale preferito: ${preferredContact}` : null,
-    preferredTime ? `Fascia oraria preferita: ${preferredTime}` : null,
-    utmAdvNote,
-    notes ? `Note visitatore: ${String(notes).slice(0, 500)}` : null,
-    `Consenso GDPR v${resolvedPolicyVersion} (${consentTimestamp})`,
-  ].filter(Boolean).join(' • ');
+  const inFlight = inFlightGuestLeads.get(lockKey);
+  if (inFlight) {
+    if (inFlight.fingerprint !== fingerprint) {
+      throw httpError('Chiave di idempotenza già utilizzata per una richiesta differente.', 409);
+    }
+    const resolved = await inFlight.promise;
+    res.status(200).json({
+      success: true,
+      idempotent: true,
+      leadId: resolved.lead.id,
+      message: 'Richiesta di consulenza già registrata nel CRM Volta Energia.',
+      lead: resolved.lead,
+    });
+    return;
+  }
 
-  const assignedBrokerId = resolveDefaultBrokerId();
+  const creationPromise = (async () => {
+    const parsedConsumption = Number(annualConsumption);
+    const safeConsumption = Number.isFinite(parsedConsumption) && parsedConsumption > 0 ? parsedConsumption : undefined;
+    const utmAdvNote = formatUtmNote(utmSource, utmCampaign, utmMedium);
+    const consentTimestamp = new Date().toISOString();
+    const resolvedPolicyVersion =
+      typeof privacyPolicyVersion === 'string' && privacyPolicyVersion.trim() ? privacyPolicyVersion.trim() : '2026.10';
+    const noteDetails = [
+      `[COMPARATORE PUBBLICO] Richiesta assistenza offerta: ${offerName || offerId} (${supplier || 'Fornitore Partner'})`,
+      `Fornitura: ${utilityType.toUpperCase()}`,
+      safeConsumption ? `Consumo indicato: ${safeConsumption} ${utilityType === 'luce' ? 'kWh' : 'Smc'}/anno` : null,
+      preferredContact ? `Canale preferito: ${preferredContact}` : null,
+      preferredTime ? `Fascia oraria preferita: ${preferredTime}` : null,
+      utmAdvNote,
+      notes ? `Note visitatore: ${String(notes).slice(0, 500)}` : null,
+      `Consenso GDPR v${resolvedPolicyVersion} (${consentTimestamp})`,
+    ].filter(Boolean).join(' • ');
 
-  const newLead: Lead = {
-    id: `lead-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    name: customerName,
-    phone: trimmedPhone,
-    email: (email && typeof email === 'string' && email.trim()) || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
-    city: (typeof city === 'string' && city.trim()) || 'Italia',
-    source: 'public_comparator',
-    status: 'new',
-    notes: noteDetails,
-    createdAt: consentTimestamp.split('T')[0],
-    estimatedConsumptionKwh: utilityType === 'luce' ? safeConsumption : undefined,
-    estimatedConsumptionSmc: utilityType === 'gas' ? safeConsumption : undefined,
-    assignedBrokerId,
-    privacyConsentAccepted: true,
-    privacyConsentTimestamp: consentTimestamp,
-    privacyPolicyVersion: resolvedPolicyVersion,
-    idempotencyKey,
-  };
+    const assignedBrokerId = resolveDefaultBrokerId();
 
-  await addLead(newLead);
+    const candidateLead: Lead = {
+      id: `lead-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: customerName,
+      phone: trimmedPhone,
+      email: (email && typeof email === 'string' && email.trim()) || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
+      city: (typeof city === 'string' && city.trim()) || 'Italia',
+      source: 'public_comparator',
+      status: 'new',
+      notes: noteDetails,
+      createdAt: consentTimestamp.split('T')[0],
+      estimatedConsumptionKwh: utilityType === 'luce' ? safeConsumption : undefined,
+      estimatedConsumptionSmc: utilityType === 'gas' ? safeConsumption : undefined,
+      assignedBrokerId,
+      privacyConsentAccepted: true,
+      privacyConsentTimestamp: consentTimestamp,
+      privacyPolicyVersion: resolvedPolicyVersion,
+      idempotencyKey,
+    };
 
-  await safeAddNotification({
-    id: `notif-consultation-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    type: 'consultation_requested',
-    title: 'Nuova Richiesta Consulenza dal Comparatore',
-    message: `${customerName} (${utilityType.toUpperCase()}) richiede assistenza per l'offerta ${offerName || offerId}.`,
-    timestamp: new Date().toISOString(),
-    isRead: false,
-    priority: 'urgent',
-    targetRole: 'call_center',
-    actionTab: 'leads',
-    meta: { leadId: newLead.id, phone: newLead.phone, customerName }
-  });
+    await addLead(candidateLead);
 
-  res.status(201).json({
-    success: true,
-    leadId: newLead.id,
-    message: 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
-    lead: newLead,
-  });
+    if (idempotencyKey) {
+      const persistedByKey = getLeads().find((l) => l.idempotencyKey === idempotencyKey);
+      if (persistedByKey && persistedByKey.id !== candidateLead.id) {
+        assertIdempotencyFingerprint(persistedByKey, 'public_comparator', trimmedPhone, marker);
+        return { lead: persistedByKey };
+      }
+    }
+
+    await safeAddNotification({
+      id: `notif-consultation-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: 'consultation_requested',
+      title: 'Nuova Richiesta Consulenza dal Comparatore',
+      message: `${customerName} (${utilityType.toUpperCase()}) richiede assistenza per l'offerta ${offerName || offerId}.`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      priority: 'urgent',
+      targetRole: 'call_center',
+      actionTab: 'leads',
+      meta: { leadId: candidateLead.id, phone: candidateLead.phone, customerName }
+    });
+
+    return { lead: candidateLead };
+  })();
+
+  inFlightGuestLeads.set(lockKey, { fingerprint, promise: creationPromise });
+  try {
+    const { lead: newLead } = await creationPromise;
+    res.status(201).json({
+      success: true,
+      leadId: newLead.id,
+      message: 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
+      lead: newLead,
+    });
+  } finally {
+    inFlightGuestLeads.delete(lockKey);
+  }
 }));
 
 portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
@@ -429,6 +486,9 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
 
   const rawFileName = typeof body.fileName === 'string' ? body.fileName : 'bolletta';
   const idempotencyKey = extractIdempotencyKey(req);
+  const fingerprint = buildLeadFingerprint('bill_upload', trimmedPhone, rawFileName);
+  const lockKey = idempotencyKey ? `key:${idempotencyKey}` : `win:bill_upload:${trimmedPhone}:${rawFileName}`;
+
   const existingLead = findIdempotentLead(idempotencyKey, trimmedPhone, 'bill_upload', rawFileName);
   if (existingLead && existingLead.billId) {
     const existingBill = await portalService.getBill(existingLead.billId);
@@ -443,67 +503,105 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
     return;
   }
 
-  const assignedBrokerId = resolveDefaultBrokerId();
-  const leadId = `lead-bill-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-  const consentTimestamp = new Date().toISOString();
-  const resolvedPolicyVersion =
-    typeof privacyPolicyVersion === 'string' && privacyPolicyVersion.trim() ? privacyPolicyVersion.trim() : '2026.10';
+  const inFlight = inFlightGuestLeads.get(lockKey);
+  if (inFlight) {
+    if (inFlight.fingerprint !== fingerprint) {
+      throw httpError('Chiave di idempotenza già utilizzata per una richiesta differente.', 409);
+    }
+    const resolved = await inFlight.promise;
+    const existingBill = resolved.bill || (resolved.lead.billId ? await portalService.getBill(resolved.lead.billId) : undefined);
+    res.status(200).json({
+      success: true,
+      idempotent: true,
+      bill: existingBill,
+      leadId: resolved.lead.id,
+      lead: resolved.lead,
+      message: 'Bolletta già caricata e registrata nel CRM.',
+    });
+    return;
+  }
 
   const bytes = decodeAndValidateBillFile(body.base64Data, body.mimeType);
-  const bill = await portalService.uploadBill({
-    customerId: `guest-${Date.now()}`,
-    customerName,
-    fileName: rawFileName,
-    mimeType: typeof body.mimeType === 'string' ? body.mimeType : '',
-    bytes,
-    utilityType,
-    notes: typeof notes === 'string' ? notes.slice(0, 1000) : undefined,
-    leadId,
-    assignedBrokerId,
-  });
 
-  const utmClause = formatUtmNote(utmSource, utmCampaign, utmMedium);
-  const utmAdvNote = utmClause ? ` • ${utmClause}` : '';
+  const creationPromise = (async () => {
+    const assignedBrokerId = resolveDefaultBrokerId();
+    const leadId = `lead-bill-guest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const consentTimestamp = new Date().toISOString();
+    const resolvedPolicyVersion =
+      typeof privacyPolicyVersion === 'string' && privacyPolicyVersion.trim() ? privacyPolicyVersion.trim() : '2026.10';
 
-  const newLead: Lead = {
-    id: leadId,
-    name: customerName,
-    phone: trimmedPhone,
-    email: (email && typeof email === 'string' && email.trim()) || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
-    city: (typeof city === 'string' && city.trim()) || 'Italia',
-    source: 'bill_upload',
-    status: 'new',
-    notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Richiesta analisi broker.${preferredContact ? ` • Orario preferito: ${preferredContact}` : ''}${utmAdvNote}${notes ? ` • Note: ${String(notes).slice(0, 500)}` : ''} • Consenso GDPR v${resolvedPolicyVersion} (${consentTimestamp})`,
-    createdAt: consentTimestamp.split('T')[0],
-    assignedBrokerId,
-    billId: bill.id,
-    privacyConsentAccepted: true,
-    privacyConsentTimestamp: consentTimestamp,
-    privacyPolicyVersion: resolvedPolicyVersion,
-    idempotencyKey,
-  };
-  await addLead(newLead);
+    const bill = await portalService.uploadBill({
+      customerId: `guest-${Date.now()}`,
+      customerName,
+      fileName: rawFileName,
+      mimeType: typeof body.mimeType === 'string' ? body.mimeType : '',
+      bytes,
+      utilityType,
+      notes: typeof notes === 'string' ? notes.slice(0, 1000) : undefined,
+      leadId,
+      assignedBrokerId,
+    });
 
-  await safeAddNotification({
-    id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    type: 'bill_uploaded',
-    title: 'Nuova Bolletta Caricata dal Comparatore',
-    message: `${customerName} ha caricato "${bill.fileName}" per ${utilityType.toUpperCase()}. Analisi richiesta.`,
-    timestamp: new Date().toISOString(),
-    isRead: false,
-    priority: 'urgent',
-    targetRole: 'call_center',
-    actionTab: 'leads',
-    meta: { leadId: newLead.id, billId: bill.id, fileName: bill.fileName }
-  });
+    const utmClause = formatUtmNote(utmSource, utmCampaign, utmMedium);
+    const utmAdvNote = utmClause ? ` • ${utmClause}` : '';
 
-  res.status(201).json({
-    success: true,
-    bill,
-    leadId: newLead.id,
-    lead: newLead,
-    message: 'Bolletta caricata e richiesta di analisi registrata nel CRM.',
-  });
+    const candidateLead: Lead = {
+      id: leadId,
+      name: customerName,
+      phone: trimmedPhone,
+      email: (email && typeof email === 'string' && email.trim()) || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
+      city: (typeof city === 'string' && city.trim()) || 'Italia',
+      source: 'bill_upload',
+      status: 'new',
+      notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Richiesta analisi broker.${preferredContact ? ` • Orario preferito: ${preferredContact}` : ''}${utmAdvNote}${notes ? ` • Note: ${String(notes).slice(0, 500)}` : ''} • Consenso GDPR v${resolvedPolicyVersion} (${consentTimestamp})`,
+      createdAt: consentTimestamp.split('T')[0],
+      assignedBrokerId,
+      billId: bill.id,
+      privacyConsentAccepted: true,
+      privacyConsentTimestamp: consentTimestamp,
+      privacyPolicyVersion: resolvedPolicyVersion,
+      idempotencyKey,
+    };
+    await addLead(candidateLead);
+
+    if (idempotencyKey) {
+      const persistedByKey = getLeads().find((l) => l.idempotencyKey === idempotencyKey);
+      if (persistedByKey && persistedByKey.id !== candidateLead.id) {
+        assertIdempotencyFingerprint(persistedByKey, 'bill_upload', trimmedPhone, rawFileName);
+        const persistedBill = persistedByKey.billId ? await portalService.getBill(persistedByKey.billId) : bill;
+        return { lead: persistedByKey, bill: persistedBill };
+      }
+    }
+
+    await safeAddNotification({
+      id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: 'bill_uploaded',
+      title: 'Nuova Bolletta Caricata dal Comparatore',
+      message: `${customerName} ha caricato "${bill.fileName}" per ${utilityType.toUpperCase()}. Analisi richiesta.`,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      priority: 'urgent',
+      targetRole: 'call_center',
+      actionTab: 'leads',
+      meta: { leadId: candidateLead.id, billId: bill.id, fileName: bill.fileName }
+    });
+
+    return { lead: candidateLead, bill };
+  })();
+
+  inFlightGuestLeads.set(lockKey, { fingerprint, promise: creationPromise });
+  try {
+    const { lead: newLead, bill } = await creationPromise;
+    res.status(201).json({
+      success: true,
+      bill,
+      leadId: newLead.id,
+      lead: newLead,
+      message: 'Bolletta caricata e richiesta di analisi registrata nel CRM.',
+    });
+  } finally {
+    inFlightGuestLeads.delete(lockKey);
+  }
 }));
 
 portalRouter.use(authenticateToken);

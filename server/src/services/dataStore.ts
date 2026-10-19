@@ -349,18 +349,65 @@ const rowToCustomer = (c: any): Customer => ({
   nextSwitchAuditDate:c.next_switch_audit_date,hasBrokerageMandate:c.has_brokerage_mandate,
   accountManager:c.account_manager,assignedBrokerId:c.assigned_broker_id||undefined,notes:c.notes,utilityPoints:c.utility_points||[]
 });
-const leadToRow = (l: Lead) => ({id:l.id,name:l.name,phone:l.phone,email:l.email||null,
-  city:l.city,source:l.source,status:l.status,notes:l.notes,
-  estimated_consumption_kwh:l.estimatedConsumptionKwh??null,estimated_consumption_smc:l.estimatedConsumptionSmc??null,
-  assigned_call_center_agent:l.assignedCallCenterAgent||null,assigned_broker_id:l.assignedBrokerId||null,
-  assigned_agent:l.assignedAgent||null,appointment_id:l.appointmentId||null});
+const leadToRow = (l: Lead) => ({
+  id: l.id,
+  name: l.name,
+  phone: l.phone,
+  email: l.email || null,
+  city: l.city,
+  source: l.source,
+  status: l.status,
+  notes: l.notes,
+  estimated_consumption_kwh: l.estimatedConsumptionKwh ?? null,
+  estimated_consumption_smc: l.estimatedConsumptionSmc ?? null,
+  assigned_call_center_agent: l.assignedCallCenterAgent || null,
+  assigned_broker_id: l.assignedBrokerId || null,
+  assigned_agent: l.assignedAgent || null,
+  appointment_id: l.appointmentId || null,
+  bill_id: l.billId || null,
+  privacy_consent_accepted: Boolean(l.privacyConsentAccepted),
+  privacy_consent_timestamp: l.privacyConsentTimestamp || null,
+  privacy_policy_version: l.privacyPolicyVersion || null,
+  idempotency_key: l.idempotencyKey || null,
+});
+const rowToLead = (l: any): Lead => ({
+  id: l.id,
+  name: l.name,
+  phone: l.phone,
+  email: l.email || '',
+  city: l.city,
+  source: l.source,
+  status: l.status,
+  notes: l.notes,
+  createdAt: l.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+  estimatedConsumptionKwh: l.estimated_consumption_kwh ?? undefined,
+  estimatedConsumptionSmc: l.estimated_consumption_smc ?? undefined,
+  assignedCallCenterAgent: l.assigned_call_center_agent || undefined,
+  assignedBrokerId: l.assigned_broker_id || undefined,
+  assignedAgent: l.assigned_agent || undefined,
+  appointmentId: l.appointment_id || undefined,
+  billId: l.bill_id || undefined,
+  privacyConsentAccepted: l.privacy_consent_accepted == null ? undefined : Boolean(l.privacy_consent_accepted),
+  privacyConsentTimestamp: l.privacy_consent_timestamp || undefined,
+  privacyPolicyVersion: l.privacy_policy_version || undefined,
+  idempotencyKey: l.idempotency_key || undefined,
+});
 export async function addLead(lead: Lead): Promise<void> {
   await addLeads([lead]);
 }
 export async function addLeads(items: Lead[]): Promise<void> {
   if (!items.length || items.some(lead => !lead?.name || !lead?.phone)) throw new Error('Nome e telefono lead obbligatori.');
   requireStorage();
-  if (isSupabaseConfigured && supabase) check((await supabase.from('leads').insert(items.map(leadToRow))).error);
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.from('leads').insert(items.map(leadToRow));
+    if (error) {
+      if ((error as any).code === '23505') {
+        await initDataStore(true);
+        return;
+      }
+      check(error);
+    }
+  }
   leads.unshift(...items.map(item => structuredClone(item)));
 }
 export async function updateLead(lead: Lead): Promise<void> {
@@ -400,7 +447,9 @@ export async function addNotification(notification: any): Promise<void> {
   if (isSupabaseConfigured && supabase) check((await supabase.from('notifications').insert({
     id:notification.id,type:notification.type,title:notification.title,message:notification.message,
     timestamp:notification.timestamp,is_read:notification.isRead||false,priority:notification.priority||'normal',
-    target_role:notification.targetRole||'all',action_tab:notification.actionTab||null,meta:notification.meta||null
+    target_role:notification.targetRole||'all',target_user_id:notification.targetUserId||null,
+    target_customer_id:notification.targetCustomerId||null,read_by:Array.isArray(notification.readBy)?notification.readBy:[],
+    action_tab:notification.actionTab||null,meta:notification.meta||null
   })).error);
   notifications.unshift(structuredClone(notification));
 }
@@ -422,11 +471,19 @@ export async function markNotificationsRead(ids: string[], userId?: string): Pro
     };
   });
   if (isSupabaseConfigured && supabase && ids.length) {
-    const personalIds = notifications
-      .filter(n => ids.includes(n.id) && Boolean(n.targetUserId || n.targetCustomerId || n.meta?.customerId))
-      .map(n => n.id);
-    if (personalIds.length) {
-      check((await supabase.from('notifications').update({is_read:true}).in('id',personalIds)).error);
+    if (typeof supabase.rpc === 'function') {
+      const rpcRes = await supabase.rpc('append_notification_reader', { p_ids: ids, p_user_id: userId });
+      if (!rpcRes?.error) return;
+    }
+    for (const id of ids) {
+      const target = notifications.find(n => n.id === id);
+      if (target) {
+        const isPersonal = Boolean(target.targetUserId || target.targetCustomerId || target.meta?.customerId);
+        check((await supabase.from('notifications').update({
+          is_read: isPersonal ? true : target.isRead,
+          read_by: target.readBy || [userId],
+        }).eq('id', id)).error);
+      }
     }
   }
 }
@@ -500,13 +557,13 @@ export async function initDataStore(force = false): Promise<void> {
   const [ls,cs,ss,ns,us] = await Promise.all(
     ['leads','customers','signature_logs','notifications','crm_accounts'].map(readAllRows)
   );
-  leads = ls.map((l:any)=>({id:l.id,name:l.name,phone:l.phone,email:l.email||'',city:l.city,source:l.source,
-    status:l.status,notes:l.notes,createdAt:l.created_at?.split('T')[0],estimatedConsumptionKwh:l.estimated_consumption_kwh,
-    estimatedConsumptionSmc:l.estimated_consumption_smc,assignedCallCenterAgent:l.assigned_call_center_agent,
-    assignedBrokerId:l.assigned_broker_id,assignedAgent:l.assigned_agent,appointmentId:l.appointment_id}));
+  leads = ls.map(rowToLead);
   customers = cs.map(rowToCustomer); signatureLogs = ss.map(rowToSignature);
   notifications = ns.map((n:any)=>({id:n.id,type:n.type,title:n.title,message:n.message,timestamp:n.timestamp,
-    isRead:n.is_read,priority:n.priority,targetRole:n.target_role,actionTab:n.action_tab,meta:n.meta}));
+    isRead:n.is_read,priority:n.priority,targetRole:n.target_role,
+    targetUserId:n.target_user_id||undefined,targetCustomerId:n.target_customer_id||undefined,
+    readBy:Array.isArray(n.read_by)?n.read_by:[],
+    actionTab:n.action_tab,meta:n.meta}));
 
   const dbUsers = us.map((u:any)=>({...u.profile,id:u.id,email:u.email,password:u.password_hash,
     role:u.role,customerId:u.customer_id,twoFactorSecret:u.two_factor_secret,is2faEnabled:u.is_2fa_enabled}));
