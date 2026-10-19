@@ -44,3 +44,10 @@ $$;
 
 revoke all on function public.append_notification_reader(text[], text) from public, anon, authenticated;
 grant execute on function public.append_notification_reader(text[], text) to service_role;
+
+grant usage on schema public to service_role;
+grant all on public.crm_accounts to service_role;
+grant all on public.crm_appointments to service_role;
+grant select, insert, update, delete on public.profiles, public.commissions, public.settlement_batches to service_role;
+grant select, insert, update, delete on public.leads, public.customers, public.notifications, public.portal_bills to service_role;
+grant select, insert, update, delete on public.signature_logs, public.meter_readings, public.security_logs to service_role;
