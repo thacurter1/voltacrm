@@ -1,6 +1,7 @@
+import { createHash } from 'crypto';
 import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
-import { decodeAndValidateBillFile } from '../utils/billFile.js';
+import { decodeAndValidateBillFile, sanitizeBillFileName } from '../utils/billFile.js';
 import { getCustomers, getLeads, users, addLead, addNotification } from '../services/dataStore.js';
 import { AppNotification, Lead, UserProfile } from '../types.js';
 import {
@@ -119,33 +120,35 @@ function extractIdempotencyKey(req: AuthRequest): string | undefined {
 
 interface InFlightGuestLead {
   fingerprint: string;
-  promise: Promise<{ lead: Lead; bill?: any }>;
+  promise: Promise<{ lead: Lead; bill?: any; wasDeduplicated?: boolean }>;
 }
 const inFlightGuestLeads = new Map<string, InFlightGuestLead>();
 
-function buildLeadFingerprint(source: Lead['source'], phone: string, marker: string): string {
-  return `${source}|${phone}|${marker}`;
-}
-
-function assertIdempotencyFingerprint(lead: Lead, source: Lead['source'], phone: string, marker: string): void {
-  if (lead.source !== source || lead.phone !== phone || !lead.notes.includes(marker)) {
+function assertIdempotencyFingerprint(lead: Lead, source: Lead['source'], normalizedPhone: string, fingerprint: string): void {
+  const leadPhoneNormalized = String(lead.phone || '').replace(/\D/g, '');
+  if (lead.source !== source || leadPhoneNormalized !== normalizedPhone || lead.idempotencyFingerprint !== fingerprint) {
     throw httpError('Chiave di idempotenza già utilizzata per una richiesta differente.', 409);
   }
 }
 
-function findIdempotentLead(idempotencyKey: string | undefined, phone: string, source: Lead['source'], marker: string): Lead | undefined {
+function findIdempotentLead(
+  idempotencyKey: string | undefined,
+  normalizedPhone: string,
+  source: Lead['source'],
+  fingerprint: string
+): Lead | undefined {
   const existing = getLeads();
   if (idempotencyKey) {
     const byKey = existing.find((l) => l.idempotencyKey === idempotencyKey);
     if (byKey) {
-      assertIdempotencyFingerprint(byKey, source, phone, marker);
+      assertIdempotencyFingerprint(byKey, source, normalizedPhone, fingerprint);
       return byKey;
     }
   }
   const nowMs = Date.now();
   return existing.find((l) => {
-    if (l.source !== source || l.phone !== phone) return false;
-    if (!l.notes.includes(marker)) return false;
+    if (l.source !== source || String(l.phone || '').replace(/\D/g, '') !== normalizedPhone) return false;
+    if (l.idempotencyFingerprint !== fingerprint) return false;
     if (!l.privacyConsentTimestamp) return false;
     const elapsedMs = nowMs - new Date(l.privacyConsentTimestamp).getTime();
     return elapsedMs >= 0 && elapsedMs < 60_000;
@@ -264,8 +267,8 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
   }
 
   const trimmedPhone = typeof phone === 'string' ? phone.trim() : '';
-  const digitsOnly = trimmedPhone.replace(/\D/g, '');
-  if (!trimmedPhone || digitsOnly.length < 8) {
+  const normalizedPhone = trimmedPhone.replace(/\D/g, '');
+  if (!trimmedPhone || normalizedPhone.length < 8) {
     throw httpError('Recapito telefonico obbligatorio per essere ricontattato.', 400);
   }
 
@@ -281,12 +284,24 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
     throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
   }
 
-  const marker = String(offerName || offerId);
+  const parsedConsumption = Number(annualConsumption);
+  const safeConsumption = Number.isFinite(parsedConsumption) && parsedConsumption > 0 ? parsedConsumption : undefined;
   const idempotencyKey = extractIdempotencyKey(req);
-  const fingerprint = buildLeadFingerprint('public_comparator', trimmedPhone, marker);
-  const lockKey = idempotencyKey ? `key:${idempotencyKey}` : `win:public_comparator:${trimmedPhone}:${marker}`;
+  const fingerprint = createHash('sha256')
+    .update(
+      JSON.stringify({
+        source: 'public_comparator',
+        phone: normalizedPhone,
+        utilityType,
+        offerId: String(offerId).trim(),
+        offerName: String(offerName || '').trim(),
+        annualConsumption: safeConsumption ?? null,
+      })
+    )
+    .digest('hex');
+  const lockKey = idempotencyKey ? `key:${idempotencyKey}` : `win:public_comparator:${fingerprint}`;
 
-  const existingLead = findIdempotentLead(idempotencyKey, trimmedPhone, 'public_comparator', marker);
+  const existingLead = findIdempotentLead(idempotencyKey, normalizedPhone, 'public_comparator', fingerprint);
   if (existingLead) {
     res.status(200).json({
       success: true,
@@ -315,8 +330,6 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
   }
 
   const creationPromise = (async () => {
-    const parsedConsumption = Number(annualConsumption);
-    const safeConsumption = Number.isFinite(parsedConsumption) && parsedConsumption > 0 ? parsedConsumption : undefined;
     const utmAdvNote = formatUtmNote(utmSource, utmCampaign, utmMedium);
     const consentTimestamp = new Date().toISOString();
     const resolvedPolicyVersion =
@@ -351,6 +364,7 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
       privacyConsentTimestamp: consentTimestamp,
       privacyPolicyVersion: resolvedPolicyVersion,
       idempotencyKey,
+      idempotencyFingerprint: fingerprint,
     };
 
     await addLead(candidateLead);
@@ -358,8 +372,8 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
     if (idempotencyKey) {
       const persistedByKey = getLeads().find((l) => l.idempotencyKey === idempotencyKey);
       if (persistedByKey && persistedByKey.id !== candidateLead.id) {
-        assertIdempotencyFingerprint(persistedByKey, 'public_comparator', trimmedPhone, marker);
-        return { lead: persistedByKey };
+        assertIdempotencyFingerprint(persistedByKey, 'public_comparator', normalizedPhone, fingerprint);
+        return { lead: persistedByKey, wasDeduplicated: true };
       }
     }
 
@@ -376,16 +390,19 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
       meta: { leadId: candidateLead.id, phone: candidateLead.phone, customerName }
     });
 
-    return { lead: candidateLead };
+    return { lead: candidateLead, wasDeduplicated: false };
   })();
 
   inFlightGuestLeads.set(lockKey, { fingerprint, promise: creationPromise });
   try {
-    const { lead: newLead } = await creationPromise;
-    res.status(201).json({
+    const { lead: newLead, wasDeduplicated } = await creationPromise;
+    res.status(wasDeduplicated ? 200 : 201).json({
       success: true,
+      ...(wasDeduplicated ? { idempotent: true } : {}),
       leadId: newLead.id,
-      message: 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
+      message: wasDeduplicated
+        ? 'Richiesta di consulenza già registrata nel CRM Volta Energia.'
+        : 'Richiesta di consulenza registrata con successo nel CRM Volta Energia.',
       lead: newLead,
     });
   } finally {
@@ -430,7 +447,12 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
       assignedBrokerId,
       billId: bill.id,
     };
-    await addLead(newLead);
+    try {
+      await addLead(newLead);
+    } catch (err) {
+      await portalService.deleteBill(bill.id);
+      throw err;
+    }
 
     await safeAddNotification({
       id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -471,8 +493,8 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
     throw httpError('Numero di telefono obbligatorio per essere ricontattati dal consulente.', 400);
   }
   const trimmedPhone = phone.trim();
-  const digitsOnly = trimmedPhone.replace(/\D/g, '');
-  if (digitsOnly.length < 8) {
+  const normalizedPhone = trimmedPhone.replace(/\D/g, '');
+  if (normalizedPhone.length < 8) {
     throw httpError('Numero di telefono non valido (minimo 8 cifre).', 400);
   }
   if (privacyConsent !== true) {
@@ -485,11 +507,24 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
   }
 
   const rawFileName = typeof body.fileName === 'string' ? body.fileName : 'bolletta';
+  const bytes = decodeAndValidateBillFile(body.base64Data, body.mimeType);
+  const bytesSha256 = createHash('sha256').update(bytes).digest('hex');
   const idempotencyKey = extractIdempotencyKey(req);
-  const fingerprint = buildLeadFingerprint('bill_upload', trimmedPhone, rawFileName);
-  const lockKey = idempotencyKey ? `key:${idempotencyKey}` : `win:bill_upload:${trimmedPhone}:${rawFileName}`;
+  const fingerprint = createHash('sha256')
+    .update(
+      JSON.stringify({
+        source: 'bill_upload',
+        phone: normalizedPhone,
+        utilityType,
+        fileName: sanitizeBillFileName(rawFileName),
+        mimeType: String(body.mimeType || '').trim().toLowerCase(),
+        bytesSha256,
+      })
+    )
+    .digest('hex');
+  const lockKey = idempotencyKey ? `key:${idempotencyKey}` : `win:bill_upload:${fingerprint}`;
 
-  const existingLead = findIdempotentLead(idempotencyKey, trimmedPhone, 'bill_upload', rawFileName);
+  const existingLead = findIdempotentLead(idempotencyKey, normalizedPhone, 'bill_upload', fingerprint);
   if (existingLead && existingLead.billId) {
     const existingBill = await portalService.getBill(existingLead.billId);
     res.status(200).json({
@@ -520,8 +555,6 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
     });
     return;
   }
-
-  const bytes = decodeAndValidateBillFile(body.base64Data, body.mimeType);
 
   const creationPromise = (async () => {
     const assignedBrokerId = resolveDefaultBrokerId();
@@ -561,15 +594,22 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
       privacyConsentTimestamp: consentTimestamp,
       privacyPolicyVersion: resolvedPolicyVersion,
       idempotencyKey,
+      idempotencyFingerprint: fingerprint,
     };
-    await addLead(candidateLead);
+    try {
+      await addLead(candidateLead);
+    } catch (err) {
+      await portalService.deleteBill(bill.id);
+      throw err;
+    }
 
     if (idempotencyKey) {
       const persistedByKey = getLeads().find((l) => l.idempotencyKey === idempotencyKey);
       if (persistedByKey && persistedByKey.id !== candidateLead.id) {
-        assertIdempotencyFingerprint(persistedByKey, 'bill_upload', trimmedPhone, rawFileName);
-        const persistedBill = persistedByKey.billId ? await portalService.getBill(persistedByKey.billId) : bill;
-        return { lead: persistedByKey, bill: persistedBill };
+        await portalService.deleteBill(bill.id);
+        assertIdempotencyFingerprint(persistedByKey, 'bill_upload', normalizedPhone, fingerprint);
+        const persistedBill = persistedByKey.billId ? await portalService.getBill(persistedByKey.billId) : undefined;
+        return { lead: persistedByKey, bill: persistedBill, wasDeduplicated: true };
       }
     }
 
@@ -586,18 +626,21 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
       meta: { leadId: candidateLead.id, billId: bill.id, fileName: bill.fileName }
     });
 
-    return { lead: candidateLead, bill };
+    return { lead: candidateLead, bill, wasDeduplicated: false };
   })();
 
   inFlightGuestLeads.set(lockKey, { fingerprint, promise: creationPromise });
   try {
-    const { lead: newLead, bill } = await creationPromise;
-    res.status(201).json({
+    const { lead: newLead, bill, wasDeduplicated } = await creationPromise;
+    res.status(wasDeduplicated ? 200 : 201).json({
       success: true,
+      ...(wasDeduplicated ? { idempotent: true } : {}),
       bill,
       leadId: newLead.id,
       lead: newLead,
-      message: 'Bolletta caricata e richiesta di analisi registrata nel CRM.',
+      message: wasDeduplicated
+        ? 'Bolletta già caricata e registrata nel CRM.'
+        : 'Bolletta caricata e richiesta di analisi registrata nel CRM.',
     });
   } finally {
     inFlightGuestLeads.delete(lockKey);

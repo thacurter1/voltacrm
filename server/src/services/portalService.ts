@@ -53,6 +53,7 @@ export type BillDownload =
 export interface PortalBackend {
   uploadBill(storagePath: string, bytes: Buffer, mimeType: string): Promise<void>;
   insertBill(record: PortalBillRecord): Promise<PortalBillRecord>;
+  deleteBillRecord(id: string): Promise<void>;
   removeBill(storagePath: string): Promise<void>;
   listBills(customerId?: string): Promise<PortalBillRecord[]>;
   getBill(id: string): Promise<PortalBillRecord | null>;
@@ -189,6 +190,10 @@ function createSupabaseBackend(): PortalBackend {
       if (error) throw new Error('Metadati bolletta non salvati: ' + error.message);
       return mapBill(data);
     },
+    async deleteBillRecord(id) {
+      const { error } = await client.from('portal_bills').delete().eq('id', id);
+      if (error) throw new Error('Eliminazione metadati bolletta fallita: ' + error.message);
+    },
     async removeBill(storagePath) {
       const { error } = await client.storage.from(PORTAL_BILL_BUCKET).remove([storagePath]);
       if (error) throw new Error('Pulizia file incompleta: ' + error.message);
@@ -306,6 +311,10 @@ function createMemoryBackend(): PortalBackend {
       bills.unshift(record);
       return record;
     },
+    async deleteBillRecord(id) {
+      const idx = bills.findIndex((b) => b.id === id);
+      if (idx >= 0) bills.splice(idx, 1);
+    },
     async removeBill(storagePath) {
       files.delete(storagePath);
     },
@@ -386,6 +395,21 @@ export function createPortalService(
         throw error;
       }
     },
+    async deleteBill(id: string): Promise<void> {
+      const record = await backend.getBill(id);
+      if (!record) return;
+      try {
+        if (typeof backend.deleteBillRecord === 'function') {
+          await backend.deleteBillRecord(id);
+        }
+      } finally {
+        try {
+          await backend.removeBill(record.storagePath);
+        } catch (err) {
+          console.warn('[Portal] Pulizia file compensativa non completata:', err);
+        }
+      }
+    },
     listBills(customerId?: string) {
       return backend.listBills(customerId);
     },
@@ -442,6 +466,7 @@ function createDefaultPortalService() {
     return createPortalService({
       uploadBill: async () => unavailable(),
       insertBill: async () => unavailable(),
+      deleteBillRecord: async () => unavailable(),
       removeBill: async () => unavailable(),
       listBills: async () => unavailable(),
       getBill: async () => unavailable(),

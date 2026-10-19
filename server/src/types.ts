@@ -52,6 +52,7 @@ export interface Lead {
   privacyConsentTimestamp?: string;
   privacyPolicyVersion?: string;
   idempotencyKey?: string;
+  idempotencyFingerprint?: string;
 }
 
 export interface UtilityPoint {

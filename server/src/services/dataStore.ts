@@ -369,6 +369,7 @@ const leadToRow = (l: Lead) => ({
   privacy_consent_timestamp: l.privacyConsentTimestamp || null,
   privacy_policy_version: l.privacyPolicyVersion || null,
   idempotency_key: l.idempotencyKey || null,
+  idempotency_fingerprint: l.idempotencyFingerprint || null,
 });
 const rowToLead = (l: any): Lead => ({
   id: l.id,
@@ -391,6 +392,7 @@ const rowToLead = (l: any): Lead => ({
   privacyConsentTimestamp: l.privacy_consent_timestamp || undefined,
   privacyPolicyVersion: l.privacy_policy_version || undefined,
   idempotencyKey: l.idempotency_key || undefined,
+  idempotencyFingerprint: l.idempotency_fingerprint || undefined,
 });
 export async function addLead(lead: Lead): Promise<void> {
   await addLeads([lead]);
@@ -401,9 +403,17 @@ export async function addLeads(items: Lead[]): Promise<void> {
   if (isSupabaseConfigured && supabase) {
     const { error } = await supabase.from('leads').insert(items.map(leadToRow));
     if (error) {
-      if ((error as any).code === '23505') {
+      const errText = `${(error as any).constraint || ''} ${(error as any).message || ''} ${(error as any).details || ''}`.toLowerCase();
+      if (
+        (error as any).code === '23505' &&
+        items.length === 1 &&
+        Boolean(items[0].idempotencyKey) &&
+        !errText.includes('leads_pkey')
+      ) {
         await initDataStore(true);
-        return;
+        if (leads.some(l => l.idempotencyKey === items[0].idempotencyKey)) {
+          return;
+        }
       }
       check(error);
     }
@@ -455,9 +465,21 @@ export async function addNotification(notification: any): Promise<void> {
 }
 export async function markNotificationsRead(ids: string[], userId?: string): Promise<void> {
   requireStorage();
+  if (!ids.length) return;
+  if (isSupabaseConfigured && supabase) {
+    if (userId) {
+      const { error } = await supabase.rpc('append_notification_reader', { p_ids: ids, p_user_id: userId });
+      check(error);
+      await initDataStore(true);
+      return;
+    }
+    const { error } = await supabase.from('notifications').update({ is_read: true }).in('id', ids);
+    check(error);
+    await initDataStore(true);
+    return;
+  }
   if (!userId) {
-    if (isSupabaseConfigured && supabase && ids.length) check((await supabase.from('notifications').update({is_read:true}).in('id',ids)).error);
-    notifications = notifications.map(n=>ids.includes(n.id)?{...n,isRead:true}:n);
+    notifications = notifications.map(n => ids.includes(n.id) ? { ...n, isRead: true } : n);
     return;
   }
   notifications = notifications.map(n => {
@@ -470,22 +492,6 @@ export async function markNotificationsRead(ids: string[], userId?: string): Pro
       isRead: isPersonal ? true : n.isRead,
     };
   });
-  if (isSupabaseConfigured && supabase && ids.length) {
-    if (typeof supabase.rpc === 'function') {
-      const rpcRes = await supabase.rpc('append_notification_reader', { p_ids: ids, p_user_id: userId });
-      if (!rpcRes?.error) return;
-    }
-    for (const id of ids) {
-      const target = notifications.find(n => n.id === id);
-      if (target) {
-        const isPersonal = Boolean(target.targetUserId || target.targetCustomerId || target.meta?.customerId);
-        check((await supabase.from('notifications').update({
-          is_read: isPersonal ? true : target.isRead,
-          read_by: target.readBy || [userId],
-        }).eq('id', id)).error);
-      }
-    }
-  }
 }
 
 export const signatureToRow = (l:any) => ({

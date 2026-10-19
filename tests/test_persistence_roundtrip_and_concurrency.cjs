@@ -204,6 +204,7 @@ async function run() {
     privacyConsentTimestamp: '2026-10-19T10:30:00.000Z',
     privacyPolicyVersion: '2026.10',
     idempotencyKey: 'idem-rt-key-001',
+    idempotencyFingerprint: 'sha256-rt-fingerprint-001',
   };
 
   await store.addLead(testLead);
@@ -253,6 +254,11 @@ async function run() {
   );
   assert.equal(reloadedLead.privacyPolicyVersion, '2026.10', 'privacyPolicyVersion must survive DB round-trip');
   assert.equal(reloadedLead.idempotencyKey, 'idem-rt-key-001', 'idempotencyKey must survive DB round-trip');
+  assert.equal(
+    reloadedLead.idempotencyFingerprint,
+    'sha256-rt-fingerprint-001',
+    'idempotencyFingerprint must survive DB round-trip'
+  );
 
   const reloadedPersonal = store.getNotifications().find((n) => n.id === 'notif-rt-personal');
   assert.ok(reloadedPersonal, 'Reloaded personal notification must exist');
