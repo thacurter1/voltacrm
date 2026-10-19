@@ -85,11 +85,32 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
   };
 
+  const getDismissedNotificationIds = (): Set<string> => {
+    try {
+      const raw = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('volta_dismissed_notifications') : null;
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch {
+      return new Set();
+    }
+  };
+
+  const persistDismissedNotificationIds = (ids: string[]) => {
+    try {
+      if (typeof sessionStorage === 'undefined') return;
+      const current = getDismissedNotificationIds();
+      for (const id of ids) current.add(id);
+      sessionStorage.setItem('volta_dismissed_notifications', JSON.stringify(Array.from(current)));
+    } catch {
+      // ignore storage quota errors
+    }
+  };
+
   // Carica le notifiche dal server/local API
   const loadNotifications = React.useCallback(async () => {
     try {
       const res = await api.notifications.getAll(userRole);
-      setNotifications(res.notifications);
+      const dismissedNotificationIds = getDismissedNotificationIds();
+      setNotifications(res.notifications.filter((n) => !dismissedNotificationIds.has(n.id)));
     } catch (err) {
       console.warn('Errore caricamento notifiche:', err);
     }
@@ -145,20 +166,28 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   };
 
   const handleMarkAllAsRead = async () => {
+    const prev = [...notifications];
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    await api.notifications.markAllRead();
-    if (onToast) onToast('Notifiche Aggiornate', 'Tutte le notifiche sono state lette.', 'info');
+    try {
+      await api.notifications.markAllRead();
+      if (onToast) onToast('Notifiche Aggiornate', 'Tutte le notifiche sono state contrassegnate come lette.', 'info');
+    } catch {
+      setNotifications(prev);
+      if (onToast) onToast('Errore', 'Impossibile aggiornare lo stato delle notifiche.', 'warning');
+    }
   };
 
   const handleClearNotifications = async () => {
     const prev = [...notifications];
+    const idsToDismiss = prev.map((n) => n.id);
     setNotifications([]);
     try {
-      await api.notifications.markAllRead(); // Best effort server side clear
-      if (onToast) onToast('Notifiche Eliminate', 'Archivio notifiche svuotato.', 'info');
+      await api.notifications.markAllRead();
+      persistDismissedNotificationIds(idsToDismiss);
+      if (onToast) onToast('Vista Notifiche Archiviata', 'Le notifiche sono state segnate come lette e nascoste per questa sessione.', 'info');
     } catch {
       setNotifications(prev);
-      if (onToast) onToast('Errore', 'Impossibile eliminare le notifiche.', 'warning');
+      if (onToast) onToast('Errore', 'Impossibile archiviare le notifiche.', 'warning');
     }
   };
 
@@ -346,7 +375,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <button
                   onClick={handleClearNotifications}
                   className="text-slate-400 hover:text-rose-600 p-0.5 rounded cursor-pointer"
-                  title="Svuota archivio"
+                  title="Segna lette e nascondi dalla vista"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>

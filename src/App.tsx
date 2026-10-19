@@ -1277,7 +1277,13 @@ export function App() {
   if (inviteToken) return <InvitationActivation token={inviteToken} />;
   if (searchParams.get('portal') === 'home') return <PortalHome />;
 
-  if (host.startsWith('totem.') || (DEMO_MODE && (appParam === 'totem' || searchParams.get('portal') === 'totem'))) {
+  const configuredTotemHost = typeof import.meta !== 'undefined' && import.meta.env?.VITE_TOTEM_HOSTNAME ? String(import.meta.env.VITE_TOTEM_HOSTNAME).trim().toLowerCase() : '';
+  const isDedicatedTotemHost =
+    host.startsWith('totem.') ||
+    host.includes('totem') ||
+    Boolean(configuredTotemHost && host.toLowerCase() === configuredTotemHost);
+
+  if (isDedicatedTotemHost || (DEMO_MODE && (appParam === 'totem' || searchParams.get('portal') === 'totem'))) {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
   if (appParam === 'totem' || searchParams.get('portal') === 'totem') {

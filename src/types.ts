@@ -27,6 +27,11 @@ export interface Lead {
   appointmentId?: string;
   estimatedConsumptionKwh?: number;
   estimatedConsumptionSmc?: number;
+  billId?: string;
+  privacyConsentAccepted?: boolean;
+  privacyConsentTimestamp?: string;
+  privacyPolicyVersion?: string;
+  idempotencyKey?: string;
 }
 
 export type AppointmentType = 'phone_consultation' | 'field_visit' | 'video_call';
@@ -191,6 +196,8 @@ export interface CustomerBill {
   status: 'in_review' | 'analyzed' | 'archived';
   notes?: string;
   extractedSavingsEur?: number;
+  leadId?: string;
+  assignedBrokerId?: string;
 }
 
 export interface SecurityAuditLog {
@@ -232,7 +239,10 @@ export interface AppNotification {
   timestamp: string;
   isRead: boolean;
   priority: NotificationPriority;
-  targetRole?: 'all' | 'call_center' | 'admin' | 'customer';
+  targetRole?: 'all' | 'call_center' | 'admin' | 'customer' | 'broker' | 'operator';
+  targetUserId?: string;
+  targetCustomerId?: string;
+  readBy?: string[];
   actionTab?: string;
   meta?: {
     customerId?: string;

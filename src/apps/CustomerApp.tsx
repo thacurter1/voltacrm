@@ -109,7 +109,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     if (activeCustomer?.utilityPoints && activeCustomer.utilityPoints.length > 0) {
       queueMicrotask(() => {
         setComparisonInput((prev) => {
-          if (prev.source === 'manual' || prev.source === 'bill-reviewed') return prev;
+          if (prev.source === 'manual' || prev.source === 'bill-reviewed' || prev.source === 'household-estimate') return prev;
           const points = activeCustomer.utilityPoints || [];
           const match = points.find((p) => p.type === prev.utilityType) || points[0];
           return {
@@ -445,7 +445,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                           Parametri di Calcolo in Uso
                         </span>
                         <span className="text-xs text-slate-500">
-                          (Origine: {comparisonInput.source === 'account' ? 'Dati Profilo' : comparisonInput.source === 'bill-reviewed' ? 'Bolletta Caricata' : 'Inserimento Manuale'})
+                          (Origine: {comparisonInput.source === 'account' ? 'Dati Profilo' : comparisonInput.source === 'bill-reviewed' ? 'Bolletta Caricata' : comparisonInput.source === 'household-estimate' ? 'Stima da Profilo Casa' : 'Inserimento Manuale'})
                         </span>
                       </div>
                       <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">

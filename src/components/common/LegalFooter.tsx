@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldCheck, Phone, Mail, Zap, Scale, FileText, CheckCircle2 } from 'lucide-react';
 import type { LegalTab } from './LegalModal';
+import { COMPANY_PROFILE } from '../../config/companyProfile';
 
 export interface LegalFooterProps {
   onOpenLegal?: (tab: LegalTab) => void;
@@ -49,7 +50,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
             <div>
               <p className="font-bold text-[#0a2540]">Assistenza Diretta Gratuita</p>
               <p className="text-xs text-slate-500 mt-0.5">
-                Numero Verde <strong>800 912 345</strong> attivo dal lunedì al venerdì dalle 9:00 alle 18:00.
+                Numero Verde <strong>{COMPANY_PROFILE.tollFreePhone || '800 912 345'}</strong> attivo dal lunedì al venerdì dalle 9:00 alle 18:00.
               </p>
             </div>
           </div>
@@ -58,6 +59,11 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
 
       {/* Main Corporate Section */}
       <div className="mx-auto max-w-7xl px-6 py-10">
+        {!COMPANY_PROFILE.isConfiguredCorporateIdentity && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-2.5 text-xs text-amber-900">
+            <strong>Nota Ambiente Dimostrativo:</strong> I dati societari e i recapiti telefonici/PEC esposti di seguito ({COMPANY_PROFILE.name}, P.IVA {COMPANY_PROFILE.vatNumber}) sono valori illustrativi di default configurabili tramite variabili d&apos;ambiente (<code>VITE_COMPANY_*</code>).
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Col 1: Brand & Presentation */}
           <div className="md:col-span-1 space-y-3">
@@ -79,10 +85,10 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
           {/* Col 2: Institutional & Legal Details */}
           <div className="space-y-2 text-xs">
             <p className="font-bold uppercase tracking-wider text-[#0a2540] text-[11px]">Dati Societari</p>
-            <p className="font-semibold text-slate-800">Volta Energia S.r.l.</p>
-            <p>Sede Legale: Via Monte Napoleone 8, 20121 Milano (MI)</p>
-            <p>P.IVA e Codice Fiscale: <strong>12948570155</strong></p>
-            <p>REA: MI-2684910 • Cap. Soc. € 100.000,00 i.v.</p>
+            <p className="font-semibold text-slate-800">{COMPANY_PROFILE.name || 'Volta Energia S.r.l.'}</p>
+            <p>Sede Legale: {COMPANY_PROFILE.address || 'Via Monte Napoleone 8, 20121 Milano (MI)'}</p>
+            <p>P.IVA e Codice Fiscale: <strong>{COMPANY_PROFILE.vatNumber || '12948570155'}</strong></p>
+            <p>REA: {COMPANY_PROFILE.reaNumber || 'MI-2684910'} • Cap. Soc. {COMPANY_PROFILE.shareCapital || '€ 100.000,00 i.v.'}</p>
             <p className="text-slate-500 pt-1">
               Volta Energia opera come mediatore e consulente energetico indipendente per il libero mercato, ai sensi della regolamentazione ARERA.
             </p>
@@ -93,15 +99,15 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
             <p className="font-bold uppercase tracking-wider text-[#0a2540] text-[11px]">Contatti & Supporto</p>
             <p className="flex items-center gap-2">
               <Phone className="size-3.5 text-[#635bff]" />
-              <span>Numero Verde: <strong>800 912 345</strong></span>
+              <span>Numero Verde: <strong>{COMPANY_PROFILE.tollFreePhone || '800 912 345'}</strong></span>
             </p>
             <p className="flex items-center gap-2">
               <Mail className="size-3.5 text-[#635bff]" />
-              <span>Email: <a href="mailto:supporto@voltaenergia.it" className="text-[#635bff] hover:underline">supporto@voltaenergia.it</a></span>
+              <span>Email: <a href={`mailto:${COMPANY_PROFILE.supportEmail}`} className="text-[#635bff] hover:underline">{COMPANY_PROFILE.supportEmail}</a></span>
             </p>
             <p className="flex items-center gap-2">
               <Mail className="size-3.5 text-[#635bff]" />
-              <span>PEC: <a href="mailto:voltaenergia@pec.it" className="text-[#635bff] hover:underline">voltaenergia@pec.it</a></span>
+              <span>PEC: <a href={`mailto:${COMPANY_PROFILE.pecEmail}`} className="text-[#635bff] hover:underline">{COMPANY_PROFILE.pecEmail}</a></span>
             </p>
             <p className="text-slate-500 pt-1">Orario supporto: Lunedì - Venerdì, 9:00 - 18:00</p>
           </div>

@@ -25,6 +25,8 @@ export interface PortalBillRecord {
   uploadDate: string;
   createdAt: string;
   ocrResult?: ExtractedBillData;
+  leadId?: string;
+  assignedBrokerId?: string;
 }
 
 export interface MeterReadingValues {
@@ -69,6 +71,8 @@ export interface UploadBillInput {
   bytes: Buffer;
   utilityType: PortalUtilityType;
   notes?: string;
+  leadId?: string;
+  assignedBrokerId?: string;
 }
 
 export interface MeterReadingInput {
@@ -135,6 +139,8 @@ function mapBill(row: any): PortalBillRecord {
     uploadDate: String(row.created_at).slice(0, 10),
     createdAt: row.created_at,
     ocrResult: row.ocr_result || undefined,
+    leadId: row.lead_id || undefined,
+    assignedBrokerId: row.assigned_broker_id || undefined,
   };
 }
 
@@ -176,6 +182,8 @@ function createSupabaseBackend(): PortalBackend {
         status: record.status,
         notes: record.notes || null,
         extracted_savings_eur: record.extractedSavingsEur ?? null,
+        lead_id: record.leadId || null,
+        assigned_broker_id: record.assignedBrokerId || null,
         created_at: record.createdAt,
       }).select('*').single();
       if (error) throw new Error('Metadati bolletta non salvati: ' + error.message);
@@ -362,6 +370,8 @@ export function createPortalService(
         notes: input.notes?.trim() || undefined,
         uploadDate: createdAt.slice(0, 10),
         createdAt,
+        leadId: input.leadId,
+        assignedBrokerId: input.assignedBrokerId,
       };
 
       await backend.uploadBill(storagePath, input.bytes, mimeType);

@@ -404,10 +404,31 @@ export async function addNotification(notification: any): Promise<void> {
   })).error);
   notifications.unshift(structuredClone(notification));
 }
-export async function markNotificationsRead(ids: string[]): Promise<void> {
+export async function markNotificationsRead(ids: string[], userId?: string): Promise<void> {
   requireStorage();
-  if (isSupabaseConfigured && supabase && ids.length) check((await supabase.from('notifications').update({is_read:true}).in('id',ids)).error);
-  notifications = notifications.map(n=>ids.includes(n.id)?{...n,isRead:true}:n);
+  if (!userId) {
+    if (isSupabaseConfigured && supabase && ids.length) check((await supabase.from('notifications').update({is_read:true}).in('id',ids)).error);
+    notifications = notifications.map(n=>ids.includes(n.id)?{...n,isRead:true}:n);
+    return;
+  }
+  notifications = notifications.map(n => {
+    if (!ids.includes(n.id)) return n;
+    const readBy = Array.from(new Set([...(n.readBy || []), userId]));
+    const isPersonal = Boolean(n.targetUserId || n.targetCustomerId || n.meta?.customerId);
+    return {
+      ...n,
+      readBy,
+      isRead: isPersonal ? true : n.isRead,
+    };
+  });
+  if (isSupabaseConfigured && supabase && ids.length) {
+    const personalIds = notifications
+      .filter(n => ids.includes(n.id) && Boolean(n.targetUserId || n.targetCustomerId || n.meta?.customerId))
+      .map(n => n.id);
+    if (personalIds.length) {
+      check((await supabase.from('notifications').update({is_read:true}).in('id',personalIds)).error);
+    }
+  }
 }
 
 export const signatureToRow = (l:any) => ({

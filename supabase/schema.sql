@@ -84,6 +84,11 @@ create table if not exists public.leads (
   assigned_broker_id text,
   assigned_agent text,
   appointment_id text,
+  bill_id text,
+  privacy_consent_accepted boolean default false,
+  privacy_consent_timestamp timestamp with time zone,
+  privacy_policy_version text,
+  idempotency_key text,
   notes text,
   estimated_consumption_kwh numeric default 2800,
   estimated_consumption_smc numeric default 1000,
@@ -129,6 +134,9 @@ create table if not exists public.signature_logs (
 create table if not exists public.notifications (
   id text primary key,
   user_id text,
+  target_user_id text,
+  target_customer_id text,
+  read_by jsonb default '[]'::jsonb not null,
   type text not null check (type in ('totem_lead', 'switch_due', 'bill_uploaded', 'signature_completed', 'security_alert', 'market_trend', 'consultation_requested', 'price_drop')),
   title text not null,
   message text not null,
@@ -641,7 +649,7 @@ create index if not exists idx_commissions_settlement_batch_id on public.commiss
 -- ==============================================================================
 create table if not exists public.portal_bills (
   id text primary key,
-  customer_id text not null references public.customers(id) on delete cascade,
+  customer_id text not null,
   customer_name text not null,
   file_name text not null,
   storage_path text not null unique,
@@ -652,6 +660,8 @@ create table if not exists public.portal_bills (
   notes text,
   extracted_savings_eur numeric check (extracted_savings_eur is null or extracted_savings_eur >= 0),
   ocr_result jsonb,
+  lead_id text,
+  assigned_broker_id text,
   created_at timestamptz not null default timezone('utc', now())
 );
 

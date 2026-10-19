@@ -6,7 +6,7 @@ export const ALLOWED_BILL_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/
 export const ALLOWED_BILL_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg'] as const;
 
 export type UtilityType = 'luce' | 'gas';
-export type ComparisonSource = 'account' | 'manual' | 'bill-reviewed';
+export type ComparisonSource = 'account' | 'manual' | 'bill-reviewed' | 'household-estimate';
 
 export interface ComparisonInput {
   utilityType: UtilityType;

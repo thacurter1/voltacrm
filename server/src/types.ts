@@ -47,6 +47,11 @@ export interface Lead {
   appointmentId?: string;
   estimatedConsumptionKwh?: number;
   estimatedConsumptionSmc?: number;
+  billId?: string;
+  privacyConsentAccepted?: boolean;
+  privacyConsentTimestamp?: string;
+  privacyPolicyVersion?: string;
+  idempotencyKey?: string;
 }
 
 export interface UtilityPoint {
@@ -152,7 +157,10 @@ export interface AppNotification {
   timestamp: string;
   isRead: boolean;
   priority: NotificationPriority;
-  targetRole?: 'all' | 'call_center' | 'admin' | 'customer';
+  targetRole?: 'all' | 'call_center' | 'admin' | 'customer' | 'broker' | 'operator';
+  targetUserId?: string;
+  targetCustomerId?: string;
+  readBy?: string[];
   actionTab?: string;
   meta?: {
     customerId?: string;

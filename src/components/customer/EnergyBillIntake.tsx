@@ -107,7 +107,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
       utilityType,
       annualConsumption: estimatedConsumption,
       powerKw: utilityType === 'luce' ? 3 : undefined,
-      source: 'manual',
+      source: 'household-estimate',
       asOf: 'Stima Abitudini Q1 2026',
     });
   };

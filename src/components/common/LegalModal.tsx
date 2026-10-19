@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { X, ShieldCheck, FileText, Scale, CheckCircle2, Phone, Mail, Building2 } from 'lucide-react';
+import { COMPANY_PROFILE } from '../../config/companyProfile';
 
 export type LegalTab = 'privacy' | 'arera' | 'terms';
 
@@ -55,7 +56,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 Informazioni Legali & Trasparenza
               </h2>
               <p className="text-xs text-slate-500">
-                Volta Energia S.r.l. • P.IVA 12948570155
+                {COMPANY_PROFILE.name || 'Volta Energia S.r.l.'} • P.IVA {COMPANY_PROFILE.vatNumber || '12948570155'}
+                {!COMPANY_PROFILE.isConfiguredCorporateIdentity && ' (Profilo Dimostrativo)'}
               </p>
             </div>
           </div>
