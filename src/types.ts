@@ -32,6 +32,7 @@ export interface Lead {
   privacyConsentTimestamp?: string;
   privacyPolicyVersion?: string;
   idempotencyKey?: string;
+  idempotencyFingerprint?: string;
 }
 
 export type AppointmentType = 'phone_consultation' | 'field_visit' | 'video_call';

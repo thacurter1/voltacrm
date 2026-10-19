@@ -89,6 +89,7 @@ create table if not exists public.leads (
   privacy_consent_timestamp timestamp with time zone,
   privacy_policy_version text,
   idempotency_key text,
+  idempotency_fingerprint text,
   notes text,
   estimated_consumption_kwh numeric default 2800,
   estimated_consumption_smc numeric default 1000,
@@ -1382,6 +1383,37 @@ end;
 $$;
 revoke all on function public.accept_crm_invitation(text,text,text) from public,anon,authenticated;
 grant execute on function public.accept_crm_invitation(text,text,text) to service_role;
+
+create or replace function public.append_notification_reader(
+  p_ids text[],
+  p_user_id text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if p_user_id is null or length(trim(p_user_id)) = 0 then
+    return;
+  end if;
+
+  update public.notifications
+  set
+    read_by = case
+      when coalesce(read_by, '[]'::jsonb) ? p_user_id then coalesce(read_by, '[]'::jsonb)
+      else coalesce(read_by, '[]'::jsonb) || to_jsonb(p_user_id)
+    end,
+    is_read = case
+      when target_user_id is not null or target_customer_id is not null or (meta is not null and meta ? 'customerId') then true
+      else is_read
+    end
+  where id = any(p_ids);
+end;
+$$;
+
+revoke all on function public.append_notification_reader(text[], text) from public, anon, authenticated;
+grant execute on function public.append_notification_reader(text[], text) to service_role;
 
 -- 18. Supabase Storage Buckets
 insert into storage.buckets (id, name, public)

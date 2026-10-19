@@ -32,7 +32,8 @@ alter table if exists public.leads
   add column if not exists privacy_consent_accepted boolean default false,
   add column if not exists privacy_consent_timestamp timestamptz,
   add column if not exists privacy_policy_version text,
-  add column if not exists idempotency_key text;
+  add column if not exists idempotency_key text,
+  add column if not exists idempotency_fingerprint text;
 
 drop index if exists public.idx_leads_idempotency_key;
 create unique index if not exists idx_leads_idempotency_key
@@ -67,3 +68,5 @@ begin
 end;
 $$;
 
+revoke all on function public.append_notification_reader(text[], text) from public, anon, authenticated;
+grant execute on function public.append_notification_reader(text[], text) to service_role;
