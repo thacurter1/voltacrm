@@ -132,6 +132,23 @@ function verifyConfig(env) {
     warnings.push('Provider WhatsApp Cloud / Twilio non configurato. Gli operatori useranno il link diretto 1-click wa.me.');
   }
 
+  // 7. Configurazione Totem Kiosk (Sicurezza Chiave Dispositivo)
+  if (env.VITE_TOTEM_DEVICE_TOKEN || env.VITE_TOTEM_KIOSK_DEVICE_KEY || env.VITE_KIOSK_DEVICE_KEY) {
+    errors.push('VIOLAZIONE SICUREZZA TOTEM: Trovata chiave segreta del totem in una variabile VITE_* (es. VITE_TOTEM_DEVICE_TOKEN / VITE_TOTEM_KIOSK_DEVICE_KEY). Non inserire MAI la chiave del dispositivo in variabili VITE_* (verrebbero esposte nel bundle pubblico). Usare TOTEM_KIOSK_DEVICE_KEY solo sul backend (Render) e inserire la chiave nel browser del totem al primo avvio.');
+  }
+  if (env.VITE_TOTEM_HOSTNAME && (env.VITE_TOTEM_HOSTNAME.includes('http://') || env.VITE_TOTEM_HOSTNAME.includes('https://') || env.VITE_TOTEM_HOSTNAME.includes('/'))) {
+    errors.push(`VITE_TOTEM_HOSTNAME deve contenere solo l'hostname (es. "voltacrm-totem.vercel.app"), non uno schema URL o percorso: "${env.VITE_TOTEM_HOSTNAME}".`);
+  }
+  if (env.TOTEM_KIOSK_DEVICE_KEY) {
+    if (env.TOTEM_KIOSK_DEVICE_KEY.length < 16) {
+      errors.push(`TOTEM_KIOSK_DEVICE_KEY troppo corta (${env.TOTEM_KIOSK_DEVICE_KEY.length} caratteri). Usare almeno 16 caratteri casuali.`);
+    } else {
+      passed.push('TOTEM_KIOSK_DEVICE_KEY configurata correttamente per il backend.');
+    }
+  } else {
+    warnings.push('TOTEM_KIOSK_DEVICE_KEY non impostata: le API /api/kiosk/* risponderanno correttamente 503 ("Totem non configurato") in produzione.');
+  }
+
   return { errors, warnings, passed };
 }
 
@@ -149,11 +166,12 @@ function runVerification() {
       SUPABASE_URL: 'http://localhost',
       SUPABASE_SECRET_KEY: 'sb_publishable_123',
       ADMIN_INITIAL_PASSWORD: 'password123',
-      ADMIN_2FA_SECRET: 'VOLTA_123'
+      ADMIN_2FA_SECRET: 'VOLTA_123',
+      VITE_TOTEM_DEVICE_TOKEN: 'leaked-secret-in-vite'
     };
     const resBad = verifyConfig(badConfig);
-    if (resBad.errors.length < 4) {
-      throw new Error(`Test fallito: la configurazione insicura doveva produrre almeno 4 errori, trovati ${resBad.errors.length}`);
+    if (resBad.errors.length < 5) {
+      throw new Error(`Test fallito: la configurazione insicura doveva produrre almeno 5 errori, trovati ${resBad.errors.length}`);
     }
 
     // Test case 2: Good production config
@@ -166,6 +184,8 @@ function runVerification() {
       ADMIN_INITIAL_PASSWORD: 'Xk9#mQ2$vL8!zW4*pT7^',
       ADMIN_2FA_SECRET: 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP',
       CORS_ORIGIN: 'https://voltacrm.it,https://app.voltacrm.it',
+      TOTEM_KIOSK_DEVICE_KEY: 'kiosk-prod-key-9f8e7d6c5b4a3f2e1d0c',
+      VITE_TOTEM_HOSTNAME: 'voltacrm-totem.vercel.app',
       NODE_ENV: 'production'
     };
     const resGood = verifyConfig(goodConfig);
