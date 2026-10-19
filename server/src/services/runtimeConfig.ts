@@ -14,6 +14,14 @@ export function validateProductionConfiguration(): void {
   if (process.env.TOTEM_KIOSK_API_KEY && (isExample(process.env.TOTEM_KIOSK_API_KEY) || process.env.TOTEM_KIOSK_API_KEY.length < 32 || process.env.TOTEM_KIOSK_API_KEY === 'KIOSK-TOKEN-RETAIL-01')) {
     throw new Error('TOTEM_KIOSK_API_KEY deve essere un segreto univoco di almeno 32 caratteri. Ometterlo per disabilitare il Totem.');
   }
+  if (
+    process.env.TOTEM_KIOSK_DEVICE_KEY &&
+    (isExample(process.env.TOTEM_KIOSK_DEVICE_KEY) ||
+      process.env.TOTEM_KIOSK_DEVICE_KEY.length < 16 ||
+      process.env.TOTEM_KIOSK_DEVICE_KEY === process.env.TOTEM_KIOSK_API_KEY)
+  ) {
+    throw new Error('TOTEM_KIOSK_DEVICE_KEY deve essere un segreto univoco di almeno 16 caratteri distinto da TOTEM_KIOSK_API_KEY.');
+  }
   if (isExample(process.env.ADMIN_INITIAL_PASSWORD) || process.env.ADMIN_INITIAL_PASSWORD!.length < 12) {
     throw new Error('ADMIN_INITIAL_PASSWORD di almeno 12 caratteri obbligatoria fuori dalla modalità demo.');
   }
