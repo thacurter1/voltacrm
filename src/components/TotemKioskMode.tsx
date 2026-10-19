@@ -151,40 +151,45 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
   return (
     <div 
       onPointerDown={resetInactivityTimer}
-      className="fixed inset-0 z-50 bg-[#0a2540] text-slate-100 flex flex-col justify-between select-none overflow-y-auto touch-manipulation font-sans"
+      className="fixed inset-0 z-50 bg-[#f6f9fc] text-[#0a2540] flex flex-col justify-between select-none overflow-y-auto touch-manipulation font-sans"
     >
       {/* Code-native graphics keep the touch surface clear and lightweight. */}
 
-      {/* TOP BAR: STRIPE TERMINAL KIOSK HEADER */}
-      <header className="relative z-10 px-6 sm:px-10 py-5 sm:py-6 flex items-center justify-between border-b border-white/10 bg-slate-950/40 backdrop-blur-md">
+      {/* TOP BAR: VOLTA ENERGIA KIOSK HEADER (ALLINEATO AL PORTALE BIANCO) */}
+      <header className="relative z-10 px-6 sm:px-10 py-4 sm:py-5 flex items-center justify-between border-b border-slate-200 bg-white shadow-xs">
         <div className="flex items-center gap-3.5">
-          <div className="h-12 w-12 rounded-2xl bg-[#635bff] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(99,91,255,0.4)]">
-            <Zap className="h-7 w-7 fill-white text-white" />
+          <div className="h-11 w-11 rounded-xl bg-[#635bff] flex items-center justify-center text-white shadow-xs">
+            <Zap className="h-6 w-6 fill-white text-white" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              VOLTA <span className="text-[#00d4aa]">TERMINAL</span>
-            </h1>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Totem Interattivo • Verifica delle bollette
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-black tracking-tight text-[#0a2540]">
+                Volta Energia
+              </h1>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25 uppercase tracking-wider">
+                Totem Touch
+              </span>
+            </div>
+            <span className="text-[11px] font-medium text-slate-500 block">
+              Comparatore & Verifica Bollette Luce e Gas
             </span>
           </div>
         </div>
 
         {/* Stepper summary & Inactivity ring */}
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-slate-300 font-medium">Sessione attiva:</span>
-            <span className="font-mono font-bold text-white">{secondsLeft}s</span>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-slate-600 font-medium">Sessione attiva:</span>
+            <span className="font-mono font-bold text-[#0a2540]">{secondsLeft}s</span>
           </div>
 
           <button
             type="button"
             onClick={resetSession}
-            className="min-h-[44px] px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer border border-white/10"
+            className="min-h-[44px] px-4 py-2 rounded-xl bg-white hover:bg-slate-50 active:scale-95 text-[#0a2540] text-xs font-bold flex items-center gap-2 transition-all cursor-pointer border border-slate-200 shadow-2xs"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
+            <RotateCcw className="h-3.5 w-3.5 text-[#635bff]" />
             <span>Ricomincia</span>
           </button>
 
@@ -192,7 +197,7 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
           <button
             type="button"
             onClick={() => setIsExitConfirmOpen(true)}
-            className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
+            className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-[#0a2540] transition-colors cursor-pointer flex items-center justify-center border border-slate-200"
             title="Ricomincia la sessione totem"
           >
             <X className="h-4 w-4" />
@@ -201,7 +206,7 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
       </header>
 
       {/* STEP INDICATOR BAR */}
-      <div className="relative z-10 max-w-2xl mx-auto w-full px-6 pt-4">
+      <div className="relative z-10 max-w-2xl mx-auto w-full px-6 pt-6">
         <div className="grid grid-cols-4 gap-2 text-center text-xs">
           {[
             { num: 1, label: 'Fornitura' },
@@ -212,12 +217,12 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
             const isCurrent = step === s.num;
             const isPassed = step > s.num;
             return (
-              <div key={s.num} className="space-y-1">
-                <div className={`h-1.5 rounded-full transition-all duration-300 ${
-                  isCurrent ? 'bg-[#00d4aa]' : isPassed ? 'bg-[#635bff]' : 'bg-white/10'
+              <div key={s.num} className="space-y-1.5">
+                <div className={`h-2 rounded-full transition-all duration-300 ${
+                  isCurrent ? 'bg-[#635bff]' : isPassed ? 'bg-emerald-500' : 'bg-slate-200'
                 }`} />
-                <span className={`text-[10px] uppercase font-bold tracking-wider ${
-                  isCurrent ? 'text-white' : isPassed ? 'text-slate-300' : 'text-slate-500'
+                <span className={`text-[10px] uppercase font-bold tracking-wider block ${
+                  isCurrent ? 'text-[#635bff]' : isPassed ? 'text-[#0a2540]' : 'text-slate-400'
                 }`}>
                   {s.label}
                 </span>
@@ -234,13 +239,13 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
         {step === 1 && (
           <div className="space-y-8 text-center w-full animate-in zoom-in-95 duration-200">
             <div className="space-y-2">
-              <span className="px-3.5 py-1 rounded-full bg-[#635bff]/20 text-[#635bff] border border-[#635bff]/30 text-xs font-black uppercase tracking-wider inline-block">
+              <span className="px-3.5 py-1 rounded-full bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25 text-xs font-black uppercase tracking-wider inline-block">
                 Passo 1 di 4
               </span>
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
+              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0a2540]">
                 Quale fornitura vuoi ottimizzare?
               </h2>
-              <p className="text-base sm:text-lg text-slate-300">
+              <p className="text-base sm:text-lg text-slate-600">
                 Tocca lo schermo per selezionare l'utenza
               </p>
             </div>
@@ -253,14 +258,14 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   setSelectedUtility('luce');
                   setStep(2);
                 }}
-                className="min-h-[180px] p-8 rounded-3xl bg-slate-900/60 hover:bg-slate-900/90 active:scale-95 border-2 border-white/15 hover:border-amber-400 text-center space-y-4 transition-all cursor-pointer shadow-xl group flex flex-col items-center justify-center"
+                className="min-h-[180px] p-8 rounded-3xl bg-white hover:bg-amber-50/40 active:scale-95 border-2 border-slate-200 hover:border-amber-400 text-center space-y-4 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col items-center justify-center"
               >
-                <div className="h-20 w-20 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Zap className="h-10 w-10 fill-amber-400" />
+                <div className="h-20 w-20 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                  <Zap className="h-10 w-10 fill-amber-500 text-amber-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-white">Solo LUCE</h3>
-                  <p className="text-xs text-slate-400 mt-1">Abitazione o Locale Commerciale</p>
+                  <h3 className="text-2xl font-black text-[#0a2540]">Solo LUCE</h3>
+                  <p className="text-xs text-slate-500 mt-1">Abitazione o Locale Commerciale</p>
                 </div>
               </button>
 
@@ -271,14 +276,14 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   setSelectedUtility('gas');
                   setStep(2);
                 }}
-                className="min-h-[180px] p-8 rounded-3xl bg-slate-900/60 hover:bg-slate-900/90 active:scale-95 border-2 border-white/15 hover:border-sky-400 text-center space-y-4 transition-all cursor-pointer shadow-xl group flex flex-col items-center justify-center"
+                className="min-h-[180px] p-8 rounded-3xl bg-white hover:bg-sky-50/40 active:scale-95 border-2 border-slate-200 hover:border-sky-400 text-center space-y-4 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col items-center justify-center"
               >
-                <div className="h-20 w-20 rounded-2xl bg-sky-400/20 text-sky-300 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Flame className="h-10 w-10 fill-sky-400" />
+                <div className="h-20 w-20 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center">
+                  <Flame className="h-10 w-10 fill-sky-500 text-sky-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-white">Solo GAS</h3>
-                  <p className="text-xs text-slate-400 mt-1">Riscaldamento & Acqua Calda</p>
+                  <h3 className="text-2xl font-black text-[#0a2540]">Solo GAS</h3>
+                  <p className="text-xs text-slate-500 mt-1">Riscaldamento & Acqua Calda</p>
                 </div>
               </button>
 
@@ -289,17 +294,17 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   setSelectedUtility('entrambe');
                   setStep(2);
                 }}
-                className="min-h-[180px] p-8 rounded-3xl bg-slate-900 hover:bg-slate-800 active:scale-95 border-2 border-[#635bff] text-center space-y-4 transition-all cursor-pointer group relative overflow-hidden flex flex-col items-center justify-center"
+                className="min-h-[180px] p-8 rounded-3xl bg-white hover:bg-[#635bff]/5 active:scale-95 border-2 border-[#635bff] text-center space-y-4 transition-all cursor-pointer shadow-md hover:shadow-lg relative overflow-hidden flex flex-col items-center justify-center"
               >
-                <div className="absolute top-0 right-0 bg-[#00d4aa] text-[#0a2540] font-black text-[10px] uppercase px-3 py-1 rounded-bl-xl shadow-md">
+                <div className="absolute top-0 right-0 bg-[#635bff] text-white font-black text-[10px] uppercase px-3 py-1 rounded-bl-xl shadow-xs">
                   Due forniture
                 </div>
-                <div className="h-20 w-20 rounded-2xl bg-[#635bff]/30 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Zap className="h-10 w-10 text-emerald-300" />
+                <div className="h-20 w-20 rounded-2xl bg-[#635bff]/10 text-[#635bff] flex items-center justify-center">
+                  <Zap className="h-10 w-10 text-[#635bff] fill-[#635bff]" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-white">LUCE + GAS</h3>
-                  <p className="text-xs text-emerald-300 font-bold mt-1">Luce e gas da valutare</p>
+                  <h3 className="text-2xl font-black text-[#0a2540]">LUCE + GAS</h3>
+                  <p className="text-xs text-[#635bff] font-bold mt-1">Luce e gas da valutare</p>
                 </div>
               </button>
             </div>
@@ -310,13 +315,13 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
         {step === 2 && (
           <div className="space-y-8 text-center w-full animate-in zoom-in-95 duration-200">
             <div className="space-y-2">
-              <span className="px-3.5 py-1 rounded-full bg-[#635bff]/20 text-[#635bff] border border-[#635bff]/30 text-xs font-black uppercase tracking-wider inline-block">
+              <span className="px-3.5 py-1 rounded-full bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25 text-xs font-black uppercase tracking-wider inline-block">
                 Passo 2 di 4
               </span>
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
+              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0a2540]">
                 Qual è la tua spesa media mensile?
               </h2>
-              <p className="text-base sm:text-lg text-slate-300">
+              <p className="text-base sm:text-lg text-slate-600">
                 Seleziona la fascia più vicina alle tue abitudini
               </p>
             </div>
@@ -329,11 +334,11 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   setSpendingBracket('bassa');
                   setStep(3);
                 }}
-                className="min-h-[160px] p-8 rounded-3xl bg-slate-900/60 hover:bg-slate-900/90 active:scale-95 border-2 border-white/15 hover:border-emerald-400 text-center space-y-3 transition-all cursor-pointer shadow-xl flex flex-col items-center justify-center"
+                className="min-h-[160px] p-8 rounded-3xl bg-white hover:bg-emerald-50/40 active:scale-95 border-2 border-slate-200 hover:border-emerald-500 text-center space-y-3 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col items-center justify-center"
               >
-                <span className="text-4xl sm:text-5xl block font-mono font-black text-slate-200">€ 50-80</span>
-                <span className="font-bold text-base text-white block">Consumi Moderati</span>
-                <span className="text-xs text-slate-400 block">Single o 1-2 persone</span>
+                <span className="text-4xl sm:text-5xl block font-mono font-black text-[#0a2540]">€ 50-80</span>
+                <span className="font-bold text-base text-[#0a2540] block">Consumi Moderati</span>
+                <span className="text-xs text-slate-500 block">Single o 1-2 persone</span>
               </button>
 
               {/* FASCIA 2: MEDIA */}
@@ -343,11 +348,11 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   setSpendingBracket('media');
                   setStep(3);
                 }}
-                className="min-h-[160px] p-8 rounded-3xl bg-[#635bff]/30 hover:bg-[#635bff]/50 active:scale-95 border-2 border-[#635bff] text-center space-y-3 transition-all cursor-pointer shadow-2xl flex flex-col items-center justify-center"
+                className="min-h-[160px] p-8 rounded-3xl bg-white hover:bg-[#635bff]/5 active:scale-95 border-2 border-[#635bff] text-center space-y-3 transition-all cursor-pointer shadow-md hover:shadow-lg flex flex-col items-center justify-center"
               >
-                <span className="text-4xl sm:text-5xl block font-mono font-black text-[#00d4aa]">€ 80-160</span>
-                <span className="font-bold text-base text-white block">Famiglia Standard</span>
-                <span className="text-xs text-emerald-300 font-semibold block">3-4 componenti / appartamento</span>
+                <span className="text-4xl sm:text-5xl block font-mono font-black text-[#635bff]">€ 80-160</span>
+                <span className="font-bold text-base text-[#0a2540] block">Famiglia Standard</span>
+                <span className="text-xs text-[#635bff] font-semibold block">3-4 componenti / appartamento</span>
               </button>
 
               {/* FASCIA 3: ALTA */}
@@ -357,11 +362,11 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   setSpendingBracket('alta');
                   setStep(3);
                 }}
-                className="min-h-[160px] p-8 rounded-3xl bg-slate-900/60 hover:bg-slate-900/90 active:scale-95 border-2 border-white/15 hover:border-amber-400 text-center space-y-3 transition-all cursor-pointer shadow-xl flex flex-col items-center justify-center"
+                className="min-h-[160px] p-8 rounded-3xl bg-white hover:bg-amber-50/40 active:scale-95 border-2 border-slate-200 hover:border-amber-500 text-center space-y-3 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col items-center justify-center"
               >
-                <span className="text-4xl sm:text-5xl block font-mono font-black text-amber-300">Oltre 160€</span>
-                <span className="font-bold text-base text-white block">Consumi Elevati</span>
-                <span className="text-xs text-slate-400 block">Ville, riscaldamento autonomo o uffici</span>
+                <span className="text-4xl sm:text-5xl block font-mono font-black text-amber-600">Oltre 160€</span>
+                <span className="font-bold text-base text-[#0a2540] block">Consumi Elevati</span>
+                <span className="text-xs text-slate-500 block">Ville, riscaldamento autonomo o uffici</span>
               </button>
             </div>
 
@@ -369,7 +374,7 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="text-slate-400 hover:text-white text-sm font-semibold flex items-center gap-1.5 mx-auto cursor-pointer p-2"
+                className="text-slate-600 hover:text-[#0a2540] text-sm font-semibold flex items-center gap-1.5 mx-auto cursor-pointer p-2"
               >
                 <ChevronLeft className="h-4 w-4" /> Torna alla scelta fornitura
               </button>
@@ -381,23 +386,23 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
         {step === 3 && (
           <div className="space-y-8 text-center w-full max-w-2xl animate-in zoom-in-95 duration-200">
             <div className="space-y-2">
-              <span className="px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-black uppercase tracking-wider inline-block">
+              <span className="px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black uppercase tracking-wider inline-block">
                 {DEMO_MODE ? 'Simulazione dimostrativa' : 'Prima valutazione'}
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-white">
+              <h2 className="text-3xl sm:text-4xl font-black text-[#0a2540]">
                 {DEMO_MODE ? 'Esempio di possibile risparmio' : 'Verifichiamo la tua bolletta insieme'}
               </h2>
             </div>
 
-            {/* RISPARMIO CARD IN STILE STRIPE TERMINAL */}
-            <div className="p-8 sm:p-10 rounded-3xl bg-slate-950/80 border-2 border-[#00d4aa] text-center space-y-4 shadow-[0_20px_50px_rgba(0,212,170,0.18)]">
-              <span className="text-xs font-bold uppercase tracking-widest text-[#00d4aa]">
+            {/* RISPARMIO CARD IN STILE VOLTA PORTALE BIANCO */}
+            <div className="p-8 sm:p-10 rounded-3xl bg-white border-2 border-[#635bff]/30 text-center space-y-4 shadow-xl">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#635bff]">
                 {DEMO_MODE ? 'Esempio di risparmio annuo' : 'Analisi personalizzata'}
               </span>
-              <div className="text-6xl sm:text-8xl font-black font-mono tracking-tight text-white">
-                {DEMO_MODE ? <>€ {estimatedSavings}<span className="text-2xl sm:text-4xl font-sans text-[#00d4aa] font-bold"> / anno</span></> : <span className="text-3xl sm:text-5xl font-sans">Richiedi una verifica</span>}
+              <div className="text-6xl sm:text-8xl font-black font-mono tracking-tight text-[#0a2540]">
+                {DEMO_MODE ? <>€ {estimatedSavings}<span className="text-2xl sm:text-4xl font-sans text-emerald-600 font-bold"> / anno</span></> : <span className="text-3xl sm:text-5xl font-sans">Richiedi una verifica</span>}
               </div>
-              <p className="text-xs sm:text-sm text-slate-300 pt-1 max-w-md mx-auto">
+              <p className="text-xs sm:text-sm text-slate-600 pt-1 max-w-md mx-auto">
                 {DEMO_MODE ? 'Importo dimostrativo basato sulla fascia scelta: non è un preventivo né una tariffa verificata.' : `Un consulente confronterà le condizioni reali della tua fornitura ${selectedUtility.toUpperCase()} prima di indicarti un eventuale risparmio.`}
               </p>
             </div>
@@ -406,7 +411,7 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="min-h-[64px] w-full py-4 rounded-2xl bg-[#00d4aa] hover:bg-[#00c29b] active:scale-95 text-[#0a2540] font-black text-base sm:text-lg flex items-center justify-center gap-3 transition-all cursor-pointer shadow-lg"
+                className="min-h-[64px] w-full py-4 rounded-2xl bg-[#635bff] hover:bg-[#5851ea] active:scale-95 text-white font-black text-base sm:text-lg flex items-center justify-center gap-3 transition-all cursor-pointer shadow-md"
               >
                 <span>{DEMO_MODE ? 'Continua con la simulazione' : 'Richiedi un ricontatto'}</span>
                 <ArrowRight className="h-5 w-5" />
@@ -415,33 +420,33 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="min-h-[64px] w-full py-4 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/20"
+                className="min-h-[64px] w-full py-4 rounded-2xl bg-white hover:bg-slate-50 active:scale-95 text-[#0a2540] font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer border border-slate-200 shadow-xs"
               >
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="h-4 w-4 text-[#635bff]" />
                 <span>Ricalcola con altri importi</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 4: TASTIERINO TOUCH INTEGRATO (ATM STYLE) */}
+        {/* STEP 4: TASTIERINO TOUCH INTEGRATO */}
         {step === 4 && (
           <div className="w-full max-w-md space-y-6 text-center animate-in zoom-in-95 duration-200">
             {!leadSent ? (
               <>
                 <div className="space-y-1">
-                  <h2 className="text-2xl sm:text-3xl font-black text-white">
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#0a2540]">
                     {DEMO_MODE ? 'Prova la richiesta di contatto' : 'A quale numero possiamo ricontattarti?'}
                   </h2>
-                  <p className="text-xs text-slate-300">
+                  <p className="text-xs text-slate-600">
                     {DEMO_MODE ? 'Inserisci il numero per la simulazione.' : 'Lascia il numero per essere ricontattato da un consulente.'}
                   </p>
                 </div>
 
                 {/* DISPLAY NUMERO TOUCH */}
-                <div className="p-4 rounded-2xl bg-slate-950/80 border-2 border-[#00d4aa] text-center shadow-inner">
-                  <span className="text-[11px] text-slate-400 block font-semibold mb-1">Numero di Cellulare:</span>
-                  <div className="text-3xl sm:text-4xl font-mono font-black tracking-widest text-[#00d4aa] min-h-[48px] flex items-center justify-center">
+                <div className="p-4 rounded-2xl bg-white border-2 border-[#635bff] text-center shadow-xs">
+                  <span className="text-[11px] text-slate-500 block font-semibold mb-1">Numero di Cellulare:</span>
+                  <div className="text-3xl sm:text-4xl font-mono font-black tracking-widest text-[#0a2540] min-h-[48px] flex items-center justify-center">
                     {phoneNumber ? `+39 ${phoneNumber}` : '+39 ...'}
                   </div>
                 </div>
@@ -453,7 +458,7 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                       key={digit}
                       type="button"
                       onClick={() => handleKeypadPress(digit)}
-                      className="min-h-[64px] rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 text-2xl font-mono font-bold text-white transition-all cursor-pointer flex items-center justify-center shadow-md border border-white/10"
+                      className="min-h-[64px] rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-100 active:scale-95 text-2xl font-mono font-bold text-[#0a2540] transition-all cursor-pointer flex items-center justify-center shadow-xs border border-slate-200"
                     >
                       {digit}
                     </button>
@@ -461,21 +466,21 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   <button
                     type="button"
                     onClick={() => setPhoneNumber('')}
-                    className="min-h-[64px] rounded-2xl bg-white/5 hover:bg-white/15 text-xs uppercase font-bold text-slate-300 transition-all cursor-pointer flex items-center justify-center border border-white/10"
+                    className="min-h-[64px] rounded-2xl bg-slate-100 hover:bg-slate-200 text-xs uppercase font-bold text-slate-600 transition-all cursor-pointer flex items-center justify-center border border-slate-200"
                   >
                     Cancella
                   </button>
                   <button
                     type="button"
                     onClick={() => handleKeypadPress('0')}
-                    className="min-h-[64px] rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 text-2xl font-mono font-bold text-white transition-all cursor-pointer flex items-center justify-center shadow-md border border-white/10"
+                    className="min-h-[64px] rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-100 active:scale-95 text-2xl font-mono font-bold text-[#0a2540] transition-all cursor-pointer flex items-center justify-center shadow-xs border border-slate-200"
                   >
                     0
                   </button>
                   <button
                     type="button"
                     onClick={handleKeypadDelete}
-                    className="min-h-[64px] rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-xs uppercase font-bold text-amber-300 transition-all cursor-pointer flex items-center justify-center border border-white/10"
+                    className="min-h-[64px] rounded-2xl bg-amber-50 hover:bg-amber-100 active:scale-95 text-xs uppercase font-bold text-amber-800 transition-all cursor-pointer flex items-center justify-center border border-amber-200"
                   >
                     ⌫ Indietro
                   </button>
@@ -486,32 +491,32 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
                   type="button"
                   onClick={handleFinishLead}
                   disabled={phoneNumber.length < 9 || isSending}
-                  className="w-full min-h-[56px] py-4 rounded-2xl bg-[#00d4aa] hover:bg-[#00c29b] active:scale-98 text-[#0a2540] font-black text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xl disabled:opacity-40 disabled:pointer-events-none"
+                  className="w-full min-h-[56px] py-4 rounded-2xl bg-[#635bff] hover:bg-[#5851ea] active:scale-98 text-white font-black text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md disabled:opacity-40 disabled:pointer-events-none"
                 >
                   <Send className="h-5 w-5" />
                   <span>{isSending ? 'Registrazione in corso…' : DEMO_MODE ? 'Invia richiesta demo' : 'Richiedi ricontatto'}</span>
                 </button>
 
-                {sendError && <p role="alert" className="text-sm font-semibold text-rose-300">{sendError}</p>}
+                {sendError && <p role="alert" className="text-sm font-semibold text-rose-600">{sendError}</p>}
 
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  className="text-slate-400 hover:text-white text-xs font-semibold block mx-auto cursor-pointer p-2"
+                  className="text-slate-600 hover:text-[#0a2540] text-xs font-semibold block mx-auto cursor-pointer p-2"
                 >
                   ← Torna alla valutazione
                 </button>
               </>
             ) : (
               /* SCHERMATA FINALE DI SUCCESSO */
-              <div className="p-8 sm:p-12 rounded-3xl bg-slate-950/90 border-2 border-emerald-400 text-center space-y-4 shadow-2xl animate-in zoom-in-95">
-                <div className="h-20 w-20 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <div className="p-8 sm:p-12 rounded-3xl bg-white border-2 border-emerald-500 text-center space-y-4 shadow-xl animate-in zoom-in-95">
+                <div className="h-20 w-20 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
                   <CheckCircle2 className="h-12 w-12" />
                 </div>
-                <h2 className="text-3xl font-black text-white">
+                <h2 className="text-3xl font-black text-[#0a2540]">
                   Richiesta Registrata!
                 </h2>
-                <p className="text-sm text-slate-300 max-w-sm mx-auto">
+                <p className="text-sm text-slate-600 max-w-sm mx-auto">
                   {DEMO_MODE ? 'La richiesta demo è stata registrata. Eventuali messaggi dipendono dal servizio configurato.' : 'La tua richiesta è stata registrata. Un consulente ti ricontatterà al numero indicato.'}
                 </p>
                 <div className="text-xs text-slate-500 pt-4">
@@ -525,11 +530,11 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
       </main>
 
       {/* FOOTER TERMINAL */}
-      <footer className="relative z-10 px-6 py-4 text-center text-xs text-slate-400 border-t border-white/10 bg-slate-950/40">
+      <footer className="relative z-10 px-6 py-4 text-center text-xs text-slate-500 border-t border-slate-200 bg-white">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>Volta Energia • Postazione informativa touch</span>
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+          <span className="font-semibold text-[#0a2540]">Volta Energia • Postazione informativa touch</span>
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
             <span>I dati inseriti servono per gestire la richiesta di contatto.</span>
           </div>
         </div>
@@ -537,7 +542,7 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
 
       {isExitConfirmOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center font-sans">
-          <div onClick={() => setIsExitConfirmOpen(false)} className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" />
+          <div onClick={() => setIsExitConfirmOpen(false)} className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs" />
           <div className="relative w-full max-w-sm bg-white text-[#0a2540] rounded-3xl p-6 sm:p-7 space-y-4 shadow-2xl text-xs border border-[#e3e8ee]">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div className="font-extrabold text-sm flex items-center gap-2">
@@ -569,7 +574,7 @@ export const TotemKioskMode: React.FC<TotemKioskModeProps> = ({
               <button
                 type="button"
                 onClick={onExitTotem}
-                className="flex-1 min-h-[44px] rounded-xl bg-[#0a2540] hover:bg-slate-800 text-white font-bold cursor-pointer shadow-xs"
+                className="flex-1 min-h-[44px] rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold cursor-pointer shadow-xs"
               >
                 Ricomincia
               </button>

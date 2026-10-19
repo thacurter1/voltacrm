@@ -60,8 +60,23 @@ try {
   const result = await response.json();
   assert.equal(result.estimatedSavingsAnnualEur, null, 'No savings without a real bill comparison');
   assert.match(result.advice, /verificherà la bolletta/i);
-  console.log('Dedicated-device boundary and honest kiosk estimate verified.');
+
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const totemAppSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'apps', 'TotemApp.tsx'), 'utf8');
+  const totemKioskSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'TotemKioskMode.tsx'), 'utf8');
+  assert.ok(
+    !totemAppSrc.includes('bg-slate-950') && !totemAppSrc.includes('bg-[#0a2540] px-5'),
+    'TotemApp.tsx must use a white/light surface aligned with the software instead of dark blue/slate backgrounds'
+  );
+  assert.ok(
+    !totemKioskSrc.includes('fixed inset-0 z-50 bg-[#0a2540]') && totemKioskSrc.includes('bg-white'),
+    'TotemKioskMode.tsx must use a white/light surface aligned with the software instead of a dark #0a2540 root background'
+  );
+
+  console.log('Dedicated-device boundary, light theme alignment, and honest kiosk estimate verified.');
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
+

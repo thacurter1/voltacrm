@@ -51,7 +51,7 @@ export const TotemApp: React.FC = () => {
 
   if (!deviceKey) {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center bg-[#0a2540] px-5 py-10 text-white">
+      <main className="flex min-h-[100dvh] items-center justify-center bg-[#f6f9fc] px-5 py-10 text-[#0a2540]">
         <form onSubmit={async (event) => {
           event.preventDefault();
           const value = pendingKey.trim();
@@ -68,23 +68,31 @@ export const TotemApp: React.FC = () => {
           } finally {
             setIsVerifying(false);
           }
-        }} className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-8 shadow-2xl">
-          <div className="mb-8 flex items-center gap-3"><span className="flex size-12 items-center justify-center rounded-xl bg-[#635bff]"><Zap className="size-6" /></span><span className="text-xl font-black">Volta Terminal</span></div>
-          <Monitor className="mb-5 size-10 text-[#00d4aa]" aria-hidden="true" />
-          <h1 className="text-2xl font-black">Configura questa postazione</h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-300">La chiave del dispositivo va inserita una sola volta dallo staff. Non compare nel sito pubblico.</p>
-          <label htmlFor="device-key" className="mt-7 block text-sm font-semibold">Chiave della postazione</label>
-          <input id="device-key" type="password" autoComplete="off" required value={pendingKey} onChange={event => setPendingKey(event.target.value)} className="mt-2 min-h-12 w-full rounded-xl border border-white/20 bg-slate-950 px-4 text-white outline-none focus:border-[#00d4aa]" />
-          {setupError && <p role="alert" className="mt-3 text-sm text-rose-300">{setupError}</p>}
-          <button type="submit" disabled={isVerifying} className="mt-5 min-h-12 w-full rounded-xl bg-[#00d4aa] px-5 font-bold text-[#0a2540] hover:bg-[#00c29b] disabled:opacity-60">{isVerifying ? 'Verifica in corso…' : 'Attiva il totem'}</button>
-          <p className="mt-6 flex items-center gap-2 text-xs text-slate-400"><ShieldCheck className="size-4" aria-hidden="true" /> Usa questa pagina solo sul dispositivo dedicato e bloccato in modalità kiosk.</p>
+        }} className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+          <div className="mb-8 flex items-center gap-3">
+            <span className="flex size-12 items-center justify-center rounded-xl bg-[#635bff] text-white shadow-xs">
+              <Zap className="size-6 fill-white" />
+            </span>
+            <div>
+              <span className="text-xl font-black text-[#0a2540] block leading-tight">Volta Energia</span>
+              <span className="text-xs font-bold text-[#635bff]">Postazione Totem Touch</span>
+            </div>
+          </div>
+          <Monitor className="mb-5 size-10 text-[#635bff]" aria-hidden="true" />
+          <h1 className="text-2xl font-black text-[#0a2540]">Configura questa postazione</h1>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">La chiave del dispositivo va inserita una sola volta dallo staff. Non compare nel sito pubblico.</p>
+          <label htmlFor="device-key" className="mt-7 block text-sm font-semibold text-[#0a2540]">Chiave della postazione</label>
+          <input id="device-key" type="password" autoComplete="off" required value={pendingKey} onChange={event => setPendingKey(event.target.value)} className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-[#0a2540] outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/20" />
+          {setupError && <p role="alert" className="mt-3 text-sm font-semibold text-rose-600">{setupError}</p>}
+          <button type="submit" disabled={isVerifying} className="mt-5 min-h-12 w-full rounded-xl bg-[#635bff] px-5 font-bold text-white hover:bg-[#5851ea] disabled:opacity-60 cursor-pointer transition-colors shadow-xs">{isVerifying ? 'Verifica in corso…' : 'Attiva il totem'}</button>
+          <p className="mt-6 flex items-center gap-2 text-xs text-slate-500"><ShieldCheck className="size-4 text-emerald-600 shrink-0" aria-hidden="true" /> Usa questa pagina solo sul dispositivo dedicato e bloccato in modalità kiosk.</p>
         </form>
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 select-none touch-manipulation">
+    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] select-none touch-manipulation">
       <TotemKioskMode
         key={sessionKey}
         isOpen={true}
