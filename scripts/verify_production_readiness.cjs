@@ -120,10 +120,22 @@ function verifyConfig(env) {
   }
 
   // 6. Integrazioni Terze Parti (Opzionali)
-  if (env.GEMINI_API_KEY) {
+  for (const [k, v] of Object.entries(env)) {
+    if (k.startsWith('VITE_') && typeof v === 'string' && /AIza[0-9A-Za-z_-]{20,50}/.test(v)) {
+      errors.push(`VIOLAZIONE SICUREZZA CHIAVE AI: Trovata chiave Google Gemini in chiaro nella variabile ${k}. Le chiavi API devono risiedere SOLO sul backend (Render) in forma cifrata (GEMINI_API_KEY_ENCRYPTED).`);
+    }
+  }
+
+  if (env.GEMINI_API_KEY_ENCRYPTED) {
+    if (!env.GEMINI_API_KEY_ENCRYPTED.startsWith('enc:v1:')) {
+      errors.push('GEMINI_API_KEY_ENCRYPTED deve iniziare con il prefisso envelope "enc:v1:". Usare node scripts/encrypt_gemini_key.cjs per generarla.');
+    } else {
+      passed.push('Google Gemini Vision API configurata in modalita protetta cifrata (AES-256-GCM).');
+    }
+  } else if (env.GEMINI_API_KEY) {
     passed.push('Google Gemini Vision API configurata per OCR avanzato bollette.');
   } else {
-    warnings.push('GEMINI_API_KEY non configurata. Il sistema userà il parser OCR standard basato su espressioni regolari.');
+    warnings.push('GEMINI_API_KEY non configurata. Il sistema usera il parser OCR standard basato su espressioni regolari.');
   }
 
   if (env.WHATSAPP_CLOUD_API_TOKEN || env.TWILIO_ACCOUNT_SID) {

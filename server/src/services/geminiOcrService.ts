@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { z } from 'zod';
+import { withDecryptedGeminiKey } from './secretVault.js';
 dotenv.config();
 
 export interface ExtractedBillData {
@@ -51,15 +52,11 @@ export async function analyzeBillWithGemini(
   mimeType: string,
   base64Data: string
 ): Promise<ExtractedBillData> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  return withDecryptedGeminiKey(async (apiKey) => {
+    try {
+      const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+      console.log(`[Gemini OCR] Invio documento a Google Gemini (${model}, ${fileName}, ${mimeType})...`);
 
-  if (!apiKey) {
-    throw Object.assign(new Error('OCR Gemini non configurato: GEMINI_API_KEY obbligatoria.'), { status: 503 });
-  }
-
-  try {
-      console.log(`[Gemini OCR] Invio documento a Gemini 2.5 Flash (${fileName}, ${mimeType})...`);
-      
       const prompt = `Sei l'assistente AI di VoltaCRM, esperto certificato ARERA nel mercato energetico italiano (luce e gas).
 Analizza questa bolletta o fattura ed estrai rigorosamente in formato JSON i dati essenziali:
 {
@@ -82,11 +79,14 @@ Analizza questa bolletta o fattura ed estrai rigorosamente in formato JSON i dat
 }
 Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
 
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
         signal: AbortSignal.timeout(20000),
         body: JSON.stringify({
           contents: [
@@ -96,17 +96,17 @@ Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
                 {
                   inlineData: {
                     mimeType: mimeType || 'application/pdf',
-                    data: base64Data
-                  }
-                }
-              ]
-            }
+                    data: base64Data,
+                  },
+                },
+              ],
+            },
           ],
           generationConfig: {
             temperature: 0.1,
-            responseMimeType: 'application/json'
-          }
-        })
+            responseMimeType: 'application/json',
+          },
+        }),
       });
 
       if (!res.ok) {
@@ -119,7 +119,7 @@ Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
       const parsed = JSON.parse(textContent);
       const validated = extractedBillSchema.safeParse(parsed);
       if (!validated.success) {
-        throw new Error('Dati OCR incompleti o non validi: ' + validated.error.issues.map(issue => issue.path.join('.')).join(', '));
+        throw new Error('Dati OCR incompleti o non validi: ' + validated.error.issues.map((issue) => issue.path.join('.')).join(', '));
       }
       const bill = validated.data;
       console.log(`[Gemini OCR] Estrazione completata con successo per ${fileName}.`);
@@ -141,9 +141,10 @@ Rispondi ESCLUSIVAMENTE con il JSON valido senza blocchi markdown.`;
         estimatedSavingEur: bill.estimatedSavingEur,
         confidenceScore: bill.confidenceScore,
         period: bill.period,
-        notes: 'Analizzato con successo tramite Google Gemini 2.0 Flash Vision.'
+        notes: `Analizzato con successo tramite Google Gemini Vision (${model}).`,
       };
     } catch (err: any) {
       throw Object.assign(new Error(`OCR Gemini non disponibile: ${err.message}`), { status: 503 });
     }
+  });
 }

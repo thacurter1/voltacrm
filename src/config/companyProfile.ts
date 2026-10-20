@@ -24,13 +24,14 @@ export const COMPANY_PROFILE: CompanyProfile = {
   privacyEmail: env.VITE_COMPANY_PRIVACY_EMAIL || 'privacy@voltaenergia.it',
   pecEmail: env.VITE_COMPANY_PEC || 'voltaenergia@pec.it',
   isConfiguredCorporateIdentity: Boolean(
-    env.VITE_COMPANY_NAME &&
-      env.VITE_COMPANY_VAT &&
-      env.VITE_COMPANY_ADDRESS &&
-      env.VITE_COMPANY_TOLL_FREE &&
-      env.VITE_COMPANY_SUPPORT_EMAIL &&
-      env.VITE_COMPANY_PRIVACY_EMAIL &&
-      env.VITE_COMPANY_PEC
+    env.VITE_CONFIRM_CORPORATE_IDENTITY === 'true' ||
+      (env.VITE_COMPANY_NAME &&
+        env.VITE_COMPANY_VAT &&
+        env.VITE_COMPANY_ADDRESS &&
+        env.VITE_COMPANY_TOLL_FREE &&
+        env.VITE_COMPANY_SUPPORT_EMAIL &&
+        env.VITE_COMPANY_PRIVACY_EMAIL &&
+        env.VITE_COMPANY_PEC)
   ),
 };
 
