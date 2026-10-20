@@ -51,7 +51,10 @@ app.use(cors({
             parsed.hostname === `clienti.${rootDomain}` ||
             parsed.hostname === `cliente.${rootDomain}` ||
             parsed.hostname === `staff.${rootDomain}` ||
-            parsed.hostname === `crm.${rootDomain}`
+            parsed.hostname === `crm.${rootDomain}` ||
+            parsed.hostname.startsWith('clienti-') ||
+            parsed.hostname.startsWith('staff-') ||
+            parsed.hostname.startsWith('crm-')
           );
         } catch {
           return false;

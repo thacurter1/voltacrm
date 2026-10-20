@@ -119,6 +119,8 @@ function UnifiedApp() {
         params.get('portal') === 'staff' ||
         params.get('login') === 'true' ||
         host.startsWith('staff.') ||
+        host.startsWith('staff-') ||
+        host.startsWith('crm-') ||
         host.startsWith('crm.') ||
         pathname === '/staff' ||
         pathname === '/crm'
@@ -135,6 +137,8 @@ function UnifiedApp() {
       return (
         params.get('login') === 'customer' ||
         host.startsWith('clienti.') ||
+        host.startsWith('clienti-') ||
+        host.startsWith('cliente-') ||
         host.startsWith('cliente.') ||
         pathname === '/clienti' ||
         pathname === '/cliente'

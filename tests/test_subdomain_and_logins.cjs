@@ -26,7 +26,9 @@ const viteConfig = fs.readFileSync(path.join(__dirname, '..', 'vite.config.ts'),
 const serverIndex = fs.readFileSync(path.join(__dirname, '..', 'server', 'src', 'index.ts'), 'utf8');
 
 // 1. Subdomain detection in App.tsx supports both clienti.* / cliente.* and staff.* / crm.*
-test('App.tsx: detects customer subdomains (clienti.* and cliente.*) and staff subdomains (staff.* and crm.*)', () => {
+test('App.tsx: detects customer subdomains (clienti.* and cliente.* and clienti-*) and staff subdomains (staff.* and crm.* and staff-*)', () => {
+  assert.ok(appTsx.includes("host.startsWith('clienti-')"), 'Must support clienti- Vercel subdomains');
+  assert.ok(appTsx.includes("host.startsWith('staff-')"), 'Must support staff- Vercel subdomains');
   assert.ok(
     appTsx.includes("portalHost.startsWith('clienti.')") && appTsx.includes("portalHost.startsWith('cliente.')"),
     'App.tsx must detect both clienti.* and cliente.* subdomains as customer portal'
