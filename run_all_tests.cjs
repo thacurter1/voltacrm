@@ -143,7 +143,10 @@ async function main() {
     path.join('tests', 'test_audit_8b5a734_edgecases.cjs'),
     path.join('tests', 'test_gemini_secret_vault.cjs'),
     path.join('tests', 'test_cors_security_hardening.cjs'),
-    path.join('tests', 'test_totp_secret_validation.cjs')
+    path.join('tests', 'test_totp_secret_validation.cjs'),
+    path.join('tests', 'test_supabase_leads_rls_hardening.cjs'),
+    path.join('tests', 'test_gemini_vault_domain_separation.cjs'),
+    path.join('tests', 'test_operator_2fa_configuration.cjs')
   ];
 
   let passed = 0;

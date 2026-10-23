@@ -11,6 +11,7 @@ try {
     SUPABASE_SECRET_KEY: 'sb_secret_valid_test_key_not_for_network',
     ADMIN_INITIAL_PASSWORD: 'a-test-password-longer-than-12',
     ADMIN_2FA_SECRET: 'a-test-totp-secret-longer-than-20',
+    OPERATOR_2FA_SECRET: 'a-test-operator-totp-secret-longer-than-20',
     ADMIN_EMAIL: 'admin@test.invalid',
   });
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;

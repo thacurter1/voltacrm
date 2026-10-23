@@ -19,6 +19,7 @@ process.env.SUPABASE_URL = 'https://audit-project.supabase.co';
 process.env.SUPABASE_SERVICE_ROLE_KEY = crypto.randomBytes(32).toString('hex');
 process.env.ADMIN_INITIAL_PASSWORD = crypto.randomBytes(20).toString('hex');
 process.env.ADMIN_2FA_SECRET = crypto.randomBytes(20).toString('hex');
+process.env.OPERATOR_2FA_SECRET = crypto.randomBytes(20).toString('hex');
 process.env.ADMIN_EMAIL = 'audit.admin@volta.invalid';
 assert.doesNotThrow(validateProductionConfiguration);
 process.env.JWT_SECRET = 'your-super-secret-jwt-key-change-in-production';
