@@ -146,7 +146,11 @@ async function main() {
     path.join('tests', 'test_totp_secret_validation.cjs'),
     path.join('tests', 'test_supabase_leads_rls_hardening.cjs'),
     path.join('tests', 'test_gemini_vault_domain_separation.cjs'),
-    path.join('tests', 'test_operator_2fa_configuration.cjs')
+    path.join('tests', 'test_operator_2fa_configuration.cjs'),
+    path.join('tests', 'test_security_audit_logging.cjs'),
+    path.join('tests', 'test_session_account_status_revocation.cjs'),
+    path.join('tests', 'test_portal_bill_download_nullcheck.cjs'),
+    path.join('tests', 'test_csp_configuration_hardening.cjs')
   ];
 
   let passed = 0;
