@@ -9,8 +9,13 @@ import { createAccountInvitation, inspectAccountInvitation, acceptAccountInvitat
 
 import { verifyTotp } from '../utils/totp.js';
 import { verifyOAuthToken } from '../services/oauthVerifier.js';
+import { addSecurityLog } from '../services/operationsService.js';
 
 export const authRouter = Router();
+
+const getClientIp = (req: Request): string => {
+  return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || req.socket?.remoteAddress || 'unknown';
+};
 
 const toSafeProfile = (user: any) => {
   const { password: _password, twoFactorSecret: _secret, oauthSubject: _oauthSubject,
@@ -40,11 +45,18 @@ authRouter.post('/demo-login', loginLimiter, (req: Request, res: Response): void
 });
 
 // POST /api/auth/login-operator
-authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), (req: Request, res: Response): void => {
+authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), async (req: Request, res: Response): Promise<void> => {
   const { email, password, totpCode } = req.body;
   const user = users.find(u => u.email.toLowerCase() === (email || '').toLowerCase() && u.role !== 'customer');
 
   if (!user || !bcrypt.compareSync(password, user.password)) {
+    await addSecurityLog({
+      eventType: 'login_failed_operator',
+      userEmail: (email || 'unknown').toLowerCase(),
+      ipAddress: getClientIp(req),
+      status: 'warning',
+      details: 'Credenziali operatore errate'
+    }).catch(err => console.error('[SecurityLog Error]', err));
     res.status(401).json({ success: false, message: 'Credenziali operatore non valide.' });
     return;
   }
@@ -69,12 +81,27 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
     const isDevMock = isDemoAllowed() && totpCode === '123456';
 
     if (!isTotpValid && !isDevMock) {
+      await addSecurityLog({
+        eventType: 'totp_failed_operator',
+        userEmail: user.email,
+        ipAddress: getClientIp(req),
+        status: 'warning',
+        details: 'Codice 2FA non valido o scaduto'
+      }).catch(err => console.error('[SecurityLog Error]', err));
       res.status(403).json({ success: false, message: 'Codice 2FA non valido o scaduto.' });
       return;
     }
   }
 
   const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+
+  await addSecurityLog({
+    eventType: 'login_success_operator',
+    userEmail: user.email,
+    ipAddress: getClientIp(req),
+    status: 'safe',
+    details: 'Autenticazione operatore completata con successo'
+  }).catch(err => console.error('[SecurityLog Error]', err));
 
   res.json({
     success: true,
@@ -84,7 +111,7 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
 });
 
 // POST /api/auth/login-customer
-authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), (req: Request, res: Response): void => {
+authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), async (req: Request, res: Response): Promise<void> => {
   const { identifier, password } = req.body;
   const query = (identifier || '').trim().toLowerCase();
   
@@ -96,6 +123,13 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
   );
 
   if (!user || !bcrypt.compareSync(password, user.password)) {
+    await addSecurityLog({
+      eventType: 'login_failed_customer',
+      userEmail: query || 'unknown',
+      ipAddress: getClientIp(req),
+      status: 'warning',
+      details: 'Credenziali cliente non valide'
+    }).catch(err => console.error('[SecurityLog Error]', err));
     res.status(401).json({ success: false, message: 'Credenziali cliente non valide.' });
     return;
   }
@@ -105,6 +139,14 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
   }
 
   const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+
+  await addSecurityLog({
+    eventType: 'login_success_customer',
+    userEmail: user.email,
+    ipAddress: getClientIp(req),
+    status: 'safe',
+    details: 'Autenticazione cliente completata con successo'
+  }).catch(err => console.error('[SecurityLog Error]', err));
 
   res.json({
     success: true,

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { users } from '../services/dataStore.js';
+import { addSecurityLog } from '../services/operationsService.js';
 
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
@@ -73,8 +74,16 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 };
 
 export const requireRole = (...roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+  return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user || !roles.includes(req.user.role)) {
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || req.socket?.remoteAddress || 'unknown';
+      await addSecurityLog({
+        eventType: 'rbac_violation',
+        userEmail: req.user?.email || 'unknown',
+        ipAddress: clientIp,
+        status: 'warning',
+        details: `Accesso negato: ruolo '${req.user?.role || 'unknown'}' non autorizzato per ${req.originalUrl || req.url}`,
+      }).catch(err => console.error('[SecurityLog Error]', err));
       res.status(403).json({ success: false, message: 'Accesso negato. Privilegi insufficienti.' });
       return;
     }
