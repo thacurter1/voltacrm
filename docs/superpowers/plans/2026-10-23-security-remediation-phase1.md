@@ -31,14 +31,14 @@
 - Consumes: `origin` header da richiesta HTTP.
 - Produces: `callback(null, true)` solo se l'origine è esattamente nell'elenco `allowedOrigins` o è un sottodominio valido del rootDomain (es. `clienti.rootDomain`, `staff.rootDomain`) o un preview deployment Vercel legittimo ancorato a `.vercel.app`. Rifiuta qualsiasi dominio tipo `https://clienti-attacker.com` o `https://staff-evil.org`.
 
-- [ ] **Step 1: Scrivere il test per verificare il fallimento (Red)**
+- [x] **Step 1: Scrivere il test per verificare il fallimento (Red)**
 Creare `tests/test_cors_security_hardening.cjs` che simula richieste CORS con origin legittimi (`http://localhost:5173`, `http://clienti.localhost:5173`, `https://clienti.voltagroup.it`) e con origin ostili (`https://clienti-evil.com`, `https://staff-phishing.org`, `https://crm-attacker.net`). Verificare che attualmente gli origin ostili vengano erroneamente ammessi.
 
-- [ ] **Step 2: Eseguire il test per verificare che fallisce**
+- [x] **Step 2: Eseguire il test per verificare che fallisce**
 Eseguire: `node tests/test_cors_security_hardening.cjs`
 Atteso: FAIL (gli origin malevoli vengono ammessi da `startsWith('clienti-')`).
 
-- [ ] **Step 3: Correggere la logica CORS in `server/src/index.ts`**
+- [x] **Step 3: Correggere la logica CORS in `server/src/index.ts`**
 Rimuovere il matching aperto `parsed.hostname.startsWith('clienti-')` che non controlla il dominio genitore, sostituendolo con controlli rigorosi:
 ```typescript
 const isAllowedProdSubdomain = allowedOrigins.some(allowed => {
@@ -64,11 +64,11 @@ const isAllowedProdSubdomain = allowedOrigins.some(allowed => {
 });
 ```
 
-- [ ] **Step 4: Eseguire il test per verificare che passa (Green)**
+- [x] **Step 4: Eseguire il test per verificare che passa (Green)**
 Eseguire: `node tests/test_cors_security_hardening.cjs`
 Atteso: PASS (tutti i test di ammissione legittima passano, tutti i test di domini malevoli vengono respinti).
 
-- [ ] **Step 5: Commit delle modifiche CORS**
+- [x] **Step 5: Commit delle modifiche CORS**
 ```bash
 git add server/src/index.ts tests/test_cors_security_hardening.cjs
 git commit -m "fix(security): sanitize CORS subdomain matching against malicious domain prefixes (SEC-01)"
@@ -86,19 +86,19 @@ git commit -m "fix(security): sanitize CORS subdomain matching against malicious
 - Consumes: dipendenza `proxy-addr` in `server/package-lock.json`.
 - Produces: `proxy-addr >= 2.0.8` priva di GHSA-jqcg-44mw-7w3h.
 
-- [ ] **Step 1: Verificare l'advisory attuale di vulnerabilità critica**
+- [x] **Step 1: Verificare l'advisory attuale di vulnerabilità critica**
 Eseguire: `npm.cmd audit --prefix server --json`
 Atteso: 1 vulnerabilità critical (`proxy-addr`).
 
-- [ ] **Step 2: Aggiornare la dipendenza `proxy-addr` nel package-lock del server**
+- [x] **Step 2: Aggiornare la dipendenza `proxy-addr` nel package-lock del server**
 Eseguire l'aggiornamento mirato della dipendenza nel server senza toccare i contratti di versione di produzione.
 Verificare che la versione installata di `proxy-addr` sia `>= 2.0.8`.
 
-- [ ] **Step 3: Verificare con `npm audit` l'azzeramento della vulnerabilità critica**
+- [x] **Step 3: Verificare con `npm audit` l'azzeramento della vulnerabilità critica**
 Eseguire: `npm.cmd audit --prefix server --json`
 Atteso: 0 vulnerabilità critical.
 
-- [ ] **Step 4: Commit delle modifiche alle dipendenze**
+- [x] **Step 4: Commit delle modifiche alle dipendenze**
 ```bash
 git add server/package-lock.json
 git commit -m "fix(security): update proxy-addr to patch GHSA-jqcg-44mw-7w3h IP spoofing (SEC-02)"
@@ -120,29 +120,29 @@ git commit -m "fix(security): update proxy-addr to patch GHSA-jqcg-44mw-7w3h IP 
 - Consumes: `process.env.ADMIN_2FA_SECRET`.
 - Produces: blocco esplicito di `JBSWY3DPEHPK3PXP` in `runtimeConfig.ts` e `verify_production_readiness.cjs`, e sostituzione nel file `.env` con un segreto crittograficamente sicuro a 32 caratteri Base32 senza stampare il segreto nei log.
 
-- [ ] **Step 1: Scrivere il test per la validazione del segreto 2FA**
+- [x] **Step 1: Scrivere il test per la validazione del segreto 2FA**
 Creare `tests/test_totp_secret_validation.cjs` che verifica che la funzione di validazione:
 - Rifiuti `JBSWY3DPEHPK3PXP` e sue ripetizioni come segreto non sicuro.
 - Rifiuti stringhe più corte di 20 caratteri o contenenti `VOLTA_`.
 - Accetti un segreto casuale Base32 ad alta entropia.
 
-- [ ] **Step 2: Eseguire il test per verificare il fallimento attuale**
+- [x] **Step 2: Eseguire il test per verificare il fallimento attuale**
 Eseguire: `node tests/test_totp_secret_validation.cjs`
 Atteso: FAIL (perché `JBSWY3DPEHPK3PXP` attualmente viene accettato da `runtimeConfig.ts`).
 
-- [ ] **Step 3: Aggiornare `runtimeConfig.ts` e `verify_production_readiness.cjs`**
+- [x] **Step 3: Aggiornare `runtimeConfig.ts` e `verify_production_readiness.cjs`**
 Aggiungere il controllo esplicito per bloccare il test vector pubblico RFC 3548 / Google Authenticator (`JBSWY3DPEHPK3PXP`).
 Aggiornare `docs/DEPLOYMENT_GUIDE.md` e `server/.env.production.example` per rimuovere il seed statico di default e documentare il comando di generazione sicura:
 `node -e "console.log(require('crypto').randomBytes(20).toString('hex'))"` o script Base32 dedicato.
 
-- [ ] **Step 4: Generare un segreto Base32 casuale forte e aggiornare `server/.env`**
+- [x] **Step 4: Generare un segreto Base32 casuale forte e aggiornare `server/.env`**
 Generare un segreto crittograficamente casuale (32 caratteri Base32) e aggiornare `ADMIN_2FA_SECRET` in `server/.env` in modo programmatico senza stamparlo nei log.
 
-- [ ] **Step 5: Verificare il superamento del test e del pre-flight check**
+- [x] **Step 5: Verificare il superamento del test e del pre-flight check**
 Eseguire: `node tests/test_totp_secret_validation.cjs` e `node scripts/verify_production_readiness.cjs --env-file=server/.env`
 Atteso: Entrambi completati con successo (PASS).
 
-- [ ] **Step 6: Commit delle modifiche di validazione e documentazione**
+- [x] **Step 6: Commit delle modifiche di validazione e documentazione**
 ```bash
 git add server/src/services/runtimeConfig.ts scripts/verify_production_readiness.cjs server/.env.production.example docs/DEPLOYMENT_GUIDE.md tests/test_totp_secret_validation.cjs
 git commit -m "fix(security): forbid known RFC 3548 TOTP example seed and enforce random admin 2FA secret (SEC-03)"
@@ -152,7 +152,7 @@ git commit -m "fix(security): forbid known RFC 3548 TOTP example seed and enforc
 
 ### Task 4: Verifica Finale di Regressione della Fase 1
 
-- [ ] **Step 1: Esecuzione di tutti i test della suite**
+- [x] **Step 1: Esecuzione di tutti i test della suite**
 Eseguire `node run_all_tests.cjs` per verificare che nessuna funzionalità preesistente sia stata impattata.
-- [ ] **Step 2: Verifica con `scripts/verify_production_readiness.cjs`**
+- [x] **Step 2: Verifica con `scripts/verify_production_readiness.cjs`**
 Verificare il passaggio di tutti i check di produzione.
