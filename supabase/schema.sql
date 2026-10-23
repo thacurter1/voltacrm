@@ -421,7 +421,7 @@ drop policy if exists "Operatori gestiscono leads" on public.leads;
 create policy "Operatori gestiscono leads" on public.leads for all to authenticated using (public.is_operator_or_admin());
 
 drop policy if exists "Inserimento lead aperto per kiosk" on public.leads;
-create policy "Inserimento lead aperto per kiosk" on public.leads for insert to anon, authenticated with check (true);
+revoke all on public.leads from anon;
 
 -- Policy Signature Logs: Immutabili (lettura per operatori o per il cliente intestatario del contratto)
 drop policy if exists "Visualizzazione log di firma" on public.signature_logs;
@@ -450,7 +450,7 @@ create policy "Aggiornamento stato lettura notifiche proprietario" on public.not
     public.is_operator_or_admin()
   );
 
-grant select, insert, update on public.leads to authenticated, anon;
+grant select, insert, update on public.leads to authenticated;
 grant select, insert on public.signature_logs to authenticated;
 grant select, insert, update on public.notifications to authenticated;
 
