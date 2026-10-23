@@ -28,6 +28,12 @@ export function validateProductionConfiguration(): void {
   if (isExample(process.env.ADMIN_2FA_SECRET) || process.env.ADMIN_2FA_SECRET!.length < 20 || process.env.ADMIN_2FA_SECRET!.includes('VOLTA_') || process.env.ADMIN_2FA_SECRET!.includes('JBSWY3DPEHPK3PXP')) {
     throw new Error('ADMIN_2FA_SECRET univoco di almeno 20 caratteri obbligatorio fuori dalla modalità demo. Non usare prefisso VOLTA_ o il seed di test JBSWY3DPEHPK3PXP.');
   }
+  if (isExample(process.env.OPERATOR_2FA_SECRET) || process.env.OPERATOR_2FA_SECRET!.length < 20 || process.env.OPERATOR_2FA_SECRET!.includes('VOLTA_') || process.env.OPERATOR_2FA_SECRET!.includes('JBSWY3DPEHPK3PXP')) {
+    throw new Error('OPERATOR_2FA_SECRET univoco di almeno 20 caratteri obbligatorio fuori dalla modalità demo. Non usare prefisso VOLTA_ o il seed di test JBSWY3DPEHPK3PXP.');
+  }
+  if (process.env.OPERATOR_2FA_SECRET === process.env.ADMIN_2FA_SECRET) {
+    throw new Error('Violazione di sicurezza: OPERATOR_2FA_SECRET non può coincidere con ADMIN_2FA_SECRET.');
+  }
   if (process.env.GEMINI_API_KEY_ENCRYPTED) {
     if (isExample(process.env.GEMINI_VAULT_SECRET) || !process.env.GEMINI_VAULT_SECRET || process.env.GEMINI_VAULT_SECRET.length < 32) {
       throw new Error('GEMINI_VAULT_SECRET univoco di almeno 32 caratteri obbligatorio per decifrare GEMINI_API_KEY_ENCRYPTED fuori dalla modalità demo.');

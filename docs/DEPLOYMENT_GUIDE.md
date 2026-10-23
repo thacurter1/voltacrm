@@ -57,6 +57,7 @@ Configura le seguenti variabili nel pannello di controllo dell'hosting backend (
 | `ADMIN_EMAIL` | Email dell'amministratore per il bootstrap iniziale (es. `amministrazione@voltacrm.it`) | Al primo avvio |
 | `ADMIN_INITIAL_PASSWORD` | Password sicura ($\ge 12$ caratteri, maiuscole, numeri, simboli) | Al primo avvio |
 | `ADMIN_2FA_SECRET` | Segreto TOTP Base32 casuale ad alta entropia ($\ge 20$ caratteri, NON usare seed di esempio) | Al primo avvio |
+| `OPERATOR_2FA_SECRET` | Segreto TOTP Base32 casuale ad alta entropia ($\ge 20$ caratteri, DISTINTO da admin) per 2FA operatori | **Sì** |
 | `GEMINI_VAULT_SECRET` | Master key dedicata ($\ge 32$ caratteri, DISTINTA da `JWT_SECRET`) per cifrare la chiave Gemini | Se si usa OCR cifrato |
 | `GEMINI_API_KEY_ENCRYPTED` | Busta cifrata AES-256-GCM (`enc:v1:...`) generata con `node scripts/encrypt_gemini_key.cjs` | Consigliata |
 | `GEMINI_API_KEY` | Chiave Google Gemini Vision API per OCR avanzato bollette (in chiaro se non cifrata) | Opzionale |
