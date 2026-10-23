@@ -25,8 +25,8 @@ export function validateProductionConfiguration(): void {
   if (isExample(process.env.ADMIN_INITIAL_PASSWORD) || process.env.ADMIN_INITIAL_PASSWORD!.length < 12) {
     throw new Error('ADMIN_INITIAL_PASSWORD di almeno 12 caratteri obbligatoria fuori dalla modalità demo.');
   }
-  if (isExample(process.env.ADMIN_2FA_SECRET) || process.env.ADMIN_2FA_SECRET!.length < 20 || process.env.ADMIN_2FA_SECRET!.includes('VOLTA_')) {
-    throw new Error('ADMIN_2FA_SECRET univoco di almeno 20 caratteri obbligatorio fuori dalla modalità demo. Non usare prefisso VOLTA_.');
+  if (isExample(process.env.ADMIN_2FA_SECRET) || process.env.ADMIN_2FA_SECRET!.length < 20 || process.env.ADMIN_2FA_SECRET!.includes('VOLTA_') || process.env.ADMIN_2FA_SECRET!.includes('JBSWY3DPEHPK3PXP')) {
+    throw new Error('ADMIN_2FA_SECRET univoco di almeno 20 caratteri obbligatorio fuori dalla modalità demo. Non usare prefisso VOLTA_ o il seed di test JBSWY3DPEHPK3PXP.');
   }
   if (!process.env.ADMIN_EMAIL || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.ADMIN_EMAIL) || process.env.ADMIN_EMAIL === 'admin@example.com') {
     throw new Error('ADMIN_EMAIL reale obbligatoria fuori dalla modalità demo.');

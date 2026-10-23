@@ -56,7 +56,7 @@ Configura le seguenti variabili nel pannello di controllo dell'hosting backend (
 | `SUPABASE_SERVICE_ROLE_KEY` | Chiave privata `service_role` (da Supabase Dashboard $\rightarrow$ Settings $\rightarrow$ API) | **Sì** |
 | `ADMIN_EMAIL` | Email dell'amministratore per il bootstrap iniziale (es. `amministrazione@voltacrm.it`) | Al primo avvio |
 | `ADMIN_INITIAL_PASSWORD` | Password sicura ($\ge 12$ caratteri, maiuscole, numeri, simboli) | Al primo avvio |
-| `ADMIN_2FA_SECRET` | Segreto TOTP Base32 ($\ge 20$ caratteri, es. `JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP`) | Al primo avvio |
+| `ADMIN_2FA_SECRET` | Segreto TOTP Base32 casuale ad alta entropia ($\ge 20$ caratteri, NON usare seed di esempio) | Al primo avvio |
 | `GEMINI_API_KEY` | Chiave Google Gemini Vision API per OCR avanzato bollette | Consigliata |
 | `WHATSAPP_CLOUD_API_TOKEN` | Token permanente Meta Graph API per messaggistica | Opzionale |
 | `WHATSAPP_PHONE_NUMBER_ID` | Phone ID WhatsApp Business API | Opzionale |

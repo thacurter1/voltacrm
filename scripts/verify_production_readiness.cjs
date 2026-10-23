@@ -100,8 +100,8 @@ function verifyConfig(env) {
     const secret2fa = env.ADMIN_2FA_SECRET || '';
     if (secret2fa.length < 20) {
       errors.push('ADMIN_2FA_SECRET troppo corta (minimo 20 caratteri Base32 richiesti).');
-    } else if (secret2fa.includes('VOLTA_')) {
-      errors.push('ADMIN_2FA_SECRET contiene la parola "VOLTA_". Deve essere un segreto TOTP univoco non prevedibile.');
+    } else if (secret2fa.includes('VOLTA_') || secret2fa.includes('JBSWY3DPEHPK3PXP')) {
+      errors.push('ADMIN_2FA_SECRET contiene "VOLTA_" o il seed di test pubblico RFC "JBSWY3DPEHPK3PXP". Deve essere un segreto TOTP univoco generato casualmente.');
     } else {
       passed.push('ADMIN_2FA_SECRET conforme allo standard TOTP Authenticator.');
     }
@@ -194,7 +194,7 @@ function runVerification() {
       SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid-service-role-key',
       ADMIN_EMAIL: 'admin@voltacrm.it',
       ADMIN_INITIAL_PASSWORD: 'Xk9#mQ2$vL8!zW4*pT7^',
-      ADMIN_2FA_SECRET: 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP',
+      ADMIN_2FA_SECRET: 'NBSWY3DPEHPK3PXP7BSWY3DPEHPK3PXQ',
       CORS_ORIGIN: 'https://voltacrm.it,https://app.voltacrm.it',
       TOTEM_KIOSK_DEVICE_KEY: 'kiosk-prod-key-9f8e7d6c5b4a3f2e1d0c',
       VITE_TOTEM_HOSTNAME: 'voltacrm-totem.vercel.app',
