@@ -141,7 +141,9 @@ async function main() {
     path.join('tests', 'test_audit_2026_10_19_p1_p2.cjs'),
     path.join('tests', 'test_persistence_roundtrip_and_concurrency.cjs'),
     path.join('tests', 'test_audit_8b5a734_edgecases.cjs'),
-    path.join('tests', 'test_gemini_secret_vault.cjs')
+    path.join('tests', 'test_gemini_secret_vault.cjs'),
+    path.join('tests', 'test_cors_security_hardening.cjs'),
+    path.join('tests', 'test_totp_secret_validation.cjs')
   ];
 
   let passed = 0;
