@@ -180,7 +180,7 @@ export interface UserProfile {
   assignedBrokerName?: string;
   avatar?: string;
   is2faEnabled?: boolean;
-  onboardingStatus?: 'active' | 'invited' | 'pending_verification';
+  onboardingStatus?: 'active' | 'invited' | 'pending_verification' | 'suspended';
   createdAt?: string;
 }
 

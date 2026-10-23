@@ -14,7 +14,7 @@ export interface UserProfile {
   avatar?: string;
   is2faEnabled?: boolean;
   twoFactorSecret?: string;
-  onboardingStatus?: 'active' | 'invited' | 'pending_verification';
+  onboardingStatus?: 'active' | 'invited' | 'pending_verification' | 'suspended';
   createdAt?: string;
 }
 

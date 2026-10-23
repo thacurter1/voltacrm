@@ -52,6 +52,18 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
       res.status(403).json({ success: false, message: 'Token demo non valido.' });
       return;
     }
+    if (current.onboardingStatus === 'suspended') {
+      const clientIp = req.ip || req.socket?.remoteAddress || 'unknown';
+      addSecurityLog({
+        eventType: 'suspended_account_access_attempt',
+        userEmail: current.email,
+        ipAddress: clientIp,
+        status: 'warning',
+        details: 'Tentativo di accesso con token valido ma account sospeso'
+      }).catch(err => console.error('[SecurityLog Error]', err));
+      res.status(403).json({ success: false, message: 'Account sospeso. Contattare l’amministratore.' });
+      return;
+    }
     req.user = { userId: current.id, email: current.email, role: current.role };
     next();
     return;
@@ -66,6 +78,18 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     const current = users.find(account => account.id === decoded.userId);
     if (!current || current.role !== decoded.role || current.email?.toLowerCase() !== decoded.email?.toLowerCase()) {
       res.status(403).json({ success: false, message: 'Sessione non più valida o privilegi modificati.' });
+      return;
+    }
+    if (current.onboardingStatus === 'suspended') {
+      const clientIp = req.ip || req.socket?.remoteAddress || 'unknown';
+      addSecurityLog({
+        eventType: 'suspended_account_access_attempt',
+        userEmail: current.email,
+        ipAddress: clientIp,
+        status: 'warning',
+        details: 'Tentativo di accesso con token valido ma account sospeso'
+      }).catch(err => console.error('[SecurityLog Error]', err));
+      res.status(403).json({ success: false, message: 'Account sospeso. Contattare l’amministratore.' });
       return;
     }
     req.user = { userId: current.id, email: current.email, role: current.role };
