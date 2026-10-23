@@ -678,6 +678,9 @@ portalRouter.get('/bills', handlePortalRoute(async (req: AuthRequest, res: Respo
 portalRouter.get('/bills/:id/download', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
   const actor = resolveActor(req);
   const bill = await portalService.getBill(req.params.id);
+  if (!bill) {
+    throw httpError('Bolletta richiesta non trovata.', 404);
+  }
   const authUser = req.user;
   const profile = users.find((item) => item.id === authUser?.userId);
 
