@@ -28,6 +28,14 @@ export function validateProductionConfiguration(): void {
   if (isExample(process.env.ADMIN_2FA_SECRET) || process.env.ADMIN_2FA_SECRET!.length < 20 || process.env.ADMIN_2FA_SECRET!.includes('VOLTA_') || process.env.ADMIN_2FA_SECRET!.includes('JBSWY3DPEHPK3PXP')) {
     throw new Error('ADMIN_2FA_SECRET univoco di almeno 20 caratteri obbligatorio fuori dalla modalità demo. Non usare prefisso VOLTA_ o il seed di test JBSWY3DPEHPK3PXP.');
   }
+  if (process.env.GEMINI_API_KEY_ENCRYPTED) {
+    if (isExample(process.env.GEMINI_VAULT_SECRET) || !process.env.GEMINI_VAULT_SECRET || process.env.GEMINI_VAULT_SECRET.length < 32) {
+      throw new Error('GEMINI_VAULT_SECRET univoco di almeno 32 caratteri obbligatorio per decifrare GEMINI_API_KEY_ENCRYPTED fuori dalla modalità demo.');
+    }
+    if (process.env.GEMINI_VAULT_SECRET === process.env.JWT_SECRET) {
+      throw new Error('Violazione di sicurezza: GEMINI_VAULT_SECRET non può coincidere con JWT_SECRET (richiesta separazione di dominio crittografico).');
+    }
+  }
   if (!process.env.ADMIN_EMAIL || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.ADMIN_EMAIL) || process.env.ADMIN_EMAIL === 'admin@example.com') {
     throw new Error('ADMIN_EMAIL reale obbligatoria fuori dalla modalità demo.');
   }

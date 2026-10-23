@@ -5,16 +5,35 @@ const HKDF_INFO = Buffer.from('voltacrm-gemini-vault-v1', 'utf8');
 const GCM_AAD = Buffer.from('voltacrm:gemini:v1', 'utf8');
 
 function resolveMasterSecret(explicitMasterSecret?: string): string {
-  const master =
-    explicitMasterSecret ||
-    process.env.GEMINI_VAULT_SECRET ||
-    process.env.JWT_SECRET;
-  if (!master || master.trim().length < 16) {
-    throw new Error(
-      'Segreto master per il vault (GEMINI_VAULT_SECRET o JWT_SECRET) mancante o troppo corto.'
-    );
+  if (explicitMasterSecret && explicitMasterSecret.trim().length >= 16) {
+    return explicitMasterSecret.trim();
   }
-  return master.trim();
+
+  const isDemo = process.env.VOLTA_DEMO_MODE === 'true';
+  const isTest = process.env.NODE_ENV === 'test';
+
+  const vaultSecret = process.env.GEMINI_VAULT_SECRET?.trim();
+  const jwtSecret = process.env.JWT_SECRET?.trim();
+
+  if (!isDemo && !isTest) {
+    if (!vaultSecret || vaultSecret.length < 32) {
+      throw new Error(
+        'Configurazione di sicurezza non valida: GEMINI_VAULT_SECRET (minimo 32 caratteri) obbligatoria per il vault crittografico.'
+      );
+    }
+    if (jwtSecret && vaultSecret === jwtSecret) {
+      throw new Error(
+        'Violazione di separazione crittografica: GEMINI_VAULT_SECRET non può coincidere con JWT_SECRET.'
+      );
+    }
+    return vaultSecret;
+  }
+
+  const master = vaultSecret || jwtSecret || 'test-vault-master-secret-fallback-for-tests';
+  if (!master || master.length < 16) {
+    throw new Error('Segreto master per il vault mancante o troppo corto.');
+  }
+  return master;
 }
 
 function deriveVaultKey(masterSecret: string, salt: Buffer): Buffer {

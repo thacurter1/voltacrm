@@ -132,6 +132,14 @@ function verifyConfig(env) {
     } else {
       passed.push('Google Gemini Vision API configurata in modalita protetta cifrata (AES-256-GCM).');
     }
+    const vaultSec = env.GEMINI_VAULT_SECRET || '';
+    if (!vaultSec || vaultSec.length < 32) {
+      errors.push('GEMINI_VAULT_SECRET mancante o troppo corto (minimo 32 caratteri richiesti per la separazione crittografica).');
+    } else if (vaultSec === env.JWT_SECRET) {
+      errors.push('Violazione di sicurezza: GEMINI_VAULT_SECRET coincide con JWT_SECRET. È richiesta una chiave master separata.');
+    } else {
+      passed.push('GEMINI_VAULT_SECRET configurata con separazione crittografica di dominio.');
+    }
   } else if (env.GEMINI_API_KEY) {
     passed.push('Google Gemini Vision API configurata per OCR avanzato bollette.');
   } else {
@@ -196,6 +204,8 @@ function runVerification() {
       ADMIN_INITIAL_PASSWORD: 'Xk9#mQ2$vL8!zW4*pT7^',
       ADMIN_2FA_SECRET: 'NBSWY3DPEHPK3PXP7BSWY3DPEHPK3PXQ',
       CORS_ORIGIN: 'https://voltacrm.it,https://app.voltacrm.it',
+      GEMINI_VAULT_SECRET: '8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b',
+      GEMINI_API_KEY_ENCRYPTED: 'enc:v1:0123456789abcdef0123456789abcdef:0123456789abcdef01234567:0123456789abcdef0123456789abcdef:abcdef0123456789abcdef0123456789',
       TOTEM_KIOSK_DEVICE_KEY: 'kiosk-prod-key-9f8e7d6c5b4a3f2e1d0c',
       VITE_TOTEM_HOSTNAME: 'voltacrm-totem.vercel.app',
       NODE_ENV: 'production'
