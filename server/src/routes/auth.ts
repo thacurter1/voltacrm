@@ -24,8 +24,21 @@ const toSafeProfile = (user: any) => {
   return safeUser;
 };
 
+const rejectIfSuspended = async (user: any, req: Request, res: Response): Promise<boolean> => {
+  if (user?.onboardingStatus !== 'suspended') return false;
+  await addSecurityLog({
+    eventType: 'suspended_account_access_attempt',
+    userEmail: user.email,
+    ipAddress: getClientIp(req),
+    status: 'warning',
+    details: `Tentativo di accesso al login con account sospeso su ${req.originalUrl || req.url}`,
+  }).catch(err => console.error('[SecurityLog Error]', err));
+  res.status(403).json({ success: false, message: 'Account sospeso. Contattare l’amministratore.' });
+  return true;
+};
+
 // POST /api/auth/demo-login (Accesso rapido 1-click in modalità demo / testing)
-authRouter.post('/demo-login', loginLimiter, (req: Request, res: Response): void => {
+authRouter.post('/demo-login', loginLimiter, async (req: Request, res: Response): Promise<void> => {
   if (!isDemoAllowed()) {
     res.status(404).json({ success: false, message: 'Endpoint non trovato.' });
     return;
@@ -36,6 +49,7 @@ authRouter.post('/demo-login', loginLimiter, (req: Request, res: Response): void
     res.status(404).json({ success: false, message: 'Account demo non trovato.' });
     return;
   }
+  if (await rejectIfSuspended(user, req, res)) return;
   const token = generateToken({ userId: user.id, email: user.email, role: user.role });
   res.json({
     success: true,
@@ -64,6 +78,7 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
     res.status(403).json({ success: false, message: 'Completa prima l’attivazione del tuo invito.' });
     return;
   }
+  if (await rejectIfSuspended(user, req, res)) return;
 
   // Verifica 2FA TOTP (se abilitato, richiede codice valido)
   if (user.is2faEnabled) {
@@ -137,6 +152,7 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
     res.status(403).json({ success: false, message: 'Completa prima l’attivazione del tuo invito.' });
     return;
   }
+  if (await rejectIfSuspended(user, req, res)) return;
 
   const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
@@ -255,6 +271,7 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
   const emailOwner = users.find(u => u.email.toLowerCase() === targetEmail);
 
   // OAuth is a customer sign-in method. Matching a staff email must never bypass staff 2FA.
+  if (user && await rejectIfSuspended(user, req, res)) return;
   if (user && user.role !== 'customer') {
     res.status(403).json({ success: false, message: 'Per lo staff è richiesto l’accesso con credenziali aziendali e 2FA.' });
     return;

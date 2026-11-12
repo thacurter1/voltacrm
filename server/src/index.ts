@@ -52,7 +52,10 @@ app.use(cors({
             parsed.hostname === `cliente.${rootDomain}` ||
             parsed.hostname === `staff.${rootDomain}` ||
             parsed.hostname === `crm.${rootDomain}` ||
-            (base.hostname.endsWith('.vercel.app') && parsed.hostname.endsWith('.vercel.app') && (parsed.hostname.startsWith('clienti-') || parsed.hostname.startsWith('staff-') || parsed.hostname.startsWith('crm-')))
+            (base.hostname.endsWith('.vercel.app') && parsed.hostname.endsWith('.vercel.app') && (() => {
+              const baseSlug = base.hostname.replace(/\.vercel\.app$/, '').replace(/^(clienti|cliente|staff|crm)-/, '');
+              return ['clienti-', 'staff-', 'crm-'].some(prefix => parsed.hostname === `${prefix}${baseSlug}.vercel.app` || parsed.hostname.startsWith(`${prefix}${baseSlug}-`));
+            })())
 
 
           );

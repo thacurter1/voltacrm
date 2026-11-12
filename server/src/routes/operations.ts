@@ -64,7 +64,28 @@ operationsRouter.get('/appointments', async (req: AuthRequest, res: Response) =>
 });
 
 operationsRouter.post('/appointments', async (req: AuthRequest, res: Response) => {
-  const appointment = await saveAppointment(parseAppointment(req.body));
+  const parsed = parseAppointment(req.body);
+  const actor = users.find(u => u.id === req.user?.userId);
+  if (actor && (actor.role === 'broker' || actor.role === 'operator')) {
+    const existing = (await listAppointments()).find(a => a.id === parsed.id);
+    if (existing && !canActorAccessAppointment(existing, actor)) {
+      res.status(403).json({ success: false, message: 'Accesso negato: non puoi modificare appuntamenti assegnati ad altri consulenti.' });
+      return;
+    }
+    const actorName = (actor.name || '').trim();
+    const linkedLead = getLeads().find(l => l.id === parsed.leadId);
+    const ownsLead = !linkedLead || (
+      linkedLead.assignedBrokerId === actor.id ||
+      linkedLead.assignedBrokerId === actorName ||
+      linkedLead.assignedAgent === actor.id ||
+      linkedLead.assignedAgent === actorName
+    );
+    if (!ownsLead || !canActorAccessAppointment(parsed, actor)) {
+      res.status(403).json({ success: false, message: 'Accesso negato: non puoi creare appuntamenti per lead o consulenti altrui.' });
+      return;
+    }
+  }
+  const appointment = await saveAppointment(parsed);
   res.status(201).json({ success: true, appointment });
 });
 

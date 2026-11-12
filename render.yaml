@@ -28,3 +28,9 @@ services:
         sync: false
       - key: TOTEM_KIOSK_DEVICE_KEY
         sync: false
+      - key: OPERATOR_2FA_SECRET
+        sync: false
+      - key: GEMINI_VAULT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY_ENCRYPTED
+        sync: false

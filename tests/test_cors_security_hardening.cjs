@@ -1,5 +1,4 @@
 const assert = require('assert');
-const url = require('url');
 
 console.log('🧪 Running CORS Security Hardening Suite (SEC-01)...');
 
@@ -17,58 +16,15 @@ function test(name, fn) {
   }
 }
 
-// We import the actual CORS origin resolver logic from server/src/index.ts
-// Or we test the compiled / source function directly.
-// Let's create an origin checker using the server's exact algorithm.
-
 const fs = require('fs');
 const path = require('path');
 const serverIndexCode = fs.readFileSync(path.join(__dirname, '..', 'server', 'src', 'index.ts'), 'utf8');
-
-// Extract allowedOrigins and origin resolver logic from server/src/index.ts
-// We also create an isolated test function that mirrors the current logic to assert RED -> GREEN.
-
-function evaluateOrigin(origin, allowedOrigins) {
-  if (!origin || allowedOrigins.includes(origin)) {
-    return true;
-  }
-  try {
-    const parsed = new URL(origin);
-    const isLocalSubdomain = parsed.hostname === 'localhost' || parsed.hostname.endsWith('.localhost');
-    const isAllowedProdSubdomain = allowedOrigins.some(allowed => {
-      try {
-        const base = new URL(allowed);
-        const rootDomain = base.hostname.replace(/^(www|clienti|cliente|staff|crm)\./, '');
-        const isExactSub = (
-          parsed.hostname === rootDomain ||
-          parsed.hostname === `clienti.${rootDomain}` ||
-          parsed.hostname === `cliente.${rootDomain}` ||
-          parsed.hostname === `staff.${rootDomain}` ||
-          parsed.hostname === `crm.${rootDomain}`
-        );
-        // Secure check: vercel previews are only allowed if base domain is *.vercel.app AND target ends with .vercel.app
-        const isVercelPreview = base.hostname.endsWith('.vercel.app') && (
-          (parsed.hostname.startsWith('clienti-') || parsed.hostname.startsWith('staff-') || parsed.hostname.startsWith('crm-')) &&
-          parsed.hostname.endsWith('.vercel.app')
-        );
-        return parsed.protocol === base.protocol && (isExactSub || isVercelPreview);
-      } catch {
-        return false;
-      }
-    });
-    if (isLocalSubdomain || isAllowedProdSubdomain) {
-      return true;
-    }
-  } catch {}
-  return false;
-}
 
 // Function to test the actual server/src/index.ts implementation
 function extractServerCorsChecker() {
   // Extract the function body between `cors({` and `})` in server/src/index.ts
   const match = serverIndexCode.match(/cors\(\{\s*origin:\s*\(([^)]+)\)\s*=>\s*\{([\s\S]*?)\},\s*methods:/);
   if (!match) throw new Error('Could not find cors origin handler in server/src/index.ts');
-  const params = match[1].split(',').map(s => s.trim());
   const body = match[2];
   
   // Reconstruct runner
@@ -136,6 +92,13 @@ test('Malicious domain starting with crm- MUST be rejected', () => {
 test('Arbitrary domains MUST be rejected', () => {
   assert.strictEqual(isServerOriginAllowed('https://random-site.com'), false);
   assert.strictEqual(isServerOriginAllowed('https://attacker.voltagroup.it.evil.com'), false);
+});
+
+test('Vercel preview subdomains must match project slug (CODE-03)', () => {
+  assert.strictEqual(isServerOriginAllowed('https://clienti-voltacrm.vercel.app'), true);
+  assert.strictEqual(isServerOriginAllowed('https://staff-voltacrm.vercel.app'), true);
+  assert.strictEqual(isServerOriginAllowed('https://clienti-attacker.vercel.app'), false, 'Unrelated vercel.app project must NOT be allowed');
+  assert.strictEqual(isServerOriginAllowed('https://staff-evil.vercel.app'), false, 'Unrelated vercel.app project must NOT be allowed');
 });
 
 console.log(`\n📊 CORS Security Hardening Suite: ${passed} passati, ${failed} falliti.`);

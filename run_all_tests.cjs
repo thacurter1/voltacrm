@@ -150,7 +150,8 @@ async function main() {
     path.join('tests', 'test_security_audit_logging.cjs'),
     path.join('tests', 'test_session_account_status_revocation.cjs'),
     path.join('tests', 'test_portal_bill_download_nullcheck.cjs'),
-    path.join('tests', 'test_csp_configuration_hardening.cjs')
+    path.join('tests', 'test_csp_configuration_hardening.cjs'),
+    path.join('tests', 'test_audit_2026_11_12_remediation.cjs')
   ];
 
   let passed = 0;
