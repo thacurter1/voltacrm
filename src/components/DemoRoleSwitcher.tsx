@@ -80,7 +80,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-3 right-4 z-50 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 shadow-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+        className="fixed bottom-3 right-4 z-40 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 shadow-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
         title="Apri selettore rapido ruoli Demo"
       >
         <Users className="w-3.5 h-3.5 text-amber-400" />

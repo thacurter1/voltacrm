@@ -37,7 +37,7 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({ onOpenLegal }) => {
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 z-40 p-3 sm:p-4 animate-in slide-in-from-bottom duration-300 pointer-events-none"
+      className="fixed bottom-0 inset-x-0 z-50 p-3 sm:p-4 animate-in slide-in-from-bottom duration-300 pointer-events-none"
       role="region"
       aria-label="Informativa sui cookie"
     >

@@ -165,6 +165,29 @@ function verifyConfig(env) {
     warnings.push('Provider WhatsApp Cloud / Twilio non configurato. Gli operatori useranno il link diretto 1-click wa.me.');
   }
 
+  // 6b. Provider Email Transazionale e URL Pubblico (verifica email, recupero password, inviti)
+  const emailProvider = (env.EMAIL_PROVIDER || '').trim().toLowerCase();
+  const hasResend = emailProvider === 'resend' && Boolean(env.RESEND_API_KEY && env.RESEND_API_KEY.trim());
+  const hasWebhook = emailProvider === 'webhook' && Boolean(env.EMAIL_WEBHOOK_URL && env.EMAIL_WEBHOOK_URL.trim());
+  if (hasResend || hasWebhook) {
+    passed.push(`Provider email transazionale configurato (${emailProvider}).`);
+  } else if (emailProvider === 'resend') {
+    errors.push('EMAIL_PROVIDER=resend configurato ma manca RESEND_API_KEY.');
+  } else if (emailProvider === 'webhook') {
+    errors.push('EMAIL_PROVIDER=webhook configurato ma manca EMAIL_WEBHOOK_URL.');
+  } else {
+    warnings.push('Provider email transazionale (EMAIL_PROVIDER=resend + RESEND_API_KEY oppure EMAIL_PROVIDER=webhook + EMAIL_WEBHOOK_URL) non configurato: verifica email, recupero password, cambio email e inviti staff non inviano email reali.');
+  }
+
+  const publicUrl = (env.APP_PUBLIC_URL || '').trim();
+  if (!publicUrl) {
+    warnings.push('APP_PUBLIC_URL non configurato sul backend: i link email useranno il fallback di origine configurato.');
+  } else if (!publicUrl.startsWith('https://') && env.NODE_ENV === 'production') {
+    errors.push(`APP_PUBLIC_URL in produzione deve usare HTTPS, ricevuto: "${publicUrl}".`);
+  } else {
+    passed.push(`APP_PUBLIC_URL configurato (${publicUrl}).`);
+  }
+
   // 7. Configurazione Totem Kiosk (Sicurezza Chiave Dispositivo)
   if (env.VITE_TOTEM_DEVICE_TOKEN || env.VITE_TOTEM_KIOSK_DEVICE_KEY || env.VITE_KIOSK_DEVICE_KEY) {
     errors.push('VIOLAZIONE SICUREZZA TOTEM: Trovata chiave segreta del totem in una variabile VITE_* (es. VITE_TOTEM_DEVICE_TOKEN / VITE_TOTEM_KIOSK_DEVICE_KEY). Non inserire MAI la chiave del dispositivo in variabili VITE_* (verrebbero esposte nel bundle pubblico). Usare TOTEM_KIOSK_DEVICE_KEY solo sul backend (Render) e inserire la chiave nel browser del totem al primo avvio.');
@@ -222,6 +245,10 @@ function runVerification() {
       GEMINI_API_KEY_ENCRYPTED: 'enc:v1:0123456789abcdef0123456789abcdef:0123456789abcdef01234567:0123456789abcdef0123456789abcdef:abcdef0123456789abcdef0123456789',
       TOTEM_KIOSK_DEVICE_KEY: 'kiosk-prod-key-9f8e7d6c5b4a3f2e1d0c',
       VITE_TOTEM_HOSTNAME: 'voltacrm-totem.vercel.app',
+      APP_PUBLIC_URL: 'https://voltacrm.vercel.app',
+      EMAIL_PROVIDER: 'resend',
+      RESEND_API_KEY: 're_test_configured_key',
+      EMAIL_FROM: 'VoltaCRM <noreply@voltacrm.it>',
       NODE_ENV: 'production'
     };
     const resGood = verifyConfig(goodConfig);
