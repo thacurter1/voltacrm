@@ -57,13 +57,13 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
 
         {/* Navigation & Actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          {/* View toggle (Offerte / Le mie forniture) */}
+          {/* View toggle (Offerte / Le mie forniture / Il mio Account) */}
           {!isPublicVisitor && (
-            <nav className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold shrink-0" aria-label="Navigazione portale">
+            <nav className="flex flex-wrap sm:flex-nowrap bg-slate-100 p-1 rounded-xl text-[11px] sm:text-xs font-bold max-w-full" aria-label="Navigazione portale">
               <button
                 type="button"
                 onClick={() => onSelectView('offers')}
-                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
                   activeView === 'offers'
                     ? 'bg-white text-[#0a2540] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -75,7 +75,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectView('supplies')}
-                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
                   activeView === 'supplies'
                     ? 'bg-white text-[#0a2540] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -87,7 +87,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectView('account')}
-                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
                   activeView === 'account'
                     ? 'bg-white text-[#0a2540] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
