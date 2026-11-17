@@ -138,7 +138,7 @@ async function safeAddNotification(notification: AppNotification): Promise<void>
 }
 
 function extractIdempotencyKey(req: AuthRequest): string | undefined {
-  const headerKey = req.headers['x-idempotency-key'];
+  const headerKey = req.headers['x-idempotency-key'] ?? req.headers['idempotency-key'];
   if (typeof headerKey === 'string' && headerKey.trim()) return headerKey.trim();
   const bodyKey = req.body?.idempotencyKey;
   if (typeof bodyKey === 'string' && bodyKey.trim()) return bodyKey.trim();

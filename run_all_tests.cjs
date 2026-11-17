@@ -153,7 +153,14 @@ async function main() {
     path.join('tests', 'test_session_account_status_revocation.cjs'),
     path.join('tests', 'test_portal_bill_download_nullcheck.cjs'),
     path.join('tests', 'test_csp_configuration_hardening.cjs'),
-    path.join('tests', 'test_audit_2026_11_12_remediation.cjs')
+    path.join('tests', 'test_audit_2026_11_12_remediation.cjs'),
+    path.join('tests', 'test_portal_authenticated_idempotency_and_assignment.cjs'),
+    path.join('tests', 'test_email_and_fiscal_validation.cjs'),
+    path.join('tests', 'test_migration_20261117_and_token_store.cjs'),
+    path.join('tests', 'test_account_lifecycle_e2e.cjs'),
+    path.join('tests', 'test_customer_account_and_guest_claim.cjs'),
+    path.join('tests', 'test_frontend_operational_flows.cjs'),
+    path.join('tests', 'test_full_customer_journey_e2e.cjs')
   ];
 
   let passed = 0;
