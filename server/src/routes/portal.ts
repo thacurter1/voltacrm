@@ -81,9 +81,30 @@ function formatUtmNote(utmSource?: unknown, utmCampaign?: unknown, utmMedium?: u
   return `Campagna ADV: ${utmSource.trim()}${utmCampaign ? ` (${String(utmCampaign).trim()})` : ''}${utmMedium ? ` [${String(utmMedium).trim()}]` : ''}`;
 }
 
-function resolveDefaultBrokerId(): string {
-  const defaultBroker = users.find((u) => u.role === 'broker' || u.role === 'operator');
-  return defaultBroker?.id || 'user-op-2';
+function isAccountActive(user: any): boolean {
+  return Boolean(
+    user &&
+    user.onboardingStatus !== 'suspended' &&
+    user.onboardingStatus !== 'invited' &&
+    user.onboardingStatus !== 'pending_verification'
+  );
+}
+
+function isActiveStaffBroker(user: any): boolean {
+  return Boolean(user && ['broker', 'operator'].includes(user.role) && isAccountActive(user));
+}
+
+function resolveDefaultBrokerId(): string | undefined {
+  const defaultBroker = users.find((u) => isActiveStaffBroker(u));
+  return defaultBroker?.id;
+}
+
+function resolveActiveAssignedBrokerId(preferredBrokerId?: string): string | undefined {
+  if (!preferredBrokerId) return undefined;
+  const assigned = users.find(
+    (u) => u.id === preferredBrokerId && ['admin', 'broker', 'operator'].includes(u.role) && isAccountActive(u)
+  );
+  return assigned?.id;
 }
 
 function canBrokerAccessBill(bill: PortalBillRecord, profile: UserProfile): boolean {
@@ -203,7 +224,7 @@ portalRouter.post('/consultations', publicFunnelLimiter, optionalAuthenticateTok
       createdAt: new Date().toISOString().split('T')[0],
       estimatedConsumptionKwh: utilityType === 'luce' ? safeConsumption : undefined,
       estimatedConsumptionSmc: utilityType === 'gas' ? safeConsumption : undefined,
-      assignedBrokerId: customer.assignedBrokerId,
+      assignedBrokerId: resolveActiveAssignedBrokerId(customer.assignedBrokerId),
     };
 
     await addLead(newLead);
@@ -419,55 +440,167 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
       throw httpError('Tipologia fornitura (luce o gas) obbligatoria.', 400);
     }
 
-    const assignedBrokerId = customer.assignedBrokerId || 'user-op-2';
-    const leadId = `lead-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const rawFileName = typeof req.body?.fileName === 'string' ? req.body.fileName : 'bolletta';
+    const rawMimeType = typeof req.body?.mimeType === 'string' ? req.body.mimeType : '';
+    const bytes = decodeAndValidateBillFile(req.body?.base64Data, rawMimeType);
+    const bytesSha256 = createHash('sha256').update(bytes).digest('hex');
+    const rawIdempotencyKey = extractIdempotencyKey(req);
+    const scopedIdempotencyKey = rawIdempotencyKey ? `acct:${customer.id}:${rawIdempotencyKey}` : undefined;
+    const normalizedPhone = String(customer.phone || '').replace(/\D/g, '');
+    const fingerprint = createHash('sha256')
+      .update(
+        JSON.stringify({
+          source: 'bill_upload',
+          customerId: customer.id,
+          utilityType,
+          fileName: sanitizeBillFileName(rawFileName),
+          mimeType: rawMimeType.trim().toLowerCase(),
+          bytesSha256,
+        })
+      )
+      .digest('hex');
+    const lockKey = scopedIdempotencyKey || `acct:${customer.id}:win:bill_upload:${fingerprint}`;
 
-    const bill = await portalService.uploadBill({
-      customerId: customer.id,
-      customerName: customer.name,
-      fileName: typeof req.body?.fileName === 'string' ? req.body.fileName : 'bolletta',
-      mimeType: typeof req.body?.mimeType === 'string' ? req.body.mimeType : '',
-      bytes: decodeAndValidateBillFile(req.body?.base64Data, req.body?.mimeType),
-      utilityType,
-      notes: typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 1000) : undefined,
-      leadId,
-      assignedBrokerId,
-    });
-
-    const newLead: Lead = {
-      id: leadId,
-      name: customer.name,
-      phone: customer.phone,
-      email: customer.email || `${customer.id}@cliente.volta.it`,
-      city: customer.city || 'Italia',
-      source: 'bill_upload',
-      status: 'new',
-      notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Cliente registrato: ${customer.id}${req.body?.notes ? ` • Note: ${String(req.body.notes).slice(0, 500)}` : ''}`,
-      createdAt: new Date().toISOString().split('T')[0],
-      assignedBrokerId,
-      billId: bill.id,
-    };
-    try {
-      await addLead(newLead);
-    } catch (err) {
-      await portalService.deleteBill(bill.id);
-      throw err;
+    if (scopedIdempotencyKey) {
+      const existingByKey = getLeads().find((l) => l.idempotencyKey === scopedIdempotencyKey);
+      if (existingByKey) {
+        assertIdempotencyFingerprint(existingByKey, 'bill_upload', normalizedPhone, fingerprint);
+        const existingBill = existingByKey.billId ? await portalService.getBill(existingByKey.billId) : undefined;
+        res.status(200).json({
+          success: true,
+          idempotent: true,
+          bill: existingBill,
+          leadId: existingByKey.id,
+          lead: existingByKey,
+          message: 'Bolletta già caricata e registrata nel CRM.',
+        });
+        return;
+      }
+    } else {
+      const recentMatch = getLeads().find((l) => {
+        if (l.source !== 'bill_upload' || l.idempotencyFingerprint !== fingerprint || !l.privacyConsentTimestamp) return false;
+        const elapsedMs = Date.now() - new Date(l.privacyConsentTimestamp).getTime();
+        return elapsedMs >= 0 && elapsedMs < 60_000;
+      });
+      if (recentMatch && recentMatch.billId) {
+        const existingBill = await portalService.getBill(recentMatch.billId);
+        res.status(200).json({
+          success: true,
+          idempotent: true,
+          bill: existingBill,
+          leadId: recentMatch.id,
+          lead: recentMatch,
+          message: 'Bolletta già caricata e registrata nel CRM.',
+        });
+        return;
+      }
     }
 
-    await safeAddNotification({
-      id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      type: 'bill_uploaded',
-      title: 'Nuova Bolletta Caricata dal Comparatore',
-      message: `${customer.name} ha caricato "${bill.fileName}" per ${utilityType.toUpperCase()}. Analisi richiesta.`,
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      priority: 'urgent',
-      targetRole: 'call_center',
-      actionTab: 'leads',
-      meta: { leadId: newLead.id, billId: bill.id, fileName: bill.fileName, customerId: customer.id }
-    });
+    const inFlight = inFlightGuestLeads.get(lockKey);
+    if (inFlight) {
+      if (inFlight.fingerprint !== fingerprint) {
+        throw httpError('Chiave di idempotenza già utilizzata per una richiesta differente.', 409);
+      }
+      const resolved = await inFlight.promise;
+      const existingBill = resolved.bill || (resolved.lead.billId ? await portalService.getBill(resolved.lead.billId) : undefined);
+      res.status(200).json({
+        success: true,
+        idempotent: true,
+        bill: existingBill,
+        leadId: resolved.lead.id,
+        lead: resolved.lead,
+        message: 'Bolletta già caricata e registrata nel CRM.',
+      });
+      return;
+    }
 
-    res.status(201).json({ success: true, bill, leadId: newLead.id, lead: newLead });
+    const creationPromise = (async () => {
+      const assignedBrokerId = resolveActiveAssignedBrokerId(customer.assignedBrokerId);
+      const leadId = `lead-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+      const consentTimestamp = new Date().toISOString();
+
+      const bill = await portalService.uploadBill({
+        customerId: customer.id,
+        customerName: customer.name,
+        fileName: rawFileName,
+        mimeType: rawMimeType,
+        bytes,
+        utilityType,
+        notes: typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 1000) : undefined,
+        leadId,
+        assignedBrokerId,
+      });
+
+      const newLead: Lead = {
+        id: leadId,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email || `${customer.id}@cliente.volta.it`,
+        city: customer.city || 'Italia',
+        source: 'bill_upload',
+        status: 'new',
+        notes: `[BOLLETTA CARICATA] File: ${bill.fileName} (${bill.fileSizeKb} KB) • Fornitura: ${utilityType.toUpperCase()} • Cliente registrato: ${customer.id}${req.body?.notes ? ` • Note: ${String(req.body.notes).slice(0, 500)}` : ''}`,
+        createdAt: consentTimestamp.split('T')[0],
+        assignedBrokerId,
+        billId: bill.id,
+        privacyConsentTimestamp: consentTimestamp,
+        idempotencyKey: scopedIdempotencyKey,
+        idempotencyFingerprint: fingerprint,
+      };
+      try {
+        await addLead(newLead);
+      } catch (err) {
+        try {
+          await portalService.deleteBill(bill.id);
+        } catch (cleanupErr) {
+          console.error('[Portal] Compensazione bolletta autenticata fallita:', cleanupErr);
+        }
+        throw err;
+      }
+
+      if (scopedIdempotencyKey) {
+        const persistedByKey = getLeads().find((l) => l.idempotencyKey === scopedIdempotencyKey);
+        if (persistedByKey && persistedByKey.id !== newLead.id) {
+          try {
+            await portalService.deleteBill(bill.id);
+          } catch (cleanupErr) {
+            console.error('[Portal] Compensazione race bolletta autenticata fallita:', cleanupErr);
+          }
+          assertIdempotencyFingerprint(persistedByKey, 'bill_upload', normalizedPhone, fingerprint);
+          const persistedBill = persistedByKey.billId ? await portalService.getBill(persistedByKey.billId) : undefined;
+          return { lead: persistedByKey, bill: persistedBill, wasDeduplicated: true };
+        }
+      }
+
+      await safeAddNotification({
+        id: `notif-bill-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        type: 'bill_uploaded',
+        title: 'Nuova Bolletta Caricata dal Comparatore',
+        message: `${customer.name} ha caricato "${bill.fileName}" per ${utilityType.toUpperCase()}. Analisi richiesta.`,
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        priority: 'urgent',
+        targetRole: 'call_center',
+        actionTab: 'leads',
+        meta: { leadId: newLead.id, billId: bill.id, fileName: bill.fileName, customerId: customer.id }
+      });
+
+      return { lead: newLead, bill, wasDeduplicated: false };
+    })();
+
+    inFlightGuestLeads.set(lockKey, { fingerprint, promise: creationPromise });
+    try {
+      const { lead: newLead, bill, wasDeduplicated } = await creationPromise;
+      res.status(wasDeduplicated ? 200 : 201).json({
+        success: true,
+        ...(wasDeduplicated ? { idempotent: true } : {}),
+        bill,
+        leadId: newLead.id,
+        lead: newLead,
+      });
+    } finally {
+      inFlightGuestLeads.delete(lockKey);
+    }
     return;
   }
 
