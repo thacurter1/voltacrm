@@ -25,6 +25,12 @@ jobs:
           npm ci
           cd server && npm ci && cd ..
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Validate release configuration checker
+        run: node scripts/verify_production_readiness.cjs --test
+
       - name: Build Server
         run: npm --prefix server run build
 

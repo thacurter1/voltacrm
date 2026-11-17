@@ -33,6 +33,7 @@ export interface EnergyBillIntakeProps {
   onUploaded: (bill: CustomerBill) => void;
   onManualInput: (input: ComparisonInput) => void;
   selectedUtilityType?: UtilityType;
+  initialMode?: IntakeMode;
   onOpenPrivacy?: () => void;
   utmParams?: {
     utmSource?: string;
@@ -48,13 +49,14 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   onUploaded,
   onManualInput,
   selectedUtilityType = 'luce',
+  initialMode,
   onOpenPrivacy,
   utmParams,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const customerPoints = customer?.utilityPoints || [];
   const hasProfilePoints = customerPoints.length > 0;
-  const [activeMode, setActiveMode] = useState<IntakeMode>(() => (hasProfilePoints ? 'profile' : 'wizard'));
+  const [activeMode, setActiveMode] = useState<IntakeMode>(() => (initialMode || (hasProfilePoints ? 'profile' : 'wizard')));
   const [utilityType, setUtilityType] = useState<UtilityType>(selectedUtilityType);
 
   // Wizard state (Stima da profilo casa)

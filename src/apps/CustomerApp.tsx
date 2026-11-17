@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { EnergyPortalHeader } from '../components/customer/EnergyPortalHeader';
+import { EnergyWelcome } from '../components/customer/EnergyWelcome';
 import { EnergyBillIntake } from '../components/customer/EnergyBillIntake';
 import { EnergyOfferCard } from '../components/customer/EnergyOfferCard';
 import { EnergyOfferDetails } from '../components/customer/EnergyOfferDetails';
@@ -76,6 +77,10 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
     if (!utmSource && !utmCampaign && !utmMedium) return undefined;
     return { utmSource, utmCampaign, utmMedium };
   }, []);
+
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const [entryMode, setEntryMode] = useState<'wizard' | 'upload'>('wizard');
+  const showWelcome = !activeCustomer && !welcomeDismissed;
 
   // View state: 'offers' | 'supplies'
   const [activeView, setActiveView] = useState<'offers' | 'supplies'>('offers');
@@ -320,7 +325,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
       {/* Modern Volta Energy Portal Header */}
       <EnergyPortalHeader
         activeView={activeView}
-        onSelectView={setActiveView}
+        onSelectView={(view) => { setActiveView(view); if (view === 'offers' && !activeCustomer) { setWelcomeDismissed(false); setCurrentStep('intake'); } }}
         customerName={activeCustomer?.name || 'Visitatore'}
         onToast={addToast}
         onReturnToBackend={onReturnToBackend}
@@ -331,7 +336,15 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
       />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 sm:pb-24 space-y-6">
-        {activeView === 'offers' ? (
+        {activeView === 'offers' && showWelcome ? (
+          <EnergyWelcome onStart={(utility, mode) => {
+            setComparisonInput(prev => ({ ...prev, utilityType: utility }));
+            setEntryMode(mode);
+            setCurrentStep('intake');
+            setWelcomeDismissed(true);
+            window.scrollTo({ top: 0 });
+          }} />
+        ) : activeView === 'offers' ? (
           <div className="space-y-6">
             {/* Guided Journey Stepper (Facile.it inspired, Volta branded) */}
             <div className="border-b border-slate-200 pb-4">
@@ -411,6 +424,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                 <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-6 lg:gap-8 items-start">
                   <EnergyBillIntake
                     customer={activeCustomer}
+                    initialMode={activeCustomer ? undefined : entryMode}
                     selectedUtilityType={comparisonInput.utilityType}
                     onUploaded={handleBillUploaded}
                     onManualInput={handleManualInputApplied}

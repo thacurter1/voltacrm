@@ -30,7 +30,7 @@ Senza chiave configurata il backend rifiuta le richieste reali del totem. Chiavi
 4. Completare informativa privacy e gestione del consenso per il ricontatto prima di raccogliere dati reali.
 5. Confermare la persistenza Supabase e i provider di messaggistica reali. Il totem registra una richiesta di contatto; non promette un risparmio o un messaggio non verificato.
 
-Non sono necessarie migrazioni SQL per queste modifiche. Domini, segreti del backend e provisioning del dispositivo restano operazioni di distribuzione da completare.
+Le sole modifiche ai portali descritte sopra non richiedevano migrazioni SQL. Per il rilascio attuale sono presenti migrazioni successive da verificare: seguire [la preparazione del 17 novembre 2026](RELEASE_2026-11-17.md). Domini, segreti del backend e provisioning del dispositivo restano operazioni di distribuzione da completare.
 
 ## Correzioni audit e verifica del 12 ottobre
 

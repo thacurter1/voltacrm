@@ -46,7 +46,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
                 Volta Energia
               </span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25">
-                {isPublicVisitor ? 'Comparatore Ufficiale' : 'PORTALE BOLLETTE'}
+                {isPublicVisitor ? 'Confronto luce e gas' : 'PORTALE BOLLETTE'}
               </span>
             </div>
             <span className="hidden sm:block text-[11px] text-slate-500 font-medium">
@@ -105,10 +105,10 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             <button
               type="button"
               onClick={onOpenStaffLogin}
-              className="min-h-[36px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-slate-700 active:scale-95 shrink-0"
+              className="min-h-[36px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition cursor-pointer border border-slate-200 active:scale-95 shrink-0"
               title="Area riservata per consulenti, broker e staff"
             >
-              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
+              <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" aria-hidden="true" />
               <span>Area Staff & Broker</span>
             </button>
           )}

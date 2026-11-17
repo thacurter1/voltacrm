@@ -88,6 +88,8 @@ async function main() {
   }
 
   const testSuites = [
+    path.join('tests', 'test_launch_company_identity.cjs'),
+    path.join('tests', 'test_energy_welcome.cjs'),
     'test_blocco1_security.cjs',
     'test_blocco2_security.cjs',
     'test_blocco3_persistence.cjs',

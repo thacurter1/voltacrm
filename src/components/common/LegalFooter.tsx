@@ -24,9 +24,9 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
               <CheckCircle2 className="size-5" />
             </span>
             <div>
-              <p className="font-bold text-[#0a2540]">Zero Costi e Zero Vincoli</p>
+              <p className="font-bold text-[#0a2540]">Confronta prima di decidere</p>
               <p className="text-xs text-slate-500 mt-0.5">
-                Il confronto online e la consulenza con i nostri esperti sono sempre 100% gratuiti. Nessun passaggio forzato.
+                Consultare le stime non attiva un contratto. Puoi valutare le condizioni prima di richiedere una consulenza.
               </p>
             </div>
           </div>
@@ -38,7 +38,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
             <div>
               <p className="font-bold text-[#0a2540]">Trasparenza ARERA</p>
               <p className="text-xs text-slate-500 mt-0.5">
-                Stime calcolate su parametri reali (PUN, PSV, quota fissa CCV/PCV, oneri passanti). Nessun costo occultato.
+                Ogni stima indica i consumi e i parametri utilizzati. Controlla la data di riferimento degli indici e le condizioni dell’offerta.
               </p>
             </div>
           </div>
@@ -48,7 +48,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
               <Phone className="size-5" />
             </span>
             <div>
-              <p className="font-bold text-[#0a2540]">Assistenza Diretta Gratuita</p>
+              <p className="font-bold text-[#0a2540]">Contatti e assistenza</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 Numero Verde <strong>{COMPANY_PROFILE.tollFreePhone || '800 912 345'}</strong> attivo dal lunedì al venerdì dalle 9:00 alle 18:00.
               </p>
@@ -61,7 +61,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
       <div className="mx-auto max-w-7xl px-6 py-10">
         {!COMPANY_PROFILE.isConfiguredCorporateIdentity && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-2.5 text-xs text-amber-900">
-            <strong>Nota Ambiente Dimostrativo:</strong> I dati societari e i recapiti telefonici/PEC esposti di seguito ({COMPANY_PROFILE.name}, P.IVA {COMPANY_PROFILE.vatNumber}) sono valori illustrativi di default configurabili tramite variabili d&apos;ambiente (<code>VITE_COMPANY_*</code>).
+            <strong>Nota Ambiente Dimostrativo:</strong> I dati societari e i recapiti telefonici/PEC esposti di seguito ({COMPANY_PROFILE.name}, P.IVA {COMPANY_PROFILE.vatNumber}) sono esempi dimostrativi. I recapiti effettivi saranno disponibili prima dell’apertura del servizio.
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -74,7 +74,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
               <span className="text-lg font-extrabold text-[#0a2540] tracking-tight">Volta Energia</span>
             </div>
             <p className="text-xs leading-relaxed text-slate-500">
-              Piattaforma di consulenza e confronto indipendente per luce e gas. Aiutiamo famiglie e imprese a ridurre le spese energetiche con massima trasparenza.
+              Confronta i costi di luce e gas, consulta le condizioni e richiedi assistenza per valutare la tua fornitura.
             </p>
             <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-semibold pt-1">
               <ShieldCheck className="size-4" />

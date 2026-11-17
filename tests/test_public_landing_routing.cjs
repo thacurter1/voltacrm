@@ -33,16 +33,16 @@ assert.ok(
 );
 
 // -----------------------------------------------------------------------------
-// TEST 2: Staff Access Header with "Area Staff & Broker" & "Comparatore Ufficiale"
+// TEST 2: Staff Access Header with "Area Staff & Broker" & "Confronto luce e gas"
 // -----------------------------------------------------------------------------
-console.log('\n[TEST 2] Header contains "Area Staff & Broker" button and official comparator branding');
+console.log('\n[TEST 2] Header contains "Area Staff & Broker" button and descriptive comparator branding');
 assert.ok(
   headerSrc.includes('Area Staff & Broker') || customerAppSrc.includes('Area Staff & Broker'),
   'Header or CustomerApp must render "Area Staff & Broker" button'
 );
 assert.ok(
-  headerSrc.includes('Comparatore Ufficiale') || customerAppSrc.includes('Comparatore Ufficiale'),
-  'Header or CustomerApp must include "Comparatore Ufficiale" badge'
+  headerSrc.includes('Confronto luce e gas') || customerAppSrc.includes('Confronto luce e gas'),
+  'Header or CustomerApp must include "Confronto luce e gas" badge'
 );
 assert.ok(
   headerSrc.includes('Trasparente, gratuito e senza vincoli') || customerAppSrc.includes('Trasparente, gratuito e senza vincoli'),
@@ -99,3 +99,5 @@ assert.ok(
 );
 
 console.log('\n🎉 ALL PUBLIC LANDING ROUTING TESTS PASSED!');
+
+assert.ok(!headerSrc.includes("Comparatore Ufficiale"), "Do not imply institutional certification");

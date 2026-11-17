@@ -1,0 +1,17 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ts = require('typescript');
+const React = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
+const filename = path.join(__dirname, '../src/components/customer/EnergyWelcome.tsx');
+const source = fs.readFileSync(filename, 'utf8');
+const compiled = ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+const mod = {exports:{}};
+new Function('require','module','exports',compiled)(require,mod,mod.exports);
+const html = renderToStaticMarkup(React.createElement(mod.exports.EnergyWelcome,{onStart:()=>{}}));
+for (const text of ['Confronta le offerte','Analizza la tua bolletta','Come funziona','Domande frequenti','Luce e gas','Solo luce','Solo gas']) assert.ok(html.includes(text), text);
+assert.ok(!html.includes('Comparatore Ufficiale'));
+assert.ok(!html.includes('450€'));
+assert.equal((html.match(/<details/g)||[]).length, 5);
+console.log('PASS: welcome page renders honest entry points and accessible FAQ');
