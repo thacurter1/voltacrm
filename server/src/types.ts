@@ -15,10 +15,17 @@ export interface UserProfile {
   is2faEnabled?: boolean;
   twoFactorSecret?: string;
   onboardingStatus?: 'active' | 'invited' | 'pending_verification' | 'suspended';
+  emailVerified?: boolean;
+  tokenVersion?: number;
+  privacyConsentAccepted?: boolean;
+  privacyConsentTimestamp?: string;
+  privacyPolicyVersion?: string;
+  marketingConsent?: boolean;
+  marketingConsentTimestamp?: string;
   createdAt?: string;
 }
 
-export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator' | 'public_comparator' | 'bill_upload';
+export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator' | 'public_comparator' | 'bill_upload' | 'support_request';
 
 export type LeadStatus = 
   | 'new' 
@@ -53,6 +60,7 @@ export interface Lead {
   privacyPolicyVersion?: string;
   idempotencyKey?: string;
   idempotencyFingerprint?: string;
+  claimTokenHash?: string;
 }
 
 export interface UtilityPoint {

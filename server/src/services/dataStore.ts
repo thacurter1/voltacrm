@@ -370,6 +370,7 @@ const leadToRow = (l: Lead) => ({
   privacy_policy_version: l.privacyPolicyVersion || null,
   idempotency_key: l.idempotencyKey || null,
   idempotency_fingerprint: l.idempotencyFingerprint || null,
+  claim_token_hash: l.claimTokenHash || null,
 });
 const rowToLead = (l: any): Lead => ({
   id: l.id,
@@ -393,6 +394,7 @@ const rowToLead = (l: any): Lead => ({
   privacyPolicyVersion: l.privacy_policy_version || undefined,
   idempotencyKey: l.idempotency_key || undefined,
   idempotencyFingerprint: l.idempotency_fingerprint || undefined,
+  claimTokenHash: l.claim_token_hash || undefined,
 });
 export async function addLead(lead: Lead): Promise<void> {
   await addLeads([lead]);
@@ -521,13 +523,37 @@ const rowToSignature = (s:any) => ({
 
 export async function registerAccount(profile:any, customer:Customer):Promise<void> {
   requireStorage();
-  if(users.some(u=>u.email.trim().toLowerCase()===profile.email.trim().toLowerCase())) {
-    throw Object.assign(new Error('Email già registrata.'),{status:409});
+  const normalizedEmail = profile.email.trim().toLowerCase();
+  const normalizedCf = (customer.fiscalCode || '').trim().toUpperCase();
+  if (users.some(u => u.email.trim().toLowerCase() === normalizedEmail)) {
+    throw Object.assign(new Error('Email già registrata.'), { status: 409 });
   }
-  if(isSupabaseConfigured && supabase) {
-    check((await supabase.rpc('register_customer_account',{p_profile:profile,p_customer:customerToRow(customer)})).error);
+  if (
+    process.env.VOLTA_DEMO_MODE !== 'true' &&
+    normalizedCf &&
+    !normalizedCf.startsWith('OAUTHUSER') &&
+    customers.some(c => (c.fiscalCode || '').trim().toUpperCase() === normalizedCf)
+  ) {
+    throw Object.assign(new Error('Codice Fiscale o Partita IVA già registrato nel sistema.'), { status: 409 });
   }
-  users.unshift(structuredClone(profile)); customers.unshift(structuredClone(customer));
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase.rpc('register_customer_account', {
+      p_profile: profile,
+      p_customer: customerToRow(customer),
+    });
+    if (error) {
+      const errText = `${(error as any).constraint || ''} ${(error as any).message || ''}`.toLowerCase();
+      if ((error as any).code === '23505') {
+        const msg = errText.includes('fiscal')
+          ? 'Codice Fiscale o Partita IVA già registrato nel sistema.'
+          : 'Email già registrata nel sistema.';
+        throw Object.assign(new Error(msg), { status: 409 });
+      }
+      check(error);
+    }
+  }
+  users.unshift(structuredClone(profile));
+  customers.unshift(structuredClone(customer));
 }
 
 let lastRefreshTime = 0;
@@ -571,8 +597,18 @@ export async function initDataStore(force = false): Promise<void> {
     readBy:Array.isArray(n.read_by)?n.read_by:[],
     actionTab:n.action_tab,meta:n.meta}));
 
-  const dbUsers = us.map((u:any)=>({...u.profile,id:u.id,email:u.email,password:u.password_hash,
-    role:u.role,customerId:u.customer_id,twoFactorSecret:u.two_factor_secret,is2faEnabled:u.is_2fa_enabled}));
+  const dbUsers = us.map((u:any)=>({
+    ...u.profile,
+    id:u.id,
+    email:u.email,
+    password:u.password_hash,
+    role:u.role,
+    customerId:u.customer_id,
+    twoFactorSecret:u.two_factor_secret,
+    is2faEnabled:u.is_2fa_enabled,
+    tokenVersion: Number(u.token_version ?? u.profile?.tokenVersion ?? 1),
+    emailVerified: u.email_verified ?? u.profile?.emailVerified ?? ((u.profile?.onboardingStatus || 'active') === 'active'),
+  }));
 
   // Preserve existing dynamic users (e.g. staff created during runtime/OAuth not yet in DB)
   const existingDynamicUsers = isDemo ? users.filter(u => !dbUsers.some(dbU => dbU.id === u.id || dbU.email.toLowerCase() === u.email.toLowerCase())) : [];
