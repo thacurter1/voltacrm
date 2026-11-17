@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { EnergyPortalHeader } from '../components/customer/EnergyPortalHeader';
 import { EnergyWelcome } from '../components/customer/EnergyWelcome';
-import { EnergyBillIntake } from '../components/customer/EnergyBillIntake';
+import { EnergyBillIntake, type IntakeMode } from '../components/customer/EnergyBillIntake';
 import { EnergyOfferCard } from '../components/customer/EnergyOfferCard';
 import { EnergyOfferDetails } from '../components/customer/EnergyOfferDetails';
 import { SubitoMySupplies } from '../components/customer/SubitoMySupplies';
+import { CustomerAccountView } from '../components/customer/CustomerAccountView';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 import { ToastContainer } from '../components/ToastContainer';
 import { LegalFooter } from '../components/common/LegalFooter';
@@ -51,7 +52,7 @@ export interface CustomerAppProps {
 }
 
 export const CustomerApp: React.FC<CustomerAppProps> = ({
-  currentUser: _currentUser,
+  currentUser,
   customer = null,
   bills = [],
   isLoading = false,
@@ -64,8 +65,14 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   onOpenCustomerLogin,
   onOpenStaffLogin,
 }) => {
-  const activeCustomer = customer;
+  const [customerOverride, setCustomerOverride] = useState<Customer | null>(null);
+  const activeCustomer = customerOverride && customer && customerOverride.id === customer.id ? customerOverride : customer;
   const myBills = bills;
+
+  const initialClaimToken = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    return new URLSearchParams(window.location.search).get('claimBillToken') || '';
+  }, []);
 
   // Marketing UTM Campaign Attribution Parsing
   const utmParams = useMemo(() => {
@@ -80,10 +87,13 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
 
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const [entryMode, setEntryMode] = useState<'wizard' | 'upload'>('wizard');
+  const [intakeInitialMode, setIntakeInitialMode] = useState<IntakeMode | undefined>(undefined);
   const showWelcome = !activeCustomer && !welcomeDismissed;
 
-  // View state: 'offers' | 'supplies'
-  const [activeView, setActiveView] = useState<'offers' | 'supplies'>('offers');
+  // View state: 'offers' | 'supplies' | 'account'
+  const [activeView, setActiveView] = useState<'offers' | 'supplies' | 'account'>(() =>
+    initialClaimToken && activeCustomer ? 'account' : 'offers'
+  );
 
   // Stepper state: 'intake' (Step 1) | 'comparison' (Step 2)
   const defaultPoint = activeCustomer?.utilityPoints?.[0];
@@ -325,7 +335,16 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
       {/* Modern Volta Energy Portal Header */}
       <EnergyPortalHeader
         activeView={activeView}
-        onSelectView={(view) => { setActiveView(view); if (view === 'offers' && !activeCustomer) { setWelcomeDismissed(false); setCurrentStep('intake'); } }}
+        onSelectView={(view) => {
+          setActiveView(view);
+          if (view === 'offers') {
+            setIntakeInitialMode(undefined);
+            if (!activeCustomer) {
+              setWelcomeDismissed(false);
+              setCurrentStep('intake');
+            }
+          }
+        }}
         customerName={activeCustomer?.name || 'Visitatore'}
         onToast={addToast}
         onReturnToBackend={onReturnToBackend}
@@ -424,7 +443,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                 <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-6 lg:gap-8 items-start">
                   <EnergyBillIntake
                     customer={activeCustomer}
-                    initialMode={activeCustomer ? undefined : entryMode}
+                    initialMode={activeCustomer ? intakeInitialMode : entryMode}
                     selectedUtilityType={comparisonInput.utilityType}
                     onUploaded={handleBillUploaded}
                     onManualInput={handleManualInputApplied}
@@ -625,6 +644,16 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               </div>
             )}
           </div>
+        ) : activeView === 'account' && activeCustomer ? (
+          <CustomerAccountView
+            customer={activeCustomer}
+            currentUser={currentUser}
+            initialClaimToken={initialClaimToken}
+            onCustomerUpdated={(updated) => setCustomerOverride(updated)}
+            onBillsUpdated={() => onReloadBills?.()}
+            onLoggedOut={() => onLogout?.()}
+            onToast={addToast}
+          />
         ) : (
           /* "Le mie forniture e bollette" View */
           activeCustomer ? (
@@ -632,6 +661,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               customer={activeCustomer}
               bills={myBills.filter((b) => b.customerId === activeCustomer.id)}
               onUploadBill={() => {
+                setIntakeInitialMode('upload');
                 setActiveView('offers');
                 setCurrentStep('intake');
               }}
@@ -670,9 +700,15 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             <dl className="divide-y divide-slate-200 border-y border-slate-200 text-sm">
               <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Fornitura</dt><dd className="font-semibold capitalize">{selectedBill.utilityType}</dd></div>
               <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Caricata il</dt><dd className="font-semibold">{selectedBill.uploadDate}</dd></div>
-              <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Stato</dt><dd className="font-semibold">{selectedBill.status === 'analyzed' ? 'Analizzata' : selectedBill.status === 'archived' ? 'Archiviata' : 'In verifica'}</dd></div>
+              <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Stato</dt><dd className="font-semibold">{selectedBill.status === 'analyzed' ? 'Analizzata' : selectedBill.status === 'needs_info' ? 'Richiesta informazioni' : selectedBill.status === 'archived' ? 'Archiviata' : 'Ricevuta / In verifica'}</dd></div>
             </dl>
-            <p className="text-sm leading-relaxed text-slate-600">{selectedBill.status === 'in_review' ? 'Il team Volta deve ancora verificare i dati di questa bolletta. Per un confronto immediato puoi inserire i consumi a mano.' : 'L’analisi è stata registrata. Per dettagli sul documento contatta il team Volta.'}</p>
+            <p className="text-sm leading-relaxed text-slate-600">
+              {selectedBill.status === 'needs_info'
+                ? 'Il team Volta richiede un chiarimento o un file più leggibile per completare la verifica della bolletta.'
+                : selectedBill.status === 'in_review'
+                  ? 'La bolletta è stata ricevuta ed è in verifica da parte del team Volta. Per un confronto immediato puoi inserire i consumi a mano.'
+                  : 'L’analisi è stata registrata. Per dettagli sul documento contatta il team Volta.'}
+            </p>
           </div>
         </div>
       )}

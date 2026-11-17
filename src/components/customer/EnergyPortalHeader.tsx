@@ -3,8 +3,8 @@ import { Zap, FileText, Sparkles, ShieldCheck, LogOut, Lock, User } from 'lucide
 import { NotificationCenter } from '../NotificationCenter';
 
 export interface EnergyPortalHeaderProps {
-  activeView: 'offers' | 'supplies';
-  onSelectView: (view: 'offers' | 'supplies') => void;
+  activeView: 'offers' | 'supplies' | 'account';
+  onSelectView: (view: 'offers' | 'supplies' | 'account') => void;
   customerName: string;
   onUploadBill?: () => void;
   onToast?: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
@@ -83,6 +83,18 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
               >
                 <FileText className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
                 <span>Le mie bollette</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectView('account')}
+                className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                  activeView === 'account'
+                    ? 'bg-white text-[#0a2540] shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <User className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
+                <span>Il mio Account</span>
               </button>
             </nav>
           )}

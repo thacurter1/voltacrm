@@ -9,6 +9,19 @@ interface SubitoMySuppliesProps {
   onOpenBillDetails?: (bill: CustomerBill) => void;
 }
 
+function getBillStatusMeta(status: CustomerBill['status']) {
+  if (status === 'analyzed') {
+    return { label: 'Analizzata', classes: 'bg-emerald-100 text-emerald-800' };
+  }
+  if (status === 'needs_info') {
+    return { label: 'Richiesta informazioni', classes: 'bg-amber-100 text-amber-800' };
+  }
+  if (status === 'archived') {
+    return { label: 'Archiviata', classes: 'bg-slate-100 text-slate-600' };
+  }
+  return { label: 'Ricevuta / In verifica', classes: 'bg-slate-100 text-slate-600' };
+}
+
 export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
   customer,
   bills,
@@ -25,6 +38,15 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
           <h2 className="text-2xl font-bold text-[#0a2540]">Le tue forniture e bollette</h2>
           <p className="text-sm font-medium text-slate-700">{customer.name}</p>
           <p className="text-sm text-slate-600">Qui trovi i punti di fornitura e lo stato delle bollette caricate.</p>
+          {(customer.assignedBrokerId || (customer.accountManager && customer.accountManager.trim())) ? (
+            <p className="text-xs text-slate-500">
+              Referente assegnato: <strong className="text-slate-800">{customer.accountManager || customer.assignedBrokerId}</strong>
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500">
+              Pratica gestita in coda operativa Volta (nessun referente ancora assegnato).
+            </p>
+          )}
         </div>
 
         {/* Action button */}
@@ -75,7 +97,9 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
             <div>
               <h4 className="text-base font-bold text-slate-800">Nessuna fornitura registrata</h4>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-                Carica la tua ultima bolletta luce o gas per analizzare i consumi e attivare il monitoraggio del risparmio.
+                {bills.length > 0
+                  ? `Hai ${bills.length} ${bills.length === 1 ? 'bolletta in verifica' : 'bollette in verifica'}. Puoi seguirne lo stato nella scheda Bollette o caricare una nuova fattura.`
+                  : 'Carica la tua prima bolletta luce o gas per aprire una pratica e far verificare i tuoi consumi reali prima di confrontare le offerte.'}
               </p>
             </div>
             <button
@@ -85,6 +109,24 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
               <Upload className="w-4 h-4" />
               <span>Carica la tua prima bolletta</span>
             </button>
+            {bills.length > 0 && (
+              <div className="max-w-lg mx-auto mt-6 text-left border-t border-slate-200 pt-4 space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Stato delle pratiche inviate
+                </p>
+                {bills.slice(0, 3).map((bill) => {
+                  const statusMeta = getBillStatusMeta(bill.status);
+                  return (
+                    <div key={bill.id} className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                      <span className="font-semibold text-slate-800 truncate">{bill.fileName}</span>
+                      <span className={`px-2 py-0.5 rounded-md font-semibold shrink-0 ${statusMeta.classes}`}>
+                        {statusMeta.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -189,9 +231,14 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">
-                      {bill.status === 'analyzed' ? 'Analizzata' : bill.status === 'archived' ? 'Archiviata' : 'In verifica'}
-                    </span>
+                    {(() => {
+                      const statusMeta = getBillStatusMeta(bill.status);
+                      return (
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${statusMeta.classes}`}>
+                          {statusMeta.label}
+                        </span>
+                      );
+                    })()}
                     <ArrowUpRight className="w-4 h-4 text-slate-400" />
                   </div>
                 </button>

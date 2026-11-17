@@ -294,7 +294,7 @@ authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSch
     privacyConsentTimestamp: nowIso,
     privacyPolicyVersion: privacyPolicyVersion || 'bozza-2026-11',
     marketingConsent: Boolean(marketingConsent),
-    marketingConsentTimestamp: Boolean(marketingConsent) ? nowIso : undefined,
+    marketingConsentTimestamp: marketingConsent ? nowIso : undefined,
     createdAt: today,
   };
 

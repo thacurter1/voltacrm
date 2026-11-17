@@ -57,6 +57,13 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   const customerPoints = customer?.utilityPoints || [];
   const hasProfilePoints = customerPoints.length > 0;
   const [activeMode, setActiveMode] = useState<IntakeMode>(() => (initialMode || (hasProfilePoints ? 'profile' : 'wizard')));
+  const [prevInitialMode, setPrevInitialMode] = useState<IntakeMode | undefined>(initialMode);
+  if (initialMode !== prevInitialMode) {
+    setPrevInitialMode(initialMode);
+    if (initialMode) {
+      setActiveMode(initialMode);
+    }
+  }
   const [utilityType, setUtilityType] = useState<UtilityType>(selectedUtilityType);
 
   // Wizard state (Stima da profilo casa)
@@ -845,8 +852,13 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     Bolletta caricata con successo ({uploadSuccess.fileName}).
                   </p>
                   <p className="text-[11px] text-emerald-700">
-                    Stato attuale: <strong>In verifica</strong> dal team Volta. Nel frattempo puoi confrontare le offerte utilizzando i dati manuali o quelli del tuo profilo.
+                    Stato attuale: <strong>Ricevuta / In verifica</strong> dal team Volta. Nel frattempo puoi confrontare le offerte utilizzando i dati manuali o quelli del tuo profilo.
                   </p>
+                  {uploadSuccess.claimToken && (
+                    <p className="text-[11px] text-emerald-900 mt-1.5 bg-white/80 border border-emerald-200 rounded-lg px-2.5 py-1.5">
+                      Codice associazione bolletta: <code className="font-mono font-bold">{uploadSuccess.claimToken}</code>. Usalo nella sezione <strong>Il mio Account</strong> dopo la registrazione per collegare questa bolletta al tuo profilo.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

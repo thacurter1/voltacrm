@@ -88,7 +88,17 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
       setNewOpName('');
       setNewOpEmail('');
       setNewOpPhone('');
-      onToast('Invito creato', `Condividi il link con ${created.profile.name} per attivare password e 2FA.`, 'success');
+      if (created.emailSent) {
+        onToast('Invito creato e inviato', `Email di attivazione inviata a ${created.profile.email}. Link generato anche per condivisione diretta.`, 'success');
+      } else {
+        onToast(
+          'Link invito generato (email non inviata)',
+          created.deliveryError
+            ? `Provider email non ha consegnato (${created.deliveryError}). Condividi manualmente il link di attivazione con ${created.profile.name}.`
+            : `Condividi manualmente il link di attivazione con ${created.profile.name} per password e 2FA.`,
+          'info'
+        );
+      }
     } catch {
       onToast('Errore', 'Impossibile creare il profilo operatore.', 'warning');
     }

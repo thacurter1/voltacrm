@@ -176,14 +176,19 @@ class ProfileService {
     role: 'admin' | 'call_center';
     phone: string;
     whatsapp: string;
-  }): Promise<{ profile: UserProfile; inviteLink?: string }> {
+  }): Promise<{ profile: UserProfile; inviteLink?: string; emailSent?: boolean; deliveryError?: string }> {
     if (!DEMO_MODE) {
-      const response = await request<{ profile: UserProfile; token: string }>('/auth/invitations', {
+      const response = await request<{ profile: UserProfile; token: string; emailSent?: boolean; deliveryError?: string }>('/auth/invitations', {
         method: 'POST', body: JSON.stringify({
           role: operator.role, name: operator.name, email: operator.email, phone: operator.phone || '',
         }),
       });
-      return { profile: response.profile, inviteLink: `${window.location.origin}/#invite=${response.token}` };
+      return {
+        profile: response.profile,
+        inviteLink: `${window.location.origin}/#invite=${response.token}`,
+        emailSent: response.emailSent,
+        deliveryError: response.deliveryError,
+      };
     }
     const initials = operator.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
     const newProfile: UserProfile = {
@@ -225,9 +230,9 @@ class ProfileService {
     city?: string;
     assignedBrokerId: string;
     assignedBrokerName: string;
-  }): Promise<{ profile: UserProfile; inviteLink: string; whatsappShareUrl: string; customer?: Customer }> {
+  }): Promise<{ profile: UserProfile; inviteLink: string; whatsappShareUrl: string; customer?: Customer; emailSent?: boolean; deliveryError?: string }> {
     if (!DEMO_MODE) {
-      const response = await request<{ profile: UserProfile; token: string; customer: Customer }>('/auth/invitations', {
+      const response = await request<{ profile: UserProfile; token: string; customer: Customer; emailSent?: boolean; deliveryError?: string }>('/auth/invitations', {
         method: 'POST', body: JSON.stringify({
           role: 'customer', name: params.name, email: params.email,
           phone: params.phone, fiscalCode: params.fiscalCode, city: params.city,
@@ -238,7 +243,7 @@ class ProfileService {
       const phone = params.phone.replace(/[^0-9]/g, '');
       return { profile: response.profile, inviteLink,
         whatsappShareUrl: `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
-        customer: response.customer };
+        customer: response.customer, emailSent: response.emailSent, deliveryError: response.deliveryError };
     }
     const initials = params.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
     const customerId = `cust-${Date.now()}`;

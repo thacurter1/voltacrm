@@ -153,9 +153,19 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
 
   if (role === 'operator' && !DEMO_MODE) return null;
 
+  const googleClientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+  const appleClientId = (import.meta as any).env?.VITE_APPLE_CLIENT_ID;
+  const showGoogle = DEMO_MODE || Boolean(googleClientId);
+  const showApple = DEMO_MODE || Boolean(appleClientId);
+
+  if (!DEMO_MODE && !showGoogle && !showApple) {
+    return null;
+  }
+
   return (
     <div className={`space-y-2.5 ${className}`}>
       {/* Google Button */}
+      {showGoogle && (
       <button
         type="button"
         disabled={loadingProvider !== null}
@@ -185,8 +195,10 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
           {loadingProvider === 'google' ? 'Autenticazione in corso...' : `${verb} Google`}
         </span>
       </button>
+      )}
 
       {/* Apple Button */}
+      {showApple && (
       <button
         type="button"
         disabled={loadingProvider !== null}
@@ -201,6 +213,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
           {loadingProvider === 'apple' ? 'Autenticazione in corso...' : `${verb} Apple`}
         </span>
       </button>
+      )}
 
       {/* Divider */}
       <div className="relative flex py-2 items-center">

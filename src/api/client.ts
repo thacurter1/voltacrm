@@ -166,14 +166,31 @@ export const api = {
       return { success: true, token: mockToken, user: targetProfile };
     },
 
-    async registerCustomer(payload: { name: string; email: string; phone: string; fiscalCode: string; password: string }) {
+    async registerCustomer(payload: {
+      name: string;
+      email: string;
+      phone: string;
+      fiscalCode: string;
+      password: string;
+      privacyConsent: boolean;
+      privacyPolicyVersion?: string;
+      marketingConsent?: boolean;
+    }) {
       if (API_BASE_URL) {
         try {
-          const data = await request<{ success: boolean; token: string; user: any }>('/auth/register-customer', {
+          const data = await request<{
+            success: boolean;
+            token?: string;
+            requireEmailVerification?: boolean;
+            emailSent?: boolean;
+            emailError?: string;
+            message?: string;
+            user: any;
+          }>('/auth/register-customer', {
             method: 'POST',
             body: JSON.stringify(payload)
           });
-          if (data.token && typeof window !== 'undefined') {
+          if (data.token && !data.requireEmailVerification && typeof window !== 'undefined') {
             localStorage.setItem('VOLTA_AUTH_TOKEN', data.token);
             localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(data.user));
           }
@@ -197,8 +214,8 @@ export const api = {
         contractStartDate: new Date().toISOString().split('T')[0],
         lastSwitchAuditDate: new Date().toISOString().split('T')[0],
         nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
-        accountManager: 'Account Manager',
-        hasBrokerageMandate: true,
+        accountManager: '',
+        hasBrokerageMandate: false,
         notes: 'Registrato da portale clienti'
       };
       dbService.save({ ...state, customers: [newCustomer, ...state.customers] });
@@ -214,6 +231,11 @@ export const api = {
         avatar: newCustomer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
         is2faEnabled: false,
         onboardingStatus: 'active' as const,
+        emailVerified: true,
+        privacyConsentAccepted: Boolean(payload.privacyConsent),
+        privacyConsentTimestamp: new Date().toISOString(),
+        privacyPolicyVersion: payload.privacyPolicyVersion || 'bozza-2026-11',
+        marketingConsent: Boolean(payload.marketingConsent),
         createdAt: newCustomer.contractStartDate
       };
       const mockToken = `mock-cust-token-${newProfile.id}-${Date.now()}`;
@@ -222,6 +244,67 @@ export const api = {
         localStorage.setItem('VOLTA_CURRENT_USER', JSON.stringify(newProfile));
       }
       return { success: true, token: mockToken, user: newProfile };
+    },
+
+    async verifyEmail(token: string) {
+      return request<{ success: boolean; message: string }>('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
+    },
+
+    async resendVerification(email: string) {
+      return request<{ success: boolean; emailSent?: boolean; message: string }>('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    },
+
+    async forgotPassword(email: string) {
+      return request<{ success: boolean; message: string }>('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    },
+
+    async resetPassword(token: string, password: string) {
+      return request<{ success: boolean; message: string }>('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+      });
+    },
+
+    async changePassword(currentPassword: string, newPassword: string) {
+      const res = await request<{ success: boolean; token?: string; message: string }>('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (res.token && typeof window !== 'undefined') {
+        localStorage.setItem('VOLTA_AUTH_TOKEN', res.token);
+      }
+      return res;
+    },
+
+    async logoutAllSessions() {
+      const res = await request<{ success: boolean; message: string }>('/auth/logout-all', {
+        method: 'POST',
+      });
+      api.auth.logout();
+      return res;
+    },
+
+    async requestEmailChange(newEmail: string, password?: string) {
+      return request<{ success: boolean; emailSent?: boolean; message: string }>('/auth/request-email-change', {
+        method: 'POST',
+        body: JSON.stringify({ newEmail, ...(password ? { password } : {}) }),
+      });
+    },
+
+    async confirmEmailChange(token: string) {
+      return request<{ success: boolean; email: string; message: string }>('/auth/confirm-email-change', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
     },
 
     async loginWithOAuth(

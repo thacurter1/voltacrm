@@ -1,4 +1,4 @@
-export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator' | 'public_comparator' | 'bill_upload';
+export type LeadSource = 'facebook_ads' | 'google_ads' | 'landing_page' | 'referral' | 'totem_kiosk' | 'manual' | 'website_calculator' | 'public_comparator' | 'bill_upload' | 'support_request';
 
 export type LeadStatus = 
   | 'new' 
@@ -181,6 +181,11 @@ export interface UserProfile {
   avatar?: string;
   is2faEnabled?: boolean;
   onboardingStatus?: 'active' | 'invited' | 'pending_verification' | 'suspended';
+  emailVerified?: boolean;
+  privacyConsentAccepted?: boolean;
+  privacyConsentTimestamp?: string;
+  privacyPolicyVersion?: string;
+  marketingConsent?: boolean;
   createdAt?: string;
 }
 
@@ -194,11 +199,12 @@ export interface CustomerBill {
   uploadDate: string;
   fileSizeKb: number;
   utilityType: 'luce' | 'gas';
-  status: 'in_review' | 'analyzed' | 'archived';
+  status: 'in_review' | 'needs_info' | 'analyzed' | 'archived';
   notes?: string;
   extractedSavingsEur?: number;
   leadId?: string;
   assignedBrokerId?: string;
+  claimToken?: string;
 }
 
 export interface SecurityAuditLog {

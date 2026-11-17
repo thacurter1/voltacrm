@@ -89,7 +89,7 @@ export const portalApi = {
     if (API_BASE_URL) {
       try {
         const headers = isGuestCall && !localStorage.getItem('VOLTA_AUTH_TOKEN') ? { Authorization: '' } : undefined;
-        const response = await request<{ success: true; bill: CustomerBill }>('/portal/bills', {
+        const response = await request<{ success: true; bill: CustomerBill; claimToken?: string }>('/portal/bills', {
           method: 'POST',
           headers,
           body: JSON.stringify({
@@ -110,7 +110,7 @@ export const portalApi = {
             utmMedium: input.utmMedium,
           }),
         });
-        return response.bill;
+        return response.claimToken ? { ...response.bill, claimToken: response.claimToken } : response.bill;
       } catch (err) {
         if (!isDemoSessionActive()) throw err;
         console.warn('[portalApi] Backend non raggiungibile, fallback locale per upload bolletta:', err);
@@ -318,6 +318,64 @@ export const portalApi = {
         ? 'Richiesta di consulenza registrata con successo nel CRM (modalità demo attiva).'
         : 'Richiesta di consulenza registrata con successo (modalità demo attiva).'
     };
+  },
+
+  async claimGuestBill(claimToken: string, customerId?: string): Promise<{ success: boolean; bill: CustomerBill; message: string }> {
+    return request<{ success: boolean; bill: CustomerBill; message: string }>('/portal/bills/claim', {
+      method: 'POST',
+      body: JSON.stringify({ claimToken, ...(customerId ? { customerId } : {}) }),
+    });
+  },
+
+  async listSupportRequests(customerId?: string): Promise<Array<{ id: string; status: string; createdAt: string; summary: string; assignedBrokerId?: string }>> {
+    if (API_BASE_URL) {
+      try {
+        const query = customerId ? '?customerId=' + encodeURIComponent(customerId) : '';
+        const res = await request<{ success: boolean; requests: Array<{ id: string; status: string; createdAt: string; summary: string; assignedBrokerId?: string }> }>('/portal/support-requests' + query);
+        return res.requests;
+      } catch (err) {
+        if (!isDemoSessionActive()) throw err;
+      }
+    }
+    if (!isDemoSessionActive()) throw new Error('Servizio richieste assistenza non configurato.');
+    const state = dbService.load();
+    const prefix = customerId ? `supp-${customerId}-` : 'supp-';
+    return (state.leads || [])
+      .filter((l) => l.id.startsWith(prefix))
+      .map((l) => ({ id: l.id, status: l.status, createdAt: l.createdAt, summary: l.notes, assignedBrokerId: l.assignedBrokerId }));
+  },
+
+  async createSupportRequest(subject: string, message: string, customerId?: string): Promise<{ success: boolean; request: { id: string; status: string; createdAt: string; summary: string; assignedBrokerId?: string } }> {
+    if (API_BASE_URL) {
+      try {
+        return await request('/portal/support-requests', {
+          method: 'POST',
+          body: JSON.stringify({ subject, message, ...(customerId ? { customerId } : {}) }),
+        });
+      } catch (err) {
+        if (!isDemoSessionActive()) throw err;
+      }
+    }
+    if (!isDemoSessionActive()) throw new Error('Servizio richieste assistenza non configurato.');
+    const reqRecord = {
+      id: `supp-${customerId || 'demo'}-${Date.now()}`,
+      status: 'new',
+      createdAt: new Date().toISOString().split('T')[0],
+      summary: `[ASSISTENZA PORTALE] ${subject} — ${message}`,
+    };
+    return { success: true, request: reqRecord };
+  },
+
+  async exportAccountData(customerId?: string): Promise<Record<string, unknown>> {
+    const query = customerId ? '?customerId=' + encodeURIComponent(customerId) : '';
+    return request<Record<string, unknown>>('/portal/account/export' + query);
+  },
+
+  async requestAccountClosure(payload: { password?: string; confirmPhrase?: string; reason?: string; customerId?: string }): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>('/portal/account/closure-request', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   },
 };
 
