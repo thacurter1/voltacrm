@@ -7,7 +7,7 @@ export { MAX_BILL_BYTES, validateBillFile, sanitizeBillFileName } from '../utils
 export const PORTAL_BILL_BUCKET = 'customer-bills';
 
 export type PortalUtilityType = 'luce' | 'gas';
-export type PortalBillStatus = 'in_review' | 'analyzed' | 'archived';
+export type PortalBillStatus = 'in_review' | 'needs_info' | 'analyzed' | 'archived';
 
 export interface PortalBillRecord {
   id: string;
@@ -27,6 +27,7 @@ export interface PortalBillRecord {
   ocrResult?: ExtractedBillData;
   leadId?: string;
   assignedBrokerId?: string;
+  claimTokenHash?: string;
 }
 
 export interface MeterReadingValues {
@@ -60,6 +61,8 @@ export interface PortalBackend {
   getBillDownload(record: PortalBillRecord): Promise<BillDownload>;
   getBillBytes(record: PortalBillRecord): Promise<{ bytes: Buffer; mimeType: string }>;
   updateBillAnalysis(id: string, analysis: { status: 'analyzed'; extractedSavingsEur: number; ocrResult: ExtractedBillData }): Promise<PortalBillRecord>;
+  updateBillStatus(id: string, status: PortalBillStatus, notes?: string): Promise<PortalBillRecord>;
+  claimGuestBill(claimTokenHash: string, customerId: string, customerName: string): Promise<PortalBillRecord>;
   insertReading(record: MeterReadingRecord): Promise<MeterReadingRecord>;
   listReadings(customerId?: string): Promise<MeterReadingRecord[]>;
 }
@@ -74,6 +77,7 @@ export interface UploadBillInput {
   notes?: string;
   leadId?: string;
   assignedBrokerId?: string;
+  claimTokenHash?: string;
 }
 
 export interface MeterReadingInput {
@@ -142,7 +146,13 @@ function mapBill(row: any): PortalBillRecord {
     ocrResult: row.ocr_result || undefined,
     leadId: row.lead_id || undefined,
     assignedBrokerId: row.assigned_broker_id || undefined,
+    claimTokenHash: row.claim_token_hash || undefined,
   };
+}
+
+export function sanitizePortalBillForClient(record: PortalBillRecord): Omit<PortalBillRecord, 'claimTokenHash' | 'storagePath'> {
+  const { claimTokenHash: _claimHash, storagePath: _storagePath, ...safe } = record;
+  return safe;
 }
 
 function mapReading(row: any): MeterReadingRecord {
@@ -185,6 +195,7 @@ function createSupabaseBackend(): PortalBackend {
         extracted_savings_eur: record.extractedSavingsEur ?? null,
         lead_id: record.leadId || null,
         assigned_broker_id: record.assignedBrokerId || null,
+        claim_token_hash: record.claimTokenHash || null,
         created_at: record.createdAt,
       }).select('*').single();
       if (error) throw new Error('Metadati bolletta non salvati: ' + error.message);
@@ -227,6 +238,27 @@ function createSupabaseBackend(): PortalBackend {
         ocr_result: analysis.ocrResult,
       }).eq('id', id).select('*').single();
       if (error) throw new Error('Esito OCR non salvato: ' + error.message);
+      return mapBill(data);
+    },
+    async updateBillStatus(id, status, notes) {
+      const updatePayload: Record<string, unknown> = { status };
+      if (typeof notes === 'string') updatePayload.notes = notes;
+      const { data, error } = await client.from('portal_bills').update(updatePayload).eq('id', id).select('*').maybeSingle();
+      if (error) throw new Error('Stato bolletta non aggiornato: ' + error.message);
+      if (!data) throw portalError('Bolletta non trovata.', 404);
+      return mapBill(data);
+    },
+    async claimGuestBill(claimTokenHash, customerId, customerName) {
+      const { data: billId, error } = await client.rpc('claim_guest_bill_with_token', {
+        p_claim_token_hash: claimTokenHash,
+        p_customer_id: customerId,
+        p_customer_name: customerName,
+      });
+      if (error || !billId) {
+        throw portalError('Codice di associazione bolletta non valido o già utilizzato.', 404);
+      }
+      const { data, error: fetchErr } = await client.from('portal_bills').select('*').eq('id', billId).single();
+      if (fetchErr || !data) throw portalError('Bolletta associata non disponibile.', 503);
       return mapBill(data);
     },
     async insertReading(record) {
@@ -340,6 +372,32 @@ function createMemoryBackend(): PortalBackend {
       bills[index] = { ...bills[index], ...analysis };
       return bills[index];
     },
+    async updateBillStatus(id, status, notes) {
+      const index = bills.findIndex(record => record.id === id);
+      if (index < 0) throw portalError('Bolletta non trovata.', 404);
+      bills[index] = {
+        ...bills[index],
+        status,
+        ...(typeof notes === 'string' ? { notes } : {}),
+      };
+      return bills[index];
+    },
+    async claimGuestBill(claimTokenHash, customerId, customerName) {
+      const index = bills.findIndex(
+        record => record.claimTokenHash === claimTokenHash && record.customerId.startsWith('guest-')
+      );
+      if (index < 0) {
+        throw portalError('Codice di associazione bolletta non valido o già utilizzato.', 404);
+      }
+      const updated = {
+        ...bills[index],
+        customerId,
+        customerName,
+      };
+      delete updated.claimTokenHash;
+      bills[index] = updated;
+      return updated;
+    },
     async insertReading(record) {
       readings.unshift(record);
       return record;
@@ -381,6 +439,7 @@ export function createPortalService(
         createdAt,
         leadId: input.leadId,
         assignedBrokerId: input.assignedBrokerId,
+        claimTokenHash: input.claimTokenHash,
       };
 
       await backend.uploadBill(storagePath, input.bytes, mimeType);
@@ -438,6 +497,18 @@ export function createPortalService(
       });
       return { bill, result };
     },
+    async updateBillStatus(id: string, status: PortalBillStatus, notes?: string): Promise<PortalBillRecord> {
+      if (!['in_review', 'needs_info', 'analyzed', 'archived'].includes(status)) {
+        throw portalError('Stato bolletta non valido.', 400);
+      }
+      return backend.updateBillStatus(id, status, notes);
+    },
+    async claimGuestBill(claimTokenHash: string, customerId: string, customerName: string): Promise<PortalBillRecord> {
+      if (!/^[0-9a-f]{64}$/.test(claimTokenHash)) {
+        throw portalError('Codice di verifica bolletta non valido.', 400);
+      }
+      return backend.claimGuestBill(claimTokenHash, customerId, customerName);
+    },
     async createReading(customerId: string, input: MeterReadingInput): Promise<MeterReadingRecord> {
       const valid = validateMeterReadingInput(input);
       const createdAt = now().toISOString();
@@ -473,6 +544,8 @@ function createDefaultPortalService() {
       getBillDownload: async () => unavailable(),
       getBillBytes: async () => unavailable(),
       updateBillAnalysis: async () => unavailable(),
+      updateBillStatus: async () => unavailable(),
+      claimGuestBill: async () => unavailable(),
       insertReading: async () => unavailable(),
       listReadings: async () => unavailable(),
     });

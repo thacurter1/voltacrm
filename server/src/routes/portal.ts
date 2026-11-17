@@ -1,5 +1,6 @@
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { Router, Response, NextFunction } from 'express';
+import bcrypt from 'bcryptjs';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { decodeAndValidateBillFile, sanitizeBillFileName } from '../utils/billFile.js';
 import { getCustomers, getLeads, users, addLead, addNotification } from '../services/dataStore.js';
@@ -7,11 +8,16 @@ import { AppNotification, Lead, UserProfile } from '../types.js';
 import {
   MeterReadingInput,
   PortalBillRecord,
+  PortalBillStatus,
   PortalUtilityType,
   portalService,
+  sanitizePortalBillForClient,
 } from '../services/portalService.js';
 import { canActorAccessCustomer, isBrokerAssigned } from '../services/customerOwnership.js';
 import { publicFunnelLimiter } from '../middleware/rateLimiter.js';
+import { addSecurityLog } from '../services/operationsService.js';
+import { suspendAccountForClosure } from '../services/authTokenService.js';
+import { sendTransactionalEmail, resolveAllowedAppBaseUrl } from '../services/emailService.js';
 
 export const portalRouter = Router();
 
@@ -141,7 +147,7 @@ function extractIdempotencyKey(req: AuthRequest): string | undefined {
 
 interface InFlightGuestLead {
   fingerprint: string;
-  promise: Promise<{ lead: Lead; bill?: any; wasDeduplicated?: boolean }>;
+  promise: Promise<{ lead: Lead; bill?: any; wasDeduplicated?: boolean; claimToken?: string }>;
 }
 const inFlightGuestLeads = new Map<string, InFlightGuestLead>();
 
@@ -695,6 +701,8 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
     const consentTimestamp = new Date().toISOString();
     const resolvedPolicyVersion =
       typeof privacyPolicyVersion === 'string' && privacyPolicyVersion.trim() ? privacyPolicyVersion.trim() : '2026.10';
+    const rawClaimToken = randomBytes(24).toString('base64url');
+    const claimTokenHash = createHash('sha256').update(rawClaimToken).digest('hex');
 
     const bill = await portalService.uploadBill({
       customerId: `guest-${Date.now()}`,
@@ -706,16 +714,20 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
       notes: typeof notes === 'string' ? notes.slice(0, 1000) : undefined,
       leadId,
       assignedBrokerId,
+      claimTokenHash,
     });
 
     const utmClause = formatUtmNote(utmSource, utmCampaign, utmMedium);
     const utmAdvNote = utmClause ? ` • ${utmClause}` : '';
+    const validGuestEmail = email && typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+      ? email.trim().toLowerCase()
+      : undefined;
 
     const candidateLead: Lead = {
       id: leadId,
       name: customerName,
       phone: trimmedPhone,
-      email: (email && typeof email === 'string' && email.trim()) || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
+      email: validGuestEmail || `${trimmedPhone.replace(/\s+/g, '')}@lead.volta.it`,
       city: (typeof city === 'string' && city.trim()) || 'Italia',
       source: 'bill_upload',
       status: 'new',
@@ -728,6 +740,7 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
       privacyPolicyVersion: resolvedPolicyVersion,
       idempotencyKey,
       idempotencyFingerprint: fingerprint,
+      claimTokenHash,
     };
     try {
       await addLead(candidateLead);
@@ -759,18 +772,29 @@ portalRouter.post('/bills', publicFunnelLimiter, optionalAuthenticateToken, hand
       meta: { leadId: candidateLead.id, billId: bill.id, fileName: bill.fileName }
     });
 
-    return { lead: candidateLead, bill, wasDeduplicated: false };
+    if (validGuestEmail) {
+      const claimLink = `${resolveAllowedAppBaseUrl()}/?portal=customer&claimBillToken=${encodeURIComponent(rawClaimToken)}`;
+      void sendTransactionalEmail({
+        to: validGuestEmail,
+        category: 'guest_bill_claim',
+        subject: 'Bolletta caricata su VoltaCRM — Codice di associazione personale',
+        text: `Ciao ${customerName},\n\nAbbiamo ricevuto la tua bolletta "${bill.fileName}".\nSe ti registri o accedi al Portale Clienti, puoi associarla in modo sicuro al tuo account usando questo codice personale monouso:\n${rawClaimToken}\n\nOppure apri: ${claimLink}`,
+      }).catch(() => undefined);
+    }
+
+    return { lead: candidateLead, bill, wasDeduplicated: false, claimToken: rawClaimToken };
   })();
 
   inFlightGuestLeads.set(lockKey, { fingerprint, promise: creationPromise });
   try {
-    const { lead: newLead, bill, wasDeduplicated } = await creationPromise;
+    const { lead: newLead, bill, wasDeduplicated, claimToken } = await creationPromise;
     res.status(wasDeduplicated ? 200 : 201).json({
       success: true,
       ...(wasDeduplicated ? { idempotent: true } : {}),
-      bill,
+      bill: bill ? sanitizePortalBillForClient(bill) : bill,
       leadId: newLead.id,
       lead: newLead,
+      ...(claimToken ? { claimToken } : {}),
       message: wasDeduplicated
         ? 'Bolletta già caricata e registrata nel CRM.'
         : 'Bolletta caricata e richiesta di analisi registrata nel CRM.',
@@ -805,7 +829,57 @@ portalRouter.get('/bills', handlePortalRoute(async (req: AuthRequest, res: Respo
     bills = bills.filter((b) => canBrokerAccessBill(b, profile));
   }
 
-  res.json({ success: true, bills });
+  res.json({ success: true, bills: bills.map(sanitizePortalBillForClient) });
+}));
+
+portalRouter.post('/bills/claim', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { actor, customer } = resolveCustomer(req, req.body?.customerId);
+  if (actor.isStaff) {
+    throw httpError('Solo il cliente titolare può associare una propria bolletta guest con codice di possesso.', 403);
+  }
+  const rawClaimToken = typeof req.body?.claimToken === 'string' ? req.body.claimToken.trim() : '';
+  if (!/^[A-Za-z0-9_-]{24,128}$/.test(rawClaimToken)) {
+    throw httpError('Inserisci un codice di verifica bolletta valido.', 400);
+  }
+  const claimTokenHash = createHash('sha256').update(rawClaimToken).digest('hex');
+  const claimedBill = await portalService.claimGuestBill(claimTokenHash, customer.id, customer.name);
+
+  if (claimedBill.leadId) {
+    const linkedLead = getLeads().find((l) => l.id === claimedBill.leadId);
+    if (linkedLead) linkedLead.claimTokenHash = undefined;
+  }
+
+  await addSecurityLog({
+    eventType: 'guest_bill_claimed',
+    userEmail: req.user?.email || customer.email || customer.id,
+    ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+    status: 'safe',
+    details: `Bolletta ${claimedBill.id} associata al cliente ${customer.id} tramite prova di possesso`,
+  }).catch(() => undefined);
+
+  res.json({
+    success: true,
+    bill: sanitizePortalBillForClient(claimedBill),
+    message: 'Bolletta associata al tuo account con successo.',
+  });
+}));
+
+portalRouter.patch('/bills/:id/status', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  const actor = resolveActor(req);
+  if (!actor.isStaff) throw httpError('Solo lo staff può aggiornare lo stato della bolletta.', 403);
+  const bill = await portalService.getBill(req.params.id);
+  if (!bill) throw httpError('Bolletta richiesta non trovata.', 404);
+  const profile = users.find((item) => item.id === req.user?.userId);
+  if (profile && (profile.role === 'broker' || profile.role === 'operator') && !canBrokerAccessBill(bill, profile)) {
+    throw httpError('Accesso negato alla bolletta del cliente non assegnato.', 403);
+  }
+  const status = req.body?.status as PortalBillStatus;
+  if (!['in_review', 'needs_info', 'analyzed', 'archived'].includes(status)) {
+    throw httpError('Stato bolletta non valido.', 400);
+  }
+  const notes = typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 1000) : undefined;
+  const updated = await portalService.updateBillStatus(bill.id, status, notes);
+  res.json({ success: true, bill: sanitizePortalBillForClient(updated) });
 }));
 
 portalRouter.get('/bills/:id/download', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
@@ -901,6 +975,144 @@ portalRouter.post('/readings', handlePortalRoute(async (req: AuthRequest, res: R
     readings: input.readings,
   });
   res.status(201).json({ success: true, reading });
+}));
+
+portalRouter.get('/support-requests', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { customer } = resolveCustomer(req, req.query?.customerId);
+  const prefix = `supp-${customer.id}-`;
+  const requests = getLeads()
+    .filter((l) => l.source === 'support_request' && l.id.startsWith(prefix))
+    .map((l) => ({
+      id: l.id,
+      status: l.status,
+      createdAt: l.createdAt,
+      summary: l.notes,
+      assignedBrokerId: l.assignedBrokerId,
+    }));
+  res.json({ success: true, requests });
+}));
+
+portalRouter.post('/support-requests', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { customer } = resolveCustomer(req, req.body?.customerId);
+  const subject = typeof req.body?.subject === 'string' ? req.body.subject.trim().slice(0, 150) : '';
+  const message = typeof req.body?.message === 'string' ? req.body.message.trim().slice(0, 1500) : '';
+  if (subject.length < 3 || message.length < 5) {
+    throw httpError('Inserisci oggetto e descrizione della richiesta di assistenza.', 400);
+  }
+
+  const assignedBrokerId = resolveActiveAssignedBrokerId(customer.assignedBrokerId);
+  const nowIso = new Date().toISOString();
+  const leadId = `supp-${customer.id}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const supportLead: Lead = {
+    id: leadId,
+    name: customer.name,
+    phone: customer.phone || 'Non indicato',
+    email: customer.email || `${customer.id}@cliente.volta.it`,
+    city: customer.city || 'Italia',
+    source: 'support_request',
+    status: 'new',
+    notes: `[ASSISTENZA PORTALE] ${subject} — ${message}`,
+    createdAt: nowIso.split('T')[0],
+    assignedBrokerId,
+  };
+
+  await addLead(supportLead);
+  await safeAddNotification({
+    id: `notif-supp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    type: 'consultation_requested',
+    title: 'Nuova Richiesta Assistenza Account',
+    message: `${customer.name}: ${subject}`,
+    timestamp: nowIso,
+    isRead: false,
+    priority: 'normal',
+    targetRole: assignedBrokerId ? 'broker' : 'call_center',
+    targetUserId: assignedBrokerId,
+    actionTab: 'leads',
+    meta: { leadId: supportLead.id, customerId: customer.id },
+  });
+
+  res.status(201).json({
+    success: true,
+    request: {
+      id: supportLead.id,
+      status: supportLead.status,
+      createdAt: supportLead.createdAt,
+      summary: supportLead.notes,
+      assignedBrokerId: supportLead.assignedBrokerId,
+    },
+  });
+}));
+
+portalRouter.get('/account/export', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { customer } = resolveCustomer(req, req.query?.customerId);
+  const user = users.find((u) => u.id === req.user?.userId);
+  const bills = (await portalService.listBills(customer.id)).map(sanitizePortalBillForClient);
+  const readings = await portalService.listReadings(customer.id);
+  const supportPrefix = `supp-${customer.id}-`;
+  const supportRequests = getLeads()
+    .filter((l) => l.source === 'support_request' && l.id.startsWith(supportPrefix))
+    .map((l) => ({ id: l.id, status: l.status, createdAt: l.createdAt, summary: l.notes }));
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Content-Disposition', `attachment; filename="voltacrm-export-${customer.id}.json"`);
+  res.json({
+    exportedAt: new Date().toISOString(),
+    account: user ? {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      onboardingStatus: user.onboardingStatus || 'active',
+      emailVerified: Boolean(user.emailVerified ?? true),
+      createdAt: user.createdAt,
+    } : null,
+    consents: {
+      privacyConsentAccepted: Boolean(user?.privacyConsentAccepted ?? false),
+      privacyConsentTimestamp: user?.privacyConsentTimestamp || null,
+      privacyPolicyVersion: user?.privacyPolicyVersion || null,
+      marketingConsent: Boolean(user?.marketingConsent ?? false),
+      marketingConsentTimestamp: user?.marketingConsentTimestamp || null,
+    },
+    customer,
+    bills,
+    readings,
+    supportRequests,
+    retentionNotice: 'Eventuali documenti contrattuali e mandati di brokeraggio restano conservati secondo gli obblighi di legge.',
+  });
+}));
+
+portalRouter.post('/account/closure-request', handlePortalRoute(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { actor, customer } = resolveCustomer(req, req.body?.customerId);
+  if (actor.isStaff) {
+    throw httpError('Solo il titolare cliente può richiedere la chiusura del proprio account.', 403);
+  }
+  const user = users.find((u) => u.id === req.user?.userId);
+  if (!user) throw httpError('Account non trovato.', 404);
+
+  if (!user.authProvider) {
+    const pwd = typeof req.body?.password === 'string' ? req.body.password : '';
+    if (!pwd || !bcrypt.compareSync(pwd, user.password)) {
+      throw httpError('Password non corretta: impossibile confermare la chiusura dell’account.', 403);
+    }
+  } else if (req.body?.confirmPhrase !== 'CHIUDI ACCOUNT') {
+    throw httpError('Conferma digitando esattamente "CHIUDI ACCOUNT".', 400);
+  }
+
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 500) : 'Richiesta chiusura account da portale';
+  await suspendAccountForClosure(user.id, reason);
+
+  await addSecurityLog({
+    eventType: 'account_closure_requested',
+    userEmail: user.email,
+    ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+    status: 'warning',
+    details: `Account cliente ${customer.id} sospeso per richiesta chiusura volontaria; documenti contrattuali conservati per obblighi normativi`,
+  }).catch(() => undefined);
+
+  res.json({
+    success: true,
+    message: 'Richiesta di chiusura account registrata. L’accesso e tutte le sessioni sono state disattivate; i documenti contrattuali restano conservati secondo legge.',
+  });
 }));
 
 
