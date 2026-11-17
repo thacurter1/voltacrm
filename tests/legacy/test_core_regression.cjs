@@ -33,7 +33,7 @@ test('core persistence and identity regressions', async t => {
    assert.equal((await post('/auth/register-customer',{name:'Audit',email:'no-password@example.invalid',phone:'+393331234567',fiscalCode:'RSSMRA80A01H501U'})).status,400);
   });
   await t.test('registration creates customer and rejects duplicate normalized email', async()=> {
-   const body={name:'Audit Person',email:'new-customer@example.invalid',phone:'+393331234567',fiscalCode:'RSSMRA80A01H501U',password:'strong-audit-password-42'};
+   const body={name:'Audit Person',email:'new-customer@example.invalid',phone:'+393331234567',fiscalCode:'RSSMRA80A01H501U',password:'strong-audit-password-42',privacyConsent:true};
    const first=await post('/auth/register-customer',body);assert.equal(first.status,201);
    assert.ok(store.getCustomers().some(c=>c.id===first.data.user.customerId));
    assert.equal((await post('/auth/register-customer',{...body,email:'NEW-CUSTOMER@example.invalid'})).status,409);
@@ -41,7 +41,7 @@ test('core persistence and identity regressions', async t => {
   await t.test('failed account transaction returns error and publishes neither user nor customer', async()=> {
    const users=store.users.length,customers=store.getCustomers().length;
    db.isSupabaseConfigured=true;db.supabase={rpc:async()=>({error:{message:'registration transaction failed'}})};
-   try { const r=await post('/auth/register-customer',{name:'Failure',email:'failure@example.invalid',phone:'+393331234567',fiscalCode:'RSSMRA80A01H501U',password:'strong-audit-password-42'});assert.equal(r.status,503);assert.equal(store.users.length,users);assert.equal(store.getCustomers().length,customers); }
+   try { const r=await post('/auth/register-customer',{name:'Failure',email:'failure@example.invalid',phone:'+393331234567',fiscalCode:'RSSMRA80A01H501U',password:'strong-audit-password-42',privacyConsent:true});assert.equal(r.status,503);assert.equal(store.users.length,users);assert.equal(store.getCustomers().length,customers); }
    finally {db.isSupabaseConfigured=false;db.supabase=null;}
   });
   await t.test('default Totem key is rejected in production',async()=> {

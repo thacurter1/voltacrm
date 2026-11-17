@@ -4,6 +4,8 @@ import { Customer } from '../types.js';
 import { registerAccount, users, initDataStore } from './dataStore.js';
 import { isSupabaseConfigured, supabase } from './dbClient.js';
 import { generateTotpSecret, verifyTotp } from '../utils/totp.js';
+import { sendTransactionalEmail, resolveAllowedAppBaseUrl } from './emailService.js';
+import { normalizeFiscalCode, shouldEnforceStrictFiscalChecksum, validateItalianFiscalCodeOrVat } from '../utils/fiscalCode.js';
 
 export type InvitationRole = 'customer' | 'admin' | 'call_center' | 'operator' | 'broker';
 
@@ -51,6 +53,13 @@ export async function createAccountInvitation(actor: { id: string; name: string 
   if (users.some(user => user.email.toLowerCase() === email)) {
     throw Object.assign(new Error('Email già registrata.'), { status: 409 });
   }
+  const normalizedCf = input.fiscalCode ? normalizeFiscalCode(input.fiscalCode) : undefined;
+  if (input.role === 'customer' && normalizedCf && shouldEnforceStrictFiscalChecksum()) {
+    const cfCheck = validateItalianFiscalCodeOrVat(normalizedCf);
+    if (!cfCheck.valid) {
+      throw Object.assign(new Error(cfCheck.reason || 'Codice Fiscale o Partita IVA non valido.'), { status: 400 });
+    }
+  }
 
   const token = crypto.randomBytes(32).toString('base64url');
   const today = new Date();
@@ -60,15 +69,24 @@ export async function createAccountInvitation(actor: { id: string; name: string 
   const totpSecret = input.role === 'customer' ? undefined : generateTotpSecret();
   const profile = {
     id, name: input.name.trim(), email, phone: input.phone.trim(), role: input.role,
-    fiscalCode: input.fiscalCode?.trim().toUpperCase(), customerId,
+    fiscalCode: normalizedCf, customerId,
     assignedBrokerId: customerId ? actor.id : undefined,
     assignedBrokerName: customerId ? actor.name : undefined,
     avatar: input.name.trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase(),
-    is2faEnabled: false, onboardingStatus: 'invited', createdAt: today.toISOString().slice(0, 10),
+    is2faEnabled: false, onboardingStatus: 'invited', emailVerified: false, tokenVersion: 1, createdAt: today.toISOString().slice(0, 10),
     inviteTokenHash: hashToken(token), inviteExpiresAt: expiresAt,
     inviteTotpSecret: totpSecret,
     password: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12),
   };
+
+  const inviteLink = `${resolveAllowedAppBaseUrl()}/?invite=${encodeURIComponent(token)}`;
+  const sendInviteNotificationEmail = () =>
+    sendTransactionalEmail({
+      to: email,
+      category: input.role === 'customer' ? 'customer_invitation' : 'staff_invitation',
+      subject: input.role === 'customer' ? 'Attiva il tuo portale clienti VoltaCRM' : 'Invito di attivazione account staff VoltaCRM',
+      text: `Ciao ${profile.name},\n\nCompleta l'attivazione del tuo account VoltaCRM tramite il seguente link monouso (valido fino al ${expiresAt.slice(0, 10)}):\n${inviteLink}\n\nSe non hai richiesto questo invito, ignora questo messaggio.`,
+    });
 
   if (customerId) {
     const customer: Customer = {
@@ -80,19 +98,34 @@ export async function createAccountInvitation(actor: { id: string; name: string 
       hasBrokerageMandate: false, accountManager: actor.name, assignedBrokerId: actor.id,
     };
     await registerAccount(profile, customer);
-    return { token, expiresAt, profile: publicInvitationProfile(profile), customer };
+    const emailResult = await sendInviteNotificationEmail();
+    return {
+      token,
+      expiresAt,
+      profile: publicInvitationProfile(profile),
+      customer,
+      emailSent: emailResult.sent,
+      ...(emailResult.error ? { deliveryError: emailResult.error } : {}),
+    };
   }
 
   const { error } = await supabase.from('crm_accounts').insert({
     id, email, password_hash: profile.password, role: input.role,
-    is_2fa_enabled: false, profile: publicDatabaseProfile(profile),
+    is_2fa_enabled: false, token_version: 1, email_verified: false, profile: publicDatabaseProfile(profile),
   });
   if (error) {
     if (error.code === '23505') throw Object.assign(new Error('Email già registrata.'), { status: 409 });
     throw error;
   }
   await initDataStore(true);
-  return { token, expiresAt, profile: publicInvitationProfile(profile) };
+  const emailResult = await sendInviteNotificationEmail();
+  return {
+    token,
+    expiresAt,
+    profile: publicInvitationProfile(profile),
+    emailSent: emailResult.sent,
+    ...(emailResult.error ? { deliveryError: emailResult.error } : {}),
+  };
 }
 
 function publicDatabaseProfile(profile: Record<string, unknown>) {
@@ -129,7 +162,20 @@ export async function renewAccountInvitation(accountId: string) {
   if (updateError) throw updateError;
   if (!updated) throw invitationError();
   await initDataStore(true);
-  return { token, expiresAt, profile: publicInvitationProfile(data.profile) };
+  const inviteLink = `${resolveAllowedAppBaseUrl()}/?invite=${encodeURIComponent(token)}`;
+  const emailResult = await sendTransactionalEmail({
+    to: data.email,
+    category: data.role === 'customer' ? 'customer_invitation_renewed' : 'staff_invitation_renewed',
+    subject: 'Nuovo link di attivazione account VoltaCRM',
+    text: `Ecco un nuovo link monouso per completare l'attivazione del tuo account (valido fino al ${expiresAt.slice(0, 10)}):\n${inviteLink}`,
+  });
+  return {
+    token,
+    expiresAt,
+    profile: publicInvitationProfile(data.profile),
+    emailSent: emailResult.sent,
+    ...(emailResult.error ? { deliveryError: emailResult.error } : {}),
+  };
 }
 
 export async function acceptAccountInvitation(token: string, password: string, totpCode?: string) {

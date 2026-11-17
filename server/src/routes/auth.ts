@@ -1,12 +1,45 @@
 import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { users, registerAccount } from '../services/dataStore.js';
+import { users, getCustomers, registerAccount } from '../services/dataStore.js';
 import { generateToken, authenticateToken, requireRole, AuthRequest, isDemoAllowed } from '../middleware/auth.js';
 import { loginLimiter } from '../middleware/rateLimiter.js';
-import { validate, loginOperatorSchema, loginCustomerSchema, registerCustomerSchema, oauthAuthSchema, createInvitationSchema, inspectInvitationSchema, acceptInvitationSchema } from '../middleware/validate.js';
-import { createAccountInvitation, inspectAccountInvitation, acceptAccountInvitation, renewAccountInvitation } from '../services/invitationService.js';
-
+import {
+  validate,
+  loginOperatorSchema,
+  loginCustomerSchema,
+  registerCustomerSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+  requestEmailChangeSchema,
+  confirmEmailChangeSchema,
+  oauthAuthSchema,
+  createInvitationSchema,
+  inspectInvitationSchema,
+  acceptInvitationSchema,
+} from '../middleware/validate.js';
+import {
+  createAccountInvitation,
+  inspectAccountInvitation,
+  acceptAccountInvitation,
+  renewAccountInvitation,
+} from '../services/invitationService.js';
+import {
+  issueAuthActionToken,
+  verifyAccountEmailWithToken,
+  resetAccountPasswordWithToken,
+  bumpAccountTokenVersion,
+  confirmEmailChangeWithToken,
+} from '../services/authTokenService.js';
+import { sendTransactionalEmail, resolveAllowedAppBaseUrl } from '../services/emailService.js';
+import {
+  normalizeFiscalCode,
+  shouldEnforceStrictFiscalChecksum,
+  validateItalianFiscalCodeOrVat,
+} from '../utils/fiscalCode.js';
 import { verifyTotp } from '../utils/totp.js';
 import { verifyOAuthToken } from '../services/oauthVerifier.js';
 import { addSecurityLog } from '../services/operationsService.js';
@@ -37,6 +70,46 @@ const rejectIfSuspended = async (user: any, req: Request, res: Response): Promis
   return true;
 };
 
+const rejectIfPendingVerification = (user: any, res: Response): boolean => {
+  if (user?.onboardingStatus !== 'pending_verification' && user?.emailVerified !== false) return false;
+  if (user?.onboardingStatus === 'invited') return false;
+  res.status(403).json({
+    success: false,
+    requireEmailVerification: true,
+    message: 'Indirizzo email non ancora verificato. Controlla la tua casella o richiedi un nuovo link di verifica.',
+  });
+  return true;
+};
+
+function buildVerificationEmailUrl(rawToken: string): string {
+  return `${resolveAllowedAppBaseUrl()}/?portal=customer&verifyEmailToken=${encodeURIComponent(rawToken)}`;
+}
+
+function buildResetPasswordUrl(rawToken: string): string {
+  return `${resolveAllowedAppBaseUrl()}/?portal=customer&resetToken=${encodeURIComponent(rawToken)}`;
+}
+
+function buildEmailChangeUrl(rawToken: string): string {
+  return `${resolveAllowedAppBaseUrl()}/?portal=customer&emailChangeToken=${encodeURIComponent(rawToken)}`;
+}
+
+async function sendVerificationEmailForUser(user: { id: string; name: string; email: string }) {
+  const issued = await issueAuthActionToken({
+    accountId: user.id,
+    purpose: 'verify_email',
+    targetEmail: user.email,
+    ttlMs: 24 * 3600_000,
+    revokePrevious: true,
+  });
+  const verifyUrl = buildVerificationEmailUrl(issued.rawToken);
+  return sendTransactionalEmail({
+    to: user.email,
+    category: 'verify_email',
+    subject: 'Verifica il tuo indirizzo email — VoltaCRM',
+    text: `Ciao ${user.name},\n\nConferma il tuo indirizzo email per attivare l'accesso a VoltaCRM:\n${verifyUrl}\n\nIl link è valido per 24 ore ed è utilizzabile una sola volta.`,
+  });
+}
+
 // POST /api/auth/demo-login (Accesso rapido 1-click in modalità demo / testing)
 authRouter.post('/demo-login', loginLimiter, async (req: Request, res: Response): Promise<void> => {
   if (!isDemoAllowed()) {
@@ -50,7 +123,8 @@ authRouter.post('/demo-login', loginLimiter, async (req: Request, res: Response)
     return;
   }
   if (await rejectIfSuspended(user, req, res)) return;
-  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+  if (rejectIfPendingVerification(user, res)) return;
+  const token = generateToken({ userId: user.id, email: user.email, role: user.role, tokenVersion: Number(user.tokenVersion ?? 1) });
   res.json({
     success: true,
     token,
@@ -108,7 +182,7 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
     }
   }
 
-  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+  const token = generateToken({ userId: user.id, email: user.email, role: user.role, tokenVersion: Number(user.tokenVersion ?? 1) });
 
   await addSecurityLog({
     eventType: 'login_success_operator',
@@ -129,10 +203,10 @@ authRouter.post('/login-operator', loginLimiter, validate(loginOperatorSchema), 
 authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), async (req: Request, res: Response): Promise<void> => {
   const { identifier, password } = req.body;
   const query = (identifier || '').trim().toLowerCase();
-  
-  const user = users.find(u => 
+
+  const user = users.find(u =>
     u.role === 'customer' && (
-      u.email.toLowerCase() === query || 
+      u.email.toLowerCase() === query ||
       u.fiscalCode?.toLowerCase() === query
     )
   );
@@ -153,8 +227,9 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
     return;
   }
   if (await rejectIfSuspended(user, req, res)) return;
+  if (rejectIfPendingVerification(user, res)) return;
 
-  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+  const token = generateToken({ userId: user.id, email: user.email, role: user.role, tokenVersion: Number(user.tokenVersion ?? 1) });
 
   await addSecurityLog({
     eventType: 'login_success_customer',
@@ -173,36 +248,325 @@ authRouter.post('/login-customer', loginLimiter, validate(loginCustomerSchema), 
 
 // POST /api/auth/register-customer
 authRouter.post('/register-customer', loginLimiter, validate(registerCustomerSchema), async (req: Request, res: Response): Promise<void> => {
-  const { name, email, phone, fiscalCode, password } = req.body;
+  const { name, email, phone, fiscalCode, password, privacyPolicyVersion, marketingConsent } = req.body;
   const normalizedEmail = email.trim().toLowerCase();
-  const normalizedFiscalCode = fiscalCode.trim().toUpperCase();
+  const normalizedFiscalCode = normalizeFiscalCode(fiscalCode);
 
-  const existingUser = users.find(u => 
-    u.email.toLowerCase() === normalizedEmail || 
+  if (shouldEnforceStrictFiscalChecksum()) {
+    const cfCheck = validateItalianFiscalCodeOrVat(normalizedFiscalCode);
+    if (!cfCheck.valid) {
+      res.status(400).json({ success: false, message: cfCheck.reason || 'Codice Fiscale o Partita IVA non valido.' });
+      return;
+    }
+  }
+
+  const existingUser = users.find(u =>
+    u.email.toLowerCase() === normalizedEmail ||
     (u.fiscalCode && u.fiscalCode.toUpperCase() === normalizedFiscalCode)
   );
-  if (existingUser) {
-    res.status(409).json({ success: false, message: 'Email o Codice Fiscale già registrato nel sistema.' });
+  const existingCustomer = getCustomers().find(c =>
+    (c.fiscalCode && c.fiscalCode.toUpperCase() === normalizedFiscalCode) ||
+    (c.email && c.email.toLowerCase() === normalizedEmail)
+  );
+  if (existingUser || existingCustomer) {
+    res.status(409).json({ success: false, message: 'Email o Codice Fiscale/P.IVA già registrato nel sistema.' });
     return;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const nowIso = new Date().toISOString();
+  const today = nowIso.split('T')[0];
   const customerId = crypto.randomUUID();
   const profile = {
-    id: crypto.randomUUID(), name: name.trim(), email: normalizedEmail,
-    password: await bcrypt.hash(password, 12), role: 'customer', phone,
-    fiscalCode: normalizedFiscalCode, customerId,
-    avatar: name.split(' ').map((n:string)=>n[0]).join('').slice(0,2).toUpperCase(),
-    is2faEnabled: false, onboardingStatus:'active', createdAt:today
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    email: normalizedEmail,
+    password: await bcrypt.hash(password, 12),
+    role: 'customer',
+    phone,
+    fiscalCode: normalizedFiscalCode,
+    customerId,
+    avatar: name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase(),
+    is2faEnabled: false,
+    onboardingStatus: 'pending_verification' as const,
+    emailVerified: false,
+    tokenVersion: 1,
+    privacyConsentAccepted: true,
+    privacyConsentTimestamp: nowIso,
+    privacyPolicyVersion: privacyPolicyVersion || 'bozza-2026-11',
+    marketingConsent: Boolean(marketingConsent),
+    marketingConsentTimestamp: Boolean(marketingConsent) ? nowIso : undefined,
+    createdAt: today,
   };
+
   await registerAccount(profile, {
-    id:customerId,name:profile.name,email:profile.email,phone,fiscalCode:profile.fiscalCode,
-    city:'',utilityPoints:[],contractStartDate:today,lastSwitchAuditDate:today,
-    nextSwitchAuditDate:new Date(Date.now()+120*86400000).toISOString().split('T')[0],
-    accountManager:'',hasBrokerageMandate:false,notes:''
+    id: customerId,
+    name: profile.name,
+    email: profile.email,
+    phone,
+    fiscalCode: profile.fiscalCode,
+    city: '',
+    utilityPoints: [],
+    contractStartDate: today,
+    lastSwitchAuditDate: today,
+    nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
+    accountManager: '',
+    hasBrokerageMandate: false,
+    notes: `Registrato da portale clienti (Informativa ${profile.privacyPolicyVersion}${profile.marketingConsent ? ' + consenso marketing' : ''})`,
   });
-  const token=generateToken({userId:profile.id,email:profile.email,role:profile.role});
-  res.status(201).json({success:true,user:toSafeProfile(profile),token});
+
+  const emailResult = await sendVerificationEmailForUser({ id: profile.id, name: profile.name, email: profile.email });
+
+  await addSecurityLog({
+    eventType: 'customer_registration_pending_verification',
+    userEmail: profile.email,
+    ipAddress: getClientIp(req),
+    status: emailResult.sent ? 'safe' : 'warning',
+    details: emailResult.sent
+      ? `Registrazione creata in attesa verifica email (informativa ${profile.privacyPolicyVersion})`
+      : 'Registrazione creata ma consegna email verifica non riuscita',
+  }).catch(err => console.error('[SecurityLog Error]', err));
+
+  res.status(201).json({
+    success: true,
+    requireEmailVerification: true,
+    emailSent: emailResult.sent,
+    ...(emailResult.error ? { emailError: emailResult.error } : {}),
+    message: emailResult.sent
+      ? 'Account creato. Controlla la tua casella email e clicca sul link di verifica per accedere.'
+      : 'Account registrato, ma il servizio email non ha completato l’invio. Riprova a inviare il link di verifica o contatta l’assistenza.',
+    user: toSafeProfile(profile),
+  });
+});
+
+// POST /api/auth/verify-email
+authRouter.post('/verify-email', loginLimiter, validate(verifyEmailSchema), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const verified = await verifyAccountEmailWithToken(req.body.token);
+    await addSecurityLog({
+      eventType: 'email_verified',
+      userEmail: verified.email || verified.accountId,
+      ipAddress: getClientIp(req),
+      status: 'safe',
+      details: 'Indirizzo email verificato con token monouso',
+    }).catch(err => console.error('[SecurityLog Error]', err));
+    res.json({ success: true, message: 'Email verificata con successo. Ora puoi accedere con le tue credenziali.' });
+  } catch (err: any) {
+    res.status(err.status || 400).json({ success: false, message: err.message || 'Link di verifica non valido o scaduto.' });
+  }
+});
+
+// POST /api/auth/resend-verification
+authRouter.post('/resend-verification', loginLimiter, validate(resendVerificationSchema), async (req: Request, res: Response): Promise<void> => {
+  const email = req.body.email.trim().toLowerCase();
+  const user = users.find(u => u.role === 'customer' && u.email.toLowerCase() === email);
+  const genericMessage = 'Se l’indirizzo è registrato ed è in attesa di verifica, abbiamo inviato un nuovo link di attivazione.';
+
+  if (!user || (user.onboardingStatus !== 'pending_verification' && user.emailVerified !== false)) {
+    res.json({ success: true, message: genericMessage });
+    return;
+  }
+
+  const emailResult = await sendVerificationEmailForUser({ id: user.id, name: user.name, email: user.email });
+  if (!emailResult.sent) {
+    res.status(503).json({
+      success: false,
+      emailSent: false,
+      message: emailResult.error || 'Invio email di verifica non disponibile al momento.',
+    });
+    return;
+  }
+  res.json({ success: true, emailSent: true, message: genericMessage });
+});
+
+// POST /api/auth/forgot-password (anti-enumerazione)
+authRouter.post('/forgot-password', loginLimiter, validate(forgotPasswordSchema), async (req: Request, res: Response): Promise<void> => {
+  const email = req.body.email.trim().toLowerCase();
+  const genericMessage = 'Se l’indirizzo è associato a un account attivo, riceverai a breve un link per reimpostare la password.';
+  const user = users.find(u => u.role === 'customer' && u.email.toLowerCase() === email && u.onboardingStatus !== 'suspended' && u.onboardingStatus !== 'invited');
+
+  if (!user) {
+    res.json({ success: true, message: genericMessage });
+    return;
+  }
+
+  const issued = await issueAuthActionToken({
+    accountId: user.id,
+    purpose: 'reset_password',
+    targetEmail: user.email,
+    ttlMs: 3600_000,
+    revokePrevious: true,
+  });
+  const resetUrl = buildResetPasswordUrl(issued.rawToken);
+  const emailResult = await sendTransactionalEmail({
+    to: user.email,
+    category: 'reset_password',
+    subject: 'Reimposta la tua password — VoltaCRM',
+    text: `Ciao ${user.name},\n\nAbbiamo ricevuto una richiesta di ripristino password. Apri questo link monouso (valido 1 ora):\n${resetUrl}\n\nSe non hai richiesto il ripristino, puoi ignorare questo messaggio: la password attuale resterà invariata.`,
+  });
+
+  await addSecurityLog({
+    eventType: 'password_reset_requested',
+    userEmail: user.email,
+    ipAddress: getClientIp(req),
+    status: emailResult.sent ? 'safe' : 'warning',
+    details: emailResult.sent
+      ? 'Link ripristino password inviato via email'
+      : 'Richiesta reset password con consegna email fallita',
+  }).catch(err => console.error('[SecurityLog Error]', err));
+
+  if (!emailResult.sent && process.env.VOLTA_DEMO_MODE !== 'true' && process.env.NODE_ENV === 'production') {
+    res.status(503).json({
+      success: false,
+      emailSent: false,
+      message: 'Servizio email per il recupero password non configurato o temporaneamente non disponibile.',
+    });
+    return;
+  }
+
+  res.json({ success: true, message: genericMessage });
+});
+
+// POST /api/auth/reset-password
+authRouter.post('/reset-password', loginLimiter, validate(resetPasswordSchema), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const newHash = await bcrypt.hash(req.body.password, 12);
+    const result = await resetAccountPasswordWithToken(req.body.token, newHash);
+    await addSecurityLog({
+      eventType: 'password_reset_completed',
+      userEmail: result.email || result.accountId,
+      ipAddress: getClientIp(req),
+      status: 'safe',
+      details: 'Password reimpostata e tutte le sessioni precedenti revocate',
+    }).catch(err => console.error('[SecurityLog Error]', err));
+    res.json({ success: true, message: 'Password aggiornata. Tutte le sessioni precedenti sono state revocate.' });
+  } catch (err: any) {
+    res.status(err.status || 400).json({ success: false, message: err.message || 'Link di ripristino non valido o scaduto.' });
+  }
+});
+
+// POST /api/auth/change-password
+authRouter.post('/change-password', authenticateToken, validate(changePasswordSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = users.find(u => u.id === req.user?.userId);
+  if (!user) {
+    res.status(403).json({ success: false, message: 'Account non trovato.' });
+    return;
+  }
+  if (!bcrypt.compareSync(req.body.currentPassword, user.password)) {
+    res.status(403).json({ success: false, message: 'La password attuale non è corretta.' });
+    return;
+  }
+  const newHash = await bcrypt.hash(req.body.newPassword, 12);
+  const nextVersion = await bumpAccountTokenVersion(user.id, newHash);
+  const freshToken = generateToken({ userId: user.id, email: user.email, role: user.role, tokenVersion: nextVersion });
+
+  await addSecurityLog({
+    eventType: 'password_changed',
+    userEmail: user.email,
+    ipAddress: getClientIp(req),
+    status: 'safe',
+    details: 'Password aggiornata e sessioni precedenti revocate',
+  }).catch(err => console.error('[SecurityLog Error]', err));
+
+  res.json({
+    success: true,
+    token: freshToken,
+    message: 'Password aggiornata. Le sessioni su altri dispositivi sono state revocate.',
+  });
+});
+
+// POST /api/auth/logout-all
+authRouter.post('/logout-all', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = users.find(u => u.id === req.user?.userId);
+  if (!user) {
+    res.status(403).json({ success: false, message: 'Account non trovato.' });
+    return;
+  }
+  await bumpAccountTokenVersion(user.id);
+  await addSecurityLog({
+    eventType: 'sessions_revoked_all',
+    userEmail: user.email,
+    ipAddress: getClientIp(req),
+    status: 'safe',
+    details: 'Revoca globale di tutte le sessioni JWT eseguita dall’utente',
+  }).catch(err => console.error('[SecurityLog Error]', err));
+
+  res.json({
+    success: true,
+    message: 'Tutte le sessioni attive sono state revocate sul server. Sarà necessario accedere nuovamente.',
+  });
+});
+
+// POST /api/auth/request-email-change
+authRouter.post('/request-email-change', authenticateToken, validate(requestEmailChangeSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = users.find(u => u.id === req.user?.userId);
+  if (!user) {
+    res.status(403).json({ success: false, message: 'Account non trovato.' });
+    return;
+  }
+  if (!user.authProvider && (!req.body.password || !bcrypt.compareSync(req.body.password, user.password))) {
+    res.status(403).json({ success: false, message: 'Inserisci la password attuale per confermare il cambio email.' });
+    return;
+  }
+  const newEmail = req.body.newEmail.trim().toLowerCase();
+  if (newEmail === user.email.toLowerCase()) {
+    res.status(400).json({ success: false, message: 'La nuova email coincide con quella già attiva.' });
+    return;
+  }
+  if (users.some(u => u.id !== user.id && u.email.toLowerCase() === newEmail)) {
+    res.status(409).json({ success: false, message: 'Questo indirizzo email è già associato a un altro account.' });
+    return;
+  }
+
+  const issued = await issueAuthActionToken({
+    accountId: user.id,
+    purpose: 'change_email',
+    targetEmail: newEmail,
+    ttlMs: 24 * 3600_000,
+    revokePrevious: true,
+  });
+  const confirmUrl = buildEmailChangeUrl(issued.rawToken);
+  const emailResult = await sendTransactionalEmail({
+    to: newEmail,
+    category: 'change_email',
+    subject: 'Conferma il nuovo indirizzo email — VoltaCRM',
+    text: `Ciao ${user.name},\n\nConferma il cambio email sul tuo account VoltaCRM aprendo questo link monouso (valido 24 ore):\n${confirmUrl}\n\nSe non hai richiesto questo cambio, ignora il messaggio.`,
+  });
+
+  if (!emailResult.sent) {
+    res.status(503).json({
+      success: false,
+      emailSent: false,
+      message: emailResult.error || 'Impossibile inviare il link di conferma al nuovo indirizzo email.',
+    });
+    return;
+  }
+
+  res.json({
+    success: true,
+    emailSent: true,
+    message: `Abbiamo inviato un link di conferma al nuovo indirizzo ${newEmail}. Il cambio sarà effettivo dopo la verifica.`,
+  });
+});
+
+// POST /api/auth/confirm-email-change
+authRouter.post('/confirm-email-change', loginLimiter, validate(confirmEmailChangeSchema), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await confirmEmailChangeWithToken(req.body.token);
+    await addSecurityLog({
+      eventType: 'email_changed',
+      userEmail: result.email,
+      ipAddress: getClientIp(req),
+      status: 'safe',
+      details: 'Indirizzo email account aggiornato dopo verifica del nuovo indirizzo',
+    }).catch(err => console.error('[SecurityLog Error]', err));
+    res.json({
+      success: true,
+      email: result.email,
+      message: 'Nuovo indirizzo email confermato. Effettua nuovamente l’accesso con la nuova email.',
+    });
+  } catch (err: any) {
+    res.status(err.status || 400).json({ success: false, message: err.message || 'Token cambio email non valido o scaduto.' });
+  }
 });
 
 authRouter.post('/invitations', authenticateToken, requireRole('admin'), validate(createInvitationSchema), async (req: AuthRequest, res: Response): Promise<void> => {
@@ -270,7 +634,6 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
   let user = users.find(u => u.authProvider === provider && u.oauthSubject === verifiedClaims.sub);
   const emailOwner = users.find(u => u.email.toLowerCase() === targetEmail);
 
-  // OAuth is a customer sign-in method. Matching a staff email must never bypass staff 2FA.
   if (user && await rejectIfSuspended(user, req, res)) return;
   if (user && user.role !== 'customer') {
     res.status(403).json({ success: false, message: 'Per lo staff è richiesto l’accesso con credenziali aziendali e 2FA.' });
@@ -286,8 +649,6 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
   }
 
   if (!user) {
-    // REGISTRAZIONE OAUTH: consentita ESCLUSIVAMENTE con ruolo 'customer'
-    // I ruoli di staff (admin, operator, broker, call_center) possono essere generati solo tramite provisioning interno protetto.
     const safeRole = 'customer';
     const today = new Date().toISOString().split('T')[0];
     const customerId = crypto.randomUUID();
@@ -302,7 +663,9 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
       customerId,
       avatar: tokenAvatar || (targetName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'OU'),
       is2faEnabled: false,
-      onboardingStatus: 'active',
+      onboardingStatus: 'active' as const,
+      emailVerified: true,
+      tokenVersion: 1,
       createdAt: today,
       authProvider: provider,
       oauthSubject: verifiedClaims.sub
@@ -319,15 +682,15 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
       contractStartDate: today,
       lastSwitchAuditDate: today,
       nextSwitchAuditDate: new Date(Date.now() + 120 * 86400000).toISOString().split('T')[0],
-      accountManager: 'Matteo Riva',
-      hasBrokerageMandate: true,
+      accountManager: '',
+      hasBrokerageMandate: false,
       notes: `Registrato via ${provider.toUpperCase()} OAuth`
     });
 
     user = profile;
   }
 
-  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+  const token = generateToken({ userId: user.id, email: user.email, role: user.role, tokenVersion: Number(user.tokenVersion ?? 1) });
   res.json({
     success: true,
     token,
@@ -336,11 +699,11 @@ authRouter.post('/oauth', loginLimiter, validate(oauthAuthSchema), async (req: R
   });
 });
 
-// GET /api/auth/profiles (Solo per operatori autorizzati)
+// GET /api/auth/me
 authRouter.get('/me', authenticateToken, (req: any, res: Response): void => {
   const user = users.find(u => u.id === req.user?.userId && u.role === req.user?.role);
-  if (!user) { res.status(401).json({success:false,message:'Sessione non più valida.'}); return; }
-  res.json({success:true,user:toSafeProfile(user)});
+  if (!user) { res.status(401).json({ success: false, message: 'Sessione non più valida.' }); return; }
+  res.json({ success: true, user: toSafeProfile(user) });
 });
 
 authRouter.get('/profiles', authenticateToken, requireRole('admin', 'call_center', 'operator', 'broker'), (req: any, res: Response) => {

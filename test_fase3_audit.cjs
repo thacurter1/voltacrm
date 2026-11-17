@@ -41,7 +41,7 @@ async function runTests() {
   console.log('=== VERIFICA TDD: FASE 3 AUDIT FIX (P0 & P1) ===\n');
 
   // TEST 1: Registrazione cliente con Codice Fiscale già esistente (deve restituire 409 Conflict)
-  console.log('--- Test 1: POST /api/auth/register-customer con CF duplicato (RSSMRA85M01H501Z) ---');
+  console.log('--- Test 1: POST /api/auth/register-customer con CF duplicato (MRTNRA82M15F205X) ---');
   const dupRes = await request(`${BASE_URL}/auth/register-customer`, {
     method: 'POST',
     body: {
@@ -49,7 +49,8 @@ async function runTests() {
       email: 'mario.duplicato@test.it',
       phone: '+39 333 9998877',
       fiscalCode: 'MRTNRA82M15F205X', // Già presente nei mock
-      password: 'StrongPassword123!'
+      password: 'StrongPassword123!',
+      privacyConsent: true
     }
   });
   console.log('Duplicate CF status:', dupRes.status);
@@ -58,8 +59,8 @@ async function runTests() {
   }
   console.log('✔ Blocco Account Takeover verificato: duplicato respinto con 409 Conflict.');
 
-  // TEST 2: Registrazione cliente nuovo e tentativo re-invio identico
-  console.log('\n--- Test 2: Registrazione nuovo cliente e verifica collisione email ---');
+  // TEST 2: Registrazione cliente nuovo (stato pending_verification senza token immediato) e collisione email
+  console.log('\n--- Test 2: Registrazione nuovo cliente, blocco token pre-verifica e collisione email ---');
   const uniqueEmail = `nuovo.cliente.${Date.now()}@example.com`;
   const uniqueCF = 'BNCLRA80A41H501Y';
   const regRes = await request(`${BASE_URL}/auth/register-customer`, {
@@ -69,14 +70,14 @@ async function runTests() {
       email: uniqueEmail,
       phone: '+39 340 1234567',
       fiscalCode: uniqueCF,
-      password: 'StrongPassword123!'
+      password: 'StrongPassword123!',
+      privacyConsent: true
     }
   });
   console.log('New customer status:', regRes.status);
-  if (regRes.status !== 201 || !regRes.data.token) {
-    throw new Error(`Expected status 201, got ${regRes.status}: ${JSON.stringify(regRes.data)}`);
+  if (regRes.status !== 201 || regRes.data.token || regRes.data.requireEmailVerification !== true) {
+    throw new Error(`Expected status 201 with requireEmailVerification and NO active token, got ${regRes.status}: ${JSON.stringify(regRes.data)}`);
   }
-  const customerToken = regRes.data.token;
 
   // Tentativo duplicazione con stessa email
   const dupEmailRes = await request(`${BASE_URL}/auth/register-customer`, {
@@ -86,7 +87,8 @@ async function runTests() {
       email: uniqueEmail,
       phone: '+39 349 0000000',
       fiscalCode: 'XYZWRA99Z99Z999X',
-      password: 'StrongPassword123!'
+      password: 'StrongPassword123!',
+      privacyConsent: true
     }
   });
   console.log('Duplicate Email status:', dupEmailRes.status);
@@ -94,6 +96,19 @@ async function runTests() {
     throw new Error(`Expected status 409 Conflict on duplicate email, got ${dupEmailRes.status}`);
   }
   console.log('✔ Blocco duplicazione email verificato: respinto con 409 Conflict.');
+
+  // Ottieni token cliente verificato per i test OTP BOLA (Andrea Moretti, telefono registrato '+39 340 1234567')
+  const custLoginRes = await request(`${BASE_URL}/auth/login-customer`, {
+    method: 'POST',
+    body: {
+      identifier: 'andrea.moretti@email.it',
+      password: 'customer123'
+    }
+  });
+  if (custLoginRes.status !== 200 || !custLoginRes.data.token) {
+    throw new Error(`Expected verified customer login 200, got ${custLoginRes.status}: ${JSON.stringify(custLoginRes.data)}`);
+  }
+  const customerToken = custLoginRes.data.token;
 
   // TEST 3: Invio OTP con numero non associato da token Customer (deve restituire 403 Forbidden)
   console.log('\n--- Test 3: POST /api/messaging/send-otp con numero non proprietario (BOLA check) ---');

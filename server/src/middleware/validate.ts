@@ -104,7 +104,41 @@ export const registerCustomerSchema = z.object({
   email: z.string().trim().email().max(254),
   phone: z.string().regex(/^\+?[0-9 ()-]{8,25}$/).refine(v=>v.replace(/\D/g,'').length>=8),
   fiscalCode: z.string().trim().regex(/^(?:[A-Za-z0-9]{16}|[0-9]{11})$/),
-  password: z.string().min(12).max(72)
+  password: z.string().min(12).max(72),
+  privacyConsent: z.boolean().refine((v) => v === true, { message: 'È necessario confermare di aver letto l’informativa e le condizioni del servizio.' }),
+  privacyPolicyVersion: z.string().trim().min(1).max(64).optional().default('bozza-2026-11'),
+  marketingConsent: z.boolean().optional().default(false),
+}).strict();
+
+export const verifyEmailSchema = z.object({
+  token: z.string().trim().min(32).max(128),
+}).strict();
+
+export const resendVerificationSchema = z.object({
+  email: z.string().trim().email().max(254),
+}).strict();
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email().max(254),
+}).strict();
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(32).max(128),
+  password: z.string().min(12).max(72),
+}).strict();
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(12).max(72),
+}).strict();
+
+export const requestEmailChangeSchema = z.object({
+  newEmail: z.string().trim().email().max(254),
+  password: z.string().min(1).optional(),
+}).strict();
+
+export const confirmEmailChangeSchema = z.object({
+  token: z.string().trim().min(32).max(128),
 }).strict();
 
 export const createInvitationSchema = z.discriminatedUnion('role', [

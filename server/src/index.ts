@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import 'dotenv/config';
 import 'express-async-errors';
 import express, { Request, Response, NextFunction } from 'express';
@@ -21,6 +22,17 @@ import { operationsRouter } from './routes/operations.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const SERVER_BOOT_ISO = new Date().toISOString();
+const resolveReleaseCommit = (): string => {
+  const fromEnv = (process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || '').trim();
+  if (fromEnv) return fromEnv.slice(0, 12);
+  try {
+    return execSync('git rev-parse --short=12 HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+};
+const RELEASE_COMMIT = resolveReleaseCommit();
 
 // Security & Middlewares
 // Trust first proxy (Reverse proxy come Nginx, Cloud Run, Vercel, AWS ALB)
@@ -86,6 +98,10 @@ app.get(['/health', '/api/health'], async (_req: Request, res: Response): Promis
     timestamp: new Date().toISOString(),
     service: 'Volta Energia SaaS Standalone Backend API',
     version: '1.0.0',
+    release: {
+      commit: RELEASE_COMMIT,
+      buildTimestamp: SERVER_BOOT_ISO,
+    },
     uptimeSeconds: Math.floor(process.uptime()),
     database: dbHealth,
     features: {
