@@ -293,7 +293,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-[#0a2540]">Il mio Account</h2>
+            <h2 className="text-2xl font-bold text-[#0F222D]">Il mio Account</h2>
             <p className="text-sm text-slate-600 mt-1">
               Gestisci recapiti, sicurezza delle sessioni, bollette caricate prima della registrazione e richieste di assistenza.
             </p>
@@ -316,8 +316,8 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Editable Contact Data */}
         <form onSubmit={handleSaveContacts} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 text-[#0a2540] font-bold text-base">
-            <User className="w-4 h-4 text-[#635bff]" />
+          <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
+            <User className="w-4 h-4 text-[#0A6847]" />
             <h3>Recapiti di contatto</h3>
           </div>
           <div className="space-y-3">
@@ -332,7 +332,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/20"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/20"
               />
             </div>
             <div>
@@ -346,14 +346,14 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="Es. Milano"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/20"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/20"
               />
             </div>
           </div>
           <button
             type="submit"
             disabled={savingContact}
-            className="px-4 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer inline-flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer inline-flex items-center gap-2"
           >
             {savingContact && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             <span>Salva recapiti</span>
@@ -362,8 +362,8 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
 
         {/* Verified Email Change */}
         <form onSubmit={handleRequestEmailChange} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 text-[#0a2540] font-bold text-base">
-            <Mail className="w-4 h-4 text-[#635bff]" />
+          <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
+            <Mail className="w-4 h-4 text-[#0A6847]" />
             <h3>Cambio email con verifica</h3>
           </div>
           <p className="text-xs text-slate-500">
@@ -382,7 +382,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="nuova.email@esempio.it"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/20"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/20"
               />
             </div>
             {!isOAuthAccount && (
@@ -397,7 +397,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                   required
                   value={emailChangePassword}
                   onChange={(e) => setEmailChangePassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/20"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/20"
                 />
               </div>
             )}
@@ -420,8 +420,8 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
 
         {/* Password Change & Session Revocation */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 text-[#0a2540] font-bold text-base">
-            <Lock className="w-4 h-4 text-[#635bff]" />
+          <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
+            <Lock className="w-4 h-4 text-[#0A6847]" />
             <h3>Sicurezza password e sessioni</h3>
           </div>
 
@@ -438,7 +438,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                   required
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff]"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847]"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -454,7 +454,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847]"
                   />
                 </div>
                 <div>
@@ -469,14 +469,14 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                     required
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847]"
                   />
                 </div>
               </div>
               <button
                 type="submit"
                 disabled={savingPassword}
-                className="px-4 py-2 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer"
               >
                 {savingPassword ? 'Aggiornamento...' : 'Aggiorna password'}
               </button>
@@ -501,8 +501,8 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
 
         {/* Claim Guest Bill */}
         <form onSubmit={handleClaimGuestBill} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 text-[#0a2540] font-bold text-base">
-            <FileCheck2 className="w-4 h-4 text-[#635bff]" />
+          <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
+            <FileCheck2 className="w-4 h-4 text-[#0A6847]" />
             <h3>Associa una bolletta caricata da ospite</h3>
           </div>
           <p className="text-xs text-slate-600">
@@ -518,7 +518,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
               value={claimToken}
               onChange={(e) => setClaimToken(e.target.value)}
               placeholder="Incolla il codice ricevuto dopo l’upload"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono text-slate-900 focus:outline-none focus:border-[#635bff]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono text-slate-900 focus:outline-none focus:border-[#0A6847]"
             />
           </div>
           {claimResult && (
@@ -530,7 +530,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
           <button
             type="submit"
             disabled={!claimToken.trim() || claimingBill}
-            className="px-4 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer"
           >
             {claimingBill ? 'Verifica in corso...' : 'Associa bolletta al mio account'}
           </button>
@@ -539,8 +539,8 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
 
       {/* Support Requests */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-        <div className="flex items-center gap-2 text-[#0a2540] font-bold text-base">
-          <LifeBuoy className="w-4 h-4 text-[#635bff]" />
+        <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
+          <LifeBuoy className="w-4 h-4 text-[#0A6847]" />
           <h3>Richieste di assistenza</h3>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -557,7 +557,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                 value={supportSubject}
                 onChange={(e) => setSupportSubject(e.target.value)}
                 placeholder="Es. Chiarimento stato bolletta o aggiornamento POD"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff]"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847]"
               />
             </div>
             <div>
@@ -572,13 +572,13 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                 value={supportMessage}
                 onChange={(e) => setSupportMessage(e.target.value)}
                 placeholder="Descrivi la tua richiesta..."
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#635bff]"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#0A6847]"
               />
             </div>
             <button
               type="submit"
               disabled={submittingSupport}
-              className="px-4 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer"
             >
               {submittingSupport ? 'Invio...' : 'Invia richiesta assistenza'}
             </button>
@@ -614,7 +614,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
       {/* Data Export & Account Closure */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h3 className="text-sm font-bold text-[#0a2540]">Portabilità e chiusura account</h3>
+          <h3 className="text-sm font-bold text-[#0F222D]">Portabilità e chiusura account</h3>
           <p className="text-xs text-slate-500 max-w-2xl">
             Puoi scaricare una copia JSON dei tuoi dati personali, consensi e pratiche. In caso di chiusura account, l’accesso al portale e tutte le sessioni vengono disattivati mentre gli eventuali documenti contrattuali restano conservati secondo gli obblighi di legge.
           </p>

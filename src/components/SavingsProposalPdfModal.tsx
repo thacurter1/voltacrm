@@ -7,8 +7,7 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   FileText, 
-  Award, 
-  Sparkles 
+  Award 
 } from 'lucide-react';
 import { SwitchAudit, Customer } from '../types';
 
@@ -61,20 +60,20 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
       {/* Backdrop */}
       <div 
         onClick={onClose} 
-        className="fixed inset-0 bg-[#0a2540]/60 backdrop-blur-xs transition-opacity print:hidden" 
+        className="fixed inset-0 bg-[#0F222D]/60 backdrop-blur-xs transition-opacity print:hidden" 
       />
 
       {/* Main Container */}
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-[#e3e8ee] flex flex-col max-h-[92vh] overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-[#DCE5E8] flex flex-col max-h-[92vh] overflow-hidden animate-in zoom-in-95 duration-150">
         
         {/* Modal Action Bar (Hidden during Print) */}
-        <div className="px-6 py-3.5 bg-[#f6f9fc] border-b border-[#e3e8ee] flex items-center justify-between print:hidden">
+        <div className="px-6 py-3.5 bg-[#F6F9FA] border-b border-[#DCE5E8] flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-[#635bff] text-white">
+            <div className="p-1.5 rounded-lg bg-[#0A6847] text-white">
               <FileText className="h-4 w-4" />
             </div>
             <div>
-              <span id="pdf-modal-title" className="font-bold text-xs text-[#0a2540]">Studio di Fattibilità Energetica</span>
+              <span id="pdf-modal-title" className="font-bold text-xs text-[#0F222D]">Studio di Fattibilità Energetica</span>
               <span className="text-[10px] text-[#425466] block">Pronto per la stampa A4 e l'invio al cliente</span>
             </div>
           </div>
@@ -82,7 +81,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F222D] hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
             >
               <Printer className="h-3.5 w-3.5" />
               Stampa / Salva PDF
@@ -101,9 +100,9 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
             {onProceedToSign && (
               <button
                 onClick={onProceedToSign}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#534be0] text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0A6847] hover:bg-[#534be0] text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 Firma Mandato
               </button>
             )}
@@ -118,18 +117,18 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
         </div>
 
         {/* PRINTABLE DOCUMENT BODY (A4 formatted) */}
-        <div id="printable-proposal" ref={printRef} className="p-8 sm:p-10 overflow-y-auto space-y-6 text-[#0a2540] bg-white print:p-0 print:m-0">
+        <div id="printable-proposal" ref={printRef} className="p-8 sm:p-10 overflow-y-auto space-y-6 text-[#0F222D] bg-white print:p-0 print:m-0">
           
           {/* Document Header */}
-          <div className="flex justify-between items-start border-b-2 border-[#0a2540] pb-6">
+          <div className="flex justify-between items-start border-b-2 border-[#0F222D] pb-6">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-xl bg-[#635bff] text-white flex items-center justify-center font-black">
+                <div className="h-9 w-9 rounded-xl bg-[#0A6847] text-white flex items-center justify-center font-black">
                   <Zap className="h-5 w-5 fill-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-black tracking-tight text-[#0a2540]">VOLTA ENERGIA</h1>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#635bff] block -mt-1">
+                  <h1 className="text-xl font-black tracking-tight text-[#0F222D]">VOLTA ENERGIA</h1>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#0A6847] block -mt-1">
                     Servizio di Brokeraggio & Audit Energetico
                   </span>
                 </div>
@@ -149,18 +148,18 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
           </div>
 
           {/* Client & Utility Box */}
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-[#f6f9fc] border border-[#e3e8ee] text-xs">
+          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-[#F6F9FA] border border-[#DCE5E8] text-xs">
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Dati Intestatario</span>
-              <div className="font-bold text-sm text-[#0a2540]">{audit.customerName}</div>
+              <div className="font-bold text-sm text-[#0F222D]">{audit.customerName}</div>
               <div className="text-[11px] text-[#425466]">Città: {customer?.city || 'Milano (IT)'}</div>
               <div className="text-[11px] text-[#425466]">Codice Fiscale: {customer?.fiscalCode || 'VERIFICATO'}</div>
             </div>
 
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Fornitura in Esame</span>
-              <div className="flex items-center gap-1.5 font-bold text-sm text-[#0a2540]">
-                <span className="uppercase px-1.5 py-0.5 rounded bg-indigo-100 text-[#635bff] text-[10px]">
+              <div className="flex items-center gap-1.5 font-bold text-sm text-[#0F222D]">
+                <span className="uppercase px-1.5 py-0.5 rounded bg-[#EAF4F0] text-[#0A6847] text-[10px]">
                   {audit.utilityType}
                 </span>
                 <span className="font-mono">{audit.podOrPdr}</span>
@@ -172,7 +171,7 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
           </div>
 
           {/* CORE COMPARISON HIGHLIGHT (Stripe / Apple Style) */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0a2540] to-[#122e4d] text-white space-y-4 shadow-sm">
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0F222D] to-[#122e4d] text-white space-y-4 shadow-sm">
             <div className="flex justify-between items-center">
               <span className="text-xs uppercase tracking-wider text-[#00d4aa] font-bold flex items-center gap-1.5">
                 <Award className="h-4 w-4 text-amber-400" />
@@ -214,12 +213,12 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
 
           {/* Breakdown Table */}
           <div className="space-y-2">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-[#0a2540]">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-[#0F222D]">
               Dettaglio Tariffario dell'Offerta Selezionata
             </h3>
             
-            <table className="w-full text-left text-xs border border-[#e3e8ee] rounded-xl overflow-hidden">
-              <thead className="bg-[#f6f9fc] border-b border-[#e3e8ee] text-[#425466] text-[10px] uppercase font-bold">
+            <table className="w-full text-left text-xs border border-[#DCE5E8] rounded-xl overflow-hidden">
+              <thead className="bg-[#F6F9FA] border-b border-[#DCE5E8] text-[#425466] text-[10px] uppercase font-bold">
                 <tr>
                   <th className="py-2.5 px-3.5">Parametro</th>
                   <th className="py-2.5 px-3.5">Tariffa Attuale</th>
@@ -227,35 +226,35 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
                   <th className="py-2.5 px-3.5 text-right">Vantaggio</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e3e8ee]">
+              <tbody className="divide-y divide-[#DCE5E8]">
                 <tr>
-                  <td className="py-2.5 px-3.5 font-semibold text-[#0a2540]">Fornitore</td>
+                  <td className="py-2.5 px-3.5 font-semibold text-[#0F222D]">Fornitore</td>
                   <td className="py-2.5 px-3.5 text-[#425466]">{audit.currentSupplier}</td>
-                  <td className="py-2.5 px-3.5 font-bold text-[#635bff]">{audit.bestOffer.supplier}</td>
+                  <td className="py-2.5 px-3.5 font-bold text-[#0A6847]">{audit.bestOffer.supplier}</td>
                   <td className="py-2.5 px-3.5 text-right text-emerald-600 font-bold">Ottimizzato</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3.5 font-semibold text-[#0a2540]">Tipologia Prezzo</td>
+                  <td className="py-2.5 px-3.5 font-semibold text-[#0F222D]">Tipologia Prezzo</td>
                   <td className="py-2.5 px-3.5 text-[#425466]">Indicizzato / Variabile</td>
-                  <td className="py-2.5 px-3.5 text-[#0a2540]">{audit.bestOffer.pricingType}</td>
+                  <td className="py-2.5 px-3.5 text-[#0F222D]">{audit.bestOffer.pricingType}</td>
                   <td className="py-2.5 px-3.5 text-right text-emerald-600 font-bold">Formula ARERA</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3.5 font-semibold text-[#0a2540]">Spread / Prezzo Materia</td>
+                  <td className="py-2.5 px-3.5 font-semibold text-[#0F222D]">Spread / Prezzo Materia</td>
                   <td className="py-2.5 px-3.5 font-mono text-slate-600">Tariffa fuori mercato</td>
-                  <td className="py-2.5 px-3.5 font-mono text-[#0a2540] font-bold">
+                  <td className="py-2.5 px-3.5 font-mono text-[#0F222D] font-bold">
                     {audit.bestOffer.unitPriceOrSpread} {audit.utilityType === 'luce' ? '€/kWh' : '€/Smc'}
                   </td>
                   <td className="py-2.5 px-3.5 text-right text-emerald-600 font-bold">Miglior Spread</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3.5 font-semibold text-[#0a2540]">Commercializzazione (CCV)</td>
+                  <td className="py-2.5 px-3.5 font-semibold text-[#0F222D]">Commercializzazione (CCV)</td>
                   <td className="py-2.5 px-3.5 font-mono text-slate-600">€ 144,00 /anno</td>
-                  <td className="py-2.5 px-3.5 font-mono text-[#0a2540] font-bold">€ {audit.bestOffer.fixedAnnualFee.toFixed(2)} /anno</td>
+                  <td className="py-2.5 px-3.5 font-mono text-[#0F222D] font-bold">€ {audit.bestOffer.fixedAnnualFee.toFixed(2)} /anno</td>
                   <td className="py-2.5 px-3.5 text-right text-emerald-600 font-bold">-€ {(144 - audit.bestOffer.fixedAnnualFee).toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3.5 font-semibold text-[#0a2540]">Sostenibilità Ambientale</td>
+                  <td className="py-2.5 px-3.5 font-semibold text-[#0F222D]">Sostenibilità Ambientale</td>
                   <td className="py-2.5 px-3.5 text-[#425466]">Standard</td>
                   <td className="py-2.5 px-3.5 text-emerald-700 font-bold flex items-center gap-1">
                     <CheckCircle2 className="h-3.5 w-3.5" /> 100% Green con Garanzie di Origine (GO)
@@ -278,10 +277,10 @@ export const SavingsProposalPdfModal: React.FC<SavingsProposalPdfModalProps> = (
           </div>
 
           {/* Signature & Advisor Footer */}
-          <div className="pt-6 border-t border-[#e3e8ee] grid grid-cols-2 gap-8 text-xs">
+          <div className="pt-6 border-t border-[#DCE5E8] grid grid-cols-2 gap-8 text-xs">
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Il tuo Consulente Dedicato</span>
-              <div className="font-bold text-[#0a2540]">{advisorName}</div>
+              <div className="font-bold text-[#0F222D]">{advisorName}</div>
               <div className="text-[11px] text-[#425466]">Specialista Mercato Libero Volta Energia</div>
               <div className="text-[11px] text-[#425466]">WhatsApp: +39 347 1122334</div>
             </div>

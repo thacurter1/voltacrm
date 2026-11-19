@@ -284,9 +284,9 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f6f9fc] flex flex-col justify-center items-center p-6 text-slate-600 font-sans">
-        <div className="w-10 h-10 border-4 border-[#635bff] border-t-transparent rounded-full animate-spin mb-4" />
-        <h2 className="text-base font-bold text-[#0a2540]">Caricamento della tua fornitura...</h2>
+      <div className="min-h-screen bg-[#F6F9FA] flex flex-col justify-center items-center p-6 text-slate-600 font-sans">
+        <div className="w-10 h-10 border-4 border-[#0A6847] border-t-transparent rounded-full animate-spin mb-4" />
+        <h2 className="text-base font-bold text-[#0F222D]">Caricamento della tua fornitura...</h2>
         <p className="text-xs text-slate-400 mt-1">Stiamo recuperando i dettagli del tuo account e delle tue bollette.</p>
       </div>
     );
@@ -295,12 +295,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   // Null customer recovery view (for authenticated sessions with missing customer record)
   if (!activeCustomer && !isPublicVisitor && !isGuest) {
     return (
-      <div className="min-h-screen bg-[#f6f9fc] flex flex-col items-center justify-center p-6 text-center font-sans">
+      <div className="min-h-screen bg-[#F6F9FA] flex flex-col items-center justify-center p-6 text-center font-sans">
         <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 shadow-xs space-y-4">
           <div className="w-12 h-12 bg-amber-50 text-amber-600 border border-amber-200 rounded-xl flex items-center justify-center mx-auto">
             <ShieldCheck className="w-6 h-6 text-amber-600" />
           </div>
-          <h2 className="text-lg font-black text-[#0a2540]">Non riusciamo a trovare la tua fornitura</h2>
+          <h2 className="text-lg font-black text-[#0F222D]">Non riusciamo a trovare la tua fornitura</h2>
           <p className="text-xs text-slate-500 leading-relaxed">
             {loadError || 'Non è stata trovata alcuna fornitura energetica associata al tuo profilo. Verifica le tue credenziali o contatta l\'assistenza clienti Volta Energia.'}
           </p>
@@ -310,7 +310,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               <button
                 type="button"
                 onClick={onReturnToBackend}
-                className="w-full min-h-[44px] px-4 bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center"
+                className="w-full min-h-[44px] px-4 bg-[#0F222D] hover:bg-[#1a385c] text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center"
               >
                 Torna al Backend CRM
               </button>
@@ -331,7 +331,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F6F9FA] text-slate-900 flex flex-col font-sans">
       {/* Modern Volta Energy Portal Header */}
       <EnergyPortalHeader
         activeView={activeView}
@@ -354,8 +354,8 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         onOpenStaffLogin={onOpenStaffLogin}
       />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 sm:pb-24 space-y-6">
-        {activeView === 'offers' && showWelcome ? (
+      {activeView === 'offers' && showWelcome ? (
+        <main className="flex-1 w-full">
           <EnergyWelcome onStart={(utility, mode) => {
             setComparisonInput(prev => ({ ...prev, utilityType: utility }));
             setEntryMode(mode);
@@ -363,13 +363,16 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             setWelcomeDismissed(true);
             window.scrollTo({ top: 0 });
           }} />
-        ) : activeView === 'offers' ? (
+        </main>
+      ) : (
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 space-y-6">
+        {activeView === 'offers' ? (
           <div className="space-y-6">
             {/* Guided Journey Stepper (Facile.it inspired, Volta branded) */}
             <div className="border-b border-slate-200 pb-4">
               <div className="sm:hidden mb-4" aria-live="polite">
-                <p className="text-sm font-semibold text-[#0a2540]">Passaggio {currentStep === 'intake' ? '1' : '2'} di 2</p>
-                <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden" aria-hidden="true"><div className={`h-full rounded-full bg-[#635bff] transition-all ${currentStep === 'intake' ? 'w-1/2' : 'w-full'}`} /></div>
+                <p className="text-sm font-semibold text-[#0F222D]">Passaggio {currentStep === 'intake' ? '1' : '2'} di 2</p>
+                <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden" aria-hidden="true"><div className={`h-full rounded-full bg-[#0A6847] transition-all ${currentStep === 'intake' ? 'w-1/2' : 'w-full'}`} /></div>
               </div>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 {/* Steps indicator */}
@@ -378,11 +381,11 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     type="button"
                     onClick={() => setCurrentStep('intake')}
                     className={`flex items-center gap-2 shrink-0 p-1 rounded-lg transition cursor-pointer text-left ${
-                      currentStep === 'intake' ? 'text-[#635bff]' : 'text-slate-600 hover:text-slate-900'
+                      currentStep === 'intake' ? 'text-[#0A6847]' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <span className={`w-7 h-7 rounded-full text-white font-bold text-xs flex items-center justify-center shrink-0 ${
-                      currentStep === 'intake' ? 'bg-[#635bff] ring-2 ring-[#635bff]/30' : 'bg-emerald-600'
+                      currentStep === 'intake' ? 'bg-[#0A6847] ring-2 ring-[#0A6847]/30' : 'bg-emerald-600'
                     }`}>
                       {currentStep === 'comparison' ? '✓' : '1'}
                     </span>
@@ -403,11 +406,11 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       }
                     }}
                     className={`flex items-center gap-2 shrink-0 p-1 rounded-lg transition cursor-pointer text-left ${
-                      currentStep === 'comparison' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
+                      currentStep === 'comparison' ? 'text-[#0A6847]' : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
                     <span className={`w-7 h-7 rounded-full text-white font-bold text-xs flex items-center justify-center shrink-0 ${
-                      currentStep === 'comparison' ? 'bg-[#635bff] ring-2 ring-[#635bff]/30' : 'bg-slate-300'
+                      currentStep === 'comparison' ? 'bg-[#0A6847] ring-2 ring-[#0A6847]/30' : 'bg-slate-300'
                     }`}>
                       2
                     </span>
@@ -432,12 +435,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
             {currentStep === 'intake' ? (
               <section className="space-y-7" aria-labelledby="intake-title">
                 <div className="max-w-3xl space-y-3 pt-1">
-                  <p className="text-sm font-bold text-[#635bff]">Confronto luce e gas</p>
-                  <h1 id="intake-title" className="text-[2rem] sm:text-[2.75rem] font-extrabold tracking-tight leading-[1.12] text-[#0a2540]">
+                  <p className="text-sm font-bold text-[#0A6847]">Confronto luce e gas</p>
+                  <h1 id="intake-title" className="text-[2rem] sm:text-[2.75rem] font-extrabold tracking-tight leading-[1.12] text-[#0F222D]">
                     Trova l'offerta giusta per i tuoi consumi.
                   </h1>
                   <p className="text-base leading-relaxed text-slate-600 max-w-2xl">
-                    Usa la tua fornitura, carica una bolletta oppure inserisci i consumi. Vedrai come viene calcolata ogni stima.
+                    Trasparente, gratuito e senza vincoli: usa la tua fornitura, carica una bolletta oppure inserisci i consumi. Vedrai come viene calcolata ogni stima.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-6 lg:gap-8 items-start">
@@ -450,12 +453,12 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                     onOpenPrivacy={() => setLegalModalTab('privacy')}
                     utmParams={utmParams}
                   />
-                  <aside className="lg:sticky lg:top-24 border-t-2 border-[#635bff] pt-5 text-sm text-slate-600" aria-label="Come funziona il confronto">
-                    <h2 className="text-lg font-bold text-[#0a2540]">Come funziona</h2>
+                  <aside className="lg:sticky lg:top-24 border-t-2 border-[#0A6847] pt-5 text-sm text-slate-600" aria-label="Come funziona il confronto">
+                    <h2 className="text-lg font-bold text-[#0F222D]">Come funziona</h2>
                     <ol className="mt-5 space-y-5">
-                      <li className="flex gap-3"><span className="font-bold text-[#635bff]">01</span><span>Partiamo dai consumi della tua fornitura.</span></li>
-                      <li className="flex gap-3"><span className="font-bold text-[#635bff]">02</span><span>Confronti i costi annui stimati e le condizioni.</span></li>
-                      <li className="flex gap-3"><span className="font-bold text-[#635bff]">03</span><span>Se ti interessa un'offerta, chiedi una consulenza.</span></li>
+                      <li className="flex gap-3"><span className="font-bold text-[#0A6847]">01</span><span>Partiamo dai consumi della tua fornitura.</span></li>
+                      <li className="flex gap-3"><span className="font-bold text-[#0A6847]">02</span><span>Confronti i costi annui stimati e le condizioni.</span></li>
+                      <li className="flex gap-3"><span className="font-bold text-[#0A6847]">03</span><span>Se ti interessa un'offerta, chiedi una consulenza.</span></li>
                     </ol>
                     <p className="mt-6 pt-5 border-t border-slate-200 text-xs leading-relaxed">Nessun contratto viene attivato durante il confronto.</p>
                   </aside>
@@ -465,8 +468,8 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
               /* STEP 2: Offers Comparison View */
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <p className="text-sm font-bold text-[#635bff]">Risultati del confronto</p>
-                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0a2540]">Le offerte per te</h1>
+                  <p className="text-sm font-bold text-[#0A6847]">Risultati del confronto</p>
+                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0F222D]">Le offerte per te</h1>
                   <p className="text-sm sm:text-base text-slate-600">{comparisons.length} {comparisons.length === 1 ? 'offerta' : 'offerte'} per {comparisonInput.annualConsumption.toLocaleString('it-IT')} {comparisonInput.utilityType === 'luce' ? 'kWh' : 'Smc'} annui.</p>
                 </div>
                 {/* Editable Summary Panel */}
@@ -474,14 +477,14 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#635bff] bg-[#635bff]/10 border border-[#635bff]/25 px-2 py-0.5 rounded">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#0A6847] bg-[#0A6847]/10 border border-[#0A6847]/25 px-2 py-0.5 rounded">
                           Parametri di Calcolo in Uso
                         </span>
                         <span className="text-xs text-slate-500">
                           (Origine: {comparisonInput.source === 'account' ? 'Dati Profilo' : comparisonInput.source === 'bill-reviewed' ? 'Bolletta Caricata' : comparisonInput.source === 'household-estimate' ? 'Stima da Profilo Casa' : 'Inserimento Manuale'})
                         </span>
                       </div>
-                      <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                      <h2 className="text-base sm:text-lg font-bold text-[#0F222D]">
                         {comparisonInput.utilityType === 'luce' ? 'Luce' : 'Gas'} · {comparisonInput.annualConsumption.toLocaleString('it-IT')} {comparisonInput.utilityType === 'luce' ? 'kWh' : 'Smc'} all'anno
                       </h2>
                     </div>
@@ -491,7 +494,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       onClick={() => setCurrentStep('intake')}
                       className="min-h-[44px] px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
                     >
-                      <Sliders className="w-4 h-4 text-[#635bff]" />
+                      <Sliders className="w-4 h-4 text-[#0A6847]" />
                       <span>Modifica dati</span>
                     </button>
                   </div>
@@ -552,7 +555,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       aria-pressed={pricingFilter === 'all'}
                       className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                         pricingFilter === 'all'
-                          ? 'bg-[#0a2540] text-white shadow-xs'
+                          ? 'bg-[#0F222D] text-white shadow-xs'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
@@ -564,7 +567,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       aria-pressed={pricingFilter === 'fixed'}
                       className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                         pricingFilter === 'fixed'
-                          ? 'bg-[#0a2540] text-white shadow-xs'
+                          ? 'bg-[#0F222D] text-white shadow-xs'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
@@ -576,7 +579,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       aria-pressed={pricingFilter === 'indexed'}
                       className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                         pricingFilter === 'indexed'
-                          ? 'bg-[#0a2540] text-white shadow-xs'
+                          ? 'bg-[#0F222D] text-white shadow-xs'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
@@ -603,7 +606,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       id="offer-sort"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as 'cost_asc' | 'savings_desc')}
-                      className="min-h-[44px] max-w-full bg-white border border-slate-300 text-sm text-slate-800 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#635bff] cursor-pointer"
+                      className="min-h-[44px] max-w-full bg-white border border-slate-300 text-sm text-slate-800 font-semibold rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0A6847] cursor-pointer"
                     >
                       <option value="cost_asc">Costo annuo stimato (più conveniente)</option>
                       <option value="savings_desc">Risparmio stimato (maggiore)</option>
@@ -625,7 +628,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
                       <button
                         type="button"
                         onClick={() => setPricingFilter('all')}
-                        className="min-h-[44px] px-5 py-2.5 bg-[#635bff] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#5851ea] transition cursor-pointer"
+                        className="min-h-[44px] px-5 py-2.5 bg-[#0A6847] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#085238] transition cursor-pointer"
                       >
                         Mostra tutte le offerte {comparisonInput.utilityType}
                       </button>
@@ -670,6 +673,7 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
           ) : null
         )}
       </main>
+      )}
 
       <InstallAppBanner inline />
 
@@ -692,10 +696,10 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
           <div className="w-full max-w-lg bg-white rounded-2xl p-6 sm:p-8 space-y-5 shadow-xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-[#635bff]">La tua bolletta</p>
-                <h2 id="bill-details-title" className="text-xl font-bold text-[#0a2540] break-all">{selectedBill.fileName}</h2>
+                <p className="text-sm font-semibold text-[#0A6847]">La tua bolletta</p>
+                <h2 id="bill-details-title" className="text-xl font-bold text-[#0F222D] break-all">{selectedBill.fileName}</h2>
               </div>
-              <button type="button" onClick={() => setSelectedBill(null)} className="min-h-[44px] px-3 rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#635bff]" aria-label="Chiudi dettagli bolletta">Chiudi</button>
+              <button type="button" onClick={() => setSelectedBill(null)} className="min-h-[44px] px-3 rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#0A6847]" aria-label="Chiudi dettagli bolletta">Chiudi</button>
             </div>
             <dl className="divide-y divide-slate-200 border-y border-slate-200 text-sm">
               <div className="flex justify-between gap-3 py-3"><dt className="text-slate-600">Fornitura</dt><dd className="font-semibold capitalize">{selectedBill.utilityType}</dd></div>

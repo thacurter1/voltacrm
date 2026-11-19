@@ -121,8 +121,8 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
         description: isLuce
           ? "Acquisto energia, dispacciamento e commercializzazione al dettaglio"
           : 'Approvvigionamento gas all’ingrosso e commercializzazione al dettaglio',
-        badgeBg: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-        barBg: 'bg-[#635bff]',
+        badgeBg: 'bg-[#EAF4F0] text-[#0A6847] border-[#BFE0D2]',
+        barBg: 'bg-[#0A6847]',
       },
       {
         id: 'trasporto',
@@ -259,7 +259,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h2 id="offer-success-title" className="text-xl sm:text-2xl font-black text-[#0a2540]">
+            <h2 id="offer-success-title" className="text-xl sm:text-2xl font-black text-[#0F222D]">
               Richiesta inviata con successo!
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
@@ -285,7 +285,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
+            className="w-full min-h-[48px] px-6 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847]"
           >
             <span>Torna al confronto</span>
             <ArrowRight className="w-4 h-4" />
@@ -323,7 +323,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                 </span>
                 {isDemoCatalog && <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-200 text-slate-700">Catalogo demo</span>}
               </div>
-              <h2 id="offer-details-title" className="text-lg sm:text-xl font-black text-[#0a2540]">
+              <h2 id="offer-details-title" className="text-lg sm:text-xl font-black text-[#0F222D]">
                 {offer.name}
               </h2>
             </div>
@@ -366,18 +366,18 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
         <div className="p-5 sm:p-6 space-y-7 max-h-[70vh] overflow-y-auto text-sm text-slate-700">
           {/* Sintesi Economica della Stima */}
           <div className="space-y-4">
-            <h3 className="font-bold text-base text-[#0a2540] flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#635bff]" />
+            <h3 className="font-bold text-base text-[#0F222D] flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#0A6847]" />
               <span>Sintesi Economica della Stima</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              <div className="border-l-2 border-[#635bff] pl-4">
+              <div className="border-l-2 border-[#0A6847] pl-4">
                 <span className="text-sm font-semibold text-slate-600 block">
                   Con questa offerta
                 </span>
                 <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-3xl font-extrabold text-[#0a2540]">
+                  <span className="text-3xl font-extrabold text-[#0F222D]">
                     {monthlyCost !== null ? `~€${monthlyCost}` : 'Non calcolabile'}
                   </span>
                   {monthlyCost !== null && (
@@ -444,8 +444,8 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
           {/* Scomposizione Spesa Bolletta (Standard ARERA) */}
           <div className="space-y-3.5">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-bold text-sm text-[#0a2540] flex items-center gap-2">
-                <PieChart className="w-4 h-4 text-[#635bff]" />
+              <h3 className="font-bold text-sm text-[#0F222D] flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-[#0A6847]" />
                 <span>Scomposizione Spesa Stimata (Standard ARERA)</span>
               </h3>
               <span className="text-xs text-slate-500 hidden sm:inline">
@@ -490,7 +490,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
                   <div className="pt-2 border-t border-slate-200/80 flex items-baseline justify-between">
                     <span className="text-[11px] text-slate-600">Stima annua:</span>
-                    <span className="font-extrabold text-sm text-[#0a2540]">
+                    <span className="font-extrabold text-sm text-[#0F222D]">
                       {item.annualAmount !== null
                         ? `~€${item.annualAmount}/anno`
                         : '—'}
@@ -507,7 +507,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
           {/* Dettaglio Condizioni Economiche */}
           <div className="space-y-3">
-            <h3 className="font-bold text-sm text-[#0a2540]">
+            <h3 className="font-bold text-sm text-[#0F222D]">
               Condizioni Economiche della Fornitura
             </h3>
             <div className="border border-slate-200 rounded-xl divide-y divide-slate-100">
@@ -547,8 +547,8 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
           {/* Metodologia e Ipotesi */}
           <details className="border-y border-slate-200 py-4 text-sm text-slate-600">
-            <summary className="flex items-center gap-2 font-semibold text-[#0a2540] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#635bff]">
-              <HelpCircle className="w-4 h-4 text-[#635bff]" />
+            <summary className="flex items-center gap-2 font-semibold text-[#0F222D] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0A6847]">
+              <HelpCircle className="w-4 h-4 text-[#0A6847]" />
               <span>Come abbiamo calcolato la stima</span>
             </summary>
             <ul className="list-disc pl-5 mt-3 space-y-2 leading-relaxed">
@@ -571,10 +571,10 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
           {/* Consultation Intake Section */}
           {isGuestMode ? (
-            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 sm:p-5 space-y-4">
+            <div className="rounded-2xl border border-[#D5E6DF] bg-[#EAF4F0]/40 p-4 sm:p-5 space-y-4">
               <div className="flex items-center gap-2">
-                <PhoneCall className="w-4 h-4 text-[#635bff]" />
-                <h3 className="font-bold text-sm text-[#0a2540]">
+                <PhoneCall className="w-4 h-4 text-[#0A6847]" />
+                <h3 className="font-bold text-sm text-[#0F222D]">
                   Richiedi consulenza gratuita con un esperto Volta
                 </h3>
               </div>
@@ -594,7 +594,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="Mario Rossi"
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
                   />
                 </div>
 
@@ -609,7 +609,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     placeholder="+39 347 1234567"
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -624,7 +624,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                   value={guestEmail}
                   onChange={(e) => setGuestEmail(e.target.value)}
                   placeholder="mario.rossi@email.it"
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
                 />
               </div>
 
@@ -644,7 +644,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                         onClick={() => setPreferredTime(timeOption)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                           isSelected
-                            ? 'bg-[#635bff] text-white border-[#635bff] shadow-xs'
+                            ? 'bg-[#0A6847] text-white border-[#0A6847] shadow-xs'
                             : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                         }`}
                       >
@@ -665,7 +665,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                   value={customerNotes}
                   onChange={(e) => setCustomerNotes(e.target.value)}
                   placeholder="Es. Richiamare preferibilmente su WhatsApp..."
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 placeholder:text-slate-400"
+                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
                 />
               </div>
 
@@ -675,7 +675,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                     type="checkbox"
                     checked={privacyConsent}
                     onChange={(e) => setPrivacyConsent(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded text-[#635bff] border-slate-300 focus:ring-[#635bff] cursor-pointer"
+                    className="mt-0.5 w-4 h-4 rounded text-[#0A6847] border-slate-300 focus:ring-[#0A6847] cursor-pointer"
                     required
                   />
                   <span>
@@ -687,7 +687,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                         e.stopPropagation();
                         onOpenPrivacy?.();
                       }}
-                      className="text-[#635bff] font-semibold underline hover:text-[#534be5] cursor-pointer"
+                      className="text-[#0A6847] font-semibold underline hover:text-[#085238] cursor-pointer"
                     >
                       informativa privacy (GDPR)
                     </button>{' '}
@@ -707,7 +707,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                 value={customerNotes}
                 onChange={(e) => setCustomerNotes(e.target.value)}
                 placeholder="Es. Richiamare preferibilmente nel pomeriggio..."
-                className="w-full min-h-[48px] px-3.5 py-2 text-base bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
+                className="w-full min-h-[48px] px-3.5 py-2 text-base bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800"
               />
             </div>
           )}
@@ -728,7 +728,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             type="button"
             onClick={submitConsultation}
             disabled={isSubmitting}
-            className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
+            className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847]"
           >
             <PhoneCall className="w-4 h-4" />
             <span>{isSubmitting ? 'Invio richiesta...' : (isGuestMode ? 'Richiedi consulenza gratuita' : 'Richiedi consulenza')}</span>

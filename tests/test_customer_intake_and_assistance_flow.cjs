@@ -107,17 +107,22 @@ assert.ok(
 );
 
 // -----------------------------------------------------------------------------
-// 5. Mobile Polish: DemoRoleSwitcher starts minimized on mobile screens
+// 5. Mobile Polish: DemoRoleSwitcher is a non-overlapping inline header selector
 // -----------------------------------------------------------------------------
-console.log('\n[TEST 5] DemoRoleSwitcher: Responsiveness on mobile');
+console.log('\n[TEST 5] DemoRoleSwitcher: Non-overlapping inline header selector');
 
 const switcherPath = path.join(__dirname, '..', 'src', 'components', 'DemoRoleSwitcher.tsx');
 const switcherSrc = fs.readFileSync(switcherPath, 'utf8');
 
-// RED CHECK 5.1: DemoRoleSwitcher must initialize isMinimized checking mobile width
+// RED CHECK 5.1: DemoRoleSwitcher must not render a fixed bottom overlay that covers mobile content
+assert.strictEqual(
+  switcherSrc.includes('fixed bottom-'),
+  false,
+  'DemoRoleSwitcher must not use a fixed bottom floating bar that overlaps mobile content'
+);
 assert.ok(
-  switcherSrc.includes('window.innerWidth <') || switcherSrc.includes('window.matchMedia'),
-  'DemoRoleSwitcher must check mobile viewport to start minimized on small screens'
+  switcherSrc.includes('<select'),
+  'DemoRoleSwitcher must render a compact inline select control for staff demo sessions'
 );
 
 // -----------------------------------------------------------------------------

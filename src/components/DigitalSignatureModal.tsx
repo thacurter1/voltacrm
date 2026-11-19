@@ -215,18 +215,18 @@ const DigitalSignatureDialog: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="sig-modal-title">
-      <div onClick={onClose} className="fixed inset-0 bg-[#0a2540]/60 backdrop-blur-xs" />
+      <div onClick={onClose} className="fixed inset-0 bg-[#0F222D]/60 backdrop-blur-xs" />
 
-      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#e3e8ee] shadow-2xl p-6 space-y-5 text-xs animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#DCE5E8] shadow-2xl p-6 space-y-5 text-xs animate-in zoom-in-95 duration-150">
         
         {/* Header */}
-        <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-3.5">
+        <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-3.5">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h3 id="sig-modal-title" className="font-bold text-sm text-[#0a2540]">Firma Digitale Mandato Switch</h3>
+              <h3 id="sig-modal-title" className="font-bold text-sm text-[#0F222D]">Firma Digitale Mandato Switch</h3>
               <p className="text-[11px] text-[#425466]">Perfezionamento a norma del Codice dell'Amministrazione Digitale</p>
             </div>
           </div>
@@ -236,11 +236,11 @@ const DigitalSignatureDialog: React.FC<{
         </div>
 
         {/* Contract Summary Chip */}
-        <div className="p-3.5 rounded-xl bg-slate-50 border border-[#e3e8ee] flex items-center justify-between">
+        <div className="p-3.5 rounded-xl bg-slate-50 border border-[#DCE5E8] flex items-center justify-between">
           <div>
-            <div className="font-bold text-[#0a2540]">{audit.customerName}</div>
+            <div className="font-bold text-[#0F222D]">{audit.customerName}</div>
             <div className="text-[11px] text-[#425466]">
-              Switch {audit.utilityType.toUpperCase()} da {audit.currentSupplier} a <strong className="text-[#635bff]">{audit.bestOffer.supplier}</strong>
+              Switch {audit.utilityType.toUpperCase()} da {audit.currentSupplier} a <strong className="text-[#0A6847]">{audit.bestOffer.supplier}</strong>
             </div>
           </div>
           <div className="text-right">
@@ -252,7 +252,7 @@ const DigitalSignatureDialog: React.FC<{
         </div>
 
         {/* Mode Selector */}
-        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 border border-[#e3e8ee]" role="tablist" aria-label="Modalità di firma">
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 border border-[#DCE5E8]" role="tablist" aria-label="Modalità di firma">
           <button
             type="button"
             role="tab"
@@ -260,8 +260,8 @@ const DigitalSignatureDialog: React.FC<{
             onClick={() => setSignatureMode('canvas')}
             className={`py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               signatureMode === 'canvas'
-                ? 'bg-white text-[#0a2540] shadow-xs'
-                : 'text-[#425466] hover:text-[#0a2540]'
+                ? 'bg-white text-[#0F222D] shadow-xs'
+                : 'text-[#425466] hover:text-[#0F222D]'
             }`}
           >
             <PenTool className="h-3.5 w-3.5" />
@@ -275,8 +275,8 @@ const DigitalSignatureDialog: React.FC<{
             onClick={() => setSignatureMode('otp')}
             className={`py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
               signatureMode === 'otp'
-                ? 'bg-white text-[#0a2540] shadow-xs'
-                : 'text-[#425466] hover:text-[#0a2540]'
+                ? 'bg-white text-[#0F222D] shadow-xs'
+                : 'text-[#425466] hover:text-[#0F222D]'
             }`}
           >
             <Smartphone className="h-3.5 w-3.5" />
@@ -300,7 +300,7 @@ const DigitalSignatureDialog: React.FC<{
               )}
             </div>
             
-            <div className="relative border-2 border-dashed border-[#e3e8ee] rounded-xl overflow-hidden bg-[#fdfdfe] h-36">
+            <div className="relative border-2 border-dashed border-[#DCE5E8] rounded-xl overflow-hidden bg-[#fdfdfe] h-36">
               <canvas
                 ref={canvasRef}
                 width={460}
@@ -325,15 +325,15 @@ const DigitalSignatureDialog: React.FC<{
 
         {/* TAB 2: OTP VERIFICATION */}
         {signatureMode === 'otp' && (
-          <div className="space-y-3.5 p-4 rounded-xl bg-slate-50 border border-[#e3e8ee]">
+          <div className="space-y-3.5 p-4 rounded-xl bg-slate-50 border border-[#DCE5E8]">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-semibold text-[#0a2540]">Verifica tramite cellulare</div>
+                <div className="font-semibold text-[#0F222D]">Verifica tramite cellulare</div>
                 <div className="text-[11px] text-[#425466]">Invieremo il codice a <strong>{customerPhone}</strong></div>
               </div>
 
               {/* Channel Selector */}
-              <div className="flex items-center bg-white border border-[#e3e8ee] rounded-lg p-0.5 shadow-2xs">
+              <div className="flex items-center bg-white border border-[#DCE5E8] rounded-lg p-0.5 shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setChannel('whatsapp')}
@@ -351,7 +351,7 @@ const DigitalSignatureDialog: React.FC<{
                   onClick={() => setChannel('sms')}
                   className={`px-2 py-1 rounded text-[10px] font-semibold flex items-center gap-1 transition-all ${
                     channel === 'sms'
-                      ? 'bg-[#635bff] text-white shadow-2xs'
+                      ? 'bg-[#0A6847] text-white shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -367,7 +367,7 @@ const DigitalSignatureDialog: React.FC<{
                 type="button"
                 disabled={otpTimer > 0 || isSendingOtp}
                 onClick={handleSendOtp}
-                className="px-3.5 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5349e0] text-white font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
+                className="px-3.5 py-1.5 rounded-lg bg-[#0A6847] hover:bg-[#5349e0] text-white font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
               >
                 {isSendingOtp ? (
                   <>
@@ -384,7 +384,7 @@ const DigitalSignatureDialog: React.FC<{
 
             {otpSent && (
               <div className="pt-1">
-                <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">
+                <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">
                   Inserisci il codice a 6 cifre ricevuto:
                 </label>
                 <input
@@ -393,7 +393,7 @@ const DigitalSignatureDialog: React.FC<{
                   value={otpCode}
                   onChange={e => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="123456"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-center font-mono text-lg tracking-widest font-bold focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] focus:outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-center font-mono text-lg tracking-widest font-bold focus:border-[#0A6847] focus:ring-1 focus:ring-[#0A6847] focus:outline-hidden"
                 />
               </div>
             )}
@@ -416,12 +416,12 @@ const DigitalSignatureDialog: React.FC<{
         )}
 
         {/* Legal Consent Checkbox */}
-        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-[#e3e8ee] cursor-pointer">
+        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-[#DCE5E8] cursor-pointer">
           <input
             type="checkbox"
             checked={consentChecked}
             onChange={e => setConsentChecked(e.target.checked)}
-            className="mt-0.5 rounded text-[#635bff] focus:ring-[#635bff]"
+            className="mt-0.5 rounded text-[#0A6847] focus:ring-[#0A6847]"
           />
           <span className="text-[11px] text-[#425466] leading-relaxed">
             Confermo la volontà di sottoscrivere il mandato di brokeraggio e la richiesta di cambio fornitore a costo zero con <strong>{audit.bestOffer.supplier}</strong>, approvando le condizioni economiche esposte nello studio di fattibilità.
@@ -433,7 +433,7 @@ const DigitalSignatureDialog: React.FC<{
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-[#e3e8ee] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
+            className="px-4 py-2 rounded-xl border border-[#DCE5E8] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
           >
             Annulla
           </button>

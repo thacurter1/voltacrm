@@ -5,7 +5,6 @@ import {
   ShieldCheck, 
   Send, 
   X,
-  Sparkles,
   Smartphone,
   MessageSquare,
   FileCheck
@@ -45,18 +44,18 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-[#e3e8ee] rounded-xl w-full max-w-xl p-6 space-y-5 shadow-[0_20px_50px_rgba(0,0,0,0.14)]">
+    <div className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-[#DCE5E8] rounded-xl w-full max-w-xl p-6 space-y-5 shadow-[0_20px_50px_rgba(0,0,0,0.14)]">
         {/* Modal Header */}
-        <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
+        <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-4">
           <div>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#635bff] uppercase tracking-wider">
-              <Sparkles className="h-3 w-3" />
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0A6847] uppercase tracking-wider">
+              <CheckCircle2 className="h-3 w-3" />
               Audit Quadrimestrale (120 Giorni)
             </span>
-            <h3 className="text-lg font-bold text-[#0a2540] mt-0.5">Dossier di Cambio Offerta</h3>
+            <h3 className="text-lg font-bold text-[#0F222D] mt-0.5">Dossier di Cambio Offerta</h3>
             <p className="text-xs text-[#425466]">
-              Cliente: <strong className="text-[#0a2540]">{audit.customerName}</strong> ({audit.utilityType.toUpperCase()} • {audit.podOrPdr})
+              Cliente: <strong className="text-[#0F222D]">{audit.customerName}</strong> ({audit.utilityType.toUpperCase()} • {audit.podOrPdr})
             </p>
           </div>
           <button 
@@ -68,11 +67,11 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
         </div>
 
         {/* Comparison Box */}
-        <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 border border-[#e3e8ee] text-xs">
+        <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 border border-[#DCE5E8] text-xs">
           {/* Vecchia Offerta */}
-          <div className="space-y-1.5 border-r border-[#e3e8ee] pr-3">
+          <div className="space-y-1.5 border-r border-[#DCE5E8] pr-3">
             <span className="text-[10px] text-[#425466] uppercase font-bold block">Attuale Fornitore</span>
-            <h4 className="font-bold text-[#0a2540] text-sm">{audit.currentSupplier}</h4>
+            <h4 className="font-bold text-[#0F222D] text-sm">{audit.currentSupplier}</h4>
             <div className="pt-2">
               <span className="text-[10px] text-[#425466] block">Spesa Stimata Annua</span>
               <span className="text-base font-bold text-slate-400 line-through font-mono">
@@ -87,7 +86,7 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
             <span className="text-[10px] text-emerald-700 uppercase font-bold block flex items-center gap-1">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Nuova Miglior Offerta
             </span>
-            <h4 className="font-bold text-[#0a2540] text-sm">{audit.bestOffer.supplier}</h4>
+            <h4 className="font-bold text-[#0F222D] text-sm">{audit.bestOffer.supplier}</h4>
             <p className="text-xs text-slate-600 font-medium">{audit.bestOffer.name}</p>
             <div className="pt-1">
               <span className="text-[10px] text-[#425466] block">Nuova Spesa Annua</span>
@@ -102,7 +101,7 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
         <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/70 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700">
-              <Sparkles className="h-4 w-4" />
+              <CheckCircle2 className="h-4 w-4" />
             </div>
             <div>
               <span className="text-xs font-semibold text-emerald-900 block">Risparmio Netto per il Cliente</span>
@@ -121,7 +120,7 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
 
         {/* Execution Options */}
         <div className="space-y-2 text-xs">
-          <span className="font-semibold text-[#0a2540] block">Modalità di Perfezionamento Switch:</span>
+          <span className="font-semibold text-[#0F222D] block">Modalità di Perfezionamento Switch:</span>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <button
@@ -129,12 +128,12 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
               onClick={() => setMethod('direct_mandate')}
               className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
                 method === 'direct_mandate' 
-                  ? 'bg-indigo-50/70 border-[#635bff] text-[#0a2540] ring-1 ring-[#635bff]' 
-                  : 'bg-white border-[#e3e8ee] text-[#425466] hover:bg-slate-50'
+                  ? 'bg-[#EAF4F0]/70 border-[#0A6847] text-[#0F222D] ring-1 ring-[#0A6847]' 
+                  : 'bg-white border-[#DCE5E8] text-[#425466] hover:bg-slate-50'
               }`}
             >
-              <div className="flex items-center gap-1.5 font-bold text-xs text-[#0a2540]">
-                <FileCheck className="h-3.5 w-3.5 text-[#635bff]" />
+              <div className="flex items-center gap-1.5 font-bold text-xs text-[#0F222D]">
+                <FileCheck className="h-3.5 w-3.5 text-[#0A6847]" />
                 Delega Diretta
               </div>
               <span className="text-[10px] text-[#425466] block mt-1">Autorizzato da contratto continuo</span>
@@ -145,11 +144,11 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
               onClick={() => setMethod('whatsapp')}
               className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
                 method === 'whatsapp' 
-                  ? 'bg-indigo-50/70 border-[#635bff] text-[#0a2540] ring-1 ring-[#635bff]' 
-                  : 'bg-white border-[#e3e8ee] text-[#425466] hover:bg-slate-50'
+                  ? 'bg-[#EAF4F0]/70 border-[#0A6847] text-[#0F222D] ring-1 ring-[#0A6847]' 
+                  : 'bg-white border-[#DCE5E8] text-[#425466] hover:bg-slate-50'
               }`}
             >
-              <div className="flex items-center gap-1.5 font-bold text-xs text-[#0a2540]">
+              <div className="flex items-center gap-1.5 font-bold text-xs text-[#0F222D]">
                 <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
                 Link WhatsApp
               </div>
@@ -161,11 +160,11 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
               onClick={() => setMethod('otp_sms')}
               className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
                 method === 'otp_sms' 
-                  ? 'bg-indigo-50/70 border-[#635bff] text-[#0a2540] ring-1 ring-[#635bff]' 
-                  : 'bg-white border-[#e3e8ee] text-[#425466] hover:bg-slate-50'
+                  ? 'bg-[#EAF4F0]/70 border-[#0A6847] text-[#0F222D] ring-1 ring-[#0A6847]' 
+                  : 'bg-white border-[#DCE5E8] text-[#425466] hover:bg-slate-50'
               }`}
             >
-              <div className="flex items-center gap-1.5 font-bold text-xs text-[#0a2540]">
+              <div className="flex items-center gap-1.5 font-bold text-xs text-[#0F222D]">
                 <Smartphone className="h-3.5 w-3.5 text-blue-600" />
                 Firma OTP SMS
               </div>
@@ -175,10 +174,10 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#e3e8ee]">
+        <div className="flex items-center justify-between pt-4 border-t border-[#DCE5E8]">
           <button
             onClick={onClose}
-            className="px-3.5 py-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] text-xs font-medium cursor-pointer"
+            className="px-3.5 py-2 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] text-xs font-medium cursor-pointer"
           >
             Chiudi
           </button>
@@ -186,7 +185,7 @@ export const SwitchProposalModal: React.FC<SwitchProposalModalProps> = ({
           <button
             onClick={handleExecute}
             disabled={isProcessing || isSuccess}
-            className="px-5 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium text-xs flex items-center gap-2 shadow-[0_1px_2px_rgba(99,91,255,0.3)] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+            className="px-5 py-2 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-medium text-xs flex items-center gap-2 shadow-[0_1px_2px_rgba(10, 104, 71,0.3)] active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
           >
             {isProcessing ? (
               <>

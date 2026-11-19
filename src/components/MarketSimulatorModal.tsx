@@ -75,20 +75,20 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-12 flex items-center justify-center">
       <div 
         onClick={onClose}
-        className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-xs transition-opacity" 
       />
 
       <div 
         role="dialog"
         aria-modal="true"
         aria-labelledby="market-simulator-title"
-        className="relative w-full max-w-xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6 text-xs max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-xl bg-white rounded-xl border border-[#DCE5E8] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6 text-xs max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
+        <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#635bff] uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0A6847] uppercase tracking-wider">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Feed & Stress Test di Mercato
               </span>
@@ -96,7 +96,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
                 GME Live
               </span>
             </div>
-            <h3 id="market-simulator-title" className="text-lg font-bold text-[#0a2540] mt-0.5">
+            <h3 id="market-simulator-title" className="text-lg font-bold text-[#0F222D] mt-0.5">
               Simula Scenari PUN & PSV con Fasce F1/F2/F3
             </h3>
             <p className="text-xs text-[#425466]">
@@ -112,7 +112,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
         <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-emerald-500 " />
               <span className="font-semibold text-slate-700">Feed Ufficiale GME / ARERA</span>
             </div>
             <span className="text-[11px] text-slate-500 block">
@@ -124,9 +124,9 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
               type="button"
               onClick={onRefreshFromGme}
               disabled={isRefreshingFromGme}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-[#0a2540] transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-semibold text-[#0F222D] transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
             >
-              <RefreshCw className={`h-3.5 w-3.5 text-[#635bff] ${isRefreshingFromGme ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3.5 w-3.5 text-[#0A6847] ${isRefreshingFromGme ? 'animate-spin' : ''}`} />
               <span>{isRefreshingFromGme ? 'Aggiornamento...' : 'Sincronizza Live'}</span>
             </button>
           )}
@@ -175,7 +175,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
             <button
               type="button"
               onClick={() => handlePreset(0.0890, 0.3100)}
-              className="p-2 rounded-lg border border-[#e3e8ee] bg-slate-50 hover:bg-slate-100 text-[#0a2540] font-medium text-left cursor-pointer"
+              className="p-2 rounded-lg border border-[#DCE5E8] bg-slate-50 hover:bg-slate-100 text-[#0F222D] font-medium text-left cursor-pointer"
             >
               <div className="flex items-center gap-1 text-emerald-600 font-bold">
                 <TrendingDown className="h-3 w-3" /> Ribasso (-22%)
@@ -186,9 +186,9 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
             <button
               type="button"
               onClick={() => handlePreset(currentIndex.punEurKwh, currentIndex.psvEurSmc)}
-              className="p-2 rounded-lg border border-[#e3e8ee] bg-slate-50 hover:bg-slate-100 text-[#0a2540] font-medium text-left cursor-pointer"
+              className="p-2 rounded-lg border border-[#DCE5E8] bg-slate-50 hover:bg-slate-100 text-[#0F222D] font-medium text-left cursor-pointer"
             >
-              <div className="flex items-center gap-1 text-[#635bff] font-bold">
+              <div className="flex items-center gap-1 text-[#0A6847] font-bold">
                 ⚖️ Live GME Oggi
               </div>
               <span className="text-[10px] text-slate-500 block">PUN {currentIndex.punEurKwh.toFixed(3)} €</span>
@@ -197,7 +197,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
             <button
               type="button"
               onClick={() => handlePreset(0.1650, 0.5400)}
-              className="p-2 rounded-lg border border-[#e3e8ee] bg-slate-50 hover:bg-slate-100 text-[#0a2540] font-medium text-left cursor-pointer"
+              className="p-2 rounded-lg border border-[#DCE5E8] bg-slate-50 hover:bg-slate-100 text-[#0F222D] font-medium text-left cursor-pointer"
             >
               <div className="flex items-center gap-1 text-rose-600 font-bold">
                 <TrendingUp className="h-3 w-3" /> Shock (+44%)
@@ -208,15 +208,15 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
         </div>
 
         {/* Sliders */}
-        <div className="space-y-4 pt-2 border-t border-[#e3e8ee]">
+        <div className="space-y-4 pt-2 border-t border-[#DCE5E8]">
           {/* PUN Slider */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-[#0a2540] flex items-center gap-1.5">
+              <span className="font-semibold text-[#0F222D] flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-amber-500" />
                 PUN Luce Monorario All'Ingrosso:
               </span>
-              <span className="font-mono font-bold text-sm text-[#0a2540]">
+              <span className="font-mono font-bold text-sm text-[#0F222D]">
                 {pun.toFixed(4)} €/kWh
               </span>
             </div>
@@ -227,7 +227,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
               step="0.005"
               value={pun}
               onChange={(e) => setPun(Number(e.target.value))}
-              className="w-full accent-[#635bff] cursor-pointer"
+              className="w-full accent-[#0A6847] cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-slate-400 font-mono">
               <span>0.070 € (Minimo Storico)</span>
@@ -238,11 +238,11 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
           {/* PSV Slider */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-[#0a2540] flex items-center gap-1.5">
+              <span className="font-semibold text-[#0F222D] flex items-center gap-1.5">
                 <Flame className="h-3.5 w-3.5 text-sky-500" />
                 PSV Gas Naturale All'Ingrosso:
               </span>
-              <span className="font-mono font-bold text-sm text-[#0a2540]">
+              <span className="font-mono font-bold text-sm text-[#0F222D]">
                 {psv.toFixed(4)} €/Smc
               </span>
             </div>
@@ -253,7 +253,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
               step="0.01"
               value={psv}
               onChange={(e) => setPsv(Number(e.target.value))}
-              className="w-full accent-[#635bff] cursor-pointer"
+              className="w-full accent-[#0A6847] cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-slate-400 font-mono">
               <span>0.250 € (Estate Minimo)</span>
@@ -264,9 +264,9 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
 
         {/* 6-Month Historical Table */}
         {currentIndex.historical6m && currentIndex.historical6m.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-[#e3e8ee]">
+          <div className="space-y-2 pt-2 border-t border-[#DCE5E8]">
             <span className="text-[10px] font-bold text-[#425466] uppercase tracking-wider flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-[#635bff]" />
+              <Calendar className="h-3 w-3 text-[#0A6847]" />
               Serie Storica Indici GME (Ultimi 6 Mesi Consuntivi):
             </span>
             <div className="border border-slate-200 rounded-lg overflow-hidden">
@@ -289,7 +289,7 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handlePreset(item.punEurKwh, item.psvEurSmc)}
-                          className="text-[10px] font-bold text-[#635bff] hover:underline cursor-pointer"
+                          className="text-[10px] font-bold text-[#0A6847] hover:underline cursor-pointer"
                         >
                           Testa
                         </button>
@@ -303,18 +303,18 @@ export const MarketSimulatorModal: React.FC<MarketSimulatorModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#e3e8ee]">
+        <div className="flex items-center justify-between pt-4 border-t border-[#DCE5E8]">
           <button
             type="button"
             onClick={onClose}
-            className="px-3.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-medium cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] font-medium cursor-pointer"
           >
             Annulla
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="px-4 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center gap-1.5"
+            className="px-4 py-2 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-medium shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center gap-1.5"
           >
             <Check className="h-3.5 w-3.5" />
             Applica & Ricalcola Portafoglio

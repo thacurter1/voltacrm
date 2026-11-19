@@ -45,16 +45,16 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e8ee]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#DCE5E8]">
         <div>
-          <h1 className="text-xl font-bold text-[#0a2540] tracking-tight">Catalogo Tariffe & Preventivatore</h1>
+          <h1 className="text-xl font-bold text-[#0F222D] tracking-tight">Catalogo Tariffe & Preventivatore</h1>
           <p className="text-xs text-[#425466] mt-0.5">
             Listini sempre aggiornati sul mercato all'ingrosso (PUN Luce {marketIndex.punEurKwh.toFixed(4)} € e PSV Gas {marketIndex.psvEurSmc.toFixed(4)} €).
           </p>
         </div>
 
         {/* Stripe Segmented Pill Control */}
-        <div className="inline-flex items-center p-1 rounded-lg bg-slate-100 border border-[#e3e8ee]">
+        <div className="inline-flex items-center p-1 rounded-lg bg-slate-100 border border-[#DCE5E8]">
           <button
             onClick={() => {
               setActiveType('luce');
@@ -62,8 +62,8 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
             }}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeType === 'luce'
-                ? 'bg-white text-[#0a2540] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                : 'text-[#425466] hover:text-[#0a2540]'
+                ? 'bg-white text-[#0F222D] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                : 'text-[#425466] hover:text-[#0F222D]'
             }`}
           >
             <Zap className="h-3.5 w-3.5 text-amber-500" />
@@ -76,8 +76,8 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
             }}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
               activeType === 'gas'
-                ? 'bg-white text-[#0a2540] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                : 'text-[#425466] hover:text-[#0a2540]'
+                ? 'bg-white text-[#0F222D] shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                : 'text-[#425466] hover:text-[#0F222D]'
             }`}
           >
             <Flame className="h-3.5 w-3.5 text-sky-500" />
@@ -87,8 +87,8 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
       </div>
 
       {/* Stripe Simulator Card */}
-      <div className="p-5 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
-        <div className="flex items-center gap-2 text-xs font-bold text-[#635bff] tracking-wider uppercase">
+      <div className="p-5 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
+        <div className="flex items-center gap-2 text-xs font-bold text-[#0A6847] tracking-wider uppercase">
           <Calculator className="h-4 w-4" />
           Simulatore di Spesa & Risparmio Immediato
         </div>
@@ -106,7 +106,7 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
                 if (activeType === 'luce') setSimKwh(val);
                 else setSimSmc(val);
               }}
-              className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-bold font-mono focus:outline-none focus:border-[#635bff] focus:bg-white text-xs"
+              className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] font-bold font-mono focus:outline-none focus:border-[#0A6847] focus:bg-white text-xs"
             />
           </div>
 
@@ -119,16 +119,16 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
               step="0.005"
               value={currentHypotheticalPrice}
               onChange={(e) => setCurrentHypotheticalPrice(Number(e.target.value))}
-              className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-bold font-mono focus:outline-none focus:border-[#635bff] focus:bg-white text-xs"
+              className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] font-bold font-mono focus:outline-none focus:border-[#0A6847] focus:bg-white text-xs"
             />
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-[#e3e8ee]">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-[#DCE5E8]">
             <div>
               <span className="text-[10px] text-[#425466] uppercase font-bold block">
                 Costo Attuale Annuo Stimato
               </span>
-              <span className="text-lg font-bold text-[#0a2540] font-mono">
+              <span className="text-lg font-bold text-[#0F222D] font-mono">
                 € {simulatedCurrentAnnualCost.toFixed(2)}
               </span>
             </div>
@@ -154,11 +154,11 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
           return (
             <div 
               key={offer.id}
-              className="p-5 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#635bff]/40 hover:shadow-[0_6px_16px_rgba(99,91,255,0.06)] transition-all flex flex-col justify-between space-y-4"
+              className="p-5 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#0A6847]/40 hover:shadow-[0_6px_16px_rgba(10, 104, 71,0.06)] transition-all flex flex-col justify-between space-y-4"
             >
               {/* Header: Tag & Supplier */}
               <div className="flex justify-between items-start">
-                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-[#635bff] border border-indigo-100">
+                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#EAF4F0] text-[#0A6847] border border-[#D5E6DF]">
                   {offer.tag}
                 </span>
                 <span className="text-[11px] text-[#425466] font-medium">
@@ -168,14 +168,14 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
 
               <div>
                 <span className="text-xs uppercase tracking-wider font-semibold text-[#425466]">{offer.supplier}</span>
-                <h3 className="text-base font-bold text-[#0a2540] mt-0.5">{offer.name}</h3>
+                <h3 className="text-base font-bold text-[#0F222D] mt-0.5">{offer.name}</h3>
               </div>
 
               {/* Pricing breakdown box */}
-              <div className="p-3.5 rounded-lg bg-slate-50 border border-[#e3e8ee] space-y-2 text-xs">
+              <div className="p-3.5 rounded-lg bg-slate-50 border border-[#DCE5E8] space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-[#425466]">Costo Materia:</span>
-                  <span className="font-bold text-[#0a2540] font-mono">
+                  <span className="font-bold text-[#0F222D] font-mono">
                     {offer.pricingType === 'fixed' ? (
                       `${offer.unitPriceOrSpread.toFixed(4)} €/${activeType === 'luce' ? 'kWh' : 'Smc'}`
                     ) : (
@@ -188,17 +188,17 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
                   <span className="font-medium text-slate-700">€ {offer.fixedAnnualFee.toFixed(0)} / anno ({Math.round(offer.fixedAnnualFee / 12)}€/m)</span>
                 </div>
                 {offer.greenCertified && (
-                  <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-semibold pt-1 border-t border-[#e3e8ee]">
+                  <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-semibold pt-1 border-t border-[#DCE5E8]">
                     <Check className="h-3 w-3 text-emerald-600" /> Energia 100% Green Certificata
                   </div>
                 )}
               </div>
 
               {/* Total Cost & Calculated Savings */}
-              <div className="pt-2 border-t border-[#e3e8ee] flex items-center justify-between">
+              <div className="pt-2 border-t border-[#DCE5E8] flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-[#425466] block uppercase font-bold">Spesa Totale Annua</span>
-                  <span className="text-xl font-bold text-[#0a2540] font-mono">€ {annualCost.toFixed(0)}</span>
+                  <span className="text-xl font-bold text-[#0F222D] font-mono">€ {annualCost.toFixed(0)}</span>
                 </div>
 
                 {savings > 30 && (
@@ -216,7 +216,7 @@ export const TariffComparator: React.FC<TariffComparatorProps> = ({ marketIndex,
                 <button
                   type="button"
                   onClick={() => onSelectOffer(offer)}
-                  className="w-full mt-2 py-2 px-3 bg-[#635bff] hover:bg-[#0a2540] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.99]"
+                  className="w-full mt-2 py-2 px-3 bg-[#0A6847] hover:bg-[#0F222D] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.99]"
                 >
                   <span>Seleziona per Contratto</span>
                   <ArrowRight className="h-3.5 w-3.5" />

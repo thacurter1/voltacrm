@@ -810,7 +810,7 @@ function UnifiedApp() {
   // 3. Public unauthenticated root landing: renders CustomerApp comparator directly
   if (isGateOpen) {
     return (
-      <div className="min-h-screen bg-[#f7f7f8] flex flex-col font-sans">
+      <div className="min-h-screen bg-[#F6F9FA] flex flex-col font-sans">
         <NetworkStatusBanner />
         <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Comparatore Tariffe...</div>}>
           <CustomerApp
@@ -823,15 +823,6 @@ function UnifiedApp() {
             onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined}
           />
         </React.Suspense>
-        {isDemoSessionActive() && (
-          <DemoRoleSwitcher
-            currentUser={currentUser}
-            customers={customers}
-            onSelectUser={handleSelectUser}
-            onOpenTotem={openTotem}
-            onLogout={logout}
-          />
-        )}
         <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
       </div>
     );
@@ -850,7 +841,7 @@ function UnifiedApp() {
     };
 
     return (
-      <div className="min-h-screen bg-[#f7f7f8] flex flex-col font-sans">
+      <div className="min-h-screen bg-[#F6F9FA] flex flex-col font-sans">
         <NetworkStatusBanner />
         {impersonatingStaffUser && (
           <ImpersonationBanner
@@ -858,29 +849,20 @@ function UnifiedApp() {
             onReturnToCallCenter={handleReturnToBackend}
           />
         )}
-        <React.Suspense fallback={<div className="p-8 text-center text-slate-500 font-medium">Caricamento Portale Clienti...</div>}>
+        <React.Suspense fallback={<div className="p-8 text-center text-[#445966] font-medium">Caricamento Portale Clienti...</div>}>
           <CustomerApp onLogout={logout} key={currentUser.customerId || currentUser.id} onReturnToBackend={impersonatingStaffUser ? handleReturnToBackend : undefined} currentUser={currentUser} customer={customers[0] || null} bills={bills} isLoading={customerPortalLoading} loadError={customerPortalError} onReloadBills={handleReloadCustomerBills} />
         </React.Suspense>
-        {isDemoSessionActive() && (
-          <DemoRoleSwitcher
-            currentUser={currentUser}
-            customers={customers}
-            onSelectUser={handleSelectUser}
-            onOpenTotem={openTotem}
-            onLogout={logout}
-          />
-        )}
         <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F6F9FA] text-[#0F222D] flex flex-col font-sans">
       <NetworkStatusBanner />
       <a 
         href="#main-content" 
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#635bff] focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#0A6847] focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold"
       >
         Vai al contenuto principale
       </a>
@@ -901,6 +883,17 @@ function UnifiedApp() {
         onOpenTotem={openTotem}
         onRefreshMarketIndex={handleRefreshMarketIndices}
         isRefreshingMarketIndex={isRefreshingMarketIndex}
+        demoSwitcher={
+          isDemoSessionActive() ? (
+            <DemoRoleSwitcher
+              currentUser={currentUser}
+              customers={customers}
+              onSelectUser={handleSelectUser}
+              onOpenTotem={openTotem}
+              onLogout={logout}
+            />
+          ) : undefined
+        }
       />
 
       <main id="main-content" className="flex-1 max-w-[1400px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pb-24 sm:pb-8">
@@ -1016,10 +1009,10 @@ function UnifiedApp() {
                   onToast={addToast}
                 />
               ) : (
-                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+                <div className="bg-white border border-[#DCE5E8] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[#0F222D]">Area Riservata alla Direzione Generale</h2>
                   <p className="text-sm text-slate-500 mt-2">La gestione dei profili e dei permessi dell'agenzia è accessibile esclusivamente agli amministratori.</p>
-                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                     Torna ai tuoi clienti
                   </button>
                 </div>
@@ -1033,10 +1026,10 @@ function UnifiedApp() {
                   onToast={addToast}
                 />
               ) : (
-                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata a Broker e Consulenti</h2>
+                <div className="bg-white border border-[#DCE5E8] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[#0F222D]">Area Riservata a Broker e Consulenti</h2>
                   <p className="text-sm text-slate-500 mt-2">Gli operatori Call Center lavorano sulla presa appuntamenti e qualificazione contatti.</p>
-                  <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                  <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                     Vai alla tua postazione Agenda
                   </button>
                 </div>
@@ -1083,10 +1076,10 @@ function UnifiedApp() {
                   onTriggerScan={() => addToast('Controllo demo', 'Questa schermata dimostrativa non esegue una verifica di conformità o della cifratura.', 'info')}
                 />
               ) : (
-                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+                <div className="bg-white border border-[#DCE5E8] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[#0F222D]">Area Riservata alla Direzione Generale</h2>
                   <p className="text-sm text-slate-500 mt-2">I registri di audit GDPR e i controlli infrastrutturali sono riservati agli amministratori.</p>
-                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                     Torna ai tuoi clienti
                   </button>
                 </div>
@@ -1234,17 +1227,6 @@ function UnifiedApp() {
       {/* Install PWA Mobile Banner */}
       <InstallAppBanner />
 
-      {/* Barra persistente per cambiare ruolo demo in 1-click */}
-      {isDemoSessionActive() && (
-        <DemoRoleSwitcher
-          currentUser={currentUser}
-          customers={customers}
-          onSelectUser={handleSelectUser}
-          onOpenTotem={openTotem}
-          onLogout={logout}
-        />
-      )}
-
       {/* Toast Notifications */}
       <ToastContainer
         toasts={toasts}
@@ -1252,9 +1234,9 @@ function UnifiedApp() {
       />
 
       {/* Stripe-style Footer */}
-      <footer className="border-t border-[#e3e8ee] bg-white py-5 text-center text-xs text-[#425466]">
+      <footer className="border-t border-[#DCE5E8] bg-white py-5 text-center text-xs text-[#425466]">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span className="font-semibold text-[#0a2540]">
+          <span className="font-semibold text-[#0F222D]">
             Volta Energia CRM • Gestione Forniture & Broker • Conforme GDPR & 2FA Attivo
           </span>
           <span className="text-slate-400">
@@ -1291,7 +1273,7 @@ export function App() {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
   if (appParam === 'totem' || searchParams.get('portal') === 'totem') {
-    return <main className="min-h-[100dvh] bg-[#f6f9fc] px-6 py-24 text-center text-[#0a2540]"><h1 className="text-3xl font-black">Totem riservato alla postazione dedicata</h1><p className="mx-auto mt-4 max-w-lg text-slate-600">Questa modalità non è disponibile dal portale pubblico.</p><a href="/" className="mt-7 inline-block font-bold text-[#635bff] underline">Torna alla scelta dei portali</a></main>;
+    return <main className="min-h-[100dvh] bg-[#F6F9FA] px-6 py-24 text-center text-[#0F222D]"><h1 className="text-3xl font-black">Totem riservato alla postazione dedicata</h1><p className="mx-auto mt-4 max-w-lg text-slate-600">Questa modalità non è disponibile dal portale pubblico.</p><a href="/" className="mt-7 inline-block font-bold text-[#0A6847] underline">Torna alla scelta dei portali</a></main>;
   }
 
   return <UnifiedApp />;

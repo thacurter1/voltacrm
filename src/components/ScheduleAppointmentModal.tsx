@@ -45,12 +45,12 @@ const ScheduleAppointmentDialog: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-[#e3e8ee] rounded-xl w-full max-w-lg p-6 space-y-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)]">
-        <div className="flex justify-between items-center border-b border-[#e3e8ee] pb-3">
+    <div className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-[#DCE5E8] rounded-xl w-full max-w-lg p-6 space-y-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)]">
+        <div className="flex justify-between items-center border-b border-[#DCE5E8] pb-3">
           <div>
-            <h3 className="font-bold text-base text-[#0a2540]">Fissa Appuntamento Commerciale</h3>
-            <p className="text-xs text-[#425466]">Lead: <strong className="text-[#0a2540]">{lead.name}</strong> ({lead.phone})</p>
+            <h3 className="font-bold text-base text-[#0F222D]">Fissa Appuntamento Commerciale</h3>
+            <p className="text-xs text-[#425466]">Lead: <strong className="text-[#0F222D]">{lead.name}</strong> ({lead.phone})</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
             <X className="h-4 w-4" />
@@ -63,7 +63,7 @@ const ScheduleAppointmentDialog: React.FC<{
             <select
               value={agentName}
               onChange={(e) => setAgentName(e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+              className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
             >
               <option value="Alessandro Mori (Energy Specialist)">Alessandro Mori (Energy Specialist)</option>
               <option value="Valentina Neri (Account Manager B2B)">Valentina Neri (Account Manager B2B)</option>
@@ -79,7 +79,7 @@ const ScheduleAppointmentDialog: React.FC<{
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
               />
             </div>
             <div>
@@ -89,7 +89,7 @@ const ScheduleAppointmentDialog: React.FC<{
                 required
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
               />
             </div>
           </div>
@@ -100,7 +100,7 @@ const ScheduleAppointmentDialog: React.FC<{
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as AppointmentType)}
-                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
               >
                 <option value="phone_consultation">Consulenza Telefonica</option>
                 <option value="field_visit">Visita Presenziale</option>
@@ -113,7 +113,7 @@ const ScheduleAppointmentDialog: React.FC<{
                 type="number"
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
               />
             </div>
           </div>
@@ -124,21 +124,21 @@ const ScheduleAppointmentDialog: React.FC<{
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+              className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
             />
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#e3e8ee]">
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#DCE5E8]">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg border border-[#e3e8ee] text-[#425466] hover:bg-slate-50 font-medium cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg border border-[#DCE5E8] text-[#425466] hover:bg-slate-50 font-medium cursor-pointer"
             >
               Annulla
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium shadow-xs cursor-pointer"
+              className="px-4 py-1.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-medium shadow-xs cursor-pointer"
             >
               Inserisci in Agenda Call Center
             </button>

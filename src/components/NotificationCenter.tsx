@@ -9,7 +9,7 @@ import {
   FileText, 
   ShieldAlert, 
   TrendingDown, 
-  Sparkles, 
+  CheckCircle2, 
   Volume2, 
   VolumeX, 
   ExternalLink,
@@ -211,7 +211,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       },
       {
         type: 'switch_due',
-        title: '⚡ Scadenza Quadrimestrale Rilevata',
+        title: 'Scadenza quadrimestrale rilevata',
         message: 'Ristorante La Terrazza Srl: trovata offerta con risparmio di €420/anno.',
         priority: 'high',
         actionTab: 'switch4m'
@@ -287,7 +287,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       case 'price_drop':
         return <TrendingDown className="w-4 h-4 text-emerald-400" />;
       default:
-        return <Sparkles className="w-4 h-4 text-indigo-400" />;
+        return <CheckCircle2 className="w-4 h-4 text-[#0A6847]" />;
     }
   };
 
@@ -296,14 +296,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       {/* Bell Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-600 hover:text-[#0a2540] transition cursor-pointer"
+        className="relative p-2 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-slate-600 hover:text-[#0F222D] transition cursor-pointer"
         title="Centro Notifiche Volta Energia"
         aria-label="Apri notifiche"
       >
-        <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-[#635bff]' : 'text-slate-500'}`} />
+        <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-[#0A6847]' : 'text-slate-500'}`} />
         
         {unreadCount > 0 && (
-          <span aria-live="polite" className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs animate-pulse">
+          <span aria-live="polite" className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs ">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -314,9 +314,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 text-slate-800">
           
           {/* Header */}
-          <div className="p-3.5 bg-[#0a2540] text-white flex items-center justify-between">
+          <div className="p-3.5 bg-[#0F222D] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#635bff] flex items-center justify-center text-white shadow-xs">
+              <div className="w-7 h-7 rounded-lg bg-[#0A6847] flex items-center justify-center text-white shadow-xs">
                 <Bell className="w-3.5 h-3.5" />
               </div>
               <div>
@@ -352,10 +352,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={handleSimulateNewNotification}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#635bff] hover:text-indigo-700 hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0A6847] hover:text-[#0A6847] hover:underline cursor-pointer"
                 title="Genera notifica istantanea di test"
               >
-                <Sparkles className="w-3 h-3" />
+                <CheckCircle2 className="w-3 h-3" />
                 <span>Simula Notifica</span>
               </button>
             </div>
@@ -389,7 +389,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               onClick={() => setActiveFilter('all')}
               className={`px-2 py-0.5 rounded-full font-medium transition cursor-pointer whitespace-nowrap ${
                 activeFilter === 'all' 
-                  ? 'bg-[#635bff] text-white' 
+                  ? 'bg-[#0A6847] text-white' 
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -423,7 +423,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              ⚡ Switch
+              Switch
             </button>
           </div>
 
@@ -443,7 +443,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   key={n.id}
                   onClick={() => handleNotificationClick(n)}
                   className={`p-3 text-left transition cursor-pointer flex gap-3 items-start group ${
-                    n.isRead ? 'bg-white hover:bg-slate-50' : 'bg-indigo-50/40 hover:bg-indigo-50/70'
+                    n.isRead ? 'bg-white hover:bg-slate-50' : 'bg-[#EAF4F0]/40 hover:bg-[#EAF4F0]/70'
                   }`}
                 >
                   {/* Icon */}
@@ -457,7 +457,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1 mb-0.5">
                       <h4 className={`text-xs font-semibold leading-tight truncate ${
-                        n.isRead ? 'text-slate-800' : 'text-[#0a2540]'
+                        n.isRead ? 'text-slate-800' : 'text-[#0F222D]'
                       }`}>
                         {n.title}
                       </h4>
@@ -473,12 +473,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     {/* Action pill if available */}
                     {n.actionTab && (
                       <div className="mt-2 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#635bff] group-hover:underline">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0A6847] group-hover:underline">
                           <span>Vai alla sezione</span>
                           <ExternalLink className="w-2.5 h-2.5" />
                         </span>
                         {!n.isRead && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#635bff]" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#0A6847]" />
                         )}
                       </div>
                     )}
@@ -501,11 +501,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
           {/* Footer: Browser Push Permission Banner */}
           {browserPermission !== 'granted' && (
-            <div className="p-2.5 bg-slate-50 text-[#0a2540] text-[11px] flex items-center justify-between border-t border-[#e3e8ee]">
+            <div className="p-2.5 bg-slate-50 text-[#0F222D] text-[11px] flex items-center justify-between border-t border-[#DCE5E8]">
               <span className="text-[#425466]">Notifiche push desktop:</span>
               <button
                 onClick={requestBrowserPermission}
-                className="px-2.5 py-1 rounded-md bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-[10px] shadow-2xs transition cursor-pointer"
+                className="px-2.5 py-1 rounded-md bg-[#0A6847] hover:bg-[#085238] text-white font-semibold text-[10px] shadow-2xs transition cursor-pointer"
               >
                 Abilita
               </button>

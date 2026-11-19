@@ -9,8 +9,7 @@ import {
   Building2, 
   Phone, 
   Mail, 
-  MapPin, 
-  Sparkles
+  MapPin
 } from 'lucide-react';
 import { Customer, UtilityPoint, Lead } from '../types';
 
@@ -175,16 +174,16 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
       {/* Backdrop */}
       <div 
         onClick={onClose}
-        className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-xs transition-opacity" 
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl border border-[#DCE5E8] shadow-[0_25px_60px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-[#e3e8ee] bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 flex items-start justify-between">
+        <div className="p-4 sm:p-6 border-b border-[#DCE5E8] bg-gradient-to-r from-slate-50 via-white to-[#EAF4F0]/30 flex items-start justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#635bff] uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A6847] uppercase tracking-wider">
                 <UserPlus className="h-4 w-4" />
                 Registrazione Anagrafica & Portafoglio
               </span>
@@ -194,7 +193,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                 </span>
               )}
             </div>
-            <h2 id="add-customer-title" className="text-lg sm:text-xl font-bold text-[#0a2540] tracking-tight mt-1">
+            <h2 id="add-customer-title" className="text-lg sm:text-xl font-bold text-[#0F222D] tracking-tight mt-1">
               Nuovo Cliente & Forniture Energetiche
             </h2>
             <p className="text-xs text-[#425466] mt-0.5">
@@ -213,7 +212,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
         </div>
 
         {/* Tab Controls */}
-        <div className="flex border-b border-[#e3e8ee] px-3 sm:px-6 text-xs bg-slate-50/50 overflow-x-auto whitespace-nowrap" role="tablist" aria-label="Sezioni nuovo cliente">
+        <div className="flex border-b border-[#DCE5E8] px-3 sm:px-6 text-xs bg-slate-50/50 overflow-x-auto whitespace-nowrap" role="tablist" aria-label="Sezioni nuovo cliente">
           <button
             type="button"
             role="tab"
@@ -221,8 +220,8 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
             onClick={() => setActiveTab('anagrafica')}
             className={`py-3 px-3 sm:px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
               activeTab === 'anagrafica'
-                ? 'border-[#635bff] text-[#635bff] bg-white rounded-t-lg'
-                : 'border-transparent text-[#425466] hover:text-[#0a2540]'
+                ? 'border-[#0A6847] text-[#0A6847] bg-white rounded-t-lg'
+                : 'border-transparent text-[#425466] hover:text-[#0F222D]'
             }`}
           >
             <Building2 className="h-3.5 w-3.5" />
@@ -236,14 +235,14 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
             onClick={() => setActiveTab('forniture')}
             className={`py-3 px-3 sm:px-4 font-bold border-b-2 transition-all cursor-pointer -mb-px flex items-center gap-2 ${
               activeTab === 'forniture'
-                ? 'border-[#635bff] text-[#635bff] bg-white rounded-t-lg'
-                : 'border-transparent text-[#425466] hover:text-[#0a2540]'
+                ? 'border-[#0A6847] text-[#0A6847] bg-white rounded-t-lg'
+                : 'border-transparent text-[#425466] hover:text-[#0F222D]'
             }`}
           >
             <Zap className="h-3.5 w-3.5" />
             <span>2. Forniture (Luce & Gas)</span>
             {(enableLuce || enableGas) && (
-              <span className="px-1.5 py-0.2 rounded-full bg-indigo-100 text-[#635bff] text-[10px] font-bold">
+              <span className="px-1.5 py-0.2 rounded-full bg-[#EAF4F0] text-[#0A6847] text-[10px] font-bold">
                 {(enableLuce ? 1 : 0) + (enableGas ? 1 : 0)} attive
               </span>
             )}
@@ -273,7 +272,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Es. Mario Rossi o Rossi Consulting S.r.l."
-                    className="w-full px-3.5 py-2 rounded-lg border border-[#e3e8ee] bg-white focus:bg-white focus:outline-none focus:border-[#635bff] text-xs font-semibold text-[#0a2540]"
+                    className="w-full px-3.5 py-2 rounded-lg border border-[#DCE5E8] bg-white focus:bg-white focus:outline-none focus:border-[#0A6847] text-xs font-semibold text-[#0F222D]"
                   />
                 </div>
 
@@ -286,7 +285,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                     value={fiscalCode}
                     onChange={(e) => setFiscalCode(e.target.value.toUpperCase())}
                     placeholder="Es. RSSMRA80A01H501U"
-                    className="w-full px-3.5 py-2 rounded-lg border border-[#e3e8ee] bg-white focus:bg-white focus:outline-none focus:border-[#635bff] text-xs font-mono text-[#0a2540]"
+                    className="w-full px-3.5 py-2 rounded-lg border border-[#DCE5E8] bg-white focus:bg-white focus:outline-none focus:border-[#0A6847] text-xs font-mono text-[#0F222D]"
                   />
                 </div>
 
@@ -301,7 +300,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder="Es. Milano (MI)"
-                      className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#e3e8ee] bg-white focus:bg-white focus:outline-none focus:border-[#635bff] text-xs text-[#0a2540]"
+                      className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#DCE5E8] bg-white focus:bg-white focus:outline-none focus:border-[#0A6847] text-xs text-[#0F222D]"
                     />
                   </div>
                 </div>
@@ -318,7 +317,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+39 340 1234567"
-                      className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#e3e8ee] bg-white focus:bg-white focus:outline-none focus:border-[#635bff] text-xs font-mono text-[#0a2540]"
+                      className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#DCE5E8] bg-white focus:bg-white focus:outline-none focus:border-[#0A6847] text-xs font-mono text-[#0F222D]"
                     />
                   </div>
                 </div>
@@ -334,7 +333,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="mario.rossi@email.it"
-                      className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#e3e8ee] bg-white focus:bg-white focus:outline-none focus:border-[#635bff] text-xs text-[#0a2540]"
+                      className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#DCE5E8] bg-white focus:bg-white focus:outline-none focus:border-[#0A6847] text-xs text-[#0F222D]"
                     />
                   </div>
                 </div>
@@ -346,7 +345,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                   <select
                     value={accountManager}
                     onChange={(e) => setAccountManager(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-lg border border-[#e3e8ee] bg-white focus:bg-white focus:outline-none focus:border-[#635bff] text-xs font-medium text-[#0a2540]"
+                    className="w-full px-3.5 py-2 rounded-lg border border-[#DCE5E8] bg-white focus:bg-white focus:outline-none focus:border-[#0A6847] text-xs font-medium text-[#0F222D]"
                   >
                     {accountManagers.map((am) => (
                       <option key={am} value={am}>{am}</option>
@@ -386,7 +385,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Informazioni aggiuntive, orari preferiti di contatto, ecc."
-                  className="w-full px-3.5 py-2 rounded-lg border border-[#e3e8ee] bg-white focus:outline-none focus:border-[#635bff] text-xs text-slate-800"
+                  className="w-full px-3.5 py-2 rounded-lg border border-[#DCE5E8] bg-white focus:outline-none focus:border-[#0A6847] text-xs text-slate-800"
                 />
               </div>
             </div>
@@ -407,7 +406,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                       onChange={(e) => setEnableLuce(e.target.checked)}
                       className="rounded border-amber-300 text-amber-600 focus:ring-amber-500 h-4 w-4 cursor-pointer"
                     />
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-[#0a2540]">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-[#0F222D]">
                       <Zap className="h-4 w-4 text-amber-500" />
                       <span>Fornitura Energia Elettrica (Luce)</span>
                     </div>
@@ -417,9 +416,9 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                     <button
                       type="button"
                       onClick={handleAutoGeneratePod}
-                      className="inline-flex items-center gap-1 text-[11px] text-[#635bff] font-semibold hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] text-[#0A6847] font-semibold hover:underline cursor-pointer"
                     >
-                      <Sparkles className="h-3 w-3" />
+                      <CheckCircle2 className="h-3 w-3" />
                       Auto-genera POD demo
                     </button>
                   )}
@@ -436,7 +435,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         value={lucePod}
                         onChange={(e) => setLucePod(e.target.value.toUpperCase())}
                         placeholder="IT001E12345678"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -449,7 +448,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         value={luceSupplier}
                         onChange={(e) => setLuceSupplier(e.target.value)}
                         placeholder="Es. Enel Energia / A2A"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -464,7 +463,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         step="100"
                         value={luceAnnualKwh}
                         onChange={(e) => setLuceAnnualKwh(Number(e.target.value))}
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -479,7 +478,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         step="0.5"
                         value={lucePowerKw}
                         onChange={(e) => setLucePowerKw(Number(e.target.value))}
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -494,7 +493,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         step="0.005"
                         value={luceUnitCost}
                         onChange={(e) => setLuceUnitCost(Number(e.target.value))}
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -509,7 +508,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         step="6"
                         value={luceFixedFee}
                         onChange={(e) => setLuceFixedFee(Number(e.target.value))}
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
                   </div>
@@ -528,7 +527,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                       onChange={(e) => setEnableGas(e.target.checked)}
                       className="rounded border-sky-300 text-sky-600 focus:ring-sky-500 h-4 w-4 cursor-pointer"
                     />
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-[#0a2540]">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-[#0F222D]">
                       <Flame className="h-4 w-4 text-sky-500" />
                       <span>Fornitura Gas Naturale</span>
                     </div>
@@ -538,9 +537,9 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                     <button
                       type="button"
                       onClick={handleAutoGeneratePdr}
-                      className="inline-flex items-center gap-1 text-[11px] text-[#635bff] font-semibold hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] text-[#0A6847] font-semibold hover:underline cursor-pointer"
                     >
-                      <Sparkles className="h-3 w-3" />
+                      <CheckCircle2 className="h-3 w-3" />
                       Auto-genera PDR demo
                     </button>
                   )}
@@ -557,7 +556,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         value={gasPdr}
                         onChange={(e) => setGasPdr(e.target.value)}
                         placeholder="01234567890123"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -570,7 +569,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         value={gasSupplier}
                         onChange={(e) => setGasSupplier(e.target.value)}
                         placeholder="Es. Eni Plenitude / Edison"
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -585,7 +584,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         step="50"
                         value={gasAnnualSmc}
                         onChange={(e) => setGasAnnualSmc(Number(e.target.value))}
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -600,7 +599,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         step="0.01"
                         value={gasUnitCost}
                         onChange={(e) => setGasUnitCost(Number(e.target.value))}
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -615,7 +614,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                         step="6"
                         value={gasFixedFee}
                         onChange={(e) => setGasFixedFee(Number(e.target.value))}
-                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                       />
                     </div>
                   </div>
@@ -625,12 +624,12 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
           )}
 
           {/* Footer Actions */}
-          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-0 pt-4 border-t border-[#e3e8ee]">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-0 pt-4 border-t border-[#DCE5E8]">
             {activeTab === 'forniture' ? (
               <button
                 type="button"
                 onClick={() => setActiveTab('anagrafica')}
-                className="min-h-[44px] px-3.5 py-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer text-center"
+                className="min-h-[44px] px-3.5 py-2.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer text-center"
               >
                 ← Indietro a Dati Anagrafici
               </button>
@@ -638,7 +637,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="min-h-[44px] px-3.5 py-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer text-center"
+                className="min-h-[44px] px-3.5 py-2.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] font-semibold cursor-pointer text-center"
               >
                 Annulla
               </button>
@@ -659,7 +658,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
                   setError(null);
                   setActiveTab('forniture');
                 }}
-                className="min-h-[44px] px-4 py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-1.5"
+                className="min-h-[44px] px-4 py-2.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-1.5"
               >
                 <span>Avanti: Configura Forniture →</span>
               </button>
@@ -667,7 +666,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="min-h-[44px] px-5 py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-[44px] px-5 py-2.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>{isSubmitting ? 'Salvataggio in corso...' : 'Salva & Attiva Cliente'}</span>

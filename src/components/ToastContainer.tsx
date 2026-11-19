@@ -29,7 +29,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
             key={toast.id}
             role="alert"
             aria-live="assertive"
-            className="pointer-events-auto p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_10px_25px_rgba(0,0,0,0.08)] flex items-start gap-3 transition-all animate-in slide-in-from-top-2 duration-200"
+            className="pointer-events-auto p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_10px_25px_rgba(0,0,0,0.08)] flex items-start gap-3 transition-all animate-in slide-in-from-top-2 duration-200"
           >
             {isSuccess && (
               <div className="p-1 rounded-md bg-emerald-50 text-emerald-600 mt-0.5">
@@ -42,13 +42,13 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
               </div>
             )}
             {!isSuccess && !isWarning && (
-              <div className="p-1 rounded-md bg-indigo-50 text-[#635bff] mt-0.5">
+              <div className="p-1 rounded-md bg-[#EAF4F0] text-[#0A6847] mt-0.5">
                 <Info className="h-4 w-4" strokeWidth={2} />
               </div>
             )}
 
             <div className="flex-1 min-w-0">
-              <h4 className="text-xs font-bold text-[#0a2540]">{toast.title}</h4>
+              <h4 className="text-xs font-bold text-[#0F222D]">{toast.title}</h4>
               <p className="text-xs text-[#425466] mt-0.5 leading-relaxed">{toast.message}</p>
             </div>
 

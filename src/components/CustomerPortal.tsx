@@ -6,7 +6,6 @@ import {
   FileText, 
   CheckCircle2, 
   Clock, 
-  Sparkles, 
   ShieldCheck, 
   AlertCircle, 
   ArrowRight, 
@@ -240,7 +239,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
         <div className="space-y-2 relative z-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="stripe-badge-success">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 " />
               Monitoraggio Continuo Attivo
             </span>
             <span className="stripe-badge-neutral font-mono">
@@ -249,13 +248,13 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#0a2540] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F222D] tracking-tight">
             Benvenuto, {customer.name}
           </h1>
 
           <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#425466]">
             <span>
-              Codice Fiscale: <strong className="font-mono text-[#0a2540]">{showPii ? customer.fiscalCode : cryptoService.maskFiscalCode(customer.fiscalCode)}</strong>
+              Codice Fiscale: <strong className="font-mono text-[#0F222D]">{showPii ? customer.fiscalCode : cryptoService.maskFiscalCode(customer.fiscalCode)}</strong>
             </span>
             <button
               onClick={() => setShowPii(!showPii)}
@@ -270,13 +269,13 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
         </div>
 
         <div className="flex items-center gap-3 relative z-10">
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-[#e3e8ee] shadow-2xs text-left min-w-[170px]">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-[#DCE5E8] shadow-2xs text-left min-w-[170px]">
             <span className="text-[10px] text-[#425466] uppercase font-bold tracking-wider block">
               Prossimo Controllo
             </span>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <Clock className="h-4 w-4 text-[#635bff]" />
-              <span className="font-bold text-sm text-[#0a2540]">
+              <Clock className="h-4 w-4 text-[#0A6847]" />
+              <span className="font-bold text-sm text-[#0F222D]">
                 {daysToAudit <= 0 ? (
                   <span className="text-orange-600">In corso adesso</span>
                 ) : (
@@ -289,7 +288,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
           <button
             onClick={onSwitchUser}
-            className="px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
             title="Cambia Utente / Torna al Call Center"
           >
             Esci
@@ -300,14 +299,14 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
       {/* STRIPE 3-COLUMN BENTO GRID: Risparmio, Pagella & Consulente */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* CARD 1: RISPARMIO CUMULATO (Stripe Climate / Dark Navy Elegance) */}
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0a2540] via-[#0f2d4a] to-[#121e2f] text-white shadow-[0_8px_20px_rgba(10,37,64,0.15)] border border-slate-700/50 space-y-4 relative overflow-hidden flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0F222D] via-[#0f2d4a] to-[#121e2f] text-white shadow-[0_8px_20px_rgba(10, 59, 64,0.15)] border border-slate-700/50 space-y-4 relative overflow-hidden flex flex-col justify-between">
           <div className="space-y-3 relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-indigo-300 flex items-center gap-1.5">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[#A7E6CC] flex items-center gap-1.5">
                 <Award className="h-4 w-4 text-amber-400" />
                 Risparmio Cumulato
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-900/80 text-emerald-400 border border-indigo-700/60">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0A3B40]/80 text-emerald-400 border border-[#155258]/60">
                 3 Rinegoziazioni
               </span>
             </div>
@@ -397,9 +396,9 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
               {onOpenPdfProposal && (
                 <button
                   onClick={() => onOpenPdfProposal(recommendedAudit)}
-                  className="w-full py-2 rounded-xl border border-[#e3e8ee] hover:bg-slate-50 text-[#0a2540] font-semibold text-[11px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full py-2 rounded-xl border border-[#DCE5E8] hover:bg-slate-50 text-[#0F222D] font-semibold text-[11px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <FileText className="h-3.5 w-3.5 text-[#635bff]" />
+                  <FileText className="h-3.5 w-3.5 text-[#0A6847]" />
                   <span>Scarica Proposta Energetica (PDF)</span>
                 </button>
               )}
@@ -421,18 +420,18 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#635bff] to-indigo-700 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#0A6847] to-[#0A3B40] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
                 AM
               </div>
               <div>
-                <h3 className="font-bold text-sm text-[#0a2540]">Alessandro Mori</h3>
+                <h3 className="font-bold text-sm text-[#0F222D]">Alessandro Mori</h3>
                 <span className="text-[11px] text-slate-500 block">Energy Specialist Dedicato</span>
                 <span className="text-[10px] text-slate-400 block mt-0.5">Reperibile Lun-Ven 09:00 - 18:30</span>
               </div>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#e3e8ee] grid grid-cols-2 gap-2">
+          <div className="pt-3 border-t border-[#DCE5E8] grid grid-cols-2 gap-2">
             <a
               href="https://wa.me/393310000000"
               target="_blank"
@@ -444,7 +443,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </a>
             <a
               href="tel:+393310000000"
-              className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-[#0a2540] font-bold text-center border border-[#e3e8ee] transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+              className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-[#0F222D] font-bold text-center border border-[#DCE5E8] transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
             >
               <Phone className="h-3.5 w-3.5 text-slate-500" />
               Chiama
@@ -459,10 +458,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1.5">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-600 text-white shadow-xs">
-                <Sparkles className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 Audit a 120 Giorni • Risparmio Rilevato
               </span>
-              <h2 className="text-lg font-bold text-[#0a2540]">
+              <h2 className="text-lg font-bold text-[#0F222D]">
                 Trovata tariffa più conveniente per la tua fornitura
               </h2>
               <p className="text-xs text-slate-700 max-w-2xl leading-relaxed">
@@ -500,7 +499,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
       {/* STRIPE PAYMENT-METHOD STYLE FORNITURE CARDS */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#0a2540]">Le Tue Forniture Attive</h2>
+          <h2 className="text-base font-bold text-[#0F222D]">Le Tue Forniture Attive</h2>
           <span className="text-[11px] text-[#425466]">Codici POD e PDR collegati al tuo profilo</span>
         </div>
         
@@ -518,7 +517,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                     {utility.type === 'luce' ? <Zap className="h-5 w-5" /> : <Flame className="h-5 w-5" />}
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-[#0a2540] uppercase tracking-tight">
+                    <h3 className="font-bold text-sm text-[#0F222D] uppercase tracking-tight">
                       Fornitura {utility.type === 'luce' ? 'Luce Elettrica' : 'Gas Naturale'}
                     </h3>
                     <span className="font-mono text-xs font-semibold text-slate-500 block">
@@ -532,20 +531,20 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50 border border-[#e3e8ee] text-xs">
+              <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-slate-50 border border-[#DCE5E8] text-xs">
                 <div>
                   <span className="text-[10px] text-[#425466] uppercase font-bold block">Gestore</span>
-                  <span className="font-bold text-[#0a2540] truncate block mt-0.5">{utility.currentSupplier}</span>
+                  <span className="font-bold text-[#0F222D] truncate block mt-0.5">{utility.currentSupplier}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-[#425466] uppercase font-bold block">Consumo Annuo</span>
-                  <span className="font-bold text-[#0a2540] font-mono block mt-0.5">
+                  <span className="font-bold text-[#0F222D] font-mono block mt-0.5">
                     {utility.annualConsumption.toLocaleString()} {utility.type === 'luce' ? 'kWh' : 'Smc'}
                   </span>
                 </div>
                 <div>
                   <span className="text-[10px] text-[#425466] uppercase font-bold block">Prezzo Materia</span>
-                  <span className="font-bold text-[#0a2540] font-mono block mt-0.5">
+                  <span className="font-bold text-[#0F222D] font-mono block mt-0.5">
                     {utility.currentUnitCost.toFixed(4)} €
                   </span>
                 </div>
@@ -557,10 +556,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
       {/* COMPOSIZIONE TRASPARENTE DELLA SPESA ENERGETICA (Stripe Bar Breakdown) */}
       <div className="stripe-card p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e3e8ee] pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#DCE5E8] pb-3">
           <div>
-            <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
-              <PieChart className="h-4 w-4 text-[#635bff]" />
+            <h3 className="text-base font-bold text-[#0F222D] flex items-center gap-2">
+              <PieChart className="h-4 w-4 text-[#0A6847]" />
               Scomposizione Trasparente della Bolletta
             </h3>
             <p className="text-xs text-[#425466]">
@@ -575,15 +574,15 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
         <div className="space-y-3">
           {/* Segmented Bar */}
           <div className="h-4 w-full rounded-full overflow-hidden flex shadow-inner bg-slate-100">
-            <div className="bg-[#635bff] h-full transition-all" style={{ width: '48%' }} title="Spesa Materia Energia: 48%" />
+            <div className="bg-[#0A6847] h-full transition-all" style={{ width: '48%' }} title="Spesa Materia Energia: 48%" />
             <div className="bg-amber-400 h-full transition-all" style={{ width: '34%' }} title="Trasporto & Oneri di Sistema: 34%" />
             <div className="bg-emerald-500 h-full transition-all" style={{ width: '18%' }} title="Imposte ed IVA: 18%" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
-            <div className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-[#0a2540]">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#635bff]" />
+            <div className="p-3.5 rounded-xl bg-[#EAF4F0]/50 border border-[#D5E6DF] space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-[#0F222D]">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#0A6847]" />
                 <span>48% Spesa Materia</span>
               </div>
               <p className="text-[11px] text-[#425466]">
@@ -592,7 +591,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </div>
 
             <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-100 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-[#0a2540]">
+              <div className="flex items-center gap-1.5 font-bold text-[#0F222D]">
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
                 <span>34% Trasporto & Oneri</span>
               </div>
@@ -602,7 +601,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </div>
 
             <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-100 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-[#0a2540]">
+              <div className="flex items-center gap-1.5 font-bold text-[#0F222D]">
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                 <span>18% Imposte ed IVA</span>
               </div>
@@ -616,10 +615,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
       {/* SEZIONE 3: AUTOLETTURA CONTATORE (Stripe Checkout Form Style) */}
       <div className="stripe-card p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#e3e8ee] pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#DCE5E8] pb-3">
           <div>
-            <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-[#635bff]" />
+            <h3 className="text-base font-bold text-[#0F222D] flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-[#0A6847]" />
               Autolettura Contatore Mensile
             </h3>
             <p className="text-xs text-[#425466]">
@@ -638,11 +637,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
         {lastReading && (
           <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-[#425466]">
-            <span className="font-semibold text-[#0a2540] flex items-center gap-1.5">
+            <span className="font-semibold text-[#0F222D] flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
               Ultima lettura inviata il {new Date(lastReading.recordedAt).toLocaleDateString('it-IT')}:
             </span>
-            <div className="flex flex-wrap items-center gap-3 font-mono font-bold text-[#0a2540]">
+            <div className="flex flex-wrap items-center gap-3 font-mono font-bold text-[#0F222D]">
               {lastReading.readings.f1 !== undefined && <span>F1: {lastReading.readings.f1} kWh</span>}
               {lastReading.readings.f2 !== undefined && <span>F2: {lastReading.readings.f2} kWh</span>}
               {lastReading.readings.f3 !== undefined && <span>F3: {lastReading.readings.f3} kWh</span>}
@@ -670,7 +669,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
         <form onSubmit={handleSubmitReading} className="space-y-4">
           <div>
-            <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
+            <label className="text-[11px] font-bold text-[#0F222D] block mb-1">
               Punto di fornitura
             </label>
             <select
@@ -680,7 +679,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                 setReadingSubmitted(false);
                 setReadingError('');
               }}
-              className="w-full px-3 py-2 rounded-xl bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:border-[#635bff] focus:outline-none shadow-2xs"
+              className="w-full px-3 py-2 rounded-xl bg-white border border-[#DCE5E8] text-[#0F222D] text-xs focus:border-[#0A6847] focus:outline-none shadow-2xs"
             >
               {customer.utilityPoints.map(point => (
                 <option key={point.id} value={point.id}>
@@ -694,7 +693,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             {selectedReadingPoint?.type === 'luce' ? (
               <>
               <div>
-                <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
+                <label className="text-[11px] font-bold text-[#0F222D] block mb-1">
                   Luce F1 (Picco)
                 </label>
                 <input
@@ -704,12 +703,12 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                   step="any"
                   value={readingF1}
                   onChange={(e) => { setReadingF1(e.target.value); setReadingSubmitted(false); }}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] font-mono text-xs focus:bg-white focus:border-[#0A6847] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
+                <label className="text-[11px] font-bold text-[#0F222D] block mb-1">
                   Luce F2 (Intermedia)
                 </label>
                 <input
@@ -719,12 +718,12 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                   step="any"
                   value={readingF2}
                   onChange={(e) => { setReadingF2(e.target.value); setReadingSubmitted(false); }}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] font-mono text-xs focus:bg-white focus:border-[#0A6847] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
+                <label className="text-[11px] font-bold text-[#0F222D] block mb-1">
                   Luce F3 (Sera/Festivi)
                 </label>
                 <input
@@ -734,13 +733,13 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                   step="any"
                   value={readingF3}
                   onChange={(e) => { setReadingF3(e.target.value); setReadingSubmitted(false); }}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] font-mono text-xs focus:bg-white focus:border-[#0A6847] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
               </>
             ) : (
               <div>
-                <label className="text-[11px] font-bold text-[#0a2540] block mb-1">
+                <label className="text-[11px] font-bold text-[#0F222D] block mb-1">
                   Gas (Smc)
                 </label>
                 <input
@@ -750,7 +749,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
                   step="any"
                   value={readingGas}
                   onChange={(e) => { setReadingGas(e.target.value); setReadingSubmitted(false); }}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] font-mono text-xs focus:bg-white focus:border-[#635bff] focus:outline-none transition-all shadow-2xs"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] font-mono text-xs focus:bg-white focus:border-[#0A6847] focus:outline-none transition-all shadow-2xs"
                 />
               </div>
             )}
@@ -760,7 +759,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             <button
               type="submit"
               disabled={!selectedReadingPoint || isSubmittingReading}
-              className="px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-xs shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
             >
               <Send className="h-3.5 w-3.5" />
               {isSubmittingReading ? 'Salvataggio...' : 'Invia Autolettura'}
@@ -769,15 +768,15 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
         </form>
 
         {meterReadings.length > 1 && (
-          <div className="border-t border-[#e3e8ee] pt-3">
-            <h4 className="font-bold text-[#0a2540] mb-2">Storico autoletture</h4>
-            <div className="divide-y divide-[#e3e8ee]">
+          <div className="border-t border-[#DCE5E8] pt-3">
+            <h4 className="font-bold text-[#0F222D] mb-2">Storico autoletture</h4>
+            <div className="divide-y divide-[#DCE5E8]">
               {meterReadings.slice(0, 6).map(reading => (
                 <div key={reading.id} className="py-2 flex flex-wrap items-center justify-between gap-2">
                   <span className="text-slate-500">
                     {new Date(reading.recordedAt).toLocaleString('it-IT')} · {reading.utilityType.toUpperCase()}
                   </span>
-                  <span className="font-mono font-bold text-[#0a2540]">
+                  <span className="font-mono font-bold text-[#0F222D]">
                     {Object.entries(reading.readings).map(([band, value]) => band.toUpperCase() + ': ' + value).join(' · ')}
                   </span>
                 </div>
@@ -788,14 +787,14 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
       </div>
 
       {/* SEZIONE 4: PROGRAMMA REFERRAL (Stripe Climate Style) */}
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 border border-indigo-200/80 stripe-card space-y-4">
+      <div className="p-6 rounded-2xl bg-gradient-to-br from-[#EAF4F0]/80 via-white to-purple-50/80 border border-[#BFE0D2]/80 stripe-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <span className="stripe-badge-blurple">
               Programma Fedeltà Volta
             </span>
-            <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
-              <Share2 className="h-4 w-4 text-[#635bff]" />
+            <h3 className="text-base font-bold text-[#0F222D] flex items-center gap-2">
+              <Share2 className="h-4 w-4 text-[#0A6847]" />
               Invita un Amico: 30€ di Bonus per Te e 30€ per Lui
             </h3>
             <p className="text-xs text-[#425466]">
@@ -803,24 +802,24 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </p>
           </div>
 
-          <div className="text-right p-3 rounded-xl bg-white border border-indigo-100 shrink-0 shadow-2xs">
+          <div className="text-right p-3 rounded-xl bg-white border border-[#D5E6DF] shrink-0 shadow-2xs">
             <span className="text-[10px] font-bold uppercase text-slate-400 block">Bonus Accumulati</span>
             <span className="text-xl font-black text-emerald-600 font-mono">€ 60.00</span>
             <span className="text-[10px] text-slate-500 block">2 Amici Attivati</span>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-indigo-100">
-          <div className="w-full sm:flex-1 p-2.5 rounded-xl bg-white border border-indigo-200 font-mono text-xs text-[#0a2540] flex items-center justify-between shadow-2xs">
+        <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-[#D5E6DF]">
+          <div className="w-full sm:flex-1 p-2.5 rounded-xl bg-white border border-[#BFE0D2] font-mono text-xs text-[#0F222D] flex items-center justify-between shadow-2xs">
             <span className="truncate">https://voltacrm.it/invito?ref={referralCode}</span>
-            <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded ml-2 shrink-0">
+            <span className="text-[10px] text-[#0A6847] font-bold bg-[#EAF4F0] px-2 py-0.5 rounded ml-2 shrink-0">
               CODICE: {referralCode}
             </span>
           </div>
 
           <button
             onClick={handleCopyReferral}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shrink-0"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shrink-0"
           >
             {copiedReferral ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
             {copiedReferral ? 'Link Copiato!' : 'Copia Link'}
@@ -830,10 +829,10 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
       {/* SEZIONE 5: CARICA LA TUA BOLLETTA (Stripe Dropzone) */}
       <div className="stripe-card p-6 space-y-5">
-        <div className="border-b border-[#e3e8ee] pb-3 flex items-center justify-between">
+        <div className="border-b border-[#DCE5E8] pb-3 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
-              <UploadCloud className="h-5 w-5 text-[#635bff]" />
+            <h2 className="text-base font-bold text-[#0F222D] flex items-center gap-2">
+              <UploadCloud className="h-5 w-5 text-[#0A6847]" />
               Carica una Nuova Bolletta per Verifica Gratuita
             </h2>
             <p className="text-xs text-[#425466]">
@@ -849,11 +848,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             onDrop={handleFileDrop}
             className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
               dragActive 
-                ? 'border-[#635bff] bg-indigo-50/50' 
-                : 'border-[#e3e8ee] bg-[#f8fafc] hover:border-[#635bff]/40 hover:bg-slate-50/80'
+                ? 'border-[#0A6847] bg-[#EAF4F0]/50' 
+                : 'border-[#DCE5E8] bg-[#f8fafc] hover:border-[#0A6847]/40 hover:bg-slate-50/80'
             }`}
           >
-            <UploadCloud className="h-10 w-10 text-[#635bff] mx-auto mb-2" />
+            <UploadCloud className="h-10 w-10 text-[#0A6847] mx-auto mb-2" />
             {selectedFile ? (
               <div className="space-y-1">
                 <span className="text-xs font-bold text-emerald-600 block flex items-center justify-center gap-1">
@@ -865,9 +864,9 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
               </div>
             ) : (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[#0a2540] hover:text-[#635bff] cursor-pointer">
+                <label className="text-xs font-bold text-[#0F222D] hover:text-[#0A6847] cursor-pointer">
                   <span>Trascina la bolletta oppure </span>
-                  <span className="text-[#635bff] underline underline-offset-2">sfoglia dal computer</span>
+                  <span className="text-[#0A6847] underline underline-offset-2">sfoglia dal computer</span>
                   <input
                     type="file"
                     accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
@@ -889,11 +888,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="text-[#0a2540] font-semibold block mb-1">Tipo Fornitura</label>
+              <label className="text-[#0F222D] font-semibold block mb-1">Tipo Fornitura</label>
               <select
                 value={utilityType}
                 onChange={(e) => setUtilityType(e.target.value as 'luce' | 'gas')}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:border-[#635bff] focus:outline-none shadow-2xs"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-[#DCE5E8] text-[#0F222D] text-xs focus:border-[#0A6847] focus:outline-none shadow-2xs"
               >
                 <option value="luce">Luce Elettrica</option>
                 <option value="gas">Gas Naturale</option>
@@ -901,13 +900,13 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             </div>
 
             <div>
-              <label className="text-[#0a2540] font-semibold block mb-1">Note Aggiuntive (opzionale)</label>
+              <label className="text-[#0F222D] font-semibold block mb-1">Note Aggiuntive (opzionale)</label>
               <input
                 type="text"
                 placeholder="es. Ultima bolletta estiva con condizionatori"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:border-[#635bff] focus:outline-none shadow-2xs"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-[#DCE5E8] text-[#0F222D] text-xs focus:border-[#0A6847] focus:outline-none shadow-2xs"
               />
             </div>
           </div>
@@ -916,7 +915,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
             <button
               type="submit"
               disabled={!selectedFile || isUploading}
-              className="px-6 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-xs cursor-pointer disabled:opacity-50 transition-all flex items-center gap-1.5 active:scale-95"
+              className="px-6 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-xs shadow-xs cursor-pointer disabled:opacity-50 transition-all flex items-center gap-1.5 active:scale-95"
             >
               {isUploading ? 'Verifica e Caricamento in corso...' : 'Invia Bolletta per Pagella & Analisi'}
             </button>
@@ -926,22 +925,22 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
 
       {/* STORICO BOLLETTE CARICATE (Stripe Invoices Table) */}
       <div className="stripe-card p-6 space-y-4">
-        <h3 className="text-base font-bold text-[#0a2540]">Storico Documenti & Bollette Caricate</h3>
+        <h3 className="text-base font-bold text-[#0F222D]">Storico Documenti & Bollette Caricate</h3>
         
         {isPortalLoading ? (
           <p className="text-xs text-slate-400 py-6 text-center">Caricamento storico documenti...</p>
         ) : customerBills.length === 0 ? (
           <p className="text-xs text-slate-400 py-6 text-center">Nessun documento caricato finora.</p>
         ) : (
-          <div className="divide-y divide-[#e3e8ee] text-xs">
+          <div className="divide-y divide-[#DCE5E8] text-xs">
             {customerBills.map((b) => (
               <div key={b.id} className="py-3.5 flex items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors px-2 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-slate-100 text-[#635bff]">
+                  <div className="p-2.5 rounded-xl bg-slate-100 text-[#0A6847]">
                     <FileText className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-[#0a2540] block">{b.fileName}</span>
+                    <span className="font-bold text-[#0F222D] block">{b.fileName}</span>
                     <span className="text-[11px] text-slate-400">
                       Caricata il {b.uploadDate} • {b.fileSizeKb} KB • Fornitura {b.utilityType.toUpperCase()}
                     </span>

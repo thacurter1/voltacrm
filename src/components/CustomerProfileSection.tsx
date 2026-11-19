@@ -76,13 +76,13 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
   return (
     <div className="space-y-6 text-xs max-w-4xl mx-auto animate-in fade-in duration-200">
       {/* Header */}
-      <div className="bg-white p-6 rounded-2xl border border-[#e3e8ee] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-6 rounded-2xl border border-[#DCE5E8] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-[#635bff] text-white font-bold flex items-center justify-center text-base shadow-sm">
+          <div className="h-12 w-12 rounded-2xl bg-[#0A6847] text-white font-bold flex items-center justify-center text-base shadow-sm">
             {customer.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[#0a2540]">{customer.name}</h2>
+            <h2 className="text-lg font-bold text-[#0F222D]">{customer.name}</h2>
             <div className="flex items-center gap-2 text-[#425466] mt-0.5">
               <span>Codice Fiscale / P.IVA: <strong className="font-mono text-slate-700">{customer.fiscalCode}</strong></span>
               <span>•</span>
@@ -93,7 +93,7 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
 
         <button
           onClick={handleExportGdpr}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#e3e8ee] hover:bg-slate-50 text-[#0a2540] font-semibold transition-colors cursor-pointer self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#DCE5E8] hover:bg-slate-50 text-[#0F222D] font-semibold transition-colors cursor-pointer self-start sm:self-auto"
         >
           <Download className="h-3.5 w-3.5 text-slate-500" />
           Scarica Dati GDPR (Art. 20)
@@ -103,55 +103,55 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* COL 1 & 2: FORM DATI PERSONALI */}
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-[#e3e8ee] shadow-xs space-y-5">
-            <div className="flex items-center gap-2 border-b border-[#e3e8ee] pb-3">
-              <User className="h-4 w-4 text-[#635bff]" />
-              <h3 className="font-bold text-sm text-[#0a2540]">Dati Anagrafici e Contatti</h3>
+          <div className="bg-white p-6 rounded-2xl border border-[#DCE5E8] shadow-xs space-y-5">
+            <div className="flex items-center gap-2 border-b border-[#DCE5E8] pb-3">
+              <User className="h-4 w-4 text-[#0A6847]" />
+              <h3 className="font-bold text-sm text-[#0F222D]">Dati Anagrafici e Contatti</h3>
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Intestatario Forniture</label>
+                <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Intestatario Forniture</label>
                 <input
                   type="text"
                   disabled
                   value={customer.name}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-[#e3e8ee] text-[#425466] cursor-not-allowed"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-[#DCE5E8] text-[#425466] cursor-not-allowed"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">Per modificare l'intestatario contatta il tuo consulente dedicato.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Email per Fatture & Notifiche</label>
+                  <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Email per Fatture & Notifiche</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Telefono Cellulare</label>
+                  <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Telefono Cellulare</label>
                   <input
                     type="tel"
                     required
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Città di Residenza / Sede Legale</label>
+                <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Città di Residenza / Sede Legale</label>
                 <input
                   type="text"
                   value={city}
                   onChange={e => setCity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                 />
               </div>
 
@@ -159,7 +159,7 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#534be0] text-white font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#534be0] text-white font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {savedSuccess ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                   {isSaving ? 'Salvataggio...' : savedSuccess ? 'Dati Salvati!' : 'Salva Modifiche'}
@@ -169,20 +169,20 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
           </div>
 
           {/* SICUREZZA & PASSWORD */}
-          <div className="bg-white p-6 rounded-2xl border border-[#e3e8ee] shadow-xs space-y-4">
-            <div className="flex items-center gap-2 border-b border-[#e3e8ee] pb-3">
-              <KeyRound className="h-4 w-4 text-[#635bff]" />
-              <h3 className="font-bold text-sm text-[#0a2540]">Sicurezza Accesso</h3>
+          <div className="bg-white p-6 rounded-2xl border border-[#DCE5E8] shadow-xs space-y-4">
+            <div className="flex items-center gap-2 border-b border-[#DCE5E8] pb-3">
+              <KeyRound className="h-4 w-4 text-[#0A6847]" />
+              <h3 className="font-bold text-sm text-[#0F222D]">Sicurezza Accesso</h3>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50 border border-[#e3e8ee]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50 border border-[#DCE5E8]">
               <div>
-                <div className="font-bold text-[#0a2540]">Password di Accesso</div>
+                <div className="font-bold text-[#0F222D]">Password di Accesso</div>
                 <div className="text-[11px] text-[#425466]">Ultima modifica: al momento della prima attivazione</div>
               </div>
               <button
                 onClick={() => onToast('Link Inviato', `Abbiamo inviato un link sicuro per reimpostare la password a ${customer.email}.`, 'info')}
-                className="px-3.5 py-2 rounded-xl bg-white border border-[#e3e8ee] hover:bg-slate-100 font-semibold text-[#0a2540] transition-colors cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-white border border-[#DCE5E8] hover:bg-slate-100 font-semibold text-[#0F222D] transition-colors cursor-pointer"
               >
                 Reimposta Password
               </button>
@@ -193,7 +193,7 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
         {/* COL 3: ADVISOR CARD & FORNITURE SINTESI */}
         <div className="space-y-6">
           {/* Consulente Assegnato */}
-          <div className="bg-[#0a2540] text-white p-6 rounded-2xl shadow-md space-y-4">
+          <div className="bg-[#0F222D] text-white p-6 rounded-2xl shadow-md space-y-4">
             <div className="text-[11px] uppercase tracking-wider text-[#00d4aa] font-bold">
               Il tuo Consulente Dedicato
             </div>
@@ -224,13 +224,13 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({
           </div>
 
           {/* Forniture collegate */}
-          <div className="bg-white p-6 rounded-2xl border border-[#e3e8ee] shadow-xs space-y-3">
-            <div className="font-bold text-sm text-[#0a2540]">Forniture Attive ({customer.utilityPoints.length})</div>
+          <div className="bg-white p-6 rounded-2xl border border-[#DCE5E8] shadow-xs space-y-3">
+            <div className="font-bold text-sm text-[#0F222D]">Forniture Attive ({customer.utilityPoints.length})</div>
             <div className="space-y-2">
               {customer.utilityPoints.map(up => (
                 <div key={up.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="flex items-center justify-between font-bold text-[#0a2540]">
-                    <span className="uppercase text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-[#635bff]">
+                  <div className="flex items-center justify-between font-bold text-[#0F222D]">
+                    <span className="uppercase text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#EAF4F0] text-[#0A6847]">
                       {up.type}
                     </span>
                     <span className="text-[11px] text-[#425466]">{up.currentSupplier}</span>

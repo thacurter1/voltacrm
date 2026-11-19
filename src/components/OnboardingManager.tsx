@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Sparkles,
   UserPlus,
   FileSpreadsheet,
   UploadCloud,
@@ -469,8 +468,8 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-600">
-              <Sparkles className="h-5 w-5" />
+            <div className="p-2 bg-[#EAF4F0] border border-[#BFE0D2] rounded-xl text-[#0A6847]">
+              <CheckCircle2 className="h-5 w-5" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
               Centro Onboarding Clienti & Contratti
@@ -492,7 +491,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                 handleResetWizard();
                 setActiveView('wizard');
               }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0A6847] hover:bg-[#085238] text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
             >
               <UserPlus className="h-4 w-4" />
               <span>+ Nuovo Onboarding Guidato</span>
@@ -513,7 +512,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
               className="inline-flex items-center gap-2 px-3 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-xl text-sm border border-slate-200 transition-all min-h-[44px]"
               title="Estrai anagrafica e POD da PDF bolletta con intelligenza artificiale"
             >
-              <UploadCloud className="h-4 w-4 text-indigo-600" />
+              <UploadCloud className="h-4 w-4 text-[#0A6847]" />
               <span className="hidden sm:inline">OCR Bolletta</span>
             </button>
           )}
@@ -565,10 +564,10 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
           </div>
         </div>
 
-        <div className="col-span-2 lg:col-span-1 bg-white p-4 rounded-xl border border-indigo-200 shadow-xs bg-indigo-50/20">
-          <div className="text-xs font-medium text-indigo-700 mb-1">Risparmio Generato</div>
-          <div className="text-2xl font-bold text-indigo-900">€{stats.totalEstimatedSavings.toLocaleString('it-IT')}</div>
-          <div className="text-[11px] text-indigo-700 mt-1 flex items-center gap-1">
+        <div className="col-span-2 lg:col-span-1 bg-white p-4 rounded-xl border border-[#BFE0D2] shadow-xs bg-[#EAF4F0]/20">
+          <div className="text-xs font-medium text-[#0A6847] mb-1">Risparmio Generato</div>
+          <div className="text-2xl font-bold text-[#0A3B40]">€{stats.totalEstimatedSavings.toLocaleString('it-IT')}</div>
+          <div className="text-[11px] text-[#0A6847] mt-1 flex items-center gap-1">
             <ShieldCheck className="h-3 w-3" /> Stima annua garantita
           </div>
         </div>
@@ -589,7 +588,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                   placeholder="Cerca per cliente, CF, POD, PDR..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                 />
               </div>
 
@@ -598,7 +597,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                 <select
                   value={filterStage}
                   onChange={(e) => setFilterStage(e.target.value)}
-                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                 >
                   <option value="all">Tutti gli stati</option>
                   {STAGES_CONFIG.map(s => (
@@ -609,7 +608,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                 >
                   <option value="all">Tutte le tipologie</option>
                   <option value="residential">Residenziale</option>
@@ -645,9 +644,9 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
           {/* Sezione di Conversione Rapida Lead Marketing -> Onboarding */}
           {leads.filter(l => l.status === 'in_negotiation' || l.status === 'appointment_booked').length > 0 && (
-            <div className="bg-gradient-to-r from-indigo-50/70 via-blue-50/50 to-slate-50 p-4 rounded-xl border border-indigo-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="bg-gradient-to-r from-[#EAF4F0]/70 via-blue-50/50 to-slate-50 p-4 rounded-xl border border-[#BFE0D2]/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-600 text-white rounded-lg shadow-xs">
+                <div className="p-2 bg-[#0A6847] text-white rounded-lg shadow-xs">
                   <UserPlus className="h-4 w-4" />
                 </div>
                 <div>
@@ -668,7 +667,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     <button
                       key={lead.id}
                       onClick={() => handleSelectLeadForWizard(lead)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 hover:border-indigo-300 rounded-lg text-xs font-medium whitespace-nowrap transition-all shadow-xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#EAF4F0] text-[#0A6847] border border-[#BFE0D2] hover:border-[#9ECBB8] rounded-lg text-xs font-medium whitespace-nowrap transition-all shadow-xs"
                     >
                       <span>{lead.name}</span>
                       <ArrowRight className="h-3 w-3" />
@@ -706,11 +705,11 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       {stageRecords.map(record => (
                         <div
                           key={record.id}
-                          className="bg-white p-3.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group"
+                          className="bg-white p-3.5 rounded-xl border border-slate-200 hover:border-[#9ECBB8] hover:shadow-md transition-all cursor-pointer group"
                           onClick={() => setSelectedRecord(record)}
                         >
                           <div className="flex items-start justify-between gap-2 mb-2">
-                            <span className="font-semibold text-sm text-slate-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                            <span className="font-semibold text-sm text-slate-900 line-clamp-1 group-hover:text-[#0A6847] transition-colors">
                               {record.customerName}
                             </span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ${
@@ -759,7 +758,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                                 e.stopPropagation();
                                 handleAdvanceStage(record.id);
                               }}
-                              className="w-full mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                              className="w-full mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-xs text-[#0A6847] hover:text-[#0A3B40] font-medium transition-colors"
                             >
                               <span>Avanza fase</span>
                               <ChevronRight className="h-3.5 w-3.5" />
@@ -854,7 +853,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                                   e.stopPropagation();
                                   handleAdvanceStage(record.id);
                                 }}
-                                className="px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                                className="px-2.5 py-1.5 text-xs font-medium text-[#0A6847] bg-[#EAF4F0] hover:bg-[#EAF4F0] rounded-lg transition-colors"
                               >
                                 Avanza Stato
                               </button>
@@ -911,14 +910,14 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                             isCompleted
                               ? 'bg-emerald-600 text-white shadow-xs'
                               : isCurrent
-                              ? 'bg-indigo-600 text-white ring-4 ring-indigo-100 shadow-xs'
+                              ? 'bg-[#0A6847] text-white ring-4 ring-indigo-100 shadow-xs'
                               : 'bg-slate-200 text-slate-500'
                           }`}
                         >
                           {isCompleted ? <Check className="h-5 w-5 stroke-[2.5]" /> : <Icon className="h-5 w-5" />}
                         </div>
                         <span className={`text-[11px] sm:text-xs mt-1.5 font-medium hidden sm:block ${
-                          isCurrent ? 'text-indigo-600 font-bold' : isCompleted ? 'text-emerald-700' : 'text-slate-400'
+                          isCurrent ? 'text-[#0A6847] font-bold' : isCompleted ? 'text-emerald-700' : 'text-slate-400'
                         }`}>
                           {s.title}
                         </span>
@@ -955,11 +954,11 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     onClick={() => setWizardCustomerType('residential')}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
                       wizardCustomerType === 'residential'
-                        ? 'border-indigo-600 bg-indigo-50/50'
+                        ? 'border-[#0A6847] bg-[#EAF4F0]/50'
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <div className="p-2.5 bg-white rounded-lg shadow-xs text-indigo-600">
+                    <div className="p-2.5 bg-white rounded-lg shadow-xs text-[#0A6847]">
                       <User className="h-5 w-5" />
                     </div>
                     <div>
@@ -972,7 +971,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     onClick={() => setWizardCustomerType('business')}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
                       wizardCustomerType === 'business'
-                        ? 'border-indigo-600 bg-indigo-50/50'
+                        ? 'border-[#0A6847] bg-[#EAF4F0]/50'
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
@@ -998,7 +997,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       placeholder={wizardCustomerType === 'business' ? 'Es. Rossi Elettronica S.r.l.' : 'Es. Mario Rossi'}
                       value={wizardName}
                       onChange={(e) => setWizardName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                     />
                   </div>
 
@@ -1013,7 +1012,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                         placeholder={wizardCustomerType === 'business' ? '01234567890' : 'RSSMRA80A01H501U'}
                         value={wizardFiscalCode}
                         onChange={(e) => setWizardFiscalCode(e.target.value.toUpperCase())}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -1026,7 +1025,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                         placeholder="Es. Milano, Roma, Torino..."
                         value={wizardCity}
                         onChange={(e) => setWizardCity(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                       />
                     </div>
                   </div>
@@ -1042,7 +1041,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                         placeholder="+39 347 1234567"
                         value={wizardPhone}
                         onChange={(e) => setWizardPhone(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                       />
                     </div>
 
@@ -1056,7 +1055,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                         placeholder="mario.rossi@email.it"
                         value={wizardEmail}
                         onChange={(e) => setWizardEmail(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                       />
                     </div>
                   </div>
@@ -1066,7 +1065,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                   <button
                     disabled={!wizardName.trim()}
                     onClick={() => setWizardStep(2)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0A6847] hover:bg-[#085238] disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
                   >
                     <span>Continua ai Dati Tecnici</span>
                     <ArrowRight className="h-4 w-4" />
@@ -1092,7 +1091,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       type="checkbox"
                       checked={hasLuce}
                       onChange={(e) => setHasLuce(e.target.checked)}
-                      className="h-4 w-4 text-indigo-600 rounded"
+                      className="h-4 w-4 text-[#0A6847] rounded"
                     />
                     <Zap className="h-4 w-4 text-amber-500" />
                     <span className="font-semibold text-sm text-slate-900">Fornitura Luce (POD)</span>
@@ -1103,7 +1102,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       type="checkbox"
                       checked={hasGas}
                       onChange={(e) => setHasGas(e.target.checked)}
-                      className="h-4 w-4 text-indigo-600 rounded"
+                      className="h-4 w-4 text-[#0A6847] rounded"
                     />
                     <Flame className="h-4 w-4 text-blue-500" />
                     <span className="font-semibold text-sm text-slate-900">Fornitura Gas (PDR)</span>
@@ -1120,7 +1119,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     placeholder="Es. Enel Energia, A2A, Eni Plenitude, Hera..."
                     value={wizardSupplier}
                     onChange={(e) => setWizardSupplier(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                   />
                 </div>
 
@@ -1142,7 +1141,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                           placeholder="IT001E12345678"
                           value={wizardPod}
                           onChange={(e) => setWizardPod(e.target.value.toUpperCase())}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                         />
                       </div>
 
@@ -1154,7 +1153,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                           type="number"
                           value={wizardKwh}
                           onChange={(e) => setWizardKwh(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                         />
                       </div>
                     </div>
@@ -1169,7 +1168,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                           step="0.5"
                           value={wizardPowerKw}
                           onChange={(e) => setWizardPowerKw(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                         />
                       </div>
 
@@ -1182,7 +1181,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                           step="0.005"
                           value={wizardUnitCost}
                           onChange={(e) => setWizardUnitCost(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                         />
                       </div>
                     </div>
@@ -1207,7 +1206,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                           placeholder="01234567890123"
                           value={wizardPdr}
                           onChange={(e) => setWizardPdr(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                         />
                       </div>
 
@@ -1219,7 +1218,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                           type="number"
                           value={wizardSmc}
                           onChange={(e) => setWizardSmc(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                         />
                       </div>
                     </div>
@@ -1233,7 +1232,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                         step="0.01"
                         value={wizardGasCost}
                         onChange={(e) => setWizardGasCost(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
                       />
                     </div>
                   </div>
@@ -1250,7 +1249,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                   <button
                     disabled={!hasLuce && !hasGas}
                     onClick={() => setWizardStep(3)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0A6847] hover:bg-[#085238] disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
                   >
                     <span>Confronta Tariffe</span>
                     <ArrowRight className="h-4 w-4" />
@@ -1297,16 +1296,16 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     onClick={() => setSelectedTariff('indicizzata_arera')}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                       selectedTariff === 'indicizzata_arera'
-                        ? 'border-indigo-600 bg-indigo-50/50'
+                        ? 'border-[#0A6847] bg-[#EAF4F0]/50'
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                        <Sparkles className="h-4 w-4 text-indigo-600" />
+                        <CheckCircle2 className="h-4 w-4 text-[#0A6847]" />
                         Volta Index Tutelata ARERA (Consigliata)
                       </span>
-                      <span className="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">
+                      <span className="text-xs font-bold text-[#0A6847] bg-[#EAF4F0] px-2 py-0.5 rounded">
                         Spread Minimo: +0.012 €/kWh
                       </span>
                     </div>
@@ -1319,7 +1318,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     onClick={() => setSelectedTariff('fissa_tutelata')}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                       selectedTariff === 'fissa_tutelata'
-                        ? 'border-indigo-600 bg-indigo-50/50'
+                        ? 'border-[#0A6847] bg-[#EAF4F0]/50'
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
@@ -1348,7 +1347,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                   </button>
                   <button
                     onClick={() => setWizardStep(4)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0A6847] hover:bg-[#085238] text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
                   >
                     <span>Procedi al Mandato</span>
                     <ArrowRight className="h-4 w-4" />
@@ -1388,7 +1387,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       type="checkbox"
                       checked={mandateAccepted}
                       onChange={(e) => setMandateAccepted(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 text-indigo-600 rounded"
+                      className="mt-0.5 h-4 w-4 text-[#0A6847] rounded"
                     />
                     <span className="text-xs text-slate-700">
                       <strong>Accettazione Mandato:</strong> Il cliente autorizza Volta Energia a gestire il subentro e le rinegoziazioni quadrimestrali per le forniture indicate.
@@ -1400,7 +1399,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       type="checkbox"
                       checked={gdprAccepted}
                       onChange={(e) => setGdprAccepted(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 text-indigo-600 rounded"
+                      className="mt-0.5 h-4 w-4 text-[#0A6847] rounded"
                     />
                     <span className="text-xs text-slate-700">
                       <strong>Informativa Privacy GDPR (Reg. UE 2016/679):</strong> Consenso al trattamento dei dati di fatturazione e dei contatti per finalità contrattuali.
@@ -1419,7 +1418,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       onClick={() => setSignatureMethod('otp')}
                       className={`p-3 rounded-xl border text-left text-xs transition-all ${
                         signatureMethod === 'otp'
-                          ? 'border-indigo-600 bg-indigo-50 font-bold text-indigo-900'
+                          ? 'border-[#0A6847] bg-[#EAF4F0] font-bold text-[#0A3B40]'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -1432,7 +1431,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       onClick={() => setSignatureMethod('canvas')}
                       className={`p-3 rounded-xl border text-left text-xs transition-all ${
                         signatureMethod === 'canvas'
-                          ? 'border-indigo-600 bg-indigo-50 font-bold text-indigo-900'
+                          ? 'border-[#0A6847] bg-[#EAF4F0] font-bold text-[#0A3B40]'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -1445,7 +1444,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       onClick={() => setSignatureMethod('manual')}
                       className={`p-3 rounded-xl border text-left text-xs transition-all ${
                         signatureMethod === 'manual'
-                          ? 'border-indigo-600 bg-indigo-50 font-bold text-indigo-900'
+                          ? 'border-[#0A6847] bg-[#EAF4F0] font-bold text-[#0A3B40]'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
@@ -1531,7 +1530,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       }
                       setActiveView('pipeline');
                     }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0A6847] hover:bg-[#085238] text-white font-semibold rounded-xl text-sm transition-all shadow-xs min-h-[44px]"
                   >
                     <User className="h-4 w-4" />
                     <span>Visualizza Scheda Cliente</span>
@@ -1652,7 +1651,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       };
                     });
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition-all shadow-xs min-h-[44px]"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#0A6847] hover:bg-[#085238] text-white font-semibold rounded-xl text-xs transition-all shadow-xs min-h-[44px]"
                 >
                   <span>Avanza allo Stadio Successivo</span>
                   <ArrowRight className="h-4 w-4" />

@@ -325,7 +325,7 @@ export const CrmApp: React.FC = () => {
   const pendingBillsCount = bills.filter(b => b.status === 'in_review').length;
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F6F9FA] text-[#0F222D] flex flex-col font-sans">
       <InstallAppBanner />
 
       {/* Header */}
@@ -505,10 +505,10 @@ export const CrmApp: React.FC = () => {
               onToast={addToast}
             />
           ) : (
-            <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-              <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+            <div className="bg-white border border-[#DCE5E8] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+              <h2 className="text-lg font-bold text-[#0F222D]">Area Riservata alla Direzione Generale</h2>
               <p className="text-sm text-slate-500 mt-2">La gestione dei profili e dei permessi dell'agenzia è accessibile esclusivamente agli amministratori.</p>
-              <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+              <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                 Torna ai tuoi clienti
               </button>
             </div>
@@ -522,10 +522,10 @@ export const CrmApp: React.FC = () => {
               onToast={addToast}
             />
           ) : (
-            <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-              <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata a Broker e Consulenti</h2>
+            <div className="bg-white border border-[#DCE5E8] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+              <h2 className="text-lg font-bold text-[#0F222D]">Area Riservata a Broker e Consulenti</h2>
               <p className="text-sm text-slate-500 mt-2">Gli operatori Call Center lavorano sulla presa appuntamenti e qualificazione contatti.</p>
-              <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+              <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                 Vai alla tua postazione Agenda
               </button>
             </div>
@@ -553,10 +553,10 @@ export const CrmApp: React.FC = () => {
               }}
             />
           ) : (
-            <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-              <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+            <div className="bg-white border border-[#DCE5E8] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+              <h2 className="text-lg font-bold text-[#0F222D]">Area Riservata alla Direzione Generale</h2>
               <p className="text-sm text-slate-500 mt-2">I registri di audit GDPR e i controlli infrastrutturali sono riservati agli amministratori.</p>
-              <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+              <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                 Torna ai tuoi clienti
               </button>
             </div>
@@ -712,9 +712,9 @@ export const CrmApp: React.FC = () => {
       <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
 
       {/* Stripe-style Volta Energia Brand Footer */}
-      <footer className="border-t border-[#e3e8ee] bg-white py-5 text-center text-xs text-[#425466]">
+      <footer className="border-t border-[#DCE5E8] bg-white py-5 text-center text-xs text-[#425466]">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span className="font-semibold text-[#0a2540]">
+          <span className="font-semibold text-[#0F222D]">
             Volta Energia CRM • Gestione Forniture & Switch • Conforme GDPR & 2FA Attivo
           </span>
           <span className="text-slate-400">

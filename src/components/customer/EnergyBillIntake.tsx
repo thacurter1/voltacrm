@@ -302,12 +302,12 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_12px_32px_rgba(10,37,64,0.04)]">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_12px_32px_rgba(10, 59, 64,0.04)]">
       {/* Utility Type Selector */}
       <div className="p-5 sm:p-7 border-b border-slate-200">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0F222D]">
               Quale fornitura vuoi confrontare?
             </h2>
             <p className="text-sm text-slate-600 mt-1">Puoi cambiare scelta prima di vedere i risultati.</p>
@@ -321,10 +321,10 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 setManualConsumption('');
               }}
               aria-pressed={utilityType === 'luce'}
-              className={`min-h-[48px] px-5 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+              className={`min-h-[48px] px-5 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                 utilityType === 'luce'
-                  ? 'bg-[#635bff] text-white'
-                  : 'bg-white text-slate-700 border border-slate-300 hover:border-[#635bff]'
+                  ? 'bg-[#0A6847] text-white'
+                  : 'bg-white text-slate-700 border border-slate-300 hover:border-[#0A6847]'
               }`}
             >
               <Zap className="w-4 h-4" />
@@ -338,10 +338,10 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 setManualConsumption('');
               }}
               aria-pressed={utilityType === 'gas'}
-              className={`min-h-[48px] px-5 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+              className={`min-h-[48px] px-5 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                 utilityType === 'gas'
-                  ? 'bg-[#635bff] text-white'
-                  : 'bg-white text-slate-700 border border-slate-300 hover:border-[#635bff]'
+                  ? 'bg-[#0A6847] text-white'
+                  : 'bg-white text-slate-700 border border-slate-300 hover:border-[#0A6847]'
               }`}
             >
               <Flame className="w-4 h-4" />
@@ -353,7 +353,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
       {/* Choice of data source: each option changes the form beneath it. */}
       <div className="p-5 sm:p-7 pb-0 sm:pb-0">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-3">Come vuoi iniziare?</h3>
+        <h3 className="text-lg font-bold text-[#0F222D] mb-3">Come vuoi iniziare?</h3>
         <div
           className={`grid grid-cols-1 ${hasProfilePoints ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}
           role="group"
@@ -367,8 +367,8 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 setUploadError(null);
               }}
               aria-pressed={activeMode === 'profile'}
-              className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
-                activeMode === 'profile' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+              className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
+                activeMode === 'profile' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
               }`}
             >
               <span className="block text-sm font-bold">Usa la mia fornitura</span>
@@ -385,8 +385,8 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               setUploadError(null);
             }}
             aria-pressed={activeMode === 'wizard'}
-            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
-              activeMode === 'wizard' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
+              activeMode === 'wizard' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
             }`}
           >
             <span className="block text-sm font-bold">Stima da profilo casa</span>
@@ -400,8 +400,8 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               setUploadError(null);
             }}
             aria-pressed={activeMode === 'upload'}
-            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
-              activeMode === 'upload' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
+              activeMode === 'upload' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
             }`}
           >
             <span className="block text-sm font-bold">Carica una bolletta</span>
@@ -415,8 +415,8 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               setUploadError(null);
             }}
             aria-pressed={activeMode === 'manual'}
-            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
-              activeMode === 'manual' ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540]' : 'border-slate-200 text-slate-700 hover:border-[#635bff]'
+            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
+              activeMode === 'manual' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
             }`}
           >
             <span className="block text-sm font-bold">Inserisci i consumi</span>
@@ -439,7 +439,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveMode('wizard')}
-                    className="px-4 py-2 bg-[#635bff] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#5851ea] transition cursor-pointer"
+                    className="px-4 py-2 bg-[#0A6847] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#085238] transition cursor-pointer"
                   >
                     Stima profilo casa
                   </button>
@@ -464,7 +464,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 {matchingPoints.map((point) => (
                   <div
                     key={point.id}
-                    className="border border-slate-200 rounded-xl p-5 hover:border-[#635bff] transition space-y-5 relative group"
+                    className="border border-slate-200 rounded-xl p-5 hover:border-[#0A6847] transition space-y-5 relative group"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
@@ -481,7 +481,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                           <span className="text-xs font-semibold uppercase text-slate-500 tracking-wider">
                             {point.type === 'luce' ? 'POD · Fornitura luce' : 'PDR · Fornitura gas'}
                           </span>
-                          <h4 className="text-sm font-mono font-bold text-[#0a2540] break-all">
+                          <h4 className="text-sm font-mono font-bold text-[#0F222D] break-all">
                             {point.podOrPdr}
                           </h4>
                         </div>
@@ -525,7 +525,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSelectExistingPoint(point)}
-                      className="w-full min-h-[48px] py-2 px-3 bg-[#635bff] hover:bg-[#5851ea] text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      className="w-full min-h-[48px] py-2 px-3 bg-[#0A6847] hover:bg-[#085238] text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <span>Usa questi dati per il confronto</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -542,7 +542,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
           <div className="space-y-6">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-1">
               <div className="flex items-center gap-2 font-bold text-slate-900">
-                <Info className="w-4 h-4 text-[#635bff]" />
+                <Info className="w-4 h-4 text-[#0A6847]" />
                 <span>Stima guidata basata sul tuo stile di vita</span>
               </div>
               <p>
@@ -552,7 +552,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
             {/* Household size selection */}
             <div className="space-y-2.5">
-              <label className="block text-sm font-bold text-[#0a2540]">
+              <label className="block text-sm font-bold text-[#0F222D]">
                 Quante persone vivono nell'abitazione?
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4" role="radiogroup" aria-label="Componenti nucleo familiare">
@@ -562,28 +562,28 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   role="radio"
                   aria-checked={householdSize === 'single'}
                   onClick={() => setHouseholdSize('single')}
-                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                     householdSize === 'single'
-                      ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540] shadow-xs'
-                      : 'border-slate-200 bg-white hover:border-[#635bff]/50 text-slate-700'
+                      ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D] shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-[#0A6847]/50 text-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <div
                       className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        householdSize === 'single' ? 'bg-[#635bff] text-white' : 'bg-slate-100 text-slate-600'
+                        householdSize === 'single' ? 'bg-[#0A6847] text-white' : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       <User className="w-4 h-4" />
                     </div>
                     {householdSize === 'single' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#635bff]/10 text-[#635bff]">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
                         Selezionato
                       </span>
                     )}
                   </div>
                   <div>
-                    <span className="block text-sm font-bold text-[#0a2540]">1 Persona</span>
+                    <span className="block text-sm font-bold text-[#0F222D]">1 Persona</span>
                     <span className="block text-xs text-slate-500 mt-0.5">
                       Base {utilityType === 'luce' ? '1.500 kWh' : '600 Smc'}
                     </span>
@@ -596,28 +596,28 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   role="radio"
                   aria-checked={householdSize === 'couple'}
                   onClick={() => setHouseholdSize('couple')}
-                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                     householdSize === 'couple'
-                      ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540] shadow-xs'
-                      : 'border-slate-200 bg-white hover:border-[#635bff]/50 text-slate-700'
+                      ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D] shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-[#0A6847]/50 text-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <div
                       className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        householdSize === 'couple' ? 'bg-[#635bff] text-white' : 'bg-slate-100 text-slate-600'
+                        householdSize === 'couple' ? 'bg-[#0A6847] text-white' : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       <Users className="w-4 h-4" />
                     </div>
                     {householdSize === 'couple' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#635bff]/10 text-[#635bff]">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
                         Selezionato
                       </span>
                     )}
                   </div>
                   <div>
-                    <span className="block text-sm font-bold text-[#0a2540]">Coppia</span>
+                    <span className="block text-sm font-bold text-[#0F222D]">Coppia</span>
                     <span className="block text-xs text-slate-500 mt-0.5">
                       Base {utilityType === 'luce' ? '2.400 kWh' : '950 Smc'}
                     </span>
@@ -630,28 +630,28 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   role="radio"
                   aria-checked={householdSize === 'family'}
                   onClick={() => setHouseholdSize('family')}
-                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                  className={`min-h-[88px] p-4 rounded-xl border-2 text-left transition cursor-pointer flex flex-col justify-between gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                     householdSize === 'family'
-                      ? 'border-[#635bff] bg-[#f3f1ff] text-[#0a2540] shadow-xs'
-                      : 'border-slate-200 bg-white hover:border-[#635bff]/50 text-slate-700'
+                      ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D] shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-[#0A6847]/50 text-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <div
                       className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        householdSize === 'family' ? 'bg-[#635bff] text-white' : 'bg-slate-100 text-slate-600'
+                        householdSize === 'family' ? 'bg-[#0A6847] text-white' : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       <Home className="w-4 h-4" />
                     </div>
                     {householdSize === 'family' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#635bff]/10 text-[#635bff]">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
                         Selezionato
                       </span>
                     )}
                   </div>
                   <div>
-                    <span className="block text-sm font-bold text-[#0a2540]">Famiglia (3+)</span>
+                    <span className="block text-sm font-bold text-[#0F222D]">Famiglia (3+)</span>
                     <span className="block text-xs text-slate-500 mt-0.5">
                       Base {utilityType === 'luce' ? '3.400 kWh' : '1.300 Smc'}
                     </span>
@@ -664,7 +664,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             {utilityType === 'luce' && (
               <div className="space-y-3 pt-1">
                 <div>
-                  <span className="block text-sm font-bold text-[#0a2540]">
+                  <span className="block text-sm font-bold text-[#0F222D]">
                     Elettrodomestici ad alto assorbimento
                   </span>
                   <p className="text-xs text-slate-600 mt-0.5">
@@ -676,14 +676,14 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     type="button"
                     onClick={() => setHasHeatPumpOrAc(!hasHeatPumpOrAc)}
                     aria-pressed={hasHeatPumpOrAc}
-                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                       hasHeatPumpOrAc
-                        ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#635bff]/50'
+                        ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0A6847] font-bold shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#0A6847]/50'
                     }`}
                   >
                     {hasHeatPumpOrAc ? (
-                      <Check className="w-4 h-4 text-[#635bff]" />
+                      <Check className="w-4 h-4 text-[#0A6847]" />
                     ) : (
                       <span className="w-2 h-2 rounded-full bg-slate-300" />
                     )}
@@ -697,14 +697,14 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     type="button"
                     onClick={() => setHasElectricBoiler(!hasElectricBoiler)}
                     aria-pressed={hasElectricBoiler}
-                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                       hasElectricBoiler
-                        ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#635bff]/50'
+                        ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0A6847] font-bold shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#0A6847]/50'
                     }`}
                   >
                     {hasElectricBoiler ? (
-                      <Check className="w-4 h-4 text-[#635bff]" />
+                      <Check className="w-4 h-4 text-[#0A6847]" />
                     ) : (
                       <span className="w-2 h-2 rounded-full bg-slate-300" />
                     )}
@@ -718,14 +718,14 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     type="button"
                     onClick={() => setHasInduction(!hasInduction)}
                     aria-pressed={hasInduction}
-                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff] ${
+                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center gap-2 border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
                       hasInduction
-                        ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#635bff]/50'
+                        ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0A6847] font-bold shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-[#0A6847]/50'
                     }`}
                   >
                     {hasInduction ? (
-                      <Check className="w-4 h-4 text-[#635bff]" />
+                      <Check className="w-4 h-4 text-[#0A6847]" />
                     ) : (
                       <span className="w-2 h-2 rounded-full bg-slate-300" />
                     )}
@@ -750,7 +750,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   </span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-extrabold font-mono text-[#0a2540]">
+                  <span className="text-3xl font-extrabold font-mono text-[#0F222D]">
                     {estimatedConsumption.toLocaleString('it-IT')}
                   </span>
                   <span className="text-base font-bold text-slate-600">
@@ -775,7 +775,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               <button
                 type="button"
                 onClick={handleWizardSubmit}
-                className="min-h-[44px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs shrink-0"
+                className="min-h-[44px] px-6 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs shrink-0"
               >
                 <span>Confronta offerte con questa stima</span>
                 <ArrowRight className="w-4 h-4" />
@@ -789,7 +789,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
           <form onSubmit={handleUploadSubmit} className="space-y-4">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-1">
               <div className="flex items-center gap-2 font-bold text-slate-900">
-                <ShieldCheck className="w-4 h-4 text-[#635bff]" />
+                <ShieldCheck className="w-4 h-4 text-[#0A6847]" />
                 <span>Caricamento Sicuro della Bolletta</span>
               </div>
               <p>
@@ -811,14 +811,14 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 accept=".pdf,image/png,image/jpeg"
                 onChange={handleFileChange}
                 disabled={isUploading}
-                className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#635bff]/10 file:text-[#635bff] hover:file:bg-[#635bff]/20 cursor-pointer"
+                className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#0A6847]/10 file:text-[#0A6847] hover:file:bg-[#0A6847]/20 cursor-pointer"
               />
             </div>
 
             {selectedFile && (
               <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
                 <div className="flex items-center gap-2 truncate">
-                  <FileText className="w-4 h-4 text-[#635bff] shrink-0" />
+                  <FileText className="w-4 h-4 text-[#0A6847] shrink-0" />
                   <span className="font-semibold text-slate-900 truncate">{selectedFile.name}</span>
                   <span className="text-slate-400 text-[10px]">
                     ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
@@ -866,7 +866,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             <button
               type="submit"
               disabled={!selectedFile || isUploading}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:cursor-not-allowed"
             >
               {isUploading ? (
                 <>
@@ -906,7 +906,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   value={manualConsumption}
                   onChange={(e) => setManualConsumption(e.target.value)}
                   placeholder={utilityType === 'luce' ? 'es. 2700' : 'es. 1000'}
-                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 />
                 <span className="text-[10px] text-slate-400 mt-0.5 block">
                   Media nazionale: {utilityType === 'luce' ? '~2.700 kWh/anno' : '~1.000 Smc/anno'}
@@ -927,7 +927,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     value={manualPowerKw}
                     onChange={(e) => setManualPowerKw(e.target.value)}
                     placeholder="es. 3.0"
-                    className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
+                    className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                   />
                   <span className="text-[10px] text-slate-400 mt-0.5 block">
                     Residenziale tipico: 3.0 kW (o 4.5 kW)
@@ -945,7 +945,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   value={manualSupplier}
                   onChange={(e) => setManualSupplier(e.target.value)}
                   placeholder="es. Enel, Eni, A2A, Hera"
-                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 />
               </div>
 
@@ -961,7 +961,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   value={manualUnitCost}
                   onChange={(e) => setManualUnitCost(e.target.value)}
                   placeholder={utilityType === 'luce' ? 'es. 0.1850' : 'es. 0.5500'}
-                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 />
                 <span className="text-[10px] text-slate-400 mt-0.5 block">
                   Necessario per calcolare il risparmio personalizzato
@@ -980,7 +980,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   value={manualFixedFeeYear}
                   onChange={(e) => setManualFixedFeeYear(e.target.value)}
                   placeholder="es. 120"
-                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 />
                 <span className="text-[10px] text-slate-400 mt-0.5 block">
                   Commercializzazione e vendita (€/anno)
@@ -995,7 +995,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   id="current-pricing-type"
                   value={manualPricingType}
                   onChange={(e) => setManualPricingType(e.target.value as 'fixed' | 'indexed')}
-                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30"
+                  className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 >
                   <option value="fixed">Prezzo Fisso</option>
                   <option value="indexed">Prezzo Indicizzato (PUN / PSV)</option>
@@ -1049,7 +1049,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
+              className="px-6 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
             >
               <Sliders className="w-4 h-4" />
               <span>Confronta le offerte con questi dati</span>
@@ -1064,7 +1064,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
           role="dialog"
           aria-modal="true"
           aria-labelledby="guest-bill-modal-title"
-          className="fixed inset-0 z-50 bg-[#0a2540]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-[#0F222D]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
         >
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 my-8">
             <button
@@ -1085,7 +1085,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0a2540]">
+                <h3 className="text-xl font-bold text-[#0F222D]">
                   Bolletta Inviata con Successo!
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
@@ -1094,7 +1094,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 </p>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 text-left space-y-1">
                   <div className="flex items-center gap-2 font-semibold text-slate-800">
-                    <FileText className="w-4 h-4 text-[#635bff]" />
+                    <FileText className="w-4 h-4 text-[#0A6847]" />
                     <span>Fornitura {utilityType.toUpperCase()}: {uploadSuccess?.fileName || 'Bolletta'}</span>
                   </div>
                   <p className="text-[11px] text-slate-500">
@@ -1108,7 +1108,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       setIsGuestModalOpen(false);
                       setGuestSuccess(false);
                     }}
-                    className="w-full py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-sm transition cursor-pointer shadow-xs"
+                    className="w-full py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-sm transition cursor-pointer shadow-xs"
                   >
                     Torna al confronto
                   </button>
@@ -1121,7 +1121,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Analisi Gratuita e Senza Impegno</span>
                   </div>
-                  <h3 id="guest-bill-modal-title" className="text-xl font-bold text-[#0a2540]">
+                  <h3 id="guest-bill-modal-title" className="text-xl font-bold text-[#0F222D]">
                     Ricevi l'analisi della tua bolletta
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
@@ -1131,7 +1131,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
 
                 {selectedFile && (
                   <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
-                    <FileText className="w-4 h-4 text-[#635bff] shrink-0" />
+                    <FileText className="w-4 h-4 text-[#0A6847] shrink-0" />
                     <span className="font-semibold truncate">{selectedFile.name}</span>
                     <span className="text-slate-400 text-[10px] shrink-0">
                       ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB • {utilityType.toUpperCase()})
@@ -1151,7 +1151,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="Mario Rossi"
-                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800"
                     />
                   </div>
 
@@ -1166,7 +1166,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       value={guestPhone}
                       onChange={(e) => setGuestPhone(e.target.value)}
                       placeholder="+39 347 1234567"
-                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800 font-mono"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 font-mono"
                     />
                   </div>
 
@@ -1180,7 +1180,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                       placeholder="mario.rossi@email.it"
-                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#635bff] text-slate-800"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800"
                     />
                   </div>
 
@@ -1198,7 +1198,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                           onClick={() => setGuestPreferredContact(timeSlot)}
                           className={`min-h-[38px] px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition cursor-pointer flex items-center justify-center gap-1 ${
                             guestPreferredContact === timeSlot
-                              ? 'border-[#635bff] bg-[#f3f1ff] text-[#635bff] font-bold shadow-2xs'
+                              ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0A6847] font-bold shadow-2xs'
                               : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                           }`}
                         >
@@ -1216,7 +1216,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                         type="checkbox"
                         checked={guestPrivacyConsent}
                         onChange={(e) => setGuestPrivacyConsent(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded text-[#635bff] border-slate-300 focus:ring-[#635bff] cursor-pointer"
+                        className="mt-0.5 w-4 h-4 rounded text-[#0A6847] border-slate-300 focus:ring-[#0A6847] cursor-pointer"
                         required
                       />
                       <span>
@@ -1228,7 +1228,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                             e.stopPropagation();
                             onOpenPrivacy?.();
                           }}
-                          className="text-[#635bff] font-semibold underline hover:text-[#534be5] cursor-pointer"
+                          className="text-[#0A6847] font-semibold underline hover:text-[#085238] cursor-pointer"
                         >
                           informativa privacy
                         </button>{' '}
@@ -1259,7 +1259,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   <button
                     type="submit"
                     disabled={isUploading}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:bg-slate-300 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:cursor-not-allowed"
                   >
                     {isUploading ? (
                       <>

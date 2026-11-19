@@ -43,12 +43,12 @@ export const InvitationActivation: React.FC<{ token: string }> = ({ token }) => 
     } finally { setBusy(false); }
   };
 
-  return <main className="min-h-screen bg-slate-50 px-4 py-12 text-[#0a2540]">
+  return <main className="min-h-screen bg-slate-50 px-4 py-12 text-[#0F222D]">
     <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
       <h1 className="text-xl font-bold">Attiva il tuo account VoltaCRM</h1>
       {complete ? <div className="space-y-3">
         <p className="text-emerald-700">Account attivato. Ora puoi accedere con la password scelta.</p>
-        <a href="/" className="inline-block rounded-xl bg-[#635bff] px-4 py-2 font-semibold text-white">Vai all’accesso</a>
+        <a href="/" className="inline-block rounded-xl bg-[#0A6847] px-4 py-2 font-semibold text-white">Vai all’accesso</a>
       </div> : details ? <form onSubmit={activate} className="space-y-4">
         <p>Invito per <strong>{details.name}</strong> ({details.email}).</p>
         <label className="block text-sm font-semibold">Nuova password
@@ -59,7 +59,7 @@ export const InvitationActivation: React.FC<{ token: string }> = ({ token }) => 
           <input type="password" autoComplete="new-password" minLength={12} maxLength={72} required value={confirmation}
             onChange={event => setConfirmation(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" />
         </label>
-        {details.totpSecret && <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 space-y-2">
+        {details.totpSecret && <div className="rounded-xl border border-[#BFE0D2] bg-[#EAF4F0] p-3 space-y-2">
           <p className="font-semibold">Configura il secondo fattore</p>
           <p>In Authenticator aggiungi manualmente un account basato sul tempo e inserisci questa chiave:</p>
           <code className="block break-all rounded bg-white p-2 select-all">{details.totpSecret}</code>
@@ -69,7 +69,7 @@ export const InvitationActivation: React.FC<{ token: string }> = ({ token }) => 
           </label>
         </div>}
         {error && <p role="alert" className="text-red-700">{error}</p>}
-        <button disabled={busy} type="submit" className="w-full rounded-xl bg-[#635bff] px-4 py-2 font-semibold text-white disabled:opacity-50">
+        <button disabled={busy} type="submit" className="w-full rounded-xl bg-[#0A6847] px-4 py-2 font-semibold text-white disabled:opacity-50">
           {busy ? 'Attivazione…' : 'Attiva account'}
         </button>
       </form> : <p role={error ? 'alert' : undefined}>{error || 'Verifica invito…'}</p>}

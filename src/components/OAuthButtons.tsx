@@ -170,7 +170,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
         type="button"
         disabled={loadingProvider !== null}
         onClick={() => openProviderModal('google')}
-        className="w-full py-2.5 px-4 rounded-xl bg-white border border-[#e3e8ee] hover:bg-slate-50 text-[#0a2540] font-semibold text-xs flex items-center justify-center gap-2.5 transition-all shadow-2xs hover:border-slate-300 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed min-h-[42px]"
+        className="w-full py-2.5 px-4 rounded-xl bg-white border border-[#DCE5E8] hover:bg-slate-50 text-[#0F222D] font-semibold text-xs flex items-center justify-center gap-2.5 transition-all shadow-2xs hover:border-slate-300 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed min-h-[42px]"
         aria-label={`${verb} Google`}
       >
         <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -217,17 +217,17 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
 
       {/* Divider */}
       <div className="relative flex py-2 items-center">
-        <div className="flex-grow border-t border-[#e3e8ee]"></div>
+        <div className="flex-grow border-t border-[#DCE5E8]"></div>
         <span className="shrink-0 px-2.5 text-[10px] text-slate-400 uppercase font-semibold">
           oppure con credenziali Volta
         </span>
-        <div className="flex-grow border-t border-[#e3e8ee]"></div>
+        <div className="flex-grow border-t border-[#DCE5E8]"></div>
       </div>
 
       {/* Interactive Google / Apple Account Picker Modal */}
       {activeModalProvider && (
         <div 
-          className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center bg-[#0a2540]/60 backdrop-blur-xs"
+          className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center bg-[#0F222D]/60 backdrop-blur-xs"
           role="dialog" 
           aria-modal="true" 
           aria-labelledby="oauth-modal-title"
@@ -262,7 +262,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
                 </div>
               )}
               <div>
-                <h3 id="oauth-modal-title" className="text-base font-bold text-[#0a2540]">
+                <h3 id="oauth-modal-title" className="text-base font-bold text-[#0F222D]">
                   {activeModalProvider === 'google' ? 'Accedi con Google' : 'Accedi con Apple ID'}
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -290,10 +290,10 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
                       : (role === 'customer' ? 'Alessandro V.' : 'Chiara Bianchi (Staff)');
                     handleOAuth(activeModalProvider, { email, name });
                   }}
-                  className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-[#635bff] hover:bg-slate-50 flex items-center justify-between transition-all group cursor-pointer"
+                  className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-[#0A6847] hover:bg-slate-50 flex items-center justify-between transition-all group cursor-pointer"
                 >
                   <div>
-                    <span className="text-xs font-bold text-[#0a2540] block group-hover:text-[#635bff]">
+                    <span className="text-xs font-bold text-[#0F222D] block group-hover:text-[#0A6847]">
                       {activeModalProvider === 'google' ? (role === 'customer' ? 'Mario Rossi' : 'Matteo Riva (Staff)') : (role === 'customer' ? 'Alessandro V.' : 'Chiara Bianchi (Staff)')}
                     </span>
                     <span className="text-[11px] text-slate-500">
@@ -320,7 +320,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
                   value={customEmail}
                   onChange={(e) => setCustomEmail(e.target.value)}
                   placeholder={activeModalProvider === 'google' ? 'es. tuo.nome@gmail.com' : 'es. tuo.nome@icloud.com'}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] outline-none transition-all"
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A6847] focus:ring-1 focus:ring-[#0A6847] outline-none transition-all"
                 />
               </div>
 
@@ -334,7 +334,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder="es. Mario Rossi"
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] outline-none transition-all"
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A6847] focus:ring-1 focus:ring-[#0A6847] outline-none transition-all"
                 />
               </div>
 
@@ -349,7 +349,7 @@ export const OAuthButtons: React.FC<OAuthButtonsProps> = ({
                 <button
                   type="submit"
                   disabled={loadingProvider !== null || !customEmail || !customName}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold transition-all shadow-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-bold transition-all shadow-sm disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                   {loadingProvider ? 'Connessione...' : `Continua con ${activeModalProvider === 'google' ? 'Google' : 'Apple'}`}
                 </button>

@@ -37,21 +37,21 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
       <div 
         onClick={onClose}
-        className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-2xs transition-opacity" 
+        className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-2xs transition-opacity" 
       />
 
-      <div className="relative w-full max-w-md bg-white h-full shadow-2xl border-l border-[#e3e8ee] flex flex-col z-10 animate-in slide-in-from-right duration-200 text-xs">
+      <div className="relative w-full max-w-md bg-white h-full shadow-2xl border-l border-[#DCE5E8] flex flex-col z-10 animate-in slide-in-from-right duration-200 text-xs">
         {/* Header */}
-        <div className="p-5 border-b border-[#e3e8ee] flex items-center justify-between bg-slate-50/70">
+        <div className="p-5 border-b border-[#DCE5E8] flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-[#635bff] flex items-center justify-center text-white">
+            <div className="h-8 w-8 rounded-lg bg-[#0A6847] flex items-center justify-center text-white">
               <Phone className="h-4 w-4" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-[#635bff] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold text-[#0A6847] uppercase tracking-wider block">
                 Call Center Assistant
               </span>
-              <h3 className="font-bold text-sm text-[#0a2540]">{lead.name}</h3>
+              <h3 className="font-bold text-sm text-[#0F222D]">{lead.name}</h3>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
@@ -62,20 +62,20 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Quick Lead Info */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-[#e3e8ee] grid grid-cols-2 gap-2 text-[11px]">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-[#DCE5E8] grid grid-cols-2 gap-2 text-[11px]">
             <div>
               <span className="text-slate-400 block text-[10px]">Telefono</span>
-              <a href={`tel:${lead.phone}`} className="font-mono font-bold text-[#635bff] hover:underline">
+              <a href={`tel:${lead.phone}`} className="font-mono font-bold text-[#0A6847] hover:underline">
                 {lead.phone}
               </a>
             </div>
             <div>
               <span className="text-slate-400 block text-[10px]">Città / Zona</span>
-              <span className="font-semibold text-[#0a2540]">{lead.city}</span>
+              <span className="font-semibold text-[#0F222D]">{lead.city}</span>
             </div>
             <div>
               <span className="text-slate-400 block text-[10px]">Consumo Luce Stimato</span>
-              <span className="font-mono font-semibold text-[#0a2540]">
+              <span className="font-mono font-semibold text-[#0F222D]">
                 {lead.estimatedConsumptionKwh?.toLocaleString() || 3200} kWh/a
               </span>
             </div>
@@ -90,7 +90,7 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
             <span className="text-[10px] font-bold text-[#425466] uppercase tracking-wider block">
               Script Telefonico Consigliato (AIDA)
             </span>
-            <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100 text-slate-700 leading-relaxed space-y-2">
+            <div className="p-4 rounded-xl bg-[#EAF4F0]/60 border border-[#D5E6DF] text-slate-700 leading-relaxed space-y-2">
               <p>
                 <strong>Saluto:</strong> <em>"Buongiorno Sig. {lead.name.split(' ')[0]}, sono [Nome] di Volta Energia. La contatto in merito alla sua richiesta di verifica tariffe..."</em>
               </p>
@@ -113,12 +113,12 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
               placeholder="es. Chiedere copia bolletta via WhatsApp, fornitore attuale è Enel..."
               value={callNotes}
               onChange={(e) => setCallNotes(e.target.value)}
-              className="w-full p-2.5 rounded-lg border border-[#e3e8ee] text-xs text-[#0a2540] placeholder-slate-400 focus:outline-none focus:border-[#635bff]"
+              className="w-full p-2.5 rounded-lg border border-[#DCE5E8] text-xs text-[#0F222D] placeholder-slate-400 focus:outline-none focus:border-[#0A6847]"
             />
           </div>
 
           {/* 1-Click Outcome Buttons */}
-          <div className="space-y-2 pt-2 border-t border-[#e3e8ee]">
+          <div className="space-y-2 pt-2 border-t border-[#DCE5E8]">
             <span className="text-[10px] font-bold text-[#425466] uppercase tracking-wider block">
               Registra Esito con 1 Click:
             </span>
@@ -126,9 +126,9 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleOutcome('call_center_queue')}
-                className="p-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-left cursor-pointer transition-colors"
+                className="p-2.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-left cursor-pointer transition-colors"
               >
-                <div className="font-bold text-[#0a2540] flex items-center gap-1">
+                <div className="font-bold text-[#0F222D] flex items-center gap-1">
                   <Clock className="h-3 w-3 text-amber-500" /> Non Risponde
                 </div>
                 <span className="text-[10px] text-slate-400">Riprova tra 2 ore</span>
@@ -136,9 +136,9 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
 
               <button
                 onClick={() => handleOutcome('in_negotiation')}
-                className="p-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-left cursor-pointer transition-colors"
+                className="p-2.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-left cursor-pointer transition-colors"
               >
-                <div className="font-bold text-[#0a2540] flex items-center gap-1">
+                <div className="font-bold text-[#0F222D] flex items-center gap-1">
                   <MessageSquare className="h-3 w-3 text-sky-500" /> In Trattativa
                 </div>
                 <span className="text-[10px] text-slate-400">Attesa bolletta</span>
@@ -149,7 +149,7 @@ export const CallScriptDrawer: React.FC<CallScriptDrawerProps> = ({
                   onClose();
                   onOpenSchedule(lead);
                 }}
-                className="col-span-2 p-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-left cursor-pointer shadow-xs transition-all active:scale-[0.99]"
+                className="col-span-2 p-2.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white text-left cursor-pointer shadow-xs transition-all active:scale-[0.99]"
               >
                 <div className="font-bold text-xs flex items-center justify-between">
                   <span className="flex items-center gap-1.5">

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Zap,
   ShieldCheck,
-  Sparkles,
   ArrowRight,
   Lock,
   User,
@@ -510,24 +508,17 @@ export const PortalGate: React.FC<PortalGateProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] flex flex-col justify-between text-[#0a2540] relative overflow-x-hidden selection:bg-[#635bff] selection:text-white font-sans">
-      
-      {/* Subtle Stripe-style diagonal background mesh gradient */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-40"
-        style={{
-          background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 91, 255, 0.15), transparent 70%)',
-        }}
-      />
-
+    <div className="min-h-screen bg-[#F6F9FA] flex flex-col justify-between text-[#0F222D] relative overflow-x-hidden selection:bg-[#0A6847] selection:text-white font-sans">
       {/* Top Navigation Bar: Minimalist & Clean */}
-      <header className="relative z-10 px-4 sm:px-8 py-5">
+      <header className="relative z-10 px-4 sm:px-8 py-4 bg-white border-b border-[#DCE5E8]">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-[#635bff] flex items-center justify-center text-white shadow-xs">
-              <Zap className="h-4 w-4 fill-white text-white" />
-            </div>
-            <span className="font-extrabold text-base tracking-tight text-[#0a2540]">
+            <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+              <rect width="28" height="28" rx="6" fill="#0A3B40" />
+              <path d="M8.2 8.5L13.1 20H15.1L20 8.5H17.3L14.1 16.4L10.9 8.5H8.2Z" fill="#FFFFFF" />
+              <rect x="19.2" y="17.2" width="3.2" height="3.2" rx="0.8" fill="#34D399" />
+            </svg>
+            <span className="font-extrabold text-base tracking-tight text-[#0F222D]">
               Volta Energia
             </span>
           </div>
@@ -537,10 +528,10 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               <button
                 type="button"
                 onClick={onOpenTotem}
-                className="px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer shadow-2xs"
+                className="px-3 py-1.5 rounded-lg border border-[#DCE5E8] bg-white hover:bg-[#F6F9FA] text-[#445966] font-semibold text-xs transition-colors cursor-pointer"
                 title="Apri modalità Totem Kiosk per showroom e fiere"
               >
-                <span>🖥️ Modalità Totem</span>
+                <span>Modalità Totem</span>
               </button>
             )}
 
@@ -548,10 +539,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               type="button"
               onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
               title="Accedi istantaneamente come Admin in Demo Mode"
             >
-              <Sparkles className="h-3 w-3 text-amber-300 fill-amber-300" />
               <span>Accedi come Demo Mode</span>
             </button>}
           </div>
@@ -562,11 +552,11 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-lg mx-auto w-full">
         
         {/* The Card */}
-        <div className="w-full bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_20px_60px_rgba(10,37,64,0.08)] p-6 sm:p-8 space-y-6">
+        <div className="w-full bg-white rounded-2xl border border-[#DCE5E8] shadow-[0_20px_60px_rgba(10, 59, 64,0.08)] p-6 sm:p-8 space-y-6">
           
           {/* Card Header */}
           <div className="text-center space-y-1.5">
-            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#0a2540]">
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#0F222D]">
               {selectedPortal === 'operator'
                 ? 'Accedi all’area operativa'
                 : customerMode === 'register'
@@ -599,17 +589,17 @@ export const PortalGate: React.FC<PortalGateProps> = ({
           </div>
 
           {/* Segmented Control Switcher (Stripe style) */}
-          {!portal && <div className="p-1 rounded-xl bg-slate-100 border border-[#e3e8ee] grid grid-cols-2 gap-1 text-xs font-semibold">
+          {!portal && <div className="p-1 rounded-xl bg-slate-100 border border-[#DCE5E8] grid grid-cols-2 gap-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setActivePortal('customer')}
               className={`min-h-[38px] py-2 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 activePortal === 'customer'
-                  ? 'bg-white text-[#0a2540] shadow-xs'
-                  : 'text-slate-500 hover:text-[#0a2540]'
+                  ? 'bg-white text-[#0F222D] shadow-xs'
+                  : 'text-slate-500 hover:text-[#0F222D]'
               }`}
             >
-              <User className="h-4 w-4 text-[#635bff]" />
+              <User className="h-4 w-4 text-[#0A6847]" />
               <span>Portale Clienti</span>
             </button>
 
@@ -618,11 +608,11 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               onClick={() => setActivePortal('operator')}
               className={`min-h-[38px] py-2 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 activePortal === 'operator'
-                  ? 'bg-white text-[#0a2540] shadow-xs'
-                  : 'text-slate-500 hover:text-[#0a2540]'
+                  ? 'bg-white text-[#0F222D] shadow-xs'
+                  : 'text-slate-500 hover:text-[#0F222D]'
               }`}
             >
-              <Briefcase className="h-4 w-4 text-[#635bff]" />
+              <Briefcase className="h-4 w-4 text-[#0A6847]" />
               <span>Staff & Broker</span>
             </button>
           </div>}
@@ -632,12 +622,12 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               <button
                 type="button"
                 onClick={onBackToPublic}
-                className="inline-flex items-center gap-1.5 text-[#635bff] hover:text-[#5851ea] hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-[#0A6847] hover:text-[#085238] hover:underline cursor-pointer"
               >
                 ← Torna al comparatore pubblico
               </button>
             ) : portal ? (
-              <a href="/" className="inline-flex items-center gap-1.5 text-[#635bff] hover:underline">
+              <a href="/" className="inline-flex items-center gap-1.5 text-[#0A6847] hover:underline">
                 ← Torna al comparatore pubblico
               </a>
             ) : null}
@@ -648,14 +638,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             )}
           </div>
 
-          {/* ⚡ 1-Click Demo Sandbox Quick Strip */}
-          {DEMO_MODE && <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 space-y-2">
+          {/* 1-Click Demo Sandbox Quick Strip */}
+          {DEMO_MODE && <div className="bg-[#F6F9FA] border border-[#DCE5E8] rounded-xl p-3 space-y-2">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-[#635bff]" /> Accesso Rapido Demo 1-Click:
+              <span className="font-bold text-[#0F222D]">
+                Accesso rapido demo
               </span>
-              <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">
-                Attivo
+              <span className="text-[10px] text-[#0A6847] font-bold uppercase tracking-wider">
+                Sandbox
               </span>
             </div>
             
@@ -664,49 +654,49 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                 type="button"
                 onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
                 disabled={isSubmitting}
-                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+                className="py-1.5 px-2 rounded-lg bg-white border border-[#DCE5E8] hover:border-[#0A6847] hover:bg-[#EAF4F0] text-[#0F222D] font-semibold text-center transition-colors cursor-pointer truncate"
               >
-                👑 Admin
+                Admin
               </button>}
               {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('broker', 'user-op-3')}
                 disabled={isSubmitting}
-                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+                className="py-1.5 px-2 rounded-lg bg-white border border-[#DCE5E8] hover:border-[#0A6847] hover:bg-[#EAF4F0] text-[#0F222D] font-semibold text-center transition-colors cursor-pointer truncate"
               >
-                💼 Broker
+                Broker
               </button>}
               {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('call_center', 'user-cc-4')}
                 disabled={isSubmitting}
-                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+                className="py-1.5 px-2 rounded-lg bg-white border border-[#DCE5E8] hover:border-[#0A6847] hover:bg-[#EAF4F0] text-[#0F222D] font-semibold text-center transition-colors cursor-pointer truncate"
               >
-                📞 Call Center
+                Call Center
               </button>}
               {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('operator', 'user-op-2')}
                 disabled={isSubmitting}
-                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-[#635bff] hover:bg-indigo-50/50 text-[#0a2540] font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+                className="py-1.5 px-2 rounded-lg bg-white border border-[#DCE5E8] hover:border-[#0A6847] hover:bg-[#EAF4F0] text-[#0F222D] font-semibold text-center transition-colors cursor-pointer truncate"
               >
-                🎧 Operatore
+                Operatore
               </button>}
               {portal !== 'staff' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('customer', 'user-cust-1')}
                 disabled={isSubmitting}
-                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-emerald-800 font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+                className="py-1.5 px-2 rounded-lg bg-white border border-[#DCE5E8] hover:border-[#0A6847] hover:bg-[#EAF4F0] text-[#0A6847] font-semibold text-center transition-colors cursor-pointer truncate"
               >
-                👤 Privato
+                Privato
               </button>}
               {portal !== 'staff' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('customer', 'user-cust-2')}
                 disabled={isSubmitting}
-                className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-emerald-800 font-bold text-center transition-all cursor-pointer shadow-2xs truncate"
+                className="py-1.5 px-2 rounded-lg bg-white border border-[#DCE5E8] hover:border-[#0A6847] hover:bg-[#EAF4F0] text-[#0A6847] font-semibold text-center transition-colors cursor-pointer truncate"
               >
-                🏢 Business
+                Business
               </button>}
             </div>
           </div>}
@@ -762,7 +752,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               {customerMode === 'login' && (
                 <form onSubmit={handleCustomerLogin} className="space-y-4">
                   <div>
-                    <label htmlFor="customer-identifier" className="block text-xs font-bold text-[#0a2540] mb-1.5">
+                    <label htmlFor="customer-identifier" className="block text-xs font-bold text-[#0F222D] mb-1.5">
                       Email o Codice Fiscale
                     </label>
                     <input
@@ -772,13 +762,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       value={customerIdentifier}
                       onChange={(e) => setCustomerIdentifier(e.target.value)}
                       placeholder="nome.cognome@email.it oppure RSSMRA80A01H501U"
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-medium"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-medium"
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="customer-password" className="block text-xs font-bold text-[#0a2540]">
+                      <label htmlFor="customer-password" className="block text-xs font-bold text-[#0F222D]">
                         Password
                       </label>
                       {DEMO_MODE ? (
@@ -787,7 +777,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         <button
                           type="button"
                           onClick={() => switchCustomerMode('forgot_password')}
-                          className="text-[11px] font-semibold text-[#635bff] hover:text-[#5851ea] cursor-pointer"
+                          className="text-[11px] font-semibold text-[#0A6847] hover:text-[#085238] cursor-pointer"
                         >
                           Password dimenticata?
                         </button>
@@ -801,7 +791,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={customerPassword}
                         onChange={(e) => setCustomerPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all"
+                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all"
                       />
                       <button
                         type="button"
@@ -818,7 +808,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
                     <span>{isSubmitting ? 'Accesso in corso...' : 'Entra nel Portale Bollette'}</span>
                     <ArrowRight className="h-4 w-4" />
@@ -830,7 +820,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                 <form onSubmit={handleCustomerRegister} className="space-y-3" noValidate>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="register-name" className="block text-xs font-bold text-[#0a2540] mb-1">Nome e Cognome *</label>
+                      <label htmlFor="register-name" className="block text-xs font-bold text-[#0F222D] mb-1">Nome e Cognome *</label>
                       <input
                         id="register-name"
                         type="text"
@@ -839,11 +829,11 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={regName}
                         onChange={(e) => setRegName(e.target.value)}
                         placeholder="Mario Rossi"
-                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#DCE5E8] text-xs focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                       />
                     </div>
                     <div>
-                      <label htmlFor="register-fiscal-code" className="block text-xs font-bold text-[#0a2540] mb-1">Codice fiscale / Partita IVA *</label>
+                      <label htmlFor="register-fiscal-code" className="block text-xs font-bold text-[#0F222D] mb-1">Codice fiscale / Partita IVA *</label>
                       <input
                         type="text"
                         id="register-fiscal-code"
@@ -854,14 +844,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={regFiscalCode}
                         onChange={(e) => setRegFiscalCode(e.target.value.toUpperCase())}
                         placeholder="RSSMRA80A01H501U"
-                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs font-mono focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#DCE5E8] text-xs font-mono focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="register-email" className="block text-xs font-bold text-[#0a2540] mb-1">Email *</label>
+                      <label htmlFor="register-email" className="block text-xs font-bold text-[#0F222D] mb-1">Email *</label>
                       <input
                         id="register-email"
                         type="email"
@@ -870,11 +860,11 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={regEmail}
                         onChange={(e) => setRegEmail(e.target.value)}
                         placeholder="mario.rossi@email.it"
-                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#DCE5E8] text-xs focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                       />
                     </div>
                     <div>
-                      <label htmlFor="register-phone" className="block text-xs font-bold text-[#0a2540] mb-1">Cellulare *</label>
+                      <label htmlFor="register-phone" className="block text-xs font-bold text-[#0F222D] mb-1">Cellulare *</label>
                       <input
                         id="register-phone"
                         type="tel"
@@ -883,13 +873,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={regPhone}
                         onChange={(e) => setRegPhone(e.target.value)}
                         placeholder="+39 340 1234567"
-                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                        className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#DCE5E8] text-xs focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="register-password" className="block text-xs font-bold text-[#0a2540] mb-1">Password * — da 12 a 72 caratteri</label>
+                    <label htmlFor="register-password" className="block text-xs font-bold text-[#0F222D] mb-1">Password * — da 12 a 72 caratteri</label>
                     <div className="relative">
                       <input
                         type={showRegPassword ? 'text' : 'password'}
@@ -901,7 +891,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3 pr-11 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                        className="w-full min-h-[44px] px-3 pr-11 py-2 rounded-xl border border-[#DCE5E8] text-xs focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                       />
                       <button
                         type="button"
@@ -922,14 +912,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         type="checkbox"
                         checked={regPrivacyConsent}
                         onChange={(e) => setRegPrivacyConsent(e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#635bff] focus:ring-[#635bff]"
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#0A6847] focus:ring-[#0A6847]"
                       />
                       <label htmlFor="register-privacy" className="leading-snug cursor-pointer">
                         Ho preso visione dell’{' '}
                         <button
                           type="button"
                           onClick={() => setLegalDialogOpen(true)}
-                          className="font-bold text-[#635bff] underline hover:text-[#5851ea] cursor-pointer"
+                          className="font-bold text-[#0A6847] underline hover:text-[#085238] cursor-pointer"
                         >
                           Informativa Privacy e Condizioni del servizio (bozza provvisoria)
                         </button>{' '}
@@ -943,7 +933,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         type="checkbox"
                         checked={regMarketingConsent}
                         onChange={(e) => setRegMarketingConsent(e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#635bff] focus:ring-[#635bff]"
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#0A6847] focus:ring-[#0A6847]"
                       />
                       <label htmlFor="register-marketing" className="leading-snug text-slate-600 cursor-pointer">
                         Acconsento facoltativamente a ricevere aggiornamenti su offerte e promozioni energetiche.
@@ -954,7 +944,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] mt-2"
+                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] mt-2"
                   >
                     <span>{isSubmitting ? 'Creazione account...' : 'Crea Account e Verifica Email'}</span>
                     <ArrowRight className="h-4 w-4" />
@@ -965,7 +955,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               {customerMode === 'verify_email' && (
                 <form onSubmit={handleVerifyEmail} className="space-y-4">
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 flex items-start gap-2">
-                    <Mail className="w-4 h-4 text-[#635bff] shrink-0 mt-0.5" />
+                    <Mail className="w-4 h-4 text-[#0A6847] shrink-0 mt-0.5" />
                     <p>
                       {pendingEmail
                         ? `Abbiamo registrato la richiesta per ${pendingEmail}. Inserisci il codice ricevuto via email oppure apri il link di conferma.`
@@ -973,7 +963,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                     </p>
                   </div>
                   <div>
-                    <label htmlFor="verify-email-token" className="block text-xs font-bold text-[#0a2540] mb-1">
+                    <label htmlFor="verify-email-token" className="block text-xs font-bold text-[#0F222D] mb-1">
                       Token di verifica email
                     </label>
                     <input
@@ -982,14 +972,14 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       value={verifyTokenInput}
                       onChange={(e) => setVerifyTokenInput(e.target.value)}
                       placeholder="Incolla il codice dal link di verifica"
-                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs font-mono focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#DCE5E8] text-xs font-mono focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                     />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 min-h-[44px] px-4 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
+                      className="flex-1 min-h-[44px] px-4 py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
                     >
                       {isSubmitting ? 'Verifica in corso...' : 'Conferma indirizzo email'}
                     </button>
@@ -1009,7 +999,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               {customerMode === 'forgot_password' && (
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div>
-                    <label htmlFor="forgot-email" className="block text-xs font-bold text-[#0a2540] mb-1">
+                    <label htmlFor="forgot-email" className="block text-xs font-bold text-[#0F222D] mb-1">
                       Email dell’account
                     </label>
                     <input
@@ -1020,13 +1010,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       placeholder="mario.rossi@email.it"
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] text-xs focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
+                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
                   >
                     {isSubmitting ? 'Invio richiesta...' : 'Invia istruzioni di recupero'}
                   </button>
@@ -1043,7 +1033,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               {customerMode === 'reset_password' && (
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div>
-                    <label htmlFor="reset-token" className="block text-xs font-bold text-[#0a2540] mb-1">
+                    <label htmlFor="reset-token" className="block text-xs font-bold text-[#0F222D] mb-1">
                       Token di recupero password
                     </label>
                     <input
@@ -1053,11 +1043,11 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       value={resetTokenInput}
                       onChange={(e) => setResetTokenInput(e.target.value)}
                       placeholder="Token ricevuto via email"
-                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs font-mono focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#DCE5E8] text-xs font-mono focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                     />
                   </div>
                   <div>
-                    <label htmlFor="reset-password" className="block text-xs font-bold text-[#0a2540] mb-1">
+                    <label htmlFor="reset-password" className="block text-xs font-bold text-[#0F222D] mb-1">
                       Nuova password (12–72 caratteri)
                     </label>
                     <div className="relative">
@@ -1071,7 +1061,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={resetNewPassword}
                         onChange={(e) => setResetNewPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3 pr-11 py-2 rounded-xl border border-[#e3e8ee] text-xs focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                        className="w-full min-h-[44px] px-3 pr-11 py-2 rounded-xl border border-[#DCE5E8] text-xs focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                       />
                       <button
                         type="button"
@@ -1087,7 +1077,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
+                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
                   >
                     {isSubmitting ? 'Salvataggio...' : 'Salva nuova password'}
                   </button>
@@ -1097,7 +1087,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
               {customerMode === 'confirm_email_change' && (
                 <form onSubmit={handleConfirmEmailChange} className="space-y-4">
                   <div>
-                    <label htmlFor="confirm-email-change-token" className="block text-xs font-bold text-[#0a2540] mb-1">
+                    <label htmlFor="confirm-email-change-token" className="block text-xs font-bold text-[#0F222D] mb-1">
                       Token conferma cambio email
                     </label>
                     <input
@@ -1107,13 +1097,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       value={emailChangeTokenInput}
                       onChange={(e) => setEmailChangeTokenInput(e.target.value)}
                       placeholder="Token ricevuto sul nuovo indirizzo email"
-                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#e3e8ee] text-xs font-mono focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff]"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-[#DCE5E8] text-xs font-mono focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847]"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
+                    className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0A6847] hover:bg-[#085238] disabled:opacity-60 text-white font-bold text-xs cursor-pointer"
                   >
                     {isSubmitting ? 'Conferma in corso...' : 'Conferma nuovo indirizzo email'}
                   </button>
@@ -1126,7 +1116,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   <button
                     type="button"
                     onClick={() => switchCustomerMode(customerMode === 'login' ? 'register' : 'login')}
-                    className="text-xs font-semibold text-[#635bff] hover:text-[#5851ea] cursor-pointer"
+                    className="text-xs font-semibold text-[#0A6847] hover:text-[#085238] cursor-pointer"
                   >
                     {customerMode === 'login'
                       ? 'Non hai ancora un account? Registrati'
@@ -1153,7 +1143,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
             <div className="space-y-4">
               <form onSubmit={handleOperatorLogin} className="space-y-4">
                 <div>
-                  <label htmlFor="operator-email" className="block text-xs font-bold text-[#0a2540] mb-1.5">
+                  <label htmlFor="operator-email" className="block text-xs font-bold text-[#0F222D] mb-1.5">
                     Email Aziendale
                   </label>
                   <input
@@ -1162,13 +1152,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                     value={operatorEmail}
                     onChange={(e) => setOperatorEmail(e.target.value)}
                     placeholder="m.riva@voltagroup.it"
-                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-mono"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-mono"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="operator-pwd" className="block text-xs font-bold text-[#0a2540] mb-1.5">
+                    <label htmlFor="operator-pwd" className="block text-xs font-bold text-[#0F222D] mb-1.5">
                       Password
                     </label>
                     <div className="relative">
@@ -1179,7 +1169,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={operatorPassword}
                         onChange={(e) => setOperatorPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all"
+                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all"
                       />
                       <button
                         type="button"
@@ -1194,7 +1184,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="operator-totp" className="block text-xs font-bold text-[#0a2540]">
+                      <label htmlFor="operator-totp" className="block text-xs font-bold text-[#0F222D]">
                         Codice 2FA (TOTP)
                       </label>
                       {DEMO_MODE && <span className="text-[10px] text-slate-400 font-mono">Demo: 123456</span>}
@@ -1206,7 +1196,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       value={operatorTotp}
                       onChange={(e) => setOperatorTotp(e.target.value)}
                       placeholder="123456"
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#e3e8ee] bg-white text-xs text-[#0a2540] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#635bff]/10 focus:border-[#635bff] transition-all font-mono text-center tracking-widest font-bold"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-mono text-center tracking-widest font-bold"
                     />
                   </div>
                 </div>
@@ -1214,7 +1204,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0a2540] hover:bg-slate-800 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                  className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0F222D] hover:bg-slate-800 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
                   <Lock className="h-4 w-4 text-[#00d4aa]" />
                   <span>Accedi al CRM & Backend Operativo</span>
@@ -1242,7 +1232,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         >
           <div className="w-full max-w-lg bg-white rounded-2xl p-6 space-y-4 shadow-xl text-xs text-slate-700">
             <div className="flex items-start justify-between gap-4">
-              <h2 id="portal-legal-dialog-title" className="text-base font-bold text-[#0a2540]">
+              <h2 id="portal-legal-dialog-title" className="text-base font-bold text-[#0F222D]">
                 Informativa Privacy e Condizioni (Bozza provvisoria • bozza-2026-11)
               </h2>
               <button

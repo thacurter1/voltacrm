@@ -36,13 +36,16 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#f8fafc] text-slate-900 p-4 font-sans">
           <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8 text-center space-y-5">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#635bff]/10 text-[#635bff]">
-              <span className="text-xl font-black">⚡</span>
+            <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-[#0A3B40] text-white">
+              <svg width="24" height="24" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <path d="M8.2 8.5L13.1 20H15.1L20 8.5H17.3L14.1 16.4L10.9 8.5H8.2Z" fill="#FFFFFF" />
+                <rect x="19.2" y="17.2" width="3.2" height="3.2" rx="0.8" fill="#34D399" />
+              </svg>
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#635bff]">Volta Energia</span>
-              <h2 className="text-xl font-extrabold text-[#0a2540]">Qualcosa non ha funzionato</h2>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#0A6847]">Volta Energia</span>
+              <h2 className="text-xl font-extrabold text-[#0F222D]">Qualcosa non ha funzionato</h2>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Si è verificato un problema imprevisto durante il caricamento del comparatore. Nessun dato contrattuale è andato perso.
               </p>
@@ -52,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="flex-1 min-h-[44px] px-4 py-2.5 bg-[#635bff] hover:bg-[#534be5] text-white rounded-xl font-bold text-xs transition cursor-pointer shadow-xs"
+                className="flex-1 min-h-[44px] px-4 py-2.5 bg-[#0A6847] hover:bg-[#085238] text-white rounded-xl font-bold text-xs transition cursor-pointer shadow-xs"
               >
                 Ricarica la pagina
               </button>
@@ -68,7 +71,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="border-t border-slate-100 pt-4 text-xs text-slate-500 space-y-1">
               <p>Hai bisogno di aiuto con la tua fornitura?</p>
               <p className="font-semibold text-slate-700">
-                Numero Verde Gratuito: <a href="tel:800912345" className="text-[#635bff] underline">800 912 345</a> • <a href="mailto:supporto@voltaenergia.it" className="text-[#635bff] underline">supporto@voltaenergia.it</a>
+                Numero Verde Gratuito: <a href="tel:800912345" className="text-[#0A6847] underline">800 912 345</a> • <a href="mailto:supporto@voltaenergia.it" className="text-[#0A6847] underline">supporto@voltaenergia.it</a>
               </p>
             </div>
 

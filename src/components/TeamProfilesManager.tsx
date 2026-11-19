@@ -7,7 +7,7 @@ import {
   Copy, 
   Check, 
   Phone, 
-  Sparkles, 
+  CheckCircle2, 
   Building2, 
   MessageSquare, 
   X, 
@@ -185,13 +185,13 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Top Banner / Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#e3e8ee] shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#DCE5E8] shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 rounded-xl bg-indigo-50 border border-indigo-100 text-[#635bff]">
+            <div className="p-2 rounded-xl bg-[#EAF4F0] border border-[#D5E6DF] text-[#0A6847]">
               <Users className="h-5 w-5" />
             </div>
-            <h1 className="text-xl font-bold text-[#0a2540]">Gestione Team & Profili Accessi</h1>
+            <h1 className="text-xl font-bold text-[#0F222D]">Gestione Team & Profili Accessi</h1>
           </div>
           <p className="text-xs text-[#425466]">
             Configura gli operatori del call center, assegna i consulenti energetici e gestisci gli inviti di accesso al portale cliente.
@@ -201,16 +201,16 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsAddOperatorOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0a2540] text-white text-xs font-semibold hover:bg-slate-800 transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0F222D] text-white text-xs font-semibold hover:bg-slate-800 transition-all cursor-pointer shadow-xs"
           >
             <UserPlus className="h-3.5 w-3.5" />
             Nuovo Operatore
           </button>
           <button
             onClick={() => setIsInviteCustomerOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#635bff] text-white text-xs font-semibold hover:bg-[#534be0] transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0A6847] text-white text-xs font-semibold hover:bg-[#534be0] transition-all cursor-pointer shadow-xs"
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <CheckCircle2 className="h-3.5 w-3.5" />
             Crea Profilo Cliente & Invita
           </button>
         </div>
@@ -218,16 +218,16 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-[#e3e8ee] shadow-xs">
+        <div className="bg-white p-5 rounded-2xl border border-[#DCE5E8] shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#425466] mb-2 font-medium">
             <span>Operatori & Broker</span>
-            <ShieldCheck className="h-4 w-4 text-indigo-500" />
+            <ShieldCheck className="h-4 w-4 text-[#0A6847]" />
           </div>
-          <div className="text-2xl font-bold text-[#0a2540]">{operators.length}</div>
+          <div className="text-2xl font-bold text-[#0F222D]">{operators.length}</div>
           <p className="text-[11px] text-slate-400 mt-1">Tutti con 2FA TOTP abilitato</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#e3e8ee] shadow-xs">
+        <div className="bg-white p-5 rounded-2xl border border-[#DCE5E8] shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#425466] mb-2 font-medium">
             <span>Profili Clienti Attivi</span>
             <UserCheck className="h-4 w-4 text-emerald-500" />
@@ -238,7 +238,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
           <p className="text-[11px] text-slate-400 mt-1">Con credenziali e accesso garantito</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#e3e8ee] shadow-xs">
+        <div className="bg-white p-5 rounded-2xl border border-[#DCE5E8] shadow-xs">
           <div className="flex items-center justify-between text-xs text-[#425466] mb-2 font-medium">
             <span>Inviti In Attesa Onboarding</span>
             <MessageSquare className="h-4 w-4 text-amber-500" />
@@ -251,13 +251,13 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
       </div>
 
       {/* Sub-tabs: Operatori vs Clienti */}
-      <div className="flex border-b border-[#e3e8ee] gap-6 text-xs font-semibold">
+      <div className="flex border-b border-[#DCE5E8] gap-6 text-xs font-semibold">
         <button
           onClick={() => setActiveSubTab('operators')}
           className={`pb-3 transition-colors cursor-pointer flex items-center gap-2 ${
             activeSubTab === 'operators'
-              ? 'text-[#635bff] border-b-2 border-[#635bff]'
-              : 'text-[#425466] hover:text-[#0a2540]'
+              ? 'text-[#0A6847] border-b-2 border-[#0A6847]'
+              : 'text-[#425466] hover:text-[#0F222D]'
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -267,8 +267,8 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
           onClick={() => setActiveSubTab('customers')}
           className={`pb-3 transition-colors cursor-pointer flex items-center gap-2 ${
             activeSubTab === 'customers'
-              ? 'text-[#635bff] border-b-2 border-[#635bff]'
-              : 'text-[#425466] hover:text-[#0a2540]'
+              ? 'text-[#0A6847] border-b-2 border-[#0A6847]'
+              : 'text-[#425466] hover:text-[#0F222D]'
           }`}
         >
           <Users className="h-4 w-4" />
@@ -278,10 +278,10 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
 
       {/* TAB 1: OPERATORI */}
       {activeSubTab === 'operators' && (
-        <div className="bg-white rounded-2xl border border-[#e3e8ee] shadow-xs overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#DCE5E8] shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#f6f9fc] border-b border-[#e3e8ee] text-[#425466] uppercase text-[10px] font-bold tracking-wider">
+              <thead className="bg-[#F6F9FA] border-b border-[#DCE5E8] text-[#425466] uppercase text-[10px] font-bold tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Consulente / Operatore</th>
                   <th className="py-3 px-4">Ruolo</th>
@@ -291,16 +291,16 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                   <th className="py-3 px-4 text-right">Azioni</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e3e8ee]">
+              <tbody className="divide-y divide-[#DCE5E8]">
                 {operators.map((op) => (
                   <tr key={op.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-[#635bff]/10 text-[#635bff] font-bold flex items-center justify-center text-xs">
+                        <div className="h-8 w-8 rounded-full bg-[#0A6847]/10 text-[#0A6847] font-bold flex items-center justify-center text-xs">
                           {op.avatar || op.name.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-bold text-[#0a2540]">{op.name}</div>
+                          <div className="font-bold text-[#0F222D]">{op.name}</div>
                           <div className="text-[11px] text-[#425466]">{op.email}</div>
                         </div>
                       </div>
@@ -309,7 +309,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         op.role === 'admin'
                           ? 'bg-purple-100 text-purple-700'
-                          : 'bg-indigo-100 text-[#635bff]'
+                          : 'bg-[#EAF4F0] text-[#0A6847]'
                       }`}>
                         {op.role === 'admin' ? 'Super Admin' : 'Consulente Call Center'}
                       </span>
@@ -333,7 +333,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                         href={`https://wa.me/${op.whatsapp?.replace(/[^0-9]/g, '')}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0a2540] font-medium text-[11px] transition-colors"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0F222D] font-medium text-[11px] transition-colors"
                       >
                         <MessageSquare className="h-3 w-3 text-emerald-600" /> WhatsApp
                       </a>
@@ -348,14 +348,14 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
 
       {/* TAB 2: PROFILI CLIENTI & INVITI */}
       {activeSubTab === 'customers' && (
-        <div className="bg-white rounded-2xl border border-[#e3e8ee] shadow-xs overflow-hidden">
-          <div className="p-4 border-b border-[#e3e8ee] flex items-center justify-between bg-slate-50/50">
+        <div className="bg-white rounded-2xl border border-[#DCE5E8] shadow-xs overflow-hidden">
+          <div className="p-4 border-b border-[#DCE5E8] flex items-center justify-between bg-slate-50/50">
             <span className="text-xs text-[#425466]">
               I clienti possono accedere al loro cruscotto personale tramite email o codice fiscale.
             </span>
             <button
               onClick={() => setIsInviteCustomerOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-[#635bff] text-white text-xs font-semibold hover:bg-[#534be0] transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#0A6847] text-white text-xs font-semibold hover:bg-[#534be0] transition-colors cursor-pointer"
             >
               + Genera Nuovo Invito
             </button>
@@ -363,7 +363,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#f6f9fc] border-b border-[#e3e8ee] text-[#425466] uppercase text-[10px] font-bold tracking-wider">
+              <thead className="bg-[#F6F9FA] border-b border-[#DCE5E8] text-[#425466] uppercase text-[10px] font-bold tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Cliente / Intestatario</th>
                   <th className="py-3 px-4">Codice Fiscale / P.IVA</th>
@@ -372,12 +372,12 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                   <th className="py-3 px-4 text-right">Invito Onboarding</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e3e8ee]">
+              <tbody className="divide-y divide-[#DCE5E8]">
                 {customerProfiles.map((cust) => {
                   return (
                     <tr key={cust.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-[#0a2540]">{cust.name}</div>
+                        <div className="font-bold text-[#0F222D]">{cust.name}</div>
                         <div className="text-[11px] text-[#425466] flex items-center gap-2 mt-0.5">
                           <span>{cust.email}</span>
                           <span>•</span>
@@ -388,8 +388,8 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                         {cust.fiscalCode || 'NON SPECIFICATO'}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-[#0a2540] text-[11px] font-medium">
-                          <UserCheck className="h-3 w-3 text-[#635bff]" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-[#0F222D] text-[11px] font-medium">
+                          <UserCheck className="h-3 w-3 text-[#0A6847]" />
                           {cust.assignedBrokerName || 'Matteo Riva'}
                         </span>
                       </td>
@@ -408,7 +408,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                         <div className="flex items-center justify-end gap-2">
                           {cust.onboardingStatus === 'invited' ? <button
                             onClick={() => handleRenewCustomerInvite(cust)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-100 text-[#0a2540] font-medium text-[11px] cursor-pointer transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-100 text-[#0F222D] font-medium text-[11px] cursor-pointer transition-colors"
                           ><Copy className="h-3 w-3" /> Rigenera link</button> : <span className="text-slate-500">Account attivo</span>}
                         </div>
                       </td>
@@ -424,14 +424,14 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
       {/* MODAL 1: AGGIUNGI OPERATORE */}
       {isAddOperatorOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center">
-          <div onClick={() => { setIsAddOperatorOpen(false); setGeneratedStaffInvite(null); }} className="fixed inset-0 bg-[#0a2540]/50 backdrop-blur-xs" />
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-[#e3e8ee] shadow-2xl p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-[#e3e8ee] pb-3">
+          <div onClick={() => { setIsAddOperatorOpen(false); setGeneratedStaffInvite(null); }} className="fixed inset-0 bg-[#0F222D]/50 backdrop-blur-xs" />
+          <div className="relative w-full max-w-md bg-white rounded-2xl border border-[#DCE5E8] shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-[#DCE5E8] pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[#635bff] text-white">
+                <div className="p-1.5 rounded-lg bg-[#0A6847] text-white">
                   <UserPlus className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold text-sm text-[#0a2540]">Nuovo Account Operatore / Consulente</h3>
+                <h3 className="font-bold text-sm text-[#0F222D]">Nuovo Account Operatore / Consulente</h3>
               </div>
               <button onClick={() => { setIsAddOperatorOpen(false); setGeneratedStaffInvite(null); }} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X className="h-4 w-4" />
@@ -440,47 +440,47 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
 
             {!generatedStaffInvite ? <form onSubmit={handleCreateOperator} className="space-y-3.5">
               <div>
-                <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Nome e Cognome</label>
+                <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Nome e Cognome</label>
                 <input
                   type="text"
                   required
                   placeholder="Es. Marco Rossi"
                   value={newOpName}
                   onChange={e => setNewOpName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Email Aziendale</label>
+                <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Email Aziendale</label>
                 <input
                   type="email"
                   required
                   placeholder="m.rossi@voltagroup.it"
                   value={newOpEmail}
                   onChange={e => setNewOpEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Cellulare / WhatsApp Dedicato</label>
+                <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Cellulare / WhatsApp Dedicato</label>
                 <input
                   type="tel"
                   placeholder="+39 340 9988776"
                   value={newOpPhone}
                   onChange={e => setNewOpPhone(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">Questo numero apparirà nella card "Il tuo Consulente Dedicato" dei clienti assegnati.</p>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Livello di Accesso</label>
+                <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Livello di Accesso</label>
                 <select
                   value={newOpRole}
                   onChange={e => setNewOpRole(e.target.value as 'admin' | 'call_center')}
-                  className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden bg-white"
                 >
                   <option value="call_center">Consulente Call Center / Commerciale</option>
                   <option value="admin">Super Admin / Amministratore Agenzia</option>
@@ -491,22 +491,22 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddOperatorOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-[#e3e8ee] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-[#DCE5E8] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#635bff] text-white font-semibold hover:bg-[#534be0] cursor-pointer shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-[#0A6847] text-white font-semibold hover:bg-[#534be0] cursor-pointer shadow-xs"
                 >
                   Crea Profilo Operatore
                 </button>
               </div>
             </form> : <div className="space-y-3">
               <p className="text-emerald-700 font-semibold">Invito creato per {generatedStaffInvite.name}. Il profilo si attiva solo dopo la scelta della password e la conferma del codice Authenticator.</p>
-              <label className="block text-[#0a2540] font-semibold">Link di attivazione (valido 7 giorni)</label>
-              <input readOnly value={generatedStaffInvite.link} className="w-full rounded-xl border border-[#e3e8ee] px-3 py-2 text-xs" />
-              <button type="button" onClick={() => handleCopyLink(generatedStaffInvite.link, 'staff-link')} className="rounded-xl bg-[#635bff] px-4 py-2 font-semibold text-white">
+              <label className="block text-[#0F222D] font-semibold">Link di attivazione (valido 7 giorni)</label>
+              <input readOnly value={generatedStaffInvite.link} className="w-full rounded-xl border border-[#DCE5E8] px-3 py-2 text-xs" />
+              <button type="button" onClick={() => handleCopyLink(generatedStaffInvite.link, 'staff-link')} className="rounded-xl bg-[#0A6847] px-4 py-2 font-semibold text-white">
                 {copiedId === 'staff-link' ? 'Copiato' : 'Copia link'}
               </button>
             </div>}
@@ -517,14 +517,14 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
       {/* MODAL 2: CREA PROFILO CLIENTE & INVITA */}
       {isInviteCustomerOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center">
-          <div onClick={() => { setIsInviteCustomerOpen(false); setGeneratedInvite(null); }} className="fixed inset-0 bg-[#0a2540]/50 backdrop-blur-xs" />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#e3e8ee] shadow-2xl p-6 space-y-4 text-xs">
-            <div className="flex justify-between items-center border-b border-[#e3e8ee] pb-3">
+          <div onClick={() => { setIsInviteCustomerOpen(false); setGeneratedInvite(null); }} className="fixed inset-0 bg-[#0F222D]/50 backdrop-blur-xs" />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#DCE5E8] shadow-2xl p-6 space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-[#DCE5E8] pb-3">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-emerald-600 text-white">
-                  <Sparkles className="h-4 w-4" />
+                  <CheckCircle2 className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold text-sm text-[#0a2540]">Crea Profilo Cliente & Invia Invito</h3>
+                <h3 className="font-bold text-sm text-[#0F222D]">Crea Profilo Cliente & Invia Invito</h3>
               </div>
               <button onClick={() => { setIsInviteCustomerOpen(false); setGeneratedInvite(null); }} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X className="h-4 w-4" />
@@ -539,81 +539,81 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Nome e Cognome / Ragione Sociale</label>
+                    <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Nome e Cognome / Ragione Sociale</label>
                     <input
                       type="text"
                       required
                       placeholder="Es. Mario Rossi"
                       value={inviteName}
                       onChange={e => setInviteName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                      className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Codice Fiscale / P.IVA</label>
+                    <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Codice Fiscale / P.IVA</label>
                     <input
                       type="text"
                       required
                       placeholder="RSSMRA80A01H501U"
                       value={inviteFiscalCode}
                       onChange={e => setInviteFiscalCode(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden uppercase font-mono"
+                      className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden uppercase font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Email del Cliente</label>
+                    <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Email del Cliente</label>
                     <input
                       type="email"
                       required
                       placeholder="mario.rossi@email.it"
                       value={inviteEmail}
                       onChange={e => setInviteEmail(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                      className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Cellulare (per WhatsApp)</label>
+                    <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Cellulare (per WhatsApp)</label>
                     <input
                       type="tel"
                       required
                       placeholder="+39 349 1234567"
                       value={invitePhone}
                       onChange={e => setInvitePhone(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                      className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Città di Fornitura</label>
+                  <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Città di Fornitura</label>
                   <input
                     type="text"
                     placeholder="Milano"
                     value={inviteCity}
                     onChange={e => setInviteCity(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-[#e3e8ee] focus:border-[#635bff] focus:outline-hidden"
+                    className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden"
                   />
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-[11px] text-[#425466]">
                   <span>Consulente dedicato assegnato:</span>
-                  <span className="font-bold text-[#0a2540]">{currentUser.name}</span>
+                  <span className="font-bold text-[#0F222D]">{currentUser.name}</span>
                 </div>
 
                 <div className="pt-2 flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setIsInviteCustomerOpen(false)}
-                    className="px-4 py-2 rounded-xl border border-[#e3e8ee] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
+                    className="px-4 py-2 rounded-xl border border-[#DCE5E8] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
                   >
                     Annulla
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-[#635bff] text-white font-semibold hover:bg-[#534be0] cursor-pointer shadow-xs"
+                    className="px-4 py-2 rounded-xl bg-[#0A6847] text-white font-semibold hover:bg-[#534be0] cursor-pointer shadow-xs"
                   >
                     Genera Link & Invito
                   </button>
@@ -632,17 +632,17 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#0a2540] mb-1">Link di Attivazione / Onboarding:</label>
+                  <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Link di Attivazione / Onboarding:</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       readOnly
                       value={generatedInvite.link}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-[#e3e8ee] text-[11px] font-mono text-slate-700"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-[#DCE5E8] text-[11px] font-mono text-slate-700"
                     />
                     <button
                       onClick={() => handleCopyLink(generatedInvite.link, 'modal-link')}
-                      className="px-3 py-2 rounded-xl border border-[#e3e8ee] hover:bg-slate-100 font-semibold cursor-pointer shrink-0"
+                      className="px-3 py-2 rounded-xl border border-[#DCE5E8] hover:bg-slate-100 font-semibold cursor-pointer shrink-0"
                     >
                       {copiedId === 'modal-link' ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                     </button>
@@ -667,7 +667,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                       setInviteEmail('');
                       setInvitePhone('');
                     }}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#e3e8ee] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#DCE5E8] text-[#425466] font-semibold hover:bg-slate-50 cursor-pointer"
                   >
                     Chiudi
                   </button>

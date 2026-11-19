@@ -3,7 +3,6 @@ import {
   UploadCloud, 
   CheckCircle2, 
   FileText, 
-  Sparkles, 
   X,
   RefreshCw,
   ShieldCheck,
@@ -236,23 +235,23 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-12 flex items-center justify-center">
       <div 
         onClick={onClose}
-        className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-xs transition-opacity" 
       />
 
       <div 
         role="dialog"
         aria-modal="true"
         aria-labelledby="bill-ocr-title"
-        className="relative w-full max-w-2xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6"
+        className="relative w-full max-w-2xl bg-white rounded-xl border border-[#DCE5E8] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6"
       >
         {/* Header */}
-        <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
+        <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#635bff] uppercase tracking-wider">
-              <Sparkles className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0A6847] uppercase tracking-wider">
+              <CheckCircle2 className="h-3.5 w-3.5" />
               Gemini Vision AI • ARERA Parser
             </span>
-            <h3 id="bill-ocr-title" className="text-lg font-bold text-[#0a2540] mt-0.5">
+            <h3 id="bill-ocr-title" className="text-lg font-bold text-[#0F222D] mt-0.5">
               Analisi & Estrazione Automatica Bolletta
             </h3>
             <p className="text-xs text-[#425466]">
@@ -291,19 +290,19 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
               dragActive 
-                ? 'border-[#635bff] bg-indigo-50/50 scale-[1.01]' 
-                : 'border-[#e3e8ee] bg-[#f8fafc] hover:border-[#635bff] hover:bg-slate-50'
+                ? 'border-[#0A6847] bg-[#EAF4F0]/50 scale-[1.01]' 
+                : 'border-[#DCE5E8] bg-[#f8fafc] hover:border-[#0A6847] hover:bg-slate-50'
             }`}
           >
-            <UploadCloud className={`h-8 w-8 mx-auto mb-2 transition-colors ${dragActive ? 'text-[#635bff] animate-bounce' : 'text-[#635bff]'}`} />
-            <span className="font-semibold text-[#0a2540] block">
+            <UploadCloud className={`h-8 w-8 mx-auto mb-2 transition-colors ${dragActive ? 'text-[#0A6847] animate-bounce' : 'text-[#0A6847]'}`} />
+            <span className="font-semibold text-[#0F222D] block">
               Trascina qui la bolletta PDF o immagine oppure clicca per scegliere
             </span>
             <span className="text-[11px] text-[#425466] block mt-1">
               Formati supportati: PDF, JPG, PNG (Max 10MB)
             </span>
-            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e3e8ee] rounded-md text-[11px] font-semibold text-[#0a2540] shadow-2xs hover:border-[#635bff]">
-              <FileUp className="h-3.5 w-3.5 text-[#635bff]" />
+            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DCE5E8] rounded-md text-[11px] font-semibold text-[#0F222D] shadow-2xs hover:border-[#0A6847]">
+              <FileUp className="h-3.5 w-3.5 text-[#0A6847]" />
               Sfoglia File dal Computer
             </div>
           </div>
@@ -319,12 +318,12 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
                   onClick={() => handleRunScan(bill)}
                   className={`p-2.5 rounded-lg border text-left text-xs transition-all cursor-pointer ${
                     selectedSample?.fileName === bill.fileName
-                      ? 'bg-indigo-50/70 border-[#635bff] text-[#0a2540] ring-1 ring-[#635bff]'
-                      : 'bg-white border-[#e3e8ee] text-[#425466] hover:bg-slate-50'
+                      ? 'bg-[#EAF4F0]/70 border-[#0A6847] text-[#0F222D] ring-1 ring-[#0A6847]'
+                      : 'bg-white border-[#DCE5E8] text-[#425466] hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 font-bold text-[#0a2540] text-[11px] truncate">
-                    <FileText className="h-3.5 w-3.5 text-[#635bff] shrink-0" />
+                  <div className="flex items-center gap-1.5 font-bold text-[#0F222D] text-[11px] truncate">
+                    <FileText className="h-3.5 w-3.5 text-[#0A6847] shrink-0" />
                     <span className="truncate">{bill.customerName}</span>
                   </div>
                   <span className="text-[10px] text-slate-500 font-mono block mt-1">
@@ -338,9 +337,9 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
 
         {/* Scanning progress */}
         {isScanning && (
-          <div className="p-8 rounded-xl bg-slate-50 border border-[#e3e8ee] text-center space-y-3">
-            <RefreshCw className="h-6 w-6 text-[#635bff] animate-spin mx-auto" />
-            <span className="text-xs font-semibold text-[#0a2540] block">
+          <div className="p-8 rounded-xl bg-slate-50 border border-[#DCE5E8] text-center space-y-3">
+            <RefreshCw className="h-6 w-6 text-[#0A6847] animate-spin mx-auto" />
+            <span className="text-xs font-semibold text-[#0F222D] block">
               Analisi OCR con Vision AI in corso...
             </span>
             <p className="text-[11px] text-[#425466]">Rilevazione codice POD/PDR, spesa materia energia e curve di consumo.</p>
@@ -349,11 +348,11 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
 
         {/* Result Box */}
         {scanResult && !isScanning && (
-          <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] space-y-4 shadow-xs text-xs animate-in fade-in duration-200">
-            <div className="flex items-center justify-between border-b border-[#e3e8ee] pb-3">
+          <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] space-y-4 shadow-xs text-xs animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-[#DCE5E8] pb-3">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span className="font-bold text-[#0a2540]">Dati Estratti con Successo</span>
+                <span className="font-bold text-[#0F222D]">Dati Estratti con Successo</span>
               </div>
               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 Accuratezza OCR {scanResult.confidenceScore}%
@@ -363,30 +362,30 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <span className="text-[10px] text-[#425466] block">Intestatario</span>
-                <span className="font-bold text-[#0a2540] truncate block">{scanResult.customerName}</span>
+                <span className="font-bold text-[#0F222D] truncate block">{scanResult.customerName}</span>
               </div>
               <div>
                 <span className="text-[10px] text-[#425466] block">Codice Fiscale</span>
-                <span className="font-mono font-semibold text-[#0a2540]">{scanResult.fiscalCode}</span>
+                <span className="font-mono font-semibold text-[#0F222D]">{scanResult.fiscalCode}</span>
               </div>
               <div>
                 <span className="text-[10px] text-[#425466] block">Fornitore Rilevato</span>
-                <span className="font-medium text-[#0a2540] truncate block">{scanResult.supplier}</span>
+                <span className="font-medium text-[#0F222D] truncate block">{scanResult.supplier}</span>
               </div>
               <div>
                 <span className="text-[10px] text-[#425466] block">POD / PDR</span>
-                <span className="font-mono font-bold text-[#635bff]">{scanResult.podOrPdr}</span>
+                <span className="font-mono font-bold text-[#0A6847]">{scanResult.podOrPdr}</span>
               </div>
               <div>
                 <span className="text-[10px] text-[#425466] block">Consumo Annuo</span>
-                <span className="font-mono font-bold text-[#0a2540]">
+                <span className="font-mono font-bold text-[#0F222D]">
                   {scanResult.annualConsumption.toLocaleString()} {scanResult.utilityType === 'luce' ? 'kWh' : 'Smc'}
                 </span>
               </div>
               {scanResult.utilityType === 'luce' && scanResult.f1Kwh !== undefined && (
                 <div>
                   <span className="text-[10px] text-[#425466] block">Fasce F1 / F2 / F3</span>
-                  <span className="font-mono text-[11px] text-[#0a2540]">
+                  <span className="font-mono text-[11px] text-[#0F222D]">
                     {scanResult.f1Kwh} / {scanResult.f2Kwh} / {scanResult.f3Kwh} kWh
                   </span>
                 </div>
@@ -394,7 +393,7 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
               {scanResult.powerKw !== undefined && (
                 <div>
                   <span className="text-[10px] text-[#425466] block">Potenza Impegnata</span>
-                  <span className="font-mono text-[11px] text-[#0a2540] flex items-center gap-1">
+                  <span className="font-mono text-[11px] text-[#0F222D] flex items-center gap-1">
                     <Zap className="h-3 w-3 text-amber-500" />
                     {scanResult.powerKw} kW
                   </span>
@@ -402,7 +401,7 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
               )}
               <div>
                 <span className="text-[10px] text-[#425466] block">Spesa Fattura</span>
-                <span className="font-mono font-semibold text-[#0a2540]">
+                <span className="font-mono font-semibold text-[#0F222D]">
                   € {scanResult.rawCostTotal.toFixed(2)}
                 </span>
               </div>
@@ -430,11 +429,11 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="flex justify-end pt-3 border-t border-[#e3e8ee]">
+        <div className="flex justify-end pt-3 border-t border-[#DCE5E8]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] text-xs font-medium cursor-pointer"
+            className="px-4 py-2 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] text-xs font-medium cursor-pointer"
           >
             Chiudi
           </button>

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DEMO_USERS, dbService } from '../services/db';
 import { INITIAL_CUSTOMERS } from '../services/mockData';
 import { AuthUser, Customer } from '../types';
-import { Users, ChevronDown, ChevronUp, LogOut, Monitor } from 'lucide-react';
 
 interface DemoRoleSwitcherProps {
   currentUser: AuthUser;
@@ -19,12 +18,18 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
   onOpenTotem,
   onLogout,
 }) => {
-  const [isMinimized, setIsMinimized] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 640;
-  });
+  const handleSwitch = (value: string) => {
+    if (!value) return;
+    if (value === '__totem__') {
+      onOpenTotem?.();
+      return;
+    }
+    if (value === '__logout__') {
+      onLogout();
+      return;
+    }
 
-  const handleSwitch = (userId: string, role: string) => {
+    const [role, userId] = value.split(':');
     if (typeof window !== 'undefined') {
       try {
         sessionStorage.setItem('VOLTA_DEMO_ACTIVE', 'true');
@@ -39,11 +44,15 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
         window.history.replaceState({}, '', url.pathname + url.search + url.hash);
       } catch {}
     }
+
     if (role === 'customer') {
       const stored = dbService.load();
-      const cust = customers.find(c => c.id === userId) || stored.customers.find(c => c.id === userId) || INITIAL_CUSTOMERS.find(c => c.id === userId);
+      const cust =
+        customers.find((c) => c.id === userId) ||
+        stored.customers.find((c) => c.id === userId) ||
+        INITIAL_CUSTOMERS.find((c) => c.id === userId);
       if (cust) {
-        if (!stored.customers.some(c => c.id === cust.id)) {
+        if (!stored.customers.some((c) => c.id === cust.id)) {
           dbService.save({ ...stored, customers: [...stored.customers, cust] });
         }
         const custUser = {
@@ -52,7 +61,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
           email: cust.email,
           role: 'customer' as const,
           customerId: cust.id,
-          avatar: cust.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+          avatar: cust.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
           is2faEnabled: false,
         };
         if (typeof window !== 'undefined') {
@@ -66,7 +75,7 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
       return;
     }
 
-    const matched = DEMO_USERS.find(u => u.id === userId) || DEMO_USERS[0];
+    const matched = DEMO_USERS.find((u) => u.id === userId) || DEMO_USERS[0];
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('VOLTA_AUTH_TOKEN', `mock-op-token-${matched.id}-${Date.now()}`);
@@ -76,154 +85,29 @@ export const DemoRoleSwitcher: React.FC<DemoRoleSwitcherProps> = ({
     onSelectUser(matched);
   };
 
-  if (isMinimized) {
-    return (
-      <button
-        onClick={() => setIsMinimized(false)}
-        className="fixed bottom-3 right-4 z-40 px-3 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 shadow-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
-        title="Apri selettore rapido ruoli Demo"
-      >
-        <Users className="w-3.5 h-3.5 text-amber-400" />
-        <span>Switch Demo ({currentUser.role})</span>
-        <ChevronUp className="w-3 h-3 text-slate-400" />
-      </button>
-    );
-  }
+  const currentValue = `${currentUser.role}:${currentUser.customerId || currentUser.id}`;
 
   return (
-    <aside 
-      aria-label="Selettore rapido ruoli demo"
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 max-w-[95vw] bg-slate-950/95 text-white border border-indigo-500/40 rounded-2xl px-3 py-2 shadow-2xl flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap text-xs"
-    >
-      <div className="flex items-center gap-1.5 text-amber-300 font-extrabold text-[11px] uppercase tracking-wider pr-1 border-r border-white/10 shrink-0">
-        <Users className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-        <span className="hidden sm:inline">1-Click Demo:</span>
-      </div>
-
-      <div className="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar">
-        {/* Admin */}
-        <button
-          type="button"
-          onClick={() => handleSwitch('user-admin-1', 'admin')}
-          className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
-            currentUser.role === 'admin'
-              ? 'bg-[#635bff] text-white shadow-xs ring-1 ring-white/30'
-              : 'bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white'
-          }`}
-        >
-          <span>👑</span>
-          <span className="hidden md:inline">Admin (Riva)</span>
-          <span className="md:hidden">Admin</span>
-        </button>
-
-        {/* Broker */}
-        <button
-          type="button"
-          onClick={() => handleSwitch('user-op-3', 'broker')}
-          className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
-            currentUser.role === 'broker'
-              ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-white/30'
-              : 'bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white'
-          }`}
-        >
-          <span>💼</span>
-          <span className="hidden md:inline">Broker (Neri)</span>
-          <span className="md:hidden">Broker</span>
-        </button>
-
-        {/* Operatore */}
-        <button
-          type="button"
-          onClick={() => handleSwitch('user-op-2', 'operator')}
-          className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
-            currentUser.role === 'operator'
-              ? 'bg-sky-600 text-white shadow-xs ring-1 ring-white/30'
-              : 'bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white'
-          }`}
-        >
-          <span>🎧</span>
-          <span className="hidden md:inline">Operatore</span>
-          <span className="md:hidden">Op</span>
-        </button>
-
-        {/* Call Center */}
-        <button
-          type="button"
-          onClick={() => handleSwitch('user-cc-4', 'call_center')}
-          className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
-            currentUser.role === 'call_center'
-              ? 'bg-emerald-600 text-white shadow-xs ring-1 ring-white/30'
-              : 'bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white'
-          }`}
-        >
-          <span>📞</span>
-          <span className="hidden md:inline">Call Center</span>
-          <span className="md:hidden">CC</span>
-        </button>
-
-        {/* Cliente Privato */}
-        <button
-          type="button"
-          onClick={() => handleSwitch('cust-1', 'customer')}
-          className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
-            currentUser.role === 'customer' && currentUser.customerId === 'cust-1'
-              ? 'bg-[#00d4aa] text-slate-950 shadow-xs ring-1 ring-white/30'
-              : 'bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white'
-          }`}
-        >
-          <span>👤</span>
-          <span className="hidden md:inline">Cliente (Moretti)</span>
-          <span className="md:hidden">Cliente</span>
-        </button>
-
-        {/* Cliente B2B */}
-        <button
-          type="button"
-          onClick={() => handleSwitch('cust-2', 'customer')}
-          className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
-            currentUser.role === 'customer' && currentUser.customerId === 'cust-2'
-              ? 'bg-[#00d4aa] text-slate-950 shadow-xs ring-1 ring-white/30'
-              : 'bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white'
-          }`}
-        >
-          <span>🏢</span>
-          <span className="hidden md:inline">B2B (La Terrazza)</span>
-          <span className="md:hidden">B2B</span>
-        </button>
-
-        {/* Totem */}
-        {onOpenTotem && (
-          <button
-            type="button"
-            onClick={onOpenTotem}
-            className="px-2.5 py-1 rounded-xl font-bold text-[11px] bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1"
-          >
-            <Monitor className="w-3 h-3" />
-            <span className="hidden md:inline">Totem</span>
-          </button>
-        )}
-      </div>
-
-      <div className="flex items-center gap-1 pl-1 border-l border-white/10 shrink-0">
-        <button
-          type="button"
-          onClick={onLogout}
-          className="p-1 rounded-lg text-slate-400 hover:text-red-400 hover:bg-white/10 transition-colors"
-          title="Esci al Portale di Login"
-          aria-label="Esci"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsMinimized(true)}
-          className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
-          title="Riduci a icona"
-          aria-label="Riduci a icona"
-        >
-          <ChevronDown className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </aside>
+    <div className="flex items-center shrink-0">
+      <label htmlFor="staff-demo-role-select" className="sr-only">
+        Cambia profilo dimostrativo
+      </label>
+      <select
+        id="staff-demo-role-select"
+        value={currentValue}
+        onChange={(e) => handleSwitch(e.target.value)}
+        aria-label="Selettore profilo dimostrativo"
+        className="h-8 px-2.5 max-w-[160px] rounded-md bg-[#072B2F] border border-white/25 text-white text-xs font-semibold cursor-pointer whitespace-nowrap truncate focus:outline-none focus:ring-2 focus:ring-[#34D399]"
+      >
+        <option value="admin:user-admin-1">Demo: Admin (M. Riva)</option>
+        <option value="broker:user-op-3">Demo: Broker (V. Neri)</option>
+        <option value="operator:user-op-2">Demo: Operatore</option>
+        <option value="call_center:user-cc-4">Demo: Call Center</option>
+        <option value="customer:cust-1">Demo: Cliente Privato</option>
+        <option value="customer:cust-2">Demo: Cliente Business</option>
+        {onOpenTotem && <option value="__totem__">Apri Totem Demo</option>}
+        <option value="__logout__">Esci da Demo</option>
+      </select>
+    </div>
   );
 };

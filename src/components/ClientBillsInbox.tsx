@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   FileText, 
-  Sparkles, 
   CheckCircle2, 
   Clock, 
   Search, 
@@ -38,13 +37,13 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({
   return (
     <div className="space-y-6 text-xs">
       {/* Top Banner */}
-      <div className="rounded-2xl bg-white border border-[#e3e8ee] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-2xl bg-white border border-[#DCE5E8] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-[#635bff] border border-indigo-100">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EAF4F0] text-[#0A6847] border border-[#D5E6DF]">
             <FileText className="h-3.5 w-3.5" />
             Inbox Bollette Clienti
           </div>
-          <h1 className="text-2xl font-bold text-[#0a2540] tracking-tight">
+          <h1 className="text-2xl font-bold text-[#0F222D] tracking-tight">
             Documenti & Bollette Caricate dai Clienti
           </h1>
           <p className="text-xs text-[#425466]">
@@ -71,15 +70,15 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({
             placeholder="Cerca per cliente o nome file..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] text-xs placeholder-slate-400 focus:outline-none focus:border-[#635bff]"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] text-xs placeholder-slate-400 focus:outline-none focus:border-[#0A6847]"
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-[#e3e8ee]">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-[#DCE5E8]">
           <button
             onClick={() => setFilter('all')}
             className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-              filter === 'all' ? 'bg-white text-[#0a2540] shadow-xs' : 'text-[#425466]'
+              filter === 'all' ? 'bg-white text-[#0F222D] shadow-xs' : 'text-[#425466]'
             }`}
           >
             Tutte ({bills.length})
@@ -104,11 +103,11 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({
       </div>
 
       {/* Table of Bills */}
-      <div className="rounded-2xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="rounded-2xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-[#e3e8ee] bg-slate-50 text-[#425466] font-semibold text-[11px] uppercase tracking-wider">
+              <tr className="border-b border-[#DCE5E8] bg-slate-50 text-[#425466] font-semibold text-[11px] uppercase tracking-wider">
                 <th className="py-3 px-4">Cliente</th>
                 <th className="py-3 px-4">Documento / File</th>
                 <th className="py-3 px-4">Fornitura</th>
@@ -117,7 +116,7 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({
                 <th className="py-3 px-4 text-right">Azioni OCR</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e3e8ee]">
+            <tbody className="divide-y divide-[#DCE5E8]">
               {filteredBills.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
@@ -128,15 +127,15 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({
                 filteredBills.map((bill) => (
                   <tr key={bill.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4">
-                      <span className="font-bold text-[#0a2540] block">{bill.customerName}</span>
+                      <span className="font-bold text-[#0F222D] block">{bill.customerName}</span>
                       <span className="text-[10px] text-slate-400 font-mono">ID: {bill.customerId}</span>
                     </td>
 
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-[#635bff] shrink-0" />
+                        <FileText className="h-4 w-4 text-[#0A6847] shrink-0" />
                         <div>
-                          <span className="font-semibold text-[#0a2540] block truncate max-w-xs">
+                          <span className="font-semibold text-[#0F222D] block truncate max-w-xs">
                             {bill.fileName}
                           </span>
                           <span className="text-[10px] text-slate-400">
@@ -183,15 +182,15 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({
                         {bill.status === 'in_review' ? (
                           <button
                             onClick={() => onOpenOcrForBill(bill)}
-                            className="px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-2xs active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                            className="px-3 py-1.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-xs shadow-2xs active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5"
                           >
-                            <Sparkles className="h-3.5 w-3.5" />
+                            <CheckCircle2 className="h-3.5 w-3.5" />
                             Lancia OCR AI
                           </button>
                         ) : (
                           <button
                             onClick={() => onOpenOcrForBill(bill)}
-                            className="px-2.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-700 font-medium text-xs cursor-pointer inline-flex items-center gap-1"
+                            className="px-2.5 py-1.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-slate-700 font-medium text-xs cursor-pointer inline-flex items-center gap-1"
                           >
                             <Eye className="h-3 w-3" />
                             Rivedi Dati

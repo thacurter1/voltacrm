@@ -95,26 +95,26 @@ const TwoFactorDialog: React.FC<{
     <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-6 md:p-12 flex items-center justify-center">
       <div 
         onClick={onClose}
-        className="fixed inset-0 bg-[#0a2540]/60 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 bg-[#0F222D]/60 backdrop-blur-xs transition-opacity" 
       />
 
       <div 
         role="dialog"
         aria-modal="true"
         aria-labelledby="two-factor-title"
-        className="relative w-full max-w-md bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.22)] p-4 sm:p-6 space-y-5 sm:space-y-6 animate-in zoom-in-95 duration-150 text-xs"
+        className="relative w-full max-w-md bg-white rounded-2xl border border-[#DCE5E8] shadow-[0_25px_60px_rgba(0,0,0,0.22)] p-4 sm:p-6 space-y-5 sm:space-y-6 animate-in zoom-in-95 duration-150 text-xs"
       >
         {/* Header */}
-        <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
+        <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#635bff] shadow-2xs shrink-0">
+            <div className="h-10 w-10 rounded-xl bg-[#EAF4F0] border border-[#D5E6DF] flex items-center justify-center text-[#0A6847] shadow-2xs shrink-0">
               <Smartphone className="h-5 w-5" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-[#635bff] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold text-[#0A6847] uppercase tracking-wider block">
                 Sicurezza & Protezione Account
               </span>
-              <h3 id="two-factor-title" className="text-sm sm:text-base font-bold text-[#0a2540]">
+              <h3 id="two-factor-title" className="text-sm sm:text-base font-bold text-[#0F222D]">
                 Verifica a Due Fattori (2FA)
               </h3>
             </div>
@@ -129,17 +129,17 @@ const TwoFactorDialog: React.FC<{
         </p>
 
         {/* Demo Helper Banner */}
-        <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-[#e3e8ee] flex flex-wrap items-center justify-between gap-2">
+        <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-[#DCE5E8] flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <Lock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
             <span className="text-[11px] text-slate-700 truncate">
-              Codice: <strong className="font-mono text-[#0a2540]">{dynamicTotp.code}</strong>
+              Codice: <strong className="font-mono text-[#0F222D]">{dynamicTotp.code}</strong>
             </span>
           </div>
           <button
             type="button"
             onClick={handleFillDemoCode}
-            className="px-2.5 py-1 rounded bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-[10px] cursor-pointer shadow-2xs shrink-0"
+            className="px-2.5 py-1 rounded bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-[10px] cursor-pointer shadow-2xs shrink-0"
           >
             Inserisci rapido
           </button>
@@ -159,7 +159,7 @@ const TwoFactorDialog: React.FC<{
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 onPaste={handlePaste}
-                className="w-9 sm:w-11 h-11 sm:h-13 text-center text-base sm:text-lg font-mono font-bold text-[#0a2540] bg-slate-50 border border-[#e3e8ee] rounded-xl focus:border-[#635bff] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#635bff]/20 transition-all shadow-xs"
+                className="w-9 sm:w-11 h-11 sm:h-13 text-center text-base sm:text-lg font-mono font-bold text-[#0F222D] bg-slate-50 border border-[#DCE5E8] rounded-xl focus:border-[#0A6847] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 transition-all shadow-xs"
               />
             ))}
           </div>
@@ -180,7 +180,7 @@ const TwoFactorDialog: React.FC<{
 
           <button
             type="submit"
-            className="w-full min-h-[44px] py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs shadow-sm active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="w-full min-h-[44px] py-2.5 rounded-xl bg-[#0A6847] hover:bg-[#085238] text-white font-bold text-xs shadow-sm active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <CheckCircle2 className="h-4 w-4" />
             <span>Conferma e Accedi al CRM</span>

@@ -5,8 +5,7 @@ import {
   Video, 
   Clock, 
   CheckCircle2, 
-  XCircle, 
-  Sparkles
+  XCircle
 } from 'lucide-react';
 import { Appointment, AppointmentStatus, AppointmentType, Lead } from '../types';
 
@@ -43,7 +42,7 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
       case 'field_visit':
         return <MapPin className="h-3.5 w-3.5 text-amber-600" />;
       case 'video_call':
-        return <Video className="h-3.5 w-3.5 text-[#635bff]" />;
+        return <Video className="h-3.5 w-3.5 text-[#0A6847]" />;
     }
   };
 
@@ -94,9 +93,9 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e8ee]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#DCE5E8]">
         <div>
-          <h1 className="text-xl font-bold text-[#0a2540] tracking-tight">Agenda Call Center & Appuntamenti</h1>
+          <h1 className="text-xl font-bold text-[#0F222D] tracking-tight">Agenda Call Center & Appuntamenti</h1>
           <p className="text-xs text-[#425466] mt-0.5">
             Sincronizzazione tra operatori telemarketing ed Energy Specialist per visite e call commerciali.
           </p>
@@ -104,20 +103,20 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-[#425466]">Appuntamenti filtrati:</span>
-          <span className="px-2 py-0.5 rounded-md bg-white border border-[#e3e8ee] font-bold text-[#0a2540] text-xs">
+          <span className="px-2 py-0.5 rounded-md bg-white border border-[#DCE5E8] font-bold text-[#0F222D] text-xs">
             {filteredAppointments.length}
           </span>
         </div>
       </div>
 
       {/* Stripe Filter Bar */}
-      <div className="p-3 bg-white rounded-xl border border-[#e3e8ee] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-wrap items-center gap-3 text-xs">
+      <div className="p-3 bg-white rounded-xl border border-[#DCE5E8] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-wrap items-center gap-3 text-xs">
         <div className="flex items-center gap-1.5">
           <span className="text-[#425466] font-medium">Consulente:</span>
           <select
             value={selectedAgent}
             onChange={(e) => setSelectedAgent(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:outline-none focus:border-[#635bff] cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] text-xs focus:outline-none focus:border-[#0A6847] cursor-pointer"
           >
             <option value="all">Tutti i Consulenti</option>
             {agents.map((agent) => (
@@ -131,7 +130,7 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:outline-none focus:border-[#635bff] cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] text-xs focus:outline-none focus:border-[#0A6847] cursor-pointer"
           >
             <option value="all">Tutte le Modalità</option>
             <option value="phone_consultation">Consulenza Telefonica</option>
@@ -145,7 +144,7 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:outline-none focus:border-[#635bff] cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] text-xs focus:outline-none focus:border-[#0A6847] cursor-pointer"
           >
             <option value="all">Tutti gli Stati</option>
             <option value="scheduled">Programmati</option>
@@ -158,14 +157,14 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
       {/* Appointments List */}
       <div className="grid grid-cols-1 gap-3.5">
         {filteredAppointments.length === 0 ? (
-          <div className="p-12 text-center rounded-xl bg-white border border-[#e3e8ee] text-[#425466] text-xs">
+          <div className="p-12 text-center rounded-xl bg-white border border-[#DCE5E8] text-[#425466] text-xs">
             Nessun appuntamento corrisponde ai filtri selezionati.
           </div>
         ) : (
           filteredAppointments.map((app) => (
             <div 
               key={app.id}
-              className="p-5 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+              className="p-5 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
             >
               {/* Left Column: Meeting Info */}
               <div className="space-y-2">
@@ -174,7 +173,7 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
                     {getTypeIcon(app.type)}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#0a2540]">{app.customerName}</h3>
+                    <h3 className="text-sm font-bold text-[#0F222D]">{app.customerName}</h3>
                     <p className="text-xs text-[#425466] flex items-center gap-2 mt-0.5">
                       <span className="font-medium text-slate-700">{getTypeLabel(app.type)}</span>
                       <span>•</span>
@@ -186,13 +185,13 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
                 </div>
 
                 <div className="text-xs text-[#425466] bg-slate-50 p-2.5 rounded-lg border border-slate-200/70 max-w-2xl">
-                  <span className="font-medium text-[#0a2540]">Note Operatore:</span> "{app.notes}"
+                  <span className="font-medium text-[#0F222D]">Note Operatore:</span> "{app.notes}"
                 </div>
               </div>
 
               {/* Middle/Right: Time & Consultant */}
               <div className="flex flex-col lg:items-end gap-1.5 min-w-[220px]">
-                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0a2540] bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/80">
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F222D] bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/80">
                   <Clock className="h-3.5 w-3.5 text-slate-500" />
                   {new Date(app.scheduledAt).toLocaleDateString('it-IT', { 
                     weekday: 'short', 
@@ -204,27 +203,27 @@ export const CallCenterAgenda: React.FC<CallCenterAgendaProps> = ({
                 </div>
 
                 <div className="text-xs text-[#425466]">
-                  Specialist: <strong className="text-[#0a2540]">{app.agentName}</strong>
+                  Specialist: <strong className="text-[#0F222D]">{app.agentName}</strong>
                 </div>
 
                 <div>{getStatusBadge(app.status)}</div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 border-t lg:border-t-0 border-[#e3e8ee] pt-3 lg:pt-0">
+              <div className="flex items-center gap-2 border-t lg:border-t-0 border-[#DCE5E8] pt-3 lg:pt-0">
                 {app.status === 'scheduled' && (
                   <>
                     <button
                       onClick={() => onConvertToCustomer(app)}
                       className="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs inline-flex items-center gap-1.5 shadow-[0_1px_2px_rgba(5,150,105,0.3)] transition-all cursor-pointer"
                     >
-                      <Sparkles className="h-3.5 w-3.5" />
+                      <CheckCircle2 className="h-3.5 w-3.5" />
                       Chiudi Vendita & Inserisci in CRM
                     </button>
 
                     <button
                       onClick={() => onUpdateStatus(app.id, 'cancelled')}
-                      className="p-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      className="p-2 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                       title="Annulla appuntamento"
                     >
                       <XCircle className="h-4 w-4" />

@@ -6,8 +6,7 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Download, 
-  Users, 
-  Sparkles
+  Users
 } from 'lucide-react';
 import { Customer, UtilityPoint } from '../types';
 
@@ -236,7 +235,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
       {/* Backdrop */}
       <div 
         onClick={onClose}
-        className="fixed inset-0 bg-[#0a2540]/50 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 bg-[#0F222D]/50 backdrop-blur-xs transition-opacity" 
       />
 
       {/* Modal Dialog */}
@@ -244,21 +243,21 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="import-customers-title"
-        className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]"
+        className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#DCE5E8] shadow-[0_25px_60px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]"
       >
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-[#e3e8ee] bg-gradient-to-r from-slate-50 via-white to-indigo-50/40 flex items-start justify-between">
+        <div className="p-4 sm:p-6 border-b border-[#DCE5E8] bg-gradient-to-r from-slate-50 via-white to-[#EAF4F0]/40 flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#635bff] uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A6847] uppercase tracking-wider">
                 <FileSpreadsheet className="h-4 w-4" />
                 Importazione Massiva
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-[#635bff] font-bold text-[10px]">
+              <span className="px-2 py-0.5 rounded-full bg-[#EAF4F0] text-[#0A6847] font-bold text-[10px]">
                 CSV / Excel
               </span>
             </div>
-            <h3 id="import-customers-title" className="text-lg sm:text-xl font-bold text-[#0a2540] tracking-tight mt-1">
+            <h3 id="import-customers-title" className="text-lg sm:text-xl font-bold text-[#0F222D] tracking-tight mt-1">
               Importa Clienti & Punti POD/PDR
             </h3>
             <p className="text-xs text-[#425466] mt-0.5">
@@ -278,9 +277,9 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
         {/* Content Body */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5 text-xs">
           {/* Quick Actions & Template */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100">
-            <div className="flex items-center gap-2 text-indigo-900">
-              <Sparkles className="h-4 w-4 text-[#635bff] shrink-0" />
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-[#EAF4F0]/50 rounded-xl border border-[#D5E6DF]">
+            <div className="flex items-center gap-2 text-[#0A3B40]">
+              <CheckCircle2 className="h-4 w-4 text-[#0A6847] shrink-0" />
               <span className="font-medium text-xs">
                 Hai un file da altri gestionali o vuoi testare subito?
               </span>
@@ -289,7 +288,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadTemplate}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-indigo-200 hover:bg-indigo-50 text-[#635bff] font-semibold text-xs transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#BFE0D2] hover:bg-[#EAF4F0] text-[#0A6847] font-semibold text-xs transition-colors cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5" />
                 <span>Scarica Modello CSV</span>
@@ -297,7 +296,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
               <button
                 type="button"
                 onClick={handlePasteDemoData}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs transition-all shadow-2xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-semibold text-xs transition-all shadow-2xs cursor-pointer"
               >
                 <span>Carica 4 Clienti Demo</span>
               </button>
@@ -312,8 +311,8 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all ${
               dragActive 
-                ? 'border-[#635bff] bg-indigo-50/40 scale-[0.99]' 
-                : 'border-[#e3e8ee] hover:border-slate-300 hover:bg-slate-50/50'
+                ? 'border-[#0A6847] bg-[#EAF4F0]/40 scale-[0.99]' 
+                : 'border-[#DCE5E8] hover:border-slate-300 hover:bg-slate-50/50'
             }`}
           >
             <input 
@@ -327,10 +326,10 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
                 }
               }}
             />
-            <div className="h-12 w-12 rounded-xl bg-indigo-50 text-[#635bff] flex items-center justify-center mx-auto mb-3">
+            <div className="h-12 w-12 rounded-xl bg-[#EAF4F0] text-[#0A6847] flex items-center justify-center mx-auto mb-3">
               <UploadCloud className="h-6 w-6" />
             </div>
-            <p className="font-bold text-[#0a2540] text-sm mb-1">
+            <p className="font-bold text-[#0F222D] text-sm mb-1">
               {fileName ? fileName : 'Trascina qui il tuo file CSV o clicca per sfogliare'}
             </p>
             <p className="text-slate-500 text-xs">
@@ -343,7 +342,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm text-[#0a2540]">Anteprima Dati Rilevati</span>
+                  <span className="font-bold text-sm text-[#0F222D]">Anteprima Dati Rilevati</span>
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs">
                     {validCount} su {parsedRows.length} record pronti
                   </span>
@@ -356,9 +355,9 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
                 )}
               </div>
 
-              <div className="border border-[#e3e8ee] rounded-xl overflow-hidden max-h-56 overflow-y-auto">
+              <div className="border border-[#DCE5E8] rounded-xl overflow-hidden max-h-56 overflow-y-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#f8fafc] text-[#425466] font-semibold border-b border-[#e3e8ee] sticky top-0">
+                  <thead className="bg-[#f8fafc] text-[#425466] font-semibold border-b border-[#DCE5E8] sticky top-0">
                     <tr>
                       <th className="py-2.5 px-3">Cliente</th>
                       <th className="py-2.5 px-3">CF / P.IVA</th>
@@ -368,10 +367,10 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
                       <th className="py-2.5 px-3 text-center">Stato</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#e3e8ee]">
+                  <tbody className="divide-y divide-[#DCE5E8]">
                     {parsedRows.map((row, idx) => (
                       <tr key={idx} className={row.isValid ? 'hover:bg-slate-50' : 'bg-rose-50/30'}>
-                        <td className="py-2 px-3 font-semibold text-[#0a2540]">{row.name}</td>
+                        <td className="py-2 px-3 font-semibold text-[#0F222D]">{row.name}</td>
                         <td className="py-2 px-3 font-mono text-slate-700">{row.fiscalCode}</td>
                         <td className="py-2 px-3 text-slate-500">{row.city} • {row.phone}</td>
                         <td className="py-2 px-3">
@@ -408,11 +407,11 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-[#e3e8ee] bg-slate-50/50 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <div className="p-4 sm:p-6 border-t border-[#DCE5E8] bg-slate-50/50 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] px-4 py-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-100 text-[#425466] font-semibold cursor-pointer text-center"
+            className="min-h-[44px] px-4 py-2 rounded-lg border border-[#DCE5E8] hover:bg-slate-100 text-[#425466] font-semibold cursor-pointer text-center"
           >
             Annulla
           </button>
@@ -421,7 +420,7 @@ export const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({
             type="button"
             disabled={validCount === 0 || isProcessing || importSuccess}
             onClick={handleConfirmImport}
-            className="min-h-[44px] px-6 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-h-[44px] px-6 py-2 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {importSuccess ? (
               <>

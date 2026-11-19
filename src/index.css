@@ -2,78 +2,110 @@
 
 @layer base {
   :root {
-    --stripe-bg: #f6f9fc;
-    --stripe-card: #ffffff;
-    --stripe-border: #e3e8ee;
-    --stripe-navy: #0a2540;
-    --stripe-muted: #425466;
-    --stripe-blurple: #635bff;
-    --stripe-blurple-hover: #5851ea;
+    --volta-petrol: #0A3B40;
+    --volta-petrol-deep: #072B2F;
+    --volta-emerald: #0A6847;
+    --volta-emerald-hover: #085238;
+    --volta-emerald-tint: #EAF4F0;
+    --volta-ink: #0F222D;
+    --volta-sub: #445966;
+    --volta-ground: #F6F9FA;
+    --volta-surface: #FFFFFF;
+    --volta-border: #DCE5E8;
+
+    /* Backward-compatible semantic aliases */
+    --stripe-bg: #F6F9FA;
+    --stripe-card: #FFFFFF;
+    --stripe-border: #DCE5E8;
+    --stripe-navy: #0F222D;
+    --stripe-muted: #445966;
+    --stripe-blurple: #0A6847;
+    --stripe-blurple-hover: #085238;
   }
 
   body {
-    background-color: var(--stripe-bg);
-    color: var(--stripe-navy);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--volta-ground);
+    color: var(--volta-ink);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
   }
+
+  h1, h2, h3 {
+    font-family: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
+    text-wrap: balance;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
 }
 
-/* Custom Stripe UI Utility Classes */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unified Volta Surface & Badge Utilities */
 .stripe-card {
-  background-color: #ffffff;
-  border: 1px solid #e3e8ee;
-  border-radius: 16px;
-  box-shadow: 0 2px 5px rgba(60, 66, 87, 0.04), 0 1px 1px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: var(--volta-surface);
+  border: 1px solid var(--volta-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(10, 59, 64, 0.04);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .stripe-card-hover:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 20px rgba(60, 66, 87, 0.08), 0 3px 6px rgba(0, 0, 0, 0.05);
-  transform: translateY(-1px);
+  border-color: #BDD0D6;
+  box-shadow: 0 8px 20px rgba(10, 59, 64, 0.07);
 }
 
 .stripe-badge-neutral {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  font-size: 0.6875rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  background-color: #f1f5f9;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background-color: #EDF3F5;
+  color: #334A57;
+  border: 1px solid #DCE5E8;
 }
 
 .stripe-badge-success {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  font-size: 0.6875rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 600;
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background-color: #EAF4F0;
+  color: #0A6847;
+  border: 1px solid #BFE0D2;
 }
 
 .stripe-badge-blurple {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  font-size: 0.6875rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 600;
-  background-color: #eef2ff;
-  color: #4f46e5;
-  border: 1px solid #c7d2fe;
+  background-color: #EAF4F0;
+  color: #0A3B40;
+  border: 1px solid #BFE0D2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Print optimization for Proposal PDF */
@@ -88,26 +120,17 @@
     color: #000000 !important;
   }
 
-  /* Hide all background app components during print */
   header, nav, aside, footer, .print\:hidden, [role="tablist"] {
     display: none !important;
   }
 
-  /* Ensure printable proposal takes full page without clipping */
   #printable-proposal {
     display: block !important;
     position: static !important;
     width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
     margin: 0 !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    overflow: visible !important;
-  }
-
-  /* Prevent awkward page breaks inside cards and tables */
-  .border, tr {
-    break-inside: avoid;
   }
 }

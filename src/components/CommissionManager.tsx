@@ -294,18 +294,18 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
   return (
     <div className="space-y-6">
       {/* Intestazione Sezione */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e3e8ee]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#DCE5E8]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#635bff] uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A6847] uppercase tracking-wider">
               <Coins className="h-4 w-4" />
               Modulo Provvigioni & Compensi
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-[#635bff] text-[10px] font-bold">
+            <span className="px-2 py-0.5 rounded-full bg-[#EAF4F0] border border-[#BFE0D2] text-[#0A6847] text-[10px] font-bold">
               Energy Compensation 2026
             </span>
           </div>
-          <h1 className="text-xl font-bold text-[#0a2540] tracking-tight mt-1">
+          <h1 className="text-xl font-bold text-[#0F222D] tracking-tight mt-1">
             Registro Provvigioni & Liquidazione Distinte Agenti
           </h1>
           <p className="text-xs text-[#425466] mt-0.5">
@@ -318,7 +318,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             type="button"
             onClick={loadData}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-xs font-medium text-[#0a2540] transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#DCE5E8] bg-white hover:bg-slate-50 text-xs font-medium text-[#0F222D] transition-colors cursor-pointer shadow-2xs"
             title="Ricarica dati provvigionali dal backend"
           >
             <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${isLoading ? 'animate-spin' : ''}`} />
@@ -329,7 +329,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <button
               type="button"
               onClick={() => handleOpenSettleModal(summaries[0].agentId)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
             >
               <Wallet className="h-3.5 w-3.5" />
               <span>Nuova Liquidazione</span>
@@ -340,14 +340,14 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
 
       {/* 4 KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
+        <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-xs font-medium text-[#425466]">Maturato da Liquidare</span>
             <div className="p-1.5 rounded-md bg-amber-50 text-amber-600">
               <Clock className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-[#0a2540]">
+          <div className="text-2xl font-bold font-mono text-[#0F222D]">
             € {totalAccruedEur.toFixed(2)}
           </div>
           <span className="text-[11px] font-medium text-amber-700 block">
@@ -355,14 +355,14 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
+        <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-xs font-medium text-[#425466]">Già Liquidato (Anno)</span>
             <div className="p-1.5 rounded-md bg-emerald-50 text-emerald-600">
               <CheckCircle2 className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-[#0a2540]">
+          <div className="text-2xl font-bold font-mono text-[#0F222D]">
             € {totalSettledEur.toFixed(2)}
           </div>
           <span className="text-[11px] font-medium text-emerald-700 block">
@@ -370,14 +370,14 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
+        <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-xs font-medium text-[#425466]">In Attivazione (Stima)</span>
             <div className="p-1.5 rounded-md bg-sky-50 text-sky-600">
               <ArrowUpRight className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-[#0a2540]">
+          <div className="text-2xl font-bold font-mono text-[#0F222D]">
             € {totalPendingEur.toFixed(2)}
           </div>
           <span className="text-[11px] font-medium text-sky-700 block">
@@ -385,28 +385,28 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
+        <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
           <div className="flex justify-between items-center text-slate-400">
             <span className="text-xs font-medium text-[#425466]">Contratti a Premio</span>
-            <div className="p-1.5 rounded-md bg-indigo-50 text-[#635bff]">
+            <div className="p-1.5 rounded-md bg-[#EAF4F0] text-[#0A6847]">
               <Award className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold font-mono text-[#0a2540]">
+          <div className="text-2xl font-bold font-mono text-[#0F222D]">
             {totalContracts}
           </div>
-          <span className="text-[11px] font-medium text-indigo-700 block">
+          <span className="text-[11px] font-medium text-[#0A6847] block">
             Media € {(totalContracts > 0 ? (totalAccruedEur + totalSettledEur) / totalContracts : 0).toFixed(2)} / fornitura
           </span>
         </div>
       </div>
 
       {/* Sezione Agenti / Leaderboard */}
-      <div className="p-5 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
+      <div className="p-5 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-[#635bff]" />
-            <h2 className="text-sm font-bold text-[#0a2540]">
+            <User className="h-4 w-4 text-[#0A6847]" />
+            <h2 className="text-sm font-bold text-[#0F222D]">
               Performance & Saldo Provvigionale Consulenti Commerciali
             </h2>
           </div>
@@ -419,15 +419,15 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
           {summaries.map((agent) => (
             <div 
               key={agent.agentId}
-              className="p-4 rounded-xl border border-[#e3e8ee] bg-slate-50/50 hover:bg-slate-50 hover:border-[#635bff]/40 transition-all flex flex-col justify-between space-y-3"
+              className="p-4 rounded-xl border border-[#DCE5E8] bg-slate-50/50 hover:bg-slate-50 hover:border-[#0A6847]/40 transition-all flex flex-col justify-between space-y-3"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-full bg-[#635bff] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                  <div className="h-9 w-9 rounded-full bg-[#0A6847] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                     {agent.agentName.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-[#0a2540] leading-snug">
+                    <h3 className="text-xs font-bold text-[#0F222D] leading-snug">
                       {agent.agentName}
                     </h3>
                     <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
@@ -460,9 +460,9 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                   type="button"
                   onClick={() => handleOpenSettleModal(agent.agentId)}
                   disabled={agent.accruedAmountEur === 0}
-                  className="w-full py-1.5 px-3 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-100 text-xs font-semibold text-[#0a2540] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
+                  className="w-full py-1.5 px-3 rounded-lg border border-[#DCE5E8] bg-white hover:bg-slate-100 text-xs font-semibold text-[#0F222D] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
                 >
-                  <Wallet className="h-3.5 w-3.5 text-[#635bff]" />
+                  <Wallet className="h-3.5 w-3.5 text-[#0A6847]" />
                   <span>Emetti Distinta Liquidazione</span>
                 </button>
               ) : (
@@ -476,12 +476,12 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
       </div>
 
       {/* Registro Dettagliato Provvigioni */}
-      <div className="p-5 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
+      <div className="p-5 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
         {/* Barra Filtri e Ricerca */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[#635bff]" />
-            <h2 className="text-sm font-bold text-[#0a2540]">
+            <FileText className="h-4 w-4 text-[#0A6847]" />
+            <h2 className="text-sm font-bold text-[#0F222D]">
               Registro Singole Voci Provvigionali
             </h2>
             <span className="text-xs text-slate-400">({filteredCommissions.length} record)</span>
@@ -496,7 +496,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Cerca cliente, POD o agente..."
-                className="pl-8 pr-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#635bff] text-xs w-48 sm:w-56"
+                className="pl-8 pr-3 py-1.5 rounded-lg border border-[#DCE5E8] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#0A6847] text-xs w-48 sm:w-56"
               />
             </div>
 
@@ -504,7 +504,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <select
               value={selectedAgentFilter}
               onChange={(e) => setSelectedAgentFilter(e.target.value)}
-              className="py-1.5 px-2.5 rounded-lg border border-[#e3e8ee] bg-white text-slate-700 text-xs focus:outline-none focus:border-[#635bff]"
+              className="py-1.5 px-2.5 rounded-lg border border-[#DCE5E8] bg-white text-slate-700 text-xs focus:outline-none focus:border-[#0A6847]"
             >
               <option value="all">Tutti gli agenti</option>
               {summaries.map(s => (
@@ -516,7 +516,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <select
               value={selectedStatusFilter}
               onChange={(e) => setSelectedStatusFilter(e.target.value)}
-              className="py-1.5 px-2.5 rounded-lg border border-[#e3e8ee] bg-white text-slate-700 text-xs focus:outline-none focus:border-[#635bff]"
+              className="py-1.5 px-2.5 rounded-lg border border-[#DCE5E8] bg-white text-slate-700 text-xs focus:outline-none focus:border-[#0A6847]"
             >
               <option value="all">Tutti gli stati</option>
               <option value="accrued">Maturata (da liquidare)</option>
@@ -528,7 +528,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <select
               value={selectedTypeFilter}
               onChange={(e) => setSelectedTypeFilter(e.target.value)}
-              className="py-1.5 px-2.5 rounded-lg border border-[#e3e8ee] bg-white text-slate-700 text-xs focus:outline-none focus:border-[#635bff]"
+              className="py-1.5 px-2.5 rounded-lg border border-[#DCE5E8] bg-white text-slate-700 text-xs focus:outline-none focus:border-[#0A6847]"
             >
               <option value="all">Tutte le tipologie</option>
               <option value="upfront">Gettone Upfront</option>
@@ -540,10 +540,10 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <button
               type="button"
               onClick={handleExportLedgerCsv}
-              className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-[#DCE5E8] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
               title="Esporta registro provvigionale filtrato in formato CSV (Excel / Contabilità)"
             >
-              <Download className="h-3.5 w-3.5 text-[#635bff]" />
+              <Download className="h-3.5 w-3.5 text-[#0A6847]" />
               <span>Esporta CSV</span>
             </button>
           </div>
@@ -577,7 +577,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                       {c.agentName}
                     </td>
                     <td className="py-2.5 px-3">
-                      <div className="font-semibold text-[#0a2540]">{c.customerName}</div>
+                      <div className="font-semibold text-[#0F222D]">{c.customerName}</div>
                       <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
                         {c.utilityType === 'luce' ? (
                           <Zap className="h-3 w-3 text-amber-500 inline" />
@@ -601,7 +601,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                         {c.type === 'upfront' ? 'Gettone Attivazione' : c.type === 'recurring' ? 'Ricorrente Consumo' : 'Bonus Dual Fuel'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-sm text-[#0a2540] whitespace-nowrap">
+                    <td className="py-2.5 px-3 font-mono font-bold text-sm text-[#0F222D] whitespace-nowrap">
                       € {c.amountEur.toFixed(2)}
                     </td>
                     <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
@@ -643,11 +643,11 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
       </div>
 
       {/* Storico Distinte di Liquidazione & Bonifici SEPA */}
-      <div className="p-5 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
+      <div className="p-5 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-[#635bff]" />
-            <h2 className="text-sm font-bold text-[#0a2540]">
+            <Wallet className="h-4 w-4 text-[#0A6847]" />
+            <h2 className="text-sm font-bold text-[#0F222D]">
               Distinte di Liquidazione & Ordini di Bonifico SEPA
             </h2>
             <span className="text-xs text-slate-400">({batches.length} distinte emesse)</span>
@@ -681,8 +681,8 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
               ) : (
                 batches.map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3 font-mono font-bold text-[#0a2540] whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-[#635bff]">
+                    <td className="py-2.5 px-3 font-mono font-bold text-[#0F222D] whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded bg-[#EAF4F0] border border-[#BFE0D2] text-[#0A6847]">
                         {b.paymentReference}
                       </span>
                     </td>
@@ -710,10 +710,10 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                       <button
                         type="button"
                         onClick={() => handleExportBatchCsv(b)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-[#e3e8ee] hover:bg-slate-100 text-[#0a2540] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-[#DCE5E8] hover:bg-slate-100 text-[#0F222D] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                         title="Scarica distinta in formato CSV per bonifico bancario SEPA"
                       >
-                        <Download className="h-3 w-3 text-[#635bff]" />
+                        <Download className="h-3 w-3 text-[#0A6847]" />
                         <span>Esporta CSV</span>
                       </button>
                     </td>
@@ -730,15 +730,15 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
         <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-12 flex items-center justify-center">
           <div 
             onClick={() => setIsSettleModalOpen(false)}
-            className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity" 
+            className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-xs transition-opacity" 
           />
 
-          <div className="relative w-full max-w-2xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6 text-xs max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white rounded-xl border border-[#DCE5E8] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6 text-xs max-h-[90vh] overflow-y-auto">
             {/* Header Modal */}
-            <div className="flex justify-between items-start border-b border-[#e3e8ee] pb-4">
+            <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#635bff] uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0A6847] uppercase tracking-wider">
                     <Wallet className="h-3.5 w-3.5" />
                     Emissione Distinta Contabile
                   </span>
@@ -746,7 +746,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                     Approvazione Pagamento
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-[#0a2540] mt-0.5">
+                <h3 className="text-lg font-bold text-[#0F222D] mt-0.5">
                   Liquidazione Competenze per {targetAgentSummary.agentName}
                 </h3>
                 <p className="text-xs text-[#425466]">
@@ -759,12 +759,12 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             </div>
 
             {/* Riepilogo Selezionato */}
-            <div className="p-3.5 rounded-lg bg-indigo-50/60 border border-indigo-100 flex items-center justify-between">
+            <div className="p-3.5 rounded-lg bg-[#EAF4F0]/60 border border-[#D5E6DF] flex items-center justify-between">
               <div>
                 <span className="text-[11px] text-[#425466] font-medium block">
                   Totale Selezionato per il Pagamento:
                 </span>
-                <span className="text-2xl font-bold font-mono text-[#635bff]">
+                <span className="text-2xl font-bold font-mono text-[#0A6847]">
                   € {selectedSettleAmount.toFixed(2)}
                 </span>
               </div>
@@ -781,7 +781,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                       setSelectedCommissionIds(targetAgentAccruedList.map(c => c.id));
                     }
                   }}
-                  className="text-[11px] text-[#635bff] font-semibold hover:underline cursor-pointer"
+                  className="text-[11px] text-[#0A6847] font-semibold hover:underline cursor-pointer"
                 >
                   {selectedCommissionIds.length === targetAgentAccruedList.length ? 'Deseleziona Tutto' : 'Seleziona Tutte'}
                 </button>
@@ -817,7 +817,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                                 setSelectedCommissionIds(prev => prev.filter(id => id !== c.id));
                               }
                             }}
-                            className="rounded border-slate-300 text-[#635bff] focus:ring-[#635bff]"
+                            className="rounded border-slate-300 text-[#0A6847] focus:ring-[#0A6847]"
                           />
                           <div>
                             <div className="font-semibold text-slate-800">{c.customerName}</div>
@@ -846,7 +846,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                   type="text"
                   value={paymentReference}
                   onChange={(e) => setPaymentReference(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono text-xs font-bold text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono text-xs font-bold text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
                 />
               </div>
 
@@ -859,17 +859,17 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                   value={settleNotes}
                   onChange={(e) => setSettleNotes(e.target.value)}
                   placeholder="Es. Bonifico competenze settimanali"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-[#635bff]"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-[#0A6847]"
                 />
               </div>
             </div>
 
             {/* Footer Modal */}
-            <div className="flex items-center justify-between pt-4 border-t border-[#e3e8ee]">
+            <div className="flex items-center justify-between pt-4 border-t border-[#DCE5E8]">
               <button
                 type="button"
                 onClick={() => setIsSettleModalOpen(false)}
-                className="px-3.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-[#425466] font-medium cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] font-medium cursor-pointer"
               >
                 Annulla
               </button>
@@ -878,7 +878,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                 type="button"
                 onClick={handleConfirmSettle}
                 disabled={isSubmittingSettle || selectedCommissionIds.length === 0}
-                className="px-4 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-medium shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>{isSubmittingSettle ? 'Registrazione...' : `Conferma & Salda € ${selectedSettleAmount.toFixed(2)}`}</span>

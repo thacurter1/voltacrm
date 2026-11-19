@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Cookie, ShieldCheck, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { LegalTab } from './LegalModal';
 
 export interface CookieBannerProps {
@@ -27,58 +27,37 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({ onOpenLegal }) => {
     setIsVisible(false);
   };
 
-  const handleOpenDetails = () => {
-    if (onOpenLegal) {
-      onOpenLegal('privacy');
-    }
-  };
-
   if (!isVisible) return null;
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 z-50 p-3 sm:p-4 animate-in slide-in-from-bottom duration-300 pointer-events-none"
+      className="fixed bottom-0 inset-x-0 z-50 border-t border-white/15 bg-[#0A3B40] text-white shadow-lg"
       role="region"
       aria-label="Informativa sui cookie"
     >
-      <div className="mx-auto max-w-4xl rounded-2xl bg-[#0a2540] text-white p-4 sm:p-5 shadow-2xl border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pointer-events-auto">
-        <div className="flex items-start gap-3.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#635bff] text-white shrink-0 mt-0.5">
-            <Cookie className="size-5" />
-          </span>
-          <div className="space-y-1 text-xs sm:text-sm text-slate-300">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-white">Informativa Cookie & Privacy</span>
-              <span className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
-                <ShieldCheck className="size-3" />
-                Solo Tecnici
-              </span>
-            </div>
-            <p className="leading-relaxed">
-              Volta Energia adotta esclusivamente <strong>cookie tecnici essenziali</strong> per il funzionamento sicuro del comparatore e la memorizzazione della sessione. Nessun cookie di profilazione commerciale o cessione a terzi.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm">
+        <p className="text-[#D7E6E8] leading-snug">
+          <strong className="text-white">Solo cookie tecnici essenziali:</strong> questo sito non utilizza cookie di profilazione commerciale o cessione a terzi.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
           <button
             type="button"
-            onClick={handleOpenDetails}
-            className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition focus-visible:outline-2 focus-visible:outline-[#635bff]"
+            onClick={() => onOpenLegal?.('privacy')}
+            className="min-h-[38px] px-3 py-1.5 rounded-md text-xs font-semibold text-[#D7E6E8] hover:text-white hover:bg-white/10 transition cursor-pointer"
           >
-            Dettagli privacy
+            Informativa privacy
           </button>
           <button
             type="button"
             onClick={handleAccept}
-            className="rounded-xl bg-[#635bff] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#534be5] transition focus-visible:outline-2 focus-visible:outline-[#635bff]"
+            className="min-h-[38px] px-4 py-1.5 rounded-md bg-white hover:bg-[#F1F5F6] text-[#0A3B40] text-xs font-bold transition cursor-pointer"
           >
             Accetta ed esplora
           </button>
           <button
             type="button"
             onClick={handleAccept}
-            className="p-2 text-slate-400 hover:text-white transition sm:hidden"
+            className="p-2 text-[#D7E6E8] hover:text-white sm:hidden cursor-pointer"
             aria-label="Chiudi avviso cookie"
           >
             <X className="size-4" />
