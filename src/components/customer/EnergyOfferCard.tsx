@@ -31,7 +31,7 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
       : 'PSV + spread';
 
   return (
-    <article className="bg-white rounded-2xl border border-slate-200 hover:border-[#635bff]/60 hover:shadow-[0_10px_30px_rgba(10,37,64,0.06)] transition-all p-4 sm:p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 w-full min-w-0">
+    <article className="bg-white rounded-2xl border border-slate-200 hover:border-brand/60 hover:shadow-[0_10px_30px_rgba(10,37,64,0.06)] transition-all p-4 sm:p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 w-full min-w-0">
       {/* Colonna Sinistra: Badges, Titolo Offerta e Dettagli Tariffari */}
       <div className="flex-1 min-w-0 w-full">
         <div className="space-y-2.5 flex-1">
@@ -41,14 +41,14 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
               {offer.supplier}
             </span>
             {offer.tag && (
-              <span className="text-xs font-bold text-[#635bff] bg-[#635bff]/10 border border-[#635bff]/25 px-2.5 py-0.5 rounded-md">
+              <span className="text-xs font-bold text-brand bg-brand/10 border border-brand/25 px-2.5 py-0.5 rounded-md">
                 {offer.tag}
               </span>
             )}
             <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-md border ${
               offer.pricingType === 'fixed'
                 ? 'bg-sky-50 text-sky-700 border-sky-200'
-                : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
             }`}>
               {pricingTypeLabel}
             </span>
@@ -65,7 +65,7 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
             )}
           </div>
 
-          <h3 className="text-xl font-bold text-[#0a2540] leading-snug break-words">
+          <h3 className="text-xl font-bold text-ink leading-snug break-words">
             {offer.name}
           </h3>
 
@@ -107,7 +107,7 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
           {monthlyCost !== null && annualCost !== null ? (
             <div>
               <div className="flex items-baseline gap-1.5 lg:justify-end">
-                <span className="text-3xl sm:text-4xl font-black text-[#0a2540] tracking-tight">
+                <span className="text-3xl sm:text-4xl font-black text-ink tracking-tight">
                   ~€{monthlyCost}
                 </span>
                 <span className="text-sm font-bold text-slate-500">/ mese</span>
@@ -153,7 +153,7 @@ export const EnergyOfferCard: React.FC<EnergyOfferCardProps> = ({
         <button
           type="button"
           onClick={() => onViewDetails(comparison)}
-          className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-[#635bff] hover:bg-[#5851ea] active:bg-[#4b43d6] active:scale-[0.99] text-white text-sm font-bold transition-all shadow-xs hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
+          className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-hover active:scale-[0.99] text-white text-sm font-bold transition-all shadow-xs hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         >
           <span>Dettagli e condizioni</span>
           <ArrowRight className="w-4 h-4" />

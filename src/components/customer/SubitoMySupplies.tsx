@@ -22,7 +22,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
       {/* Overview Card */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-[#0a2540]">Le tue forniture e bollette</h2>
+          <h2 className="text-2xl font-bold text-ink">Le tue forniture e bollette</h2>
           <p className="text-sm font-medium text-slate-700">{customer.name}</p>
           <p className="text-sm text-slate-600">Qui trovi i punti di fornitura e lo stato delle bollette caricate.</p>
         </div>
@@ -31,7 +31,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <button
             onClick={onUploadBill}
-            className="px-4 py-2.5 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <Upload className="w-4 h-4" />
             <span>Carica Nuova Bolletta</span>
@@ -44,23 +44,23 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
         <button
           onClick={() => setActiveTab('supplies')}
           className={`pb-3 relative transition-colors cursor-pointer ${
-            activeTab === 'supplies' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
+            activeTab === 'supplies' ? 'text-brand' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <span>Punti di Fornitura ({customer.utilityPoints?.length || 0})</span>
           {activeTab === 'supplies' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#635bff] rounded-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
           )}
         </button>
         <button
           onClick={() => setActiveTab('bills')}
           className={`pb-3 relative transition-colors cursor-pointer ${
-            activeTab === 'bills' ? 'text-[#635bff]' : 'text-slate-500 hover:text-slate-800'
+            activeTab === 'bills' ? 'text-brand' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <span>Storico Bollette ({bills.length})</span>
           {activeTab === 'bills' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#635bff] rounded-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
           )}
         </button>
       </div>
@@ -69,7 +69,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
       {activeTab === 'supplies' && (
         (!customer.utilityPoints || customer.utilityPoints.length === 0) ? (
           <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4 shadow-xs">
-            <div className="w-14 h-14 bg-[#635bff]/10 text-[#635bff] rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 bg-brand/10 text-brand rounded-2xl flex items-center justify-center mx-auto">
               <Zap className="w-7 h-7" />
             </div>
             <div>
@@ -80,7 +80,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
             </div>
             <button
               onClick={onUploadBill}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#635bff] text-white text-xs font-bold shadow-xs hover:bg-[#5851ea] transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand text-white text-xs font-bold shadow-xs hover:bg-brand-hover transition-all cursor-pointer"
             >
               <Upload className="w-4 h-4" />
               <span>Carica la tua prima bolletta</span>
@@ -160,7 +160,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
               <p className="text-xs">Nessuna bolletta caricata finora.</p>
               <button
                 onClick={onUploadBill}
-                className="px-4 py-2 rounded-xl bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
               >
                 Carica la prima bolletta
               </button>
@@ -175,11 +175,11 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                   className="w-full text-left p-4 hover:bg-slate-50 flex items-center justify-between gap-4 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#635bff]/10 text-[#635bff] flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
                       <FileText className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 hover:text-[#635bff] transition-colors">
+                      <h4 className="text-xs font-bold text-slate-900 hover:text-brand transition-colors">
                         {bill.fileName}
                       </h4>
                       <p className="text-[11px] text-slate-400">

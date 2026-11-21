@@ -34,18 +34,18 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
         <button
           type="button"
           aria-label="Volta Energia, torna al confronto"
-          className="flex items-center gap-2.5 sm:gap-3 cursor-pointer shrink-0 text-left rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635bff]"
+          className="flex items-center gap-2.5 sm:gap-3 cursor-pointer shrink-0 text-left rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           onClick={() => onSelectView('offers')}
         >
-          <div className="h-9 w-9 rounded-xl bg-[#635bff] flex items-center justify-center text-white shadow-xs shrink-0">
+          <div className="h-9 w-9 rounded-xl bg-brand flex items-center justify-center text-white shadow-xs shrink-0">
             <Zap className="h-5 w-5 fill-white text-white" strokeWidth={2} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-base text-[#0a2540] tracking-tight">
+              <span className="font-black text-base text-ink tracking-tight">
                 Volta Energia
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand/10 text-brand border border-brand/25">
                 {isPublicVisitor ? 'Confronto luce e gas' : 'PORTALE BOLLETTE'}
               </span>
             </div>
@@ -65,11 +65,11 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
                 onClick={() => onSelectView('offers')}
                 className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
                   activeView === 'offers'
-                    ? 'bg-white text-[#0a2540] shadow-xs'
+                    ? 'bg-white text-ink shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-brand shrink-0" />
                 <span>Confronta Offerte</span>
               </button>
               <button
@@ -77,11 +77,11 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
                 onClick={() => onSelectView('supplies')}
                 className={`min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
                   activeView === 'supplies'
-                    ? 'bg-white text-[#0a2540] shadow-xs'
+                    ? 'bg-white text-ink shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <FileText className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
+                <FileText className="w-3.5 h-3.5 text-brand shrink-0" />
                 <span>Le mie bollette</span>
               </button>
             </nav>
@@ -92,7 +92,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             <button
               type="button"
               onClick={onOpenCustomerLogin}
-              className="min-h-[36px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-95 shrink-0"
+              className="min-h-[36px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-95 shrink-0"
               title="Accedi o registrati all'Area Clienti per vedere bollette e forniture"
             >
               <User className="w-3.5 h-3.5 text-white shrink-0" aria-hidden="true" />
@@ -122,7 +122,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
           )}
 
           {onLogout && !isPublicVisitor && (
-            <button type="button" onClick={onLogout} className="min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#635bff] flex items-center gap-1.5 cursor-pointer">
+            <button type="button" onClick={onLogout} className="min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand flex items-center gap-1.5 cursor-pointer">
               <LogOut className="w-4 h-4" aria-hidden="true" />
               <span>Esci</span>
             </button>
@@ -132,7 +132,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
           {!isPublicVisitor && (
             <div className="hidden md:flex items-center gap-1.5 pl-2 border-l border-slate-200 text-xs">
               <span className="text-slate-400">Utente:</span>
-              <span className="font-bold text-[#0a2540]">{customerName.split(' ')[0]}</span>
+              <span className="font-bold text-ink">{customerName.split(' ')[0]}</span>
             </div>
           )}
 
@@ -141,10 +141,10 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             <button
               type="button"
               onClick={onReturnToBackend}
-              className="min-h-[36px] flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#0a2540] hover:bg-[#1a385c] text-white text-xs font-bold transition shadow-xs cursor-pointer border border-[#635bff]/40 active:scale-95 shrink-0"
+              className="min-h-[36px] flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-ink hover:bg-ink-soft text-white text-xs font-bold transition shadow-xs cursor-pointer border border-brand/40 active:scale-95 shrink-0"
               title="Sessione operatore: torna al gestionale CRM"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#635bff] shrink-0" />
+              <ShieldCheck className="w-3.5 h-3.5 text-brand shrink-0" />
               <span className="hidden sm:inline">Torna al Backend CRM</span>
               <span className="sm:hidden">CRM</span>
             </button>

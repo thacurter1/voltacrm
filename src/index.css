@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+/*
+ * Volta Energia design tokens (public site + customer portal).
+ * Usage in Tailwind: bg-brand, text-ink, border-brand/30, bg-spark, font-display...
+ * Change a value here to restyle every customer screen at once.
+ */
+@theme {
+  --color-brand: #0a7a55;        /* Volta green: CTA, links, selection (5.3:1 on white) */
+  --color-brand-hover: #08664a;
+  --color-brand-soft: #e7f4ee;   /* tinted surfaces, selected rows */
+  --color-ink: #0d2420;          /* headings, dark bands (16:1 on white) */
+  --color-ink-soft: #16352f;     /* hover on dark surfaces */
+  --color-canvas: #f5f6f1;       /* warm off-white page background */
+  --color-spark: #f2c230;        /* amber accent, used on dark surfaces only */
+  --color-spark-soft: #fdf3d3;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-energy: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
 @layer base {
   :root {
     --stripe-bg: #f6f9fc;
@@ -9,6 +27,17 @@
     --stripe-muted: #425466;
     --stripe-blurple: #635bff;
     --stripe-blurple-hover: #5851ea;
+  }
+
+  /* Energy typography, scoped to the customer app root (.volta-energy) so the CRM keeps its font for now */
+  .volta-energy {
+    font-family: var(--font-energy);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+  }
+  .volta-energy :is(h1, h2, h3) {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 
   body {
