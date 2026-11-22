@@ -1,3 +1,4 @@
+import '../styles/energy-staff.css';
 import React, { useState } from 'react';
 import { 
   Zap, 
@@ -151,11 +152,11 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="border-b border-[#e3e8ee] bg-white sticky top-0 z-40">
+    <header className="border-b border-[var(--energy-line)] border-t-2 border-t-[var(--energy-spark)] bg-white sticky top-0 z-40">
       {/* Skip to Main Content Link (WCAG 2.2 AA SC 2.4.1) */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#635bff] focus:text-white focus:font-bold focus:rounded-lg focus:shadow-lg focus:outline-none"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--energy-accent)] focus:text-white focus:font-bold focus:rounded-lg focus:shadow-lg focus:outline-none"
       >
         Salta al contenuto principale
       </a>
@@ -166,17 +167,17 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2 sm:gap-4">
           <div className="flex items-center gap-2 cursor-pointer group">
             <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-white shadow-xs shrink-0 ${
-              isCustomer ? 'bg-emerald-600' : 'bg-[#635bff]'
+              isCustomer ? 'bg-emerald-600' : 'bg-[var(--energy-grid)]'
             }`}>
-              <Zap className="h-4 w-4 fill-white text-white" strokeWidth={2} />
+              <Zap className={`h-4 w-4 ${isCustomer ? 'fill-white text-white' : 'fill-[var(--energy-spark)] text-[var(--energy-spark)]'}`} strokeWidth={2} />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm text-[#0a2540] tracking-tight whitespace-nowrap">Volta Energia</span>
+              <span className="font-bold text-sm text-[var(--energy-ink)] tracking-tight whitespace-nowrap">Volta Energia</span>
               <span className={`hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
                 isCustomer 
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
                   : currentUser.role === 'admin'
-                  ? 'bg-[#635bff]/10 text-[#635bff] border border-[#635bff]/25'
+                  ? 'bg-[var(--energy-accent)]/10 text-[var(--energy-accent)] border border-[var(--energy-accent)]/25'
                   : currentUser.role === 'call_center'
                   ? 'bg-sky-50 text-sky-700 border border-sky-200'
                   : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -193,7 +194,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={onOpenCommandPalette}
                 aria-label="Cerca nel CRM o premi Ctrl+K"
-                className="hidden lg:flex items-center w-64 h-8 px-2.5 rounded-lg bg-slate-50 border border-[#e3e8ee] text-xs text-slate-400 hover:border-slate-300 hover:bg-slate-100 transition-all cursor-pointer justify-between focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
+                className="hidden lg:flex items-center w-64 h-8 px-2.5 rounded-lg bg-slate-50 border border-[var(--energy-line)] text-xs text-slate-400 hover:border-slate-300 hover:bg-slate-100 transition-all cursor-pointer justify-between focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)]"
               >
                 <div className="flex items-center">
                   <Search className="h-3.5 w-3.5 text-slate-400 mr-2 shrink-0" strokeWidth={1.75} />
@@ -214,12 +215,12 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onOpenMarketSimulator}
             aria-label={`Visualizza simulatore indici: PUN a ${marketIndex.punEurKwh.toFixed(3)} euro`}
-            className="flex sm:hidden items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] text-[11px] cursor-pointer hover:bg-slate-100 transition-colors"
+            className="flex sm:hidden items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-[var(--energy-line)] text-[11px] cursor-pointer hover:bg-slate-100 transition-colors"
             title="Clicca per visualizzare simulatore e fasce F1/F2/F3"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-slate-500 font-medium">PUN:</span>
-            <span className="font-semibold text-[#0a2540] font-mono">
+            <span className="font-semibold text-[var(--energy-ink)] font-mono">
               {marketIndex.punEurKwh.toFixed(3)}€
             </span>
           </button>
@@ -234,10 +235,10 @@ export const Header: React.FC<HeaderProps> = ({
               title={`Clicca per simulare scenari PUN/PSV o vedere fasce F1/F2/F3. Ultimo aggiornamento: ${marketIndex.lastUpdated}`}
             >
               {/* PUN Pill */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] group-hover:border-[#635bff]/40 text-xs transition-colors">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-[var(--energy-line)] group-hover:border-[var(--energy-accent)]/40 text-xs transition-colors">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-slate-500 font-medium">PUN:</span>
-                <span className="font-semibold text-[#0a2540] tabular-nums font-mono">
+                <span className="font-semibold text-[var(--energy-ink)] tabular-nums font-mono">
                   {marketIndex.punEurKwh.toFixed(4)} €
                 </span>
                 {marketIndex.punChangePercent !== undefined && (
@@ -259,10 +260,10 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* PSV Pill */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-[#e3e8ee] group-hover:border-[#635bff]/40 text-xs transition-colors">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-[var(--energy-line)] group-hover:border-[var(--energy-accent)]/40 text-xs transition-colors">
                 <span className="h-2 w-2 rounded-full bg-sky-500" />
                 <span className="text-slate-500 font-medium">PSV:</span>
-                <span className="font-semibold text-[#0a2540] tabular-nums font-mono">
+                <span className="font-semibold text-[var(--energy-ink)] tabular-nums font-mono">
                   {marketIndex.psvEurSmc.toFixed(4)} €
                 </span>
                 {marketIndex.psvChangePercent !== undefined && (
@@ -281,7 +282,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {marketIndex.psvChangePercent > 0 ? '+' : ''}{marketIndex.psvChangePercent}%
                   </span>
                 )}
-                <SlidersHorizontal className="h-3 w-3 text-slate-400 group-hover:text-[#635bff] ml-0.5" />
+                <SlidersHorizontal className="h-3 w-3 text-slate-400 group-hover:text-[var(--energy-accent)] ml-0.5" />
               </div>
             </button>
 
@@ -292,10 +293,10 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onRefreshMarketIndex}
                 disabled={isRefreshingMarketIndex}
                 aria-label="Aggiorna quotazioni PUN e PSV in tempo reale dal GME"
-                className="p-1.5 rounded-md border border-[#e3e8ee] bg-white hover:bg-slate-50 text-slate-500 hover:text-[#635bff] transition-colors disabled:opacity-50 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
+                className="p-1.5 rounded-md border border-[var(--energy-line)] bg-white hover:bg-slate-50 text-slate-500 hover:text-[var(--energy-accent)] transition-colors disabled:opacity-50 cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)]"
                 title={`Aggiorna feed GME in tempo reale (Ultimo: ${marketIndex.lastUpdated})`}
               >
-                <RefreshCw className={`h-3 w-3 ${isRefreshingMarketIndex ? 'animate-spin text-[#635bff]' : ''}`} />
+                <RefreshCw className={`h-3 w-3 ${isRefreshingMarketIndex ? 'animate-spin text-[var(--energy-accent)]' : ''}`} />
               </button>
             )}
           </div>
@@ -307,7 +308,7 @@ export const Header: React.FC<HeaderProps> = ({
                   type="button"
                   onClick={onOpenAddCustomer}
                   aria-label="Registra manualmente un nuovo cliente"
-                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold shadow-2xs cursor-pointer transition-all active:scale-[0.99] focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white text-xs font-bold shadow-2xs cursor-pointer transition-all active:scale-[0.99] focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)]"
                   title="Registra manualmente un nuovo cliente con relative forniture"
                 >
                   <UserPlus className="h-3.5 w-3.5" />
@@ -319,9 +320,9 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={onOpenBillOcr}
                 aria-label="Analisi e scansione OCR Bolletta"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e3e8ee] bg-white hover:bg-slate-50 text-xs font-semibold text-[#0a2540] shadow-2xs cursor-pointer transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--energy-line)] bg-white hover:bg-slate-50 text-xs font-semibold text-[var(--energy-ink)] shadow-2xs cursor-pointer transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)]"
               >
-                <FileSearch className="h-3.5 w-3.5 text-[#635bff]" />
+                <FileSearch className="h-3.5 w-3.5 text-[var(--energy-accent)]" />
                 <span>OCR Bolletta</span>
               </button>
 
@@ -330,7 +331,7 @@ export const Header: React.FC<HeaderProps> = ({
                   type="button"
                   onClick={onOpenTotem}
                   aria-label="Attiva Totem Kiosk per negozio o punto vendita"
-                  className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#00d4aa]/40 bg-[#00d4aa]/10 hover:bg-[#00d4aa]/20 text-xs font-bold text-[#0a2540] shadow-2xs cursor-pointer transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#00d4aa]"
+                  className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--energy-spark)]/40 bg-[var(--energy-spark)]/10 hover:bg-[var(--energy-spark)]/20 text-xs font-bold text-[var(--energy-ink)] shadow-2xs cursor-pointer transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-spark)]"
                   title="Attiva Totem Kiosk per il negozio o centro commerciale"
                 >
                   <span>🖥️ Kiosk Point</span>
@@ -350,16 +351,16 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onOpenLogin}
             aria-label={`Profilo utente attuale: ${currentUser.name}. Clicca per cambiare profilo`}
-            className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 hover:opacity-80 transition-opacity cursor-pointer text-left focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff] rounded-r-lg"
+            className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 hover:opacity-80 transition-opacity cursor-pointer text-left focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)] rounded-r-lg"
             title="Clicca per cambiare utente o ruolo"
           >
             <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${
-              isCustomer ? 'bg-emerald-600' : 'bg-[#635bff]'
+              isCustomer ? 'bg-emerald-600' : 'bg-[var(--energy-accent)]'
             }`}>
               {currentUser.avatar || (isCustomer ? 'CL' : 'CC')}
             </div>
             <div className="hidden md:block">
-              <span className="text-xs font-semibold text-[#0a2540] block leading-none flex items-center gap-1">
+              <span className="text-xs font-semibold text-[var(--energy-ink)] block leading-none flex items-center gap-1">
                 {currentUser.name}
                 <ChevronDown className="h-3 w-3 text-slate-400" />
               </span>
@@ -379,7 +380,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="sm:hidden p-2 rounded-lg text-slate-600 hover:text-[#0a2540] hover:bg-slate-100 transition-colors cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff]"
+            className="sm:hidden p-2 rounded-lg text-slate-600 hover:text-[var(--energy-ink)] hover:bg-slate-100 transition-colors cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)]"
             aria-label={isMobileMenuOpen ? 'Chiudi menu navigazione' : 'Apri menu navigazione'}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -400,16 +401,16 @@ export const Header: React.FC<HeaderProps> = ({
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer -mb-px focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff] ${
+                  className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer -mb-px focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)] ${
                     isActive
-                      ? `${isCustomer ? 'border-emerald-600 text-emerald-700' : 'border-[#635bff] text-[#635bff]'}`
-                      : 'border-transparent text-[#425466] hover:text-[#0a2540] hover:border-slate-300'
+                      ? `${isCustomer ? 'border-emerald-600 text-emerald-700' : 'border-[var(--energy-accent)] text-[var(--energy-accent)]'}`
+                      : 'border-transparent text-[var(--energy-muted)] hover:text-[var(--energy-ink)] hover:border-slate-300'
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? (isCustomer ? 'text-emerald-600' : 'text-[#635bff]') : 'text-slate-400'}`} strokeWidth={1.75} />
+                  <Icon className={`h-4 w-4 ${isActive ? (isCustomer ? 'text-emerald-600' : 'text-[var(--energy-accent)]') : 'text-slate-400'}`} strokeWidth={1.75} />
                   <span>{item.label}</span>
                   {item.badge !== undefined && (
-                    <span className="px-1.5 py-0.5 text-[11px] font-bold rounded-full bg-[#635bff] text-white">
+                    <span className="px-1.5 py-0.5 text-[11px] font-bold rounded-full bg-[var(--energy-accent)] text-white">
                       {item.badge}
                     </span>
                   )}
@@ -424,21 +425,21 @@ export const Header: React.FC<HeaderProps> = ({
       {isMobileMenuOpen && (
         <div className="sm:hidden fixed inset-0 z-50 overflow-hidden">
           <div 
-            className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-[var(--energy-ink)]/40 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
           <div className="fixed inset-y-0 right-0 max-w-full flex">
             <div className="w-screen max-w-xs bg-white shadow-2xl flex flex-col justify-between">
               {/* Drawer Top */}
-              <div className="p-4 border-b border-[#e3e8ee] flex items-center justify-between bg-slate-50/70">
+              <div className="p-4 border-b border-[var(--energy-line)] flex items-center justify-between bg-slate-50/70">
                 <div className="flex items-center gap-2">
                   <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-white ${
-                    isCustomer ? 'bg-emerald-600' : 'bg-[#635bff]'
+                    isCustomer ? 'bg-emerald-600' : 'bg-[var(--energy-grid)]'
                   }`}>
-                    <Zap className="h-3.5 w-3.5 fill-white text-white" />
+                    <Zap className={`h-3.5 w-3.5 ${isCustomer ? 'fill-white text-white' : 'fill-[var(--energy-spark)] text-[var(--energy-spark)]'}`} />
                   </div>
                   <div>
-                    <span className="font-bold text-sm text-[#0a2540]">Volta Energia</span>
+                    <span className="font-bold text-sm text-[var(--energy-ink)]">Volta Energia</span>
                     <span className="block text-[10px] text-slate-500 font-medium">
                       {isCustomer ? 'Portale Risparmio' : 'CRM & Telemarketing'}
                     </span>
@@ -467,16 +468,16 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={() => handleMobileNavClick(item.id)}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium transition-all text-left ${
                         isActive
-                          ? `${isCustomer ? 'bg-emerald-50 text-emerald-700 font-bold' : 'bg-indigo-50 text-[#635bff] font-bold'}`
-                          : 'text-[#425466] hover:bg-slate-50 hover:text-[#0a2540]'
+                          ? `${isCustomer ? 'bg-emerald-50 text-emerald-700 font-bold' : 'bg-[var(--energy-accent-soft)] text-[var(--energy-accent)] font-bold'}`
+                          : 'text-[var(--energy-muted)] hover:bg-slate-50 hover:text-[var(--energy-ink)]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className={`h-4 w-4 ${isActive ? (isCustomer ? 'text-emerald-600' : 'text-[#635bff]') : 'text-slate-400'}`} />
+                        <Icon className={`h-4 w-4 ${isActive ? (isCustomer ? 'text-emerald-600' : 'text-[var(--energy-accent)]') : 'text-slate-400'}`} />
                         <span>{item.label}</span>
                       </div>
                       {item.badge !== undefined && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-[#635bff] text-white">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-[var(--energy-accent)] text-white">
                           {item.badge}
                         </span>
                       )}
@@ -498,9 +499,9 @@ export const Header: React.FC<HeaderProps> = ({
                           setIsMobileMenuOpen(false);
                           onOpenAddCustomer();
                         }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-50 text-[#635bff] hover:bg-indigo-100 font-bold mb-1 transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[var(--energy-accent-soft)] text-[var(--energy-accent)] hover:bg-[var(--energy-accent-soft)] font-bold mb-1 transition-colors text-left"
                       >
-                        <UserPlus className="h-4 w-4 text-[#635bff]" />
+                        <UserPlus className="h-4 w-4 text-[var(--energy-accent)]" />
                         <span>+ Nuovo Cliente & POD/PDR</span>
                       </button>
                     )}
@@ -523,9 +524,9 @@ export const Header: React.FC<HeaderProps> = ({
                         setIsMobileMenuOpen(false);
                         onOpenBillOcr();
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#0a2540] hover:bg-slate-50 font-medium"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--energy-ink)] hover:bg-slate-50 font-medium"
                     >
-                      <FileSearch className="h-4 w-4 text-[#635bff]" />
+                      <FileSearch className="h-4 w-4 text-[var(--energy-accent)]" />
                       <span>OCR Scanner Bolletta</span>
                     </button>
 
@@ -567,7 +568,7 @@ export const Header: React.FC<HeaderProps> = ({
                     className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium"
                   >
                     <div className="flex items-center gap-2.5">
-                      <RefreshCw className={`h-4 w-4 ${isRefreshingMarketIndex ? 'animate-spin text-[#635bff]' : 'text-slate-400'}`} />
+                      <RefreshCw className={`h-4 w-4 ${isRefreshingMarketIndex ? 'animate-spin text-[var(--energy-accent)]' : 'text-slate-400'}`} />
                       <span>Aggiorna Feed GME</span>
                     </div>
                     <span className="text-[10px] font-mono text-slate-400">{marketIndex.lastUpdated}</span>
@@ -576,22 +577,22 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Drawer Bottom: User profile switch */}
-              <div className="p-3 border-t border-[#e3e8ee] bg-slate-50/60">
+              <div className="p-3 border-t border-[var(--energy-line)] bg-slate-50/60">
                 <button
                   type="button"
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     onOpenLogin();
                   }}
-                  className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-white border border-[#e3e8ee] shadow-2xs hover:border-[#635bff]/40 text-left"
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-white border border-[var(--energy-line)] shadow-2xs hover:border-[var(--energy-accent)]/40 text-left"
                 >
                   <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${
-                    isCustomer ? 'bg-emerald-600' : 'bg-[#635bff]'
+                    isCustomer ? 'bg-emerald-600' : 'bg-[var(--energy-accent)]'
                   }`}>
                     {currentUser.avatar || (isCustomer ? 'CL' : 'CC')}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold text-[#0a2540] block truncate">{currentUser.name}</span>
+                    <span className="text-xs font-bold text-[var(--energy-ink)] block truncate">{currentUser.name}</span>
                     <span className="text-[10px] text-slate-500 block truncate">{currentUser.email}</span>
                   </div>
                   <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
@@ -604,7 +605,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Mobile Sticky Bottom Navigation Bar (Thumb Friendly) */}
       <nav 
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e3e8ee] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-2 py-1 flex items-center justify-around"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[var(--energy-line)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-2 py-1 flex items-center justify-around"
         style={{ paddingBottom: 'max(0.35rem, env(safe-area-inset-bottom))' }}
       >
         {isCustomer ? (
@@ -612,7 +613,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => setActiveTab('customer_overview')}
               className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-semibold transition-colors ${
-                activeTab === 'customer_overview' ? 'text-emerald-600 font-bold' : 'text-slate-500 hover:text-[#0a2540]'
+                activeTab === 'customer_overview' ? 'text-emerald-600 font-bold' : 'text-slate-500 hover:text-[var(--energy-ink)]'
               }`}
             >
               <ShieldCheck className="h-5 w-5 mb-0.5" />
@@ -622,7 +623,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => setActiveTab('customer_upload')}
               className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-semibold transition-colors ${
-                activeTab === 'customer_upload' ? 'text-emerald-600 font-bold' : 'text-slate-500 hover:text-[#0a2540]'
+                activeTab === 'customer_upload' ? 'text-emerald-600 font-bold' : 'text-slate-500 hover:text-[var(--energy-ink)]'
               }`}
             >
               <UploadCloud className="h-5 w-5 mb-0.5" />
@@ -632,7 +633,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => setActiveTab('customer_profile')}
               className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-semibold transition-colors ${
-                activeTab === 'customer_profile' ? 'text-emerald-600 font-bold' : 'text-slate-500 hover:text-[#0a2540]'
+                activeTab === 'customer_profile' ? 'text-emerald-600 font-bold' : 'text-slate-500 hover:text-[var(--energy-ink)]'
               }`}
             >
               <User className="h-5 w-5 mb-0.5" />
@@ -650,13 +651,13 @@ export const Header: React.FC<HeaderProps> = ({
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-colors relative ${
-                    isActive ? 'text-[#635bff] font-bold' : 'text-slate-500 hover:text-[#0a2540]'
+                    isActive ? 'text-[var(--energy-accent)] font-bold' : 'text-slate-500 hover:text-[var(--energy-ink)]'
                   }`}
                 >
                   <Icon className="h-5 w-5 mb-0.5" />
                   <span className="truncate max-w-[64px]">{item.label}</span>
                   {hasBadge && (
-                    <span className="absolute top-0 right-1 h-2 w-2 rounded-full bg-[#635bff]" />
+                    <span className="absolute top-0 right-1 h-2 w-2 rounded-full bg-[var(--energy-accent)]" />
                   )}
                 </button>
               );
@@ -665,7 +666,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg text-[10px] font-semibold transition-colors ${
-                isMobileMenuOpen ? 'text-[#635bff] font-bold' : 'text-slate-500 hover:text-[#0a2540]'
+                isMobileMenuOpen ? 'text-[var(--energy-accent)] font-bold' : 'text-slate-500 hover:text-[var(--energy-ink)]'
               }`}
             >
               <Menu className="h-5 w-5 mb-0.5" />

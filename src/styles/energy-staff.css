@@ -1,0 +1,35 @@
+/*
+ * Volta energy tokens for staff CRM + Totem.
+ * Kept out of src/index.css on purpose (that file belongs to the public-site redesign).
+ * Every variable points at the shared @theme tokens from index.css (--color-brand, --color-ink, ...)
+ * and falls back to the same hex values, so this branch also renders correctly on its own.
+ */
+:root {
+  --energy-bg: var(--color-canvas, #f5f6f1);
+  --energy-surface: #ffffff;
+  --energy-surface-2: #f9faf6;              /* GUESS: table heads, subtle panels */
+  --energy-line: #dfe4dc;                   /* GUESS: borders, derived from canvas */
+  --energy-ink: var(--color-ink, #0d2420);
+  --energy-muted: #4a5d56;                  /* GUESS: secondary text, AA on white */
+  --energy-accent: var(--color-brand, #0a7a55);
+  --energy-accent-hover: var(--color-brand-hover, #08664a);
+  --energy-accent-strong: #065a3f;          /* GUESS: accent text on soft backgrounds */
+  --energy-accent-soft: var(--color-brand-soft, #e7f4ee);
+  --energy-accent-line: #b7dccc;            /* GUESS */
+  --energy-spark: var(--color-spark, #f2c230);
+  --energy-spark-soft: var(--color-spark-soft, #fdf3d3);
+  --energy-grid: var(--color-ink, #0d2420);  /* dark bands: kiosk header, logo tile */
+  --energy-grid-2: var(--color-ink-soft, #16352f);
+  --energy-on-grid: #e8f2ee;
+  --energy-on-grid-muted: #a3bab2;
+}
+
+/* Typography for staff + totem roots. Fonts load from index.html on the shared branch;
+   without them the system stack is used. */
+.volta-energy-staff {
+  font-family: var(--font-energy, 'Manrope'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.volta-energy-staff :is(h1, h2, h3) {
+  font-family: var(--font-display, 'Space Grotesk'), var(--font-energy, 'Manrope'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: -0.01em;
+}

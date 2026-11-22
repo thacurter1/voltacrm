@@ -52,19 +52,19 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
       {/* Backdrop */}
       <div 
         onClick={onClose}
-        className="absolute inset-0 bg-[#0a2540]/30 backdrop-blur-xs transition-opacity" 
+        className="absolute inset-0 bg-[var(--energy-ink)]/30 backdrop-blur-xs transition-opacity" 
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
-        <div className="w-screen max-w-full sm:max-w-md bg-white border-l border-[#e3e8ee] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col">
+        <div className="w-screen max-w-full sm:max-w-md bg-white border-l border-[var(--energy-line)] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col">
           {/* Drawer Header */}
-          <div className="p-4 sm:p-6 border-b border-[#e3e8ee] flex items-start justify-between bg-[#fcfdff]">
+          <div className="p-4 sm:p-6 border-b border-[var(--energy-line)] flex items-start justify-between bg-[var(--energy-surface-2)]">
             <div className="space-y-1 pr-2">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#635bff] uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--energy-accent)] uppercase tracking-wider">
                 {customer ? 'Cliente Attivo a Portafoglio' : 'Lead Inbound Marketing'}
               </span>
-              <h2 className="text-base sm:text-lg font-bold text-[#0a2540] break-words">{title}</h2>
-              <p className="text-xs text-[#425466] font-mono break-all">{subtitle}</p>
+              <h2 className="text-base sm:text-lg font-bold text-[var(--energy-ink)] break-words">{title}</h2>
+              <p className="text-xs text-[var(--energy-muted)] font-mono break-all">{subtitle}</p>
             </div>
             <button
               onClick={onClose}
@@ -76,11 +76,11 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
           </div>
 
           {/* Tab Navigation */}
-          <div className="px-3 sm:px-6 border-b border-[#e3e8ee] flex gap-4 text-xs overflow-x-auto whitespace-nowrap">
+          <div className="px-3 sm:px-6 border-b border-[var(--energy-line)] flex gap-4 text-xs overflow-x-auto whitespace-nowrap">
             <button
               onClick={() => setActiveTab('details')}
               className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px shrink-0 ${
-                activeTab === 'details' ? 'border-[#635bff] text-[#635bff]' : 'border-transparent text-[#425466] hover:text-[#0a2540]'
+                activeTab === 'details' ? 'border-[var(--energy-accent)] text-[var(--energy-accent)]' : 'border-transparent text-[var(--energy-muted)] hover:text-[var(--energy-ink)]'
               }`}
             >
               Dati Tecnici & Forniture
@@ -88,7 +88,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             <button
               onClick={() => setActiveTab('timeline')}
               className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px shrink-0 ${
-                activeTab === 'timeline' ? 'border-[#635bff] text-[#635bff]' : 'border-transparent text-[#425466] hover:text-[#0a2540]'
+                activeTab === 'timeline' ? 'border-[var(--energy-accent)] text-[var(--energy-accent)]' : 'border-transparent text-[var(--energy-muted)] hover:text-[var(--energy-ink)]'
               }`}
             >
               Timeline 120 Giorni
@@ -96,7 +96,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             <button
               onClick={() => setActiveTab('documents')}
               className={`py-3 font-semibold border-b-2 transition-colors cursor-pointer -mb-px shrink-0 ${
-                activeTab === 'documents' ? 'border-[#635bff] text-[#635bff]' : 'border-transparent text-[#425466] hover:text-[#0a2540]'
+                activeTab === 'documents' ? 'border-[var(--energy-accent)] text-[var(--energy-accent)]' : 'border-transparent text-[var(--energy-muted)] hover:text-[var(--energy-ink)]'
               }`}
             >
               Documenti & Mandati
@@ -109,8 +109,8 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             {activeTab === 'details' && (
               <div className="space-y-5">
                 {/* Contact Box */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-[#e3e8ee] space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-[#425466] block">Contatti & Sede</span>
+                <div className="p-4 rounded-xl bg-slate-50 border border-[var(--energy-line)] space-y-2">
+                  <span className="text-[10px] uppercase font-bold text-[var(--energy-muted)] block">Contatti & Sede</span>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-slate-700">
                       <Phone className="h-3.5 w-3.5 text-slate-400" />
@@ -131,16 +131,16 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                 {customer && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#0a2540] uppercase tracking-wider">
+                      <span className="text-xs font-bold text-[var(--energy-ink)] uppercase tracking-wider">
                         Punti di Fornitura Attivi
                       </span>
-                      <span className="text-[11px] text-[#635bff] font-semibold">
+                      <span className="text-[11px] text-[var(--energy-accent)] font-semibold">
                         {customer.utilityPoints.length} Punti
                       </span>
                     </div>
 
                     {customer.utilityPoints.map((util) => (
-                      <div key={util.id} className="p-4 rounded-xl border border-[#e3e8ee] bg-white space-y-3 shadow-xs">
+                      <div key={util.id} className="p-4 rounded-xl border border-[var(--energy-line)] bg-white space-y-3 shadow-xs">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {util.type === 'luce' ? (
@@ -153,7 +153,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                               </div>
                             )}
                             <div>
-                              <span className="font-bold text-xs uppercase text-[#0a2540]">
+                              <span className="font-bold text-xs uppercase text-[var(--energy-ink)]">
                                 Fornitura {util.type}
                               </span>
                               <span className="font-mono text-slate-600 block text-[11px] font-semibold">
@@ -166,23 +166,23 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#e3e8ee]">
+                        <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[var(--energy-line)]">
                           <div>
-                            <span className="text-[10px] text-[#425466] block">Fornitore Oggi</span>
-                            <span className="font-semibold text-[#0a2540]">{util.currentSupplier}</span>
+                            <span className="text-[10px] text-[var(--energy-muted)] block">Fornitore Oggi</span>
+                            <span className="font-semibold text-[var(--energy-ink)]">{util.currentSupplier}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-[#425466] block">Consumo Annuo</span>
-                            <span className="font-semibold text-[#0a2540] font-mono">
+                            <span className="text-[10px] text-[var(--energy-muted)] block">Consumo Annuo</span>
+                            <span className="font-semibold text-[var(--energy-ink)] font-mono">
                               {util.annualConsumption.toLocaleString()} {util.type === 'luce' ? 'kWh' : 'Smc'}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-[#425466] block">Tariffa Materia</span>
-                            <span className="font-bold text-[#0a2540] font-mono">{util.currentUnitCost.toFixed(4)} €</span>
+                            <span className="text-[10px] text-[var(--energy-muted)] block">Tariffa Materia</span>
+                            <span className="font-bold text-[var(--energy-ink)] font-mono">{util.currentUnitCost.toFixed(4)} €</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-[#425466] block">Quota Fissa (CCV)</span>
+                            <span className="text-[10px] text-[var(--energy-muted)] block">Quota Fissa (CCV)</span>
                             <span className="font-medium text-slate-700 font-mono">€ {util.currentFixedFeeYear}/anno</span>
                           </div>
                         </div>
@@ -193,14 +193,14 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
 
                 {/* If Lead: Marketing Details */}
                 {lead && (
-                  <div className="p-4 rounded-xl border border-[#e3e8ee] bg-white space-y-3">
-                    <span className="font-bold text-xs text-[#0a2540] block">Dettaglio Campagna Marketing</span>
+                  <div className="p-4 rounded-xl border border-[var(--energy-line)] bg-white space-y-3">
+                    <span className="font-bold text-xs text-[var(--energy-ink)] block">Dettaglio Campagna Marketing</span>
                     <div className="space-y-1.5 text-xs text-slate-700">
                       <div>Canale Inbound: <strong>{lead.source}</strong></div>
                       <div>Data Registrazione: <strong>{new Date(lead.createdAt).toLocaleString('it-IT')}</strong></div>
                       <div>Stato Corrente: <strong className="uppercase">{lead.status}</strong></div>
                       {lead.notes && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[#425466] italic">
+                        <div className="mt-2 p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[var(--energy-muted)] italic">
                           "{lead.notes}"
                         </div>
                       )}
@@ -213,11 +213,11 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             {/* TAB 2: TIMELINE 120 GIORNI */}
             {activeTab === 'timeline' && (
               <div className="space-y-4">
-                <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-[#635bff]" />
+                <div className="p-3.5 rounded-xl bg-[var(--energy-accent-soft)]/70 border border-[var(--energy-accent-line)] flex items-center gap-3">
+                  <Clock className="h-4 w-4 text-[var(--energy-accent)]" />
                   <div>
-                    <span className="font-bold text-xs text-[#0a2540] block">Ciclo Ricorrente Quadrimestrale</span>
-                    <span className="text-[11px] text-[#425466]">Monitoraggio automatico ogni 120 giorni dall'attivazione</span>
+                    <span className="font-bold text-xs text-[var(--energy-ink)] block">Ciclo Ricorrente Quadrimestrale</span>
+                    <span className="text-[11px] text-[var(--energy-muted)]">Monitoraggio automatico ogni 120 giorni dall'attivazione</span>
                   </div>
                 </div>
 
@@ -228,19 +228,19 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                       <span className="text-[11px] text-slate-400 font-mono">
                         {customer?.contractStartDate || 'Data Iniziale'}
                       </span>
-                      <h4 className="font-bold text-xs text-[#0a2540] mt-0.5">Contratto Iniziale Sottoscritto</h4>
-                      <p className="text-[11px] text-[#425466]">Firmata delega brokeraggio continuo per monitoraggio tariffe.</p>
+                      <h4 className="font-bold text-xs text-[var(--energy-ink)] mt-0.5">Contratto Iniziale Sottoscritto</h4>
+                      <p className="text-[11px] text-[var(--energy-muted)]">Firmata delega brokeraggio continuo per monitoraggio tariffe.</p>
                     </div>
                   </div>
 
                   <div className="relative">
-                    <span className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full bg-[#635bff] ring-4 ring-white" />
+                    <span className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full bg-[var(--energy-accent)] ring-4 ring-white" />
                     <div>
                       <span className="text-[11px] text-slate-400 font-mono">
                         {customer?.nextSwitchAuditDate || '120 Giorni'}
                       </span>
-                      <h4 className="font-bold text-xs text-[#0a2540] mt-0.5">Audit Quadrimestrale (Attuale)</h4>
-                      <p className="text-[11px] text-[#425466]">Il motore ha verificato il listino aggiornato e ha generato il calcolo comparativo.</p>
+                      <h4 className="font-bold text-xs text-[var(--energy-ink)] mt-0.5">Audit Quadrimestrale (Attuale)</h4>
+                      <p className="text-[11px] text-[var(--energy-muted)]">Il motore ha verificato il listino aggiornato e ha generato il calcolo comparativo.</p>
                     </div>
                   </div>
 
@@ -259,40 +259,40 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             {/* TAB 3: DOCUMENTS */}
             {activeTab === 'documents' && (
               <div className="space-y-3">
-                <div className="p-3 rounded-lg border border-[#e3e8ee] bg-slate-50 flex items-center justify-between">
+                <div className="p-3 rounded-lg border border-[var(--energy-line)] bg-slate-50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-[#635bff]" />
+                    <FileText className="h-4 w-4 text-[var(--energy-accent)]" />
                     <div>
-                      <span className="font-semibold text-xs text-[#0a2540] block">Mandato_Brokeraggio_Firmato.pdf</span>
-                      <span className="text-[10px] text-[#425466]">Firma Digitale OTP • Conforme GDPR</span>
+                      <span className="font-semibold text-xs text-[var(--energy-ink)] block">Mandato_Brokeraggio_Firmato.pdf</span>
+                      <span className="text-[10px] text-[var(--energy-muted)]">Firma Digitale OTP • Conforme GDPR</span>
                     </div>
                   </div>
                   <span className="text-[11px] text-emerald-600 font-bold">Valido</span>
                 </div>
 
-                <div className="p-3 rounded-lg border border-[#e3e8ee] bg-slate-50 flex items-center justify-between">
+                <div className="p-3 rounded-lg border border-[var(--energy-line)] bg-slate-50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-amber-500" />
                     <div>
-                      <span className="font-semibold text-xs text-[#0a2540] block">Bolletta_Storica_Precedente.pdf</span>
-                      <span className="text-[10px] text-[#425466]">Estratta via OCR • 2.4 MB</span>
+                      <span className="font-semibold text-xs text-[var(--energy-ink)] block">Bolletta_Storica_Precedente.pdf</span>
+                      <span className="text-[10px] text-[var(--energy-muted)]">Estratta via OCR • 2.4 MB</span>
                     </div>
                   </div>
-                  <span className="text-[11px] text-[#425466] font-medium">Archiviata</span>
+                  <span className="text-[11px] text-[var(--energy-muted)] font-medium">Archiviata</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Drawer Footer Actions */}
-          <div className="p-3 sm:p-4 border-t border-[#e3e8ee] bg-[#fcfdff] flex items-center gap-2">
+          <div className="p-3 sm:p-4 border-t border-[var(--energy-line)] bg-[var(--energy-surface-2)] flex items-center gap-2">
             {customer && onTriggerSwitch && (
               <button
                 onClick={() => {
                   onTriggerSwitch(customer.id);
                   onClose();
                 }}
-                className="flex-1 min-h-[44px] py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
+                className="flex-1 min-h-[44px] py-2.5 rounded-lg bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
               >
                 <RefreshCw className="h-4 w-4" />
                 <span>Avvia Switch Offerta</span>
@@ -305,7 +305,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                   onConvertLeadToCustomer(lead);
                   onClose();
                 }}
-                className="flex-1 min-h-[44px] py-2.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
+                className="flex-1 min-h-[44px] py-2.5 rounded-lg bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
                 title="Trasforma questo lead in cliente attivo completando l'anagrafica e le forniture"
               >
                 <UserCheck className="h-4 w-4" />
@@ -324,7 +324,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                   window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
                 }
               }}
-              className="min-h-[44px] min-w-[44px] p-2.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-emerald-600 font-medium text-xs flex items-center justify-center cursor-pointer transition-colors shadow-2xs active:scale-[0.98]"
+              className="min-h-[44px] min-w-[44px] p-2.5 rounded-lg border border-[var(--energy-line)] hover:bg-slate-50 text-emerald-600 font-medium text-xs flex items-center justify-center cursor-pointer transition-colors shadow-2xs active:scale-[0.98]"
               title="Apri chat WhatsApp"
               aria-label="Apri chat WhatsApp con il contatto"
             >

@@ -84,7 +84,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       case 'bill_upload':
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200/50">Bolletta Caricata</span>;
       case 'public_comparator':
-        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/50">Comparatore</span>;
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--energy-accent-soft)] text-[var(--energy-accent-strong)] border border-[var(--energy-accent-line)]/50">Comparatore</span>;
       case 'facebook_ads':
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200/50">Meta Ads</span>;
       case 'google_ads':
@@ -121,8 +121,8 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
         );
       case 'in_negotiation':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-800 border border-indigo-200/60">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#635bff]" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--energy-accent-soft)] text-[var(--energy-accent-strong)] border border-[var(--energy-accent-line)]/60">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--energy-accent)]" />
             Trattativa In Corso
           </span>
         );
@@ -146,17 +146,17 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e8ee]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[var(--energy-line)]">
         <div>
-          <h1 className="text-xl font-bold text-[#0a2540] tracking-tight">Lead Inbound & Reparto Marketing</h1>
-          <p className="text-xs text-[#425466] mt-0.5">
+          <h1 className="text-xl font-bold text-[var(--energy-ink)] tracking-tight">Lead Inbound & Reparto Marketing</h1>
+          <p className="text-xs text-[var(--energy-muted)] mt-0.5">
             Ricezione real-time dei contatti dalle campagne pubblicitarie per l'assegnazione al call center.
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-medium shadow-[0_1px_2px_rgba(99,91,255,0.3)] active:scale-[0.99] transition-all cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white text-xs font-medium shadow-[0_1px_2px_rgba(99,91,255,0.3)] active:scale-[0.99] transition-all cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
           Simula Webhook Inbound
@@ -164,7 +164,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       </div>
 
       {/* Stripe Filter Bar */}
-      <div className="p-3 bg-white rounded-xl border border-[#e3e8ee] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-wrap items-center gap-3 text-xs">
+      <div className="p-3 bg-white rounded-xl border border-[var(--energy-line)] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-wrap items-center gap-3 text-xs">
         <div className="flex-1 min-w-[240px] relative">
           <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" />
           <input
@@ -172,16 +172,16 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
             placeholder="Filtra per nome, telefono, città..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-[#e3e8ee] text-[#0a2540] placeholder-slate-400 focus:outline-none focus:border-[#635bff] focus:bg-white text-xs transition-colors"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-[var(--energy-line)] text-[var(--energy-ink)] placeholder-slate-400 focus:outline-none focus:border-[var(--energy-accent)] focus:bg-white text-xs transition-colors"
           />
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-[#425466] font-medium">Canale:</span>
+          <span className="text-[var(--energy-muted)] font-medium">Canale:</span>
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:outline-none focus:border-[#635bff] cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] text-xs focus:outline-none focus:border-[var(--energy-accent)] cursor-pointer"
           >
             <option value="all">Tutti i Canali</option>
             <option value="bill_upload">Bolletta Caricata</option>
@@ -194,11 +194,11 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-[#425466] font-medium">Stato:</span>
+          <span className="text-[var(--energy-muted)] font-medium">Stato:</span>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] text-xs focus:outline-none focus:border-[#635bff] cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] text-xs focus:outline-none focus:border-[var(--energy-accent)] cursor-pointer"
           >
             <option value="all">Tutti gli Stati</option>
             <option value="new">Nuovo Inbound</option>
@@ -213,7 +213,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       {/* Mobile Cards for Leads (<sm screens) */}
       <div className="sm:hidden space-y-3">
         {filteredLeads.length === 0 ? (
-          <div className="p-8 text-center rounded-xl bg-white border border-[#e3e8ee] text-slate-400 text-xs">
+          <div className="p-8 text-center rounded-xl bg-white border border-[var(--energy-line)] text-slate-400 text-xs">
             Nessun lead trovato con i filtri correnti.
           </div>
         ) : (
@@ -221,11 +221,11 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
             <div
               key={lead.id}
               onClick={() => onSelectLead(lead)}
-              className="p-4 rounded-xl bg-white border border-[#e3e8ee] shadow-xs space-y-3 active:border-[#635bff]/60 transition-all cursor-pointer"
+              className="p-4 rounded-xl bg-white border border-[var(--energy-line)] shadow-xs space-y-3 active:border-[var(--energy-accent)]/60 transition-all cursor-pointer"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h4 className="font-bold text-[#0a2540] text-sm">{lead.name}</h4>
+                  <h4 className="font-bold text-[var(--energy-ink)] text-sm">{lead.name}</h4>
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
                     <span className="font-mono text-slate-700 font-semibold">{lead.phone}</span>
                     <span>•</span>
@@ -267,7 +267,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenCallScript(lead)}
-                  className="flex-1 min-h-[44px] px-3 py-2 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-700 font-semibold text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  className="flex-1 min-h-[44px] px-3 py-2 rounded-lg border border-[var(--energy-line)] hover:bg-slate-50 text-slate-700 font-semibold text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <Phone className="h-4 w-4 text-emerald-600" />
                   <span>Chiama</span>
@@ -287,7 +287,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenScheduleModal(lead)}
-                  className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold text-xs inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.99] transition-all cursor-pointer"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white font-semibold text-xs inline-flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.99] transition-all cursor-pointer"
                 >
                   <CalendarPlus className="h-4 w-4" />
                   <span>Fissa Appuntamento</span>
@@ -299,10 +299,10 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       </div>
 
       {/* Desktop/Tablet Table for Leads (>=sm screens) */}
-      <div className="hidden sm:block rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="hidden sm:block rounded-xl bg-white border border-[var(--energy-line)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#f8fafc] text-[#425466] font-semibold border-b border-[#e3e8ee]">
+            <thead className="bg-[var(--energy-surface-2)] text-[var(--energy-muted)] font-semibold border-b border-[var(--energy-line)]">
               <tr>
                 <th className="py-3.5 px-4">Contatto</th>
                 <th className="py-3.5 px-4">Origine</th>
@@ -312,7 +312,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                 <th className="py-3.5 px-4 text-right">Azioni Call Center</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e3e8ee]">
+            <tbody className="divide-y divide-[var(--energy-line)]">
               {filteredLeads.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400 text-xs">
@@ -328,8 +328,8 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   >
                     {/* Contatto */}
                     <td className="py-3.5 px-4">
-                      <span className="font-semibold text-[#0a2540] text-sm block group-hover:text-[#635bff] transition-colors">{lead.name}</span>
-                      <div className="flex items-center gap-2 text-[11px] text-[#425466] mt-0.5">
+                      <span className="font-semibold text-[var(--energy-ink)] text-sm block group-hover:text-[var(--energy-accent)] transition-colors">{lead.name}</span>
+                      <div className="flex items-center gap-2 text-[11px] text-[var(--energy-muted)] mt-0.5">
                         <span className="font-mono text-slate-700">{lead.phone}</span>
                         <span>•</span>
                         <span>{lead.city}</span>
@@ -366,9 +366,9 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     </td>
 
                     {/* Operatore */}
-                    <td className="py-3.5 px-4 text-[11px] text-[#425466]">
+                    <td className="py-3.5 px-4 text-[11px] text-[var(--energy-muted)]">
                       {lead.assignedCallCenterAgent ? (
-                        <span className="font-medium text-[#0a2540]">{lead.assignedCallCenterAgent}</span>
+                        <span className="font-medium text-[var(--energy-ink)]">{lead.assignedCallCenterAgent}</span>
                       ) : (
                         <span className="text-amber-600 font-medium">Non assegnato</span>
                       )}
@@ -379,7 +379,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                       <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() => onOpenCallScript(lead)}
-                          className="px-2.5 py-1.5 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-slate-700 font-medium text-xs inline-flex items-center gap-1 cursor-pointer transition-colors"
+                          className="px-2.5 py-1.5 rounded-lg border border-[var(--energy-line)] hover:bg-slate-50 text-slate-700 font-medium text-xs inline-flex items-center gap-1 cursor-pointer transition-colors"
                         >
                           <Phone className="h-3 w-3 text-emerald-600" />
                           Chiama
@@ -398,7 +398,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
 
                         <button
                           onClick={() => onOpenScheduleModal(lead)}
-                          className="px-3 py-1.5 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-medium text-xs inline-flex items-center gap-1 shadow-xs active:scale-[0.99] transition-all cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white font-medium text-xs inline-flex items-center gap-1 shadow-xs active:scale-[0.99] transition-all cursor-pointer"
                         >
                           <CalendarPlus className="h-3 w-3" />
                           Fissa Appuntamento
@@ -415,12 +415,12 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
 
       {/* Stripe Modal: Ingestion Lead Simulation */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-white border border-[#e3e8ee] rounded-xl w-full max-w-lg p-4 sm:p-6 space-y-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)] max-h-[94vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b border-[#e3e8ee] pb-3">
+        <div className="fixed inset-0 bg-[var(--energy-ink)]/40 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white border border-[var(--energy-line)] rounded-xl w-full max-w-lg p-4 sm:p-6 space-y-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)] max-h-[94vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-[var(--energy-line)] pb-3">
               <div>
-                <h3 className="font-bold text-sm sm:text-base text-[#0a2540]">Simula Webhook Inbound Marketing</h3>
-                <p className="text-xs text-[#425466]">Inietta un nuovo contatto generato da Meta Lead Ads o Google Ads</p>
+                <h3 className="font-bold text-sm sm:text-base text-[var(--energy-ink)]">Simula Webhook Inbound Marketing</h3>
+                <p className="text-xs text-[var(--energy-muted)]">Inietta un nuovo contatto generato da Meta Lead Ads o Google Ads</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -433,59 +433,59 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
             <form onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Nome o Ragione Sociale *</label>
+                  <label className="text-[var(--energy-muted)] font-medium block mb-1">Nome o Ragione Sociale *</label>
                   <input
                     type="text"
                     required
                     placeholder="es. Marco Rossi"
                     value={newLeadName}
                     onChange={(e) => setNewLeadName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                   />
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Telefono *</label>
+                  <label className="text-[var(--energy-muted)] font-medium block mb-1">Telefono *</label>
                   <input
                     type="text"
                     required
                     placeholder="es. +39 347 1234567"
                     value={newLeadPhone}
                     onChange={(e) => setNewLeadPhone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Email</label>
+                  <label className="text-[var(--energy-muted)] font-medium block mb-1">Email</label>
                   <input
                     type="email"
                     placeholder="marco.rossi@email.it"
                     value={newLeadEmail}
                     onChange={(e) => setNewLeadEmail(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                   />
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Città</label>
+                  <label className="text-[var(--energy-muted)] font-medium block mb-1">Città</label>
                   <input
                     type="text"
                     placeholder="Milano (MI)"
                     value={newLeadCity}
                     onChange={(e) => setNewLeadCity(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Campagna</label>
+                  <label className="text-[var(--energy-muted)] font-medium block mb-1">Campagna</label>
                   <select
                     value={newLeadSource}
                     onChange={(e) => setNewLeadSource(e.target.value as LeadSource)}
-                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                   >
                     <option value="facebook_ads">Meta Lead Ads</option>
                     <option value="google_ads">Google Ads</option>
@@ -494,47 +494,47 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Consumo Luce (kWh)</label>
+                  <label className="text-[var(--energy-muted)] font-medium block mb-1">Consumo Luce (kWh)</label>
                   <input
                     type="number"
                     value={newLeadKwh}
                     onChange={(e) => setNewLeadKwh(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                   />
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Consumo Gas (Smc)</label>
+                  <label className="text-[var(--energy-muted)] font-medium block mb-1">Consumo Gas (Smc)</label>
                   <input
                     type="number"
                     value={newLeadSmc}
                     onChange={(e) => setNewLeadSmc(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                    className="w-full px-2.5 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[#425466] font-medium block mb-1">Note di Marketing</label>
+                <label className="text-[var(--energy-muted)] font-medium block mb-1">Note di Marketing</label>
                 <textarea
                   rows={2}
                   placeholder="es. Campagna Instagram comparatore bolletta con upload foto."
                   value={newLeadNotes}
                   onChange={(e) => setNewLeadNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#e3e8ee] text-[#0a2540] focus:outline-none focus:border-[#635bff]"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[var(--energy-line)] text-[var(--energy-ink)] focus:outline-none focus:border-[var(--energy-accent)]"
                 />
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-[#e3e8ee]">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-[var(--energy-line)]">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="min-h-[44px] px-4 py-2 rounded-lg border border-[#e3e8ee] text-[#425466] hover:bg-slate-50 font-semibold cursor-pointer text-center"
+                  className="min-h-[44px] px-4 py-2 rounded-lg border border-[var(--energy-line)] text-[var(--energy-muted)] hover:bg-slate-50 font-semibold cursor-pointer text-center"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="min-h-[44px] px-5 py-2 rounded-lg bg-[#635bff] hover:bg-[#5851ea] text-white font-semibold shadow-xs cursor-pointer text-center"
+                  className="min-h-[44px] px-5 py-2 rounded-lg bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white font-semibold shadow-xs cursor-pointer text-center"
                 >
                   Invia Lead al CRM
                 </button>

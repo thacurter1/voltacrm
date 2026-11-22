@@ -79,12 +79,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-20 flex items-start justify-center">
       <div 
         onClick={onClose} 
-        className="fixed inset-0 bg-[#0a2540]/40 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 bg-[var(--energy-ink)]/40 backdrop-blur-xs transition-opacity" 
       />
 
-      <div className="relative w-full max-w-xl bg-white rounded-xl border border-[#e3e8ee] shadow-[0_25px_60px_rgba(0,0,0,0.18)] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-xl bg-white rounded-xl border border-[var(--energy-line)] shadow-[0_25px_60px_rgba(0,0,0,0.18)] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Search Input */}
-        <div className="flex items-center px-4 border-b border-[#e3e8ee]">
+        <div className="flex items-center px-4 border-b border-[var(--energy-line)]">
           <Search className="h-4 w-4 text-slate-400 mr-3 shrink-0" />
           <input
             type="text"
@@ -92,7 +92,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             placeholder="Cerca cliente, lead, POD/PDR, o digita un comando..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full py-3.5 text-xs text-[#0a2540] placeholder-slate-400 focus:outline-none bg-transparent"
+            className="w-full py-3.5 text-xs text-[var(--energy-ink)] placeholder-slate-400 focus:outline-none bg-transparent"
           />
           <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 rounded border border-slate-200">
             ESC
@@ -100,11 +100,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Results List */}
-        <div className="max-h-80 overflow-y-auto p-2 text-xs divide-y divide-[#e3e8ee]">
+        <div className="max-h-80 overflow-y-auto p-2 text-xs divide-y divide-[var(--energy-line)]">
           {/* Quick Actions */}
           {quickActions.length > 0 && (
             <div className="py-1">
-              <span className="px-3 py-1 text-[10px] font-bold text-[#425466] uppercase tracking-wider block">
+              <span className="px-3 py-1 text-[10px] font-bold text-[var(--energy-muted)] uppercase tracking-wider block">
                 Azioni Rapide
               </span>
               {quickActions.map((action) => {
@@ -116,15 +116,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                       onTriggerAction(action.id);
                       onClose();
                     }}
-                    className="w-full px-3 py-2 rounded-lg hover:bg-indigo-50/60 text-left flex items-center justify-between text-[#0a2540] group cursor-pointer transition-colors"
+                    className="w-full px-3 py-2 rounded-lg hover:bg-[var(--energy-accent-soft)]/60 text-left flex items-center justify-between text-[var(--energy-ink)] group cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="p-1 rounded-md bg-slate-100 group-hover:bg-[#635bff] group-hover:text-white transition-colors">
+                      <div className="p-1 rounded-md bg-slate-100 group-hover:bg-[var(--energy-accent)] group-hover:text-white transition-colors">
                         <Icon className="h-3.5 w-3.5" />
                       </div>
                       <span className="font-medium text-xs">{action.label}</span>
                     </div>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#635bff]" />
+                    <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[var(--energy-accent)]" />
                   </button>
                 );
               })}
@@ -134,7 +134,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {/* Customers */}
           {filteredCustomers.length > 0 && (
             <div className="py-1">
-              <span className="px-3 py-1 text-[10px] font-bold text-[#425466] uppercase tracking-wider block">
+              <span className="px-3 py-1 text-[10px] font-bold text-[var(--energy-muted)] uppercase tracking-wider block">
                 Clienti & Forniture
               </span>
               {filteredCustomers.map((c) => (
@@ -144,13 +144,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     onSelectCustomer(c);
                     onClose();
                   }}
-                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-50 text-left flex items-center justify-between text-[#0a2540] group cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-50 text-left flex items-center justify-between text-[var(--energy-ink)] group cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#635bff]" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-[var(--energy-accent)]" />
                     <div>
-                      <span className="font-semibold text-xs text-[#0a2540] block">{c.name}</span>
-                      <span className="text-[10px] text-[#425466] font-mono">
+                      <span className="font-semibold text-xs text-[var(--energy-ink)] block">{c.name}</span>
+                      <span className="text-[10px] text-[var(--energy-muted)] font-mono">
                         {c.city} • {c.utilityPoints.map(u => u.podOrPdr).join(', ')}
                       </span>
                     </div>
@@ -164,7 +164,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {/* Leads */}
           {filteredLeads.length > 0 && (
             <div className="py-1">
-              <span className="px-3 py-1 text-[10px] font-bold text-[#425466] uppercase tracking-wider block">
+              <span className="px-3 py-1 text-[10px] font-bold text-[var(--energy-muted)] uppercase tracking-wider block">
                 Lead Marketing
               </span>
               {filteredLeads.map((l) => (
@@ -174,13 +174,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     onSelectLead(l);
                     onClose();
                   }}
-                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-50 text-left flex items-center justify-between text-[#0a2540] group cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg hover:bg-slate-50 text-left flex items-center justify-between text-[var(--energy-ink)] group cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
                     <Users className="h-3.5 w-3.5 text-amber-500" />
                     <div>
-                      <span className="font-semibold text-xs text-[#0a2540] block">{l.name}</span>
-                      <span className="text-[10px] text-[#425466] font-mono">
+                      <span className="font-semibold text-xs text-[var(--energy-ink)] block">{l.name}</span>
+                      <span className="text-[10px] text-[var(--energy-muted)] font-mono">
                         {l.phone} • {l.source}
                       </span>
                     </div>

@@ -66,16 +66,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   return (
     <div className="space-y-8">
       {/* Top Breadcrumb & Page Actions (Stripe style) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e8ee]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[var(--energy-line)]">
         <div>
-          <h1 className="text-xl font-bold text-[#0a2540] tracking-tight">Panoramica Operativa & Vendite</h1>
-          <p className="text-xs text-[#425466] mt-0.5">
+          <h1 className="text-xl font-bold text-[var(--energy-ink)] tracking-tight">Panoramica Operativa & Vendite</h1>
+          <p className="text-xs text-[var(--energy-muted)] mt-0.5">
             Monitoraggio pipeline commerciale, agenda telemarketing e cicli di rinegoziazione a 120 giorni.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-white border border-[#e3e8ee] text-xs font-medium text-[#425466] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-white border border-[var(--energy-line)] text-xs font-medium text-[var(--energy-muted)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
             Settembre 2026
           </div>
@@ -83,16 +83,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <button
               type="button"
               onClick={onOpenAddCustomer}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white border border-[#e3e8ee] hover:bg-slate-50 text-[#0a2540] font-bold text-xs shadow-2xs active:scale-[0.99] transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white border border-[var(--energy-line)] hover:bg-slate-50 text-[var(--energy-ink)] font-bold text-xs shadow-2xs active:scale-[0.99] transition-all cursor-pointer"
               title="Registra subito un nuovo cliente"
             >
-              <UserPlus className="h-3.5 w-3.5 text-[#635bff]" />
+              <UserPlus className="h-3.5 w-3.5 text-[var(--energy-accent)]" />
               <span>+ Nuovo Cliente</span>
             </button>
           )}
           <button
             onClick={() => onNavigate('switch4m')}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#635bff] text-white font-medium text-xs shadow-[0_1px_2px_rgba(99,91,255,0.3)] hover:bg-[#5851ea] active:scale-[0.99] transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--energy-accent)] text-white font-medium text-xs shadow-[0_1px_2px_rgba(99,91,255,0.3)] hover:bg-[var(--energy-accent-hover)] active:scale-[0.99] transition-all cursor-pointer"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Audit 4 Mesi ({pendingAudits.length})
@@ -108,19 +108,19 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             key={i}
             onClick={stat.action}
             aria-label={`${stat.title}: ${stat.value}. Clicca per aprire la sezione dedicata.`}
-            className={`p-5 rounded-xl border transition-all cursor-pointer bg-white text-left w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#635bff] ${
+            className={`p-5 rounded-xl border transition-all cursor-pointer bg-white text-left w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--energy-accent)] ${
               stat.highlight
-                ? 'border-[#635bff]/40 shadow-[0_4px_12px_rgba(99,91,255,0.08)] ring-1 ring-[#635bff]/20'
-                : 'border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-slate-300 hover:shadow-[0_4px_10px_rgba(0,0,0,0.06)]'
+                ? 'border-[var(--energy-accent)]/40 shadow-[0_4px_12px_rgba(99,91,255,0.08)] ring-1 ring-[var(--energy-accent)]/20'
+                : 'border-[var(--energy-line)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-slate-300 hover:shadow-[0_4px_10px_rgba(0,0,0,0.06)]'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-[#425466]">{stat.title}</span>
+              <span className="text-xs font-medium text-[var(--energy-muted)]">{stat.title}</span>
               <ArrowUpRight className="h-4 w-4 text-slate-400" />
             </div>
 
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-[#0a2540] tracking-tight tabular-nums">
+              <span className="text-3xl font-bold text-[var(--energy-ink)] tracking-tight tabular-nums">
                 {stat.value}
               </span>
             </div>
@@ -129,24 +129,24 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/50">
                 {stat.change}
               </span>
-              <span className="text-[#425466] text-[11px]">{stat.subtext}</span>
+              <span className="text-[var(--energy-muted)] text-[11px]">{stat.subtext}</span>
             </div>
           </button>
         ))}
       </div>
 
       {/* Stripe-style Workflow Section: "Il Ciclo di Retention a 4 Mesi" */}
-      <div className="rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="p-6 border-b border-[#e3e8ee] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-xl bg-white border border-[var(--energy-line)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="p-6 border-b border-[var(--energy-line)] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-[#635bff] border border-indigo-100 mb-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--energy-accent-soft)] text-[var(--energy-accent)] border border-[var(--energy-accent-line)] mb-2">
               <Sparkles className="h-3 w-3" />
               Automazione di Portafoglio
             </div>
-            <h2 className="text-base font-bold text-[#0a2540] tracking-tight">
+            <h2 className="text-base font-bold text-[var(--energy-ink)] tracking-tight">
               Flusso Integrato: Marketing → Call Center → Switch Continuo ogni 4 Mesi
             </h2>
-            <p className="text-xs text-[#425466] mt-0.5 max-w-2xl">
+            <p className="text-xs text-[var(--energy-muted)] mt-0.5 max-w-2xl">
               Ogni cliente contrattualizzato entra in un ciclo di monitoraggio ricorrente a 120 giorni. 
               Il CRM rileva in anticipo i rincari del mercato e applica la tariffa più competitiva, azzerando il tasso di abbandono.
             </p>
@@ -154,21 +154,21 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
           <button
             onClick={() => onNavigate('leads')}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#635bff] hover:text-[#5851ea] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--energy-accent)] hover:text-[var(--energy-accent-hover)] transition-colors cursor-pointer"
           >
             Nuova Campagna Inbound <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
 
         {/* 4 Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#e3e8ee] bg-[#fafcff]">
+        <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[var(--energy-line)] bg-[var(--energy-surface-2)]">
           {/* Step 1 */}
           <div className="p-5 space-y-2">
-            <span className="text-[11px] font-bold text-[#635bff] tracking-wider uppercase block">
+            <span className="text-[11px] font-bold text-[var(--energy-accent)] tracking-wider uppercase block">
               01 • Ingestion Lead
             </span>
-            <h3 className="text-sm font-semibold text-[#0a2540]">Marketing & Webhook</h3>
-            <p className="text-xs text-[#425466] leading-relaxed">
+            <h3 className="text-sm font-semibold text-[var(--energy-ink)]">Marketing & Webhook</h3>
+            <p className="text-xs text-[var(--energy-muted)] leading-relaxed">
               Meta Ads e Google Ads inviano anagrafica e consumi (kWh/Smc) con parsing immediato.
             </p>
           </div>
@@ -178,30 +178,30 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <span className="text-[11px] font-bold text-emerald-600 tracking-wider uppercase block">
               02 • Telemarketing
             </span>
-            <h3 className="text-sm font-semibold text-[#0a2540]">Call Center & Agenda</h3>
-            <p className="text-xs text-[#425466] leading-relaxed">
+            <h3 className="text-sm font-semibold text-[var(--energy-ink)]">Call Center & Agenda</h3>
+            <p className="text-xs text-[var(--energy-muted)] leading-relaxed">
               L'operatore contatta il lead e fissa l'appuntamento (call o visita) per l'Energy Specialist.
             </p>
           </div>
 
           {/* Step 3 */}
           <div className="p-5 space-y-2">
-            <span className="text-[11px] font-bold text-indigo-600 tracking-wider uppercase block">
+            <span className="text-[11px] font-bold text-[var(--energy-accent-strong)] tracking-wider uppercase block">
               03 • Onboarding CRM
             </span>
-            <h3 className="text-sm font-semibold text-[#0a2540]">Attivazione POD/PDR</h3>
-            <p className="text-xs text-[#425466] leading-relaxed">
+            <h3 className="text-sm font-semibold text-[var(--energy-ink)]">Attivazione POD/PDR</h3>
+            <p className="text-xs text-[var(--energy-muted)] leading-relaxed">
               Firma del primo contratto e della delega di brokeraggio per il monitoraggio continuo.
             </p>
           </div>
 
           {/* Step 4 */}
-          <div className="p-5 space-y-2 bg-[#f4f7fc]">
+          <div className="p-5 space-y-2 bg-[var(--energy-surface-2)]">
             <span className="text-[11px] font-bold text-orange-600 tracking-wider uppercase block">
               04 • 120 Giorni
             </span>
-            <h3 className="text-sm font-semibold text-[#0a2540]">Switch Tariffario</h3>
-            <p className="text-xs text-[#425466] leading-relaxed">
+            <h3 className="text-sm font-semibold text-[var(--energy-ink)]">Switch Tariffario</h3>
+            <p className="text-xs text-[var(--energy-muted)] leading-relaxed">
               Al 120° giorno il sistema valuta il mercato. Se c'è risparmio, si cambia fornitore in 1 click!
             </p>
           </div>
@@ -211,15 +211,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* Two Columns: Recent Pending Audits & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Clienti con Switch Raccomandato (Stripe Table) */}
-        <div className="lg:col-span-2 rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="p-4 sm:px-6 border-b border-[#e3e8ee] flex items-center justify-between">
+        <div className="lg:col-span-2 rounded-xl bg-white border border-[var(--energy-line)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="p-4 sm:px-6 border-b border-[var(--energy-line)] flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-[#0a2540]">Audit Quadrimestrali Richiesti</h3>
-              <p className="text-xs text-[#425466]">Clienti attivi da oltre 120 giorni con risparmio positivo riscontrato</p>
+              <h3 className="text-sm font-bold text-[var(--energy-ink)]">Audit Quadrimestrali Richiesti</h3>
+              <p className="text-xs text-[var(--energy-muted)]">Clienti attivi da oltre 120 giorni con risparmio positivo riscontrato</p>
             </div>
             <button 
               onClick={() => onNavigate('switch4m')}
-              className="text-xs font-semibold text-[#635bff] hover:text-[#5851ea] cursor-pointer"
+              className="text-xs font-semibold text-[var(--energy-accent)] hover:text-[var(--energy-accent-hover)] cursor-pointer"
             >
               Vedi Tutti ({pendingAudits.length})
             </button>
@@ -227,7 +227,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#f8fafc] text-[#425466] font-semibold border-b border-[#e3e8ee]">
+              <thead className="bg-[var(--energy-surface-2)] text-[var(--energy-muted)] font-semibold border-b border-[var(--energy-line)]">
                 <tr>
                   <th className="py-3 px-4">Cliente</th>
                   <th className="py-3 px-4">Fornitura</th>
@@ -236,12 +236,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <th className="py-3 px-4 text-center">Azione</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e3e8ee]">
+              <tbody className="divide-y divide-[var(--energy-line)]">
                 {pendingAudits.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3 px-4">
-                      <span className="font-semibold text-[#0a2540] block">{item.customerName}</span>
-                      <span className="text-[11px] text-[#425466] font-mono">{item.podOrPdr}</span>
+                      <span className="font-semibold text-[var(--energy-ink)] block">{item.customerName}</span>
+                      <span className="text-[11px] text-[var(--energy-muted)] font-mono">{item.podOrPdr}</span>
                     </td>
                     <td className="py-3 px-4">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 uppercase">
@@ -250,7 +250,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     </td>
                     <td className="py-3 px-4 text-[11px]">
                       <span className="text-slate-400 line-through block">{item.currentSupplier.split(' ')[0]} (€{item.currentAnnualCost.toFixed(0)})</span>
-                      <span className="font-semibold text-[#0a2540]">{item.bestOffer.supplier} (€{item.bestOfferAnnualCost.toFixed(0)})</span>
+                      <span className="font-semibold text-[var(--energy-ink)]">{item.bestOffer.supplier} (€{item.bestOfferAnnualCost.toFixed(0)})</span>
                     </td>
                     <td className="py-3 px-4 text-right">
                       <span className="font-bold text-emerald-600 text-sm">
@@ -261,7 +261,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     <td className="py-3 px-4 text-center">
                       <button
                         onClick={() => onNavigate('switch4m')}
-                        className="px-2.5 py-1 rounded-md bg-[#635bff] hover:bg-[#5851ea] text-white text-[11px] font-semibold cursor-pointer shadow-xs"
+                        className="px-2.5 py-1 rounded-md bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white text-[11px] font-semibold cursor-pointer shadow-xs"
                       >
                         Dossier
                       </button>
@@ -274,34 +274,34 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Right Col: Quick Status & Call Center Live Desk */}
-        <div className="rounded-xl bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5 space-y-4">
-          <h3 className="text-sm font-bold text-[#0a2540]">Desk Commerciale Rapido</h3>
+        <div className="rounded-xl bg-white border border-[var(--energy-line)] shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5 space-y-4">
+          <h3 className="text-sm font-bold text-[var(--energy-ink)]">Desk Commerciale Rapido</h3>
           
-          <div className="p-4 rounded-lg bg-slate-50 border border-[#e3e8ee] space-y-3">
+          <div className="p-4 rounded-lg bg-slate-50 border border-[var(--energy-line)] space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#425466]">Operatori Call Center Attivi:</span>
-              <span className="font-bold text-[#0a2540]">3 In Turno</span>
+              <span className="text-[var(--energy-muted)]">Operatori Call Center Attivi:</span>
+              <span className="font-bold text-[var(--energy-ink)]">3 In Turno</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#425466]">Tempo Medio Presa Lead:</span>
+              <span className="text-[var(--energy-muted)]">Tempo Medio Presa Lead:</span>
               <span className="font-semibold text-emerald-600">4.2 minuti</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#425466]">Conversion Rate da Lead:</span>
-              <span className="font-bold text-[#0a2540]">32.8%</span>
+              <span className="text-[var(--energy-muted)]">Conversion Rate da Lead:</span>
+              <span className="font-bold text-[var(--energy-ink)]">32.8%</span>
             </div>
           </div>
 
           <div className="space-y-2 pt-2">
             <button
               onClick={() => onNavigate('onboarding')}
-              className="w-full py-2.5 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold text-indigo-700 flex items-center justify-between transition-colors cursor-pointer"
+              className="w-full py-2.5 px-3 rounded-lg bg-[var(--energy-accent-soft)] hover:bg-[var(--energy-accent-soft)] border border-[var(--energy-accent-line)] text-xs font-bold text-[var(--energy-accent-strong)] flex items-center justify-between transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-600" />
+                <Sparkles className="h-4 w-4 text-[var(--energy-accent-strong)]" />
                 <span>Centro Onboarding & Attivazioni</span>
               </span>
-              <ArrowRight className="h-3.5 w-3.5 text-indigo-600" />
+              <ArrowRight className="h-3.5 w-3.5 text-[var(--energy-accent-strong)]" />
             </button>
 
             {onOpenAddCustomer && (
@@ -320,21 +320,21 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
             <button
               onClick={() => onNavigate('leads')}
-              className="w-full py-2.5 px-3 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-xs font-semibold text-[#0a2540] flex items-center justify-between transition-colors cursor-pointer"
+              className="w-full py-2.5 px-3 rounded-lg border border-[var(--energy-line)] hover:bg-slate-50 text-xs font-semibold text-[var(--energy-ink)] flex items-center justify-between transition-colors cursor-pointer"
             >
               <span>Gestisci Coda Lead Inbound</span>
               <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
             </button>
             <button
               onClick={() => onNavigate('callcenter')}
-              className="w-full py-2.5 px-3 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-xs font-semibold text-[#0a2540] flex items-center justify-between transition-colors cursor-pointer"
+              className="w-full py-2.5 px-3 rounded-lg border border-[var(--energy-line)] hover:bg-slate-50 text-xs font-semibold text-[var(--energy-ink)] flex items-center justify-between transition-colors cursor-pointer"
             >
               <span>Apri Calendario Appuntamenti</span>
               <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
             </button>
             <button
               onClick={() => onNavigate('tariffe')}
-              className="w-full py-2.5 px-3 rounded-lg border border-[#e3e8ee] hover:bg-slate-50 text-xs font-semibold text-[#0a2540] flex items-center justify-between transition-colors cursor-pointer"
+              className="w-full py-2.5 px-3 rounded-lg border border-[var(--energy-line)] hover:bg-slate-50 text-xs font-semibold text-[var(--energy-ink)] flex items-center justify-between transition-colors cursor-pointer"
             >
               <span>Simulatore Preventivi Tariffe</span>
               <ArrowRight className="h-3.5 w-3.5 text-slate-400" />

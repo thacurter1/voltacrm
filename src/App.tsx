@@ -876,11 +876,11 @@ function UnifiedApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] text-[#0a2540] flex flex-col font-sans">
+    <div className="min-h-screen bg-[var(--energy-bg)] text-[var(--energy-ink)] flex flex-col font-sans volta-energy-staff">
       <NetworkStatusBanner />
       <a 
         href="#main-content" 
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[#635bff] focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[var(--energy-accent)] focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-bold"
       >
         Vai al contenuto principale
       </a>
@@ -1016,10 +1016,10 @@ function UnifiedApp() {
                   onToast={addToast}
                 />
               ) : (
-                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+                <div className="bg-white border border-[var(--energy-line)] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[var(--energy-ink)]">Area Riservata alla Direzione Generale</h2>
                   <p className="text-sm text-slate-500 mt-2">La gestione dei profili e dei permessi dell'agenzia è accessibile esclusivamente agli amministratori.</p>
-                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                     Torna ai tuoi clienti
                   </button>
                 </div>
@@ -1033,10 +1033,10 @@ function UnifiedApp() {
                   onToast={addToast}
                 />
               ) : (
-                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata a Broker e Consulenti</h2>
+                <div className="bg-white border border-[var(--energy-line)] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[var(--energy-ink)]">Area Riservata a Broker e Consulenti</h2>
                   <p className="text-sm text-slate-500 mt-2">Gli operatori Call Center lavorano sulla presa appuntamenti e qualificazione contatti.</p>
-                  <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                  <button onClick={() => setActiveTab('callcenter')} className="mt-4 px-4 py-2 bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                     Vai alla tua postazione Agenda
                   </button>
                 </div>
@@ -1083,10 +1083,10 @@ function UnifiedApp() {
                   onTriggerScan={() => addToast('Controllo demo', 'Questa schermata dimostrativa non esegue una verifica di conformità o della cifratura.', 'info')}
                 />
               ) : (
-                <div className="bg-white border border-[#e3e8ee] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
-                  <h2 className="text-lg font-bold text-[#0a2540]">Area Riservata alla Direzione Generale</h2>
+                <div className="bg-white border border-[var(--energy-line)] rounded-xl p-8 text-center max-w-lg mx-auto shadow-xs">
+                  <h2 className="text-lg font-bold text-[var(--energy-ink)]">Area Riservata alla Direzione Generale</h2>
                   <p className="text-sm text-slate-500 mt-2">I registri di audit GDPR e i controlli infrastrutturali sono riservati agli amministratori.</p>
-                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[#635bff] hover:bg-[#5851ea] text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                  <button onClick={() => setActiveTab('crm')} className="mt-4 px-4 py-2 bg-[var(--energy-accent)] hover:bg-[var(--energy-accent-hover)] text-white text-xs font-bold rounded-lg cursor-pointer transition">
                     Torna ai tuoi clienti
                   </button>
                 </div>
@@ -1252,9 +1252,9 @@ function UnifiedApp() {
       />
 
       {/* Stripe-style Footer */}
-      <footer className="border-t border-[#e3e8ee] bg-white py-5 text-center text-xs text-[#425466]">
+      <footer className="border-t border-[var(--energy-line)] bg-white py-5 text-center text-xs text-[var(--energy-muted)]">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span className="font-semibold text-[#0a2540]">
+          <span className="font-semibold text-[var(--energy-ink)]">
             Volta Energia CRM • Gestione Forniture & Broker • Conforme GDPR & 2FA Attivo
           </span>
           <span className="text-slate-400">
@@ -1291,7 +1291,7 @@ export function App() {
     return <React.Suspense fallback={<Fallback />}><TotemApp /></React.Suspense>;
   }
   if (appParam === 'totem' || searchParams.get('portal') === 'totem') {
-    return <main className="min-h-[100dvh] bg-[#f6f9fc] px-6 py-24 text-center text-[#0a2540]"><h1 className="text-3xl font-black">Totem riservato alla postazione dedicata</h1><p className="mx-auto mt-4 max-w-lg text-slate-600">Questa modalità non è disponibile dal portale pubblico.</p><a href="/" className="mt-7 inline-block font-bold text-[#635bff] underline">Torna alla scelta dei portali</a></main>;
+    return <main className="min-h-[100dvh] bg-[var(--energy-bg)] px-6 py-24 text-center text-[var(--energy-ink)]"><h1 className="text-3xl font-black">Totem riservato alla postazione dedicata</h1><p className="mx-auto mt-4 max-w-lg text-slate-600">Questa modalità non è disponibile dal portale pubblico.</p><a href="/" className="mt-7 inline-block font-bold text-[var(--energy-accent)] underline">Torna alla scelta dei portali</a></main>;
   }
 
   return <UnifiedApp />;
