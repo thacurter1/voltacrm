@@ -28,7 +28,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
   onOpenStaffLogin,
 }) => {
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <header className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-3">
         {/* Brand Logo */}
         <button
@@ -37,15 +37,15 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
           className="flex items-center gap-2.5 sm:gap-3 cursor-pointer shrink-0 text-left rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           onClick={() => onSelectView('offers')}
         >
-          <div className="h-9 w-9 rounded-xl bg-brand flex items-center justify-center text-white shadow-xs shrink-0">
-            <Zap className="h-5 w-5 fill-white text-white" strokeWidth={2} />
+          <div className="h-9 w-9 rounded-xl bg-ink flex items-center justify-center shadow-xs shrink-0">
+            <Zap className="h-5 w-5 fill-spark text-spark" strokeWidth={2} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-base text-ink tracking-tight">
+              <span className="font-display font-bold text-base text-ink tracking-tight">
                 Volta Energia
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand/10 text-brand border border-brand/25">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-soft text-brand border border-brand/25">
                 {isPublicVisitor ? 'Confronto luce e gas' : 'PORTALE BOLLETTE'}
               </span>
             </div>

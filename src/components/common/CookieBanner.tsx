@@ -41,9 +41,9 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({ onOpenLegal }) => {
       role="region"
       aria-label="Informativa sui cookie"
     >
-      <div className="mx-auto max-w-4xl rounded-2xl bg-[#0a2540] text-white p-4 sm:p-5 shadow-2xl border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pointer-events-auto">
+      <div className="mx-auto max-w-4xl rounded-2xl bg-ink text-white p-4 sm:p-5 shadow-2xl border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pointer-events-auto">
         <div className="flex items-start gap-3.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#635bff] text-white shrink-0 mt-0.5">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-brand text-white shrink-0 mt-0.5">
             <Cookie className="size-5" />
           </span>
           <div className="space-y-1 text-xs sm:text-sm text-slate-300">
@@ -64,14 +64,14 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({ onOpenLegal }) => {
           <button
             type="button"
             onClick={handleOpenDetails}
-            className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition focus-visible:outline-2 focus-visible:outline-[#635bff]"
+            className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition focus-visible:outline-2 focus-visible:outline-brand"
           >
             Dettagli privacy
           </button>
           <button
             type="button"
             onClick={handleAccept}
-            className="rounded-xl bg-[#635bff] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#534be5] transition focus-visible:outline-2 focus-visible:outline-[#635bff]"
+            className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-brand-hover transition focus-visible:outline-2 focus-visible:outline-brand"
           >
             Accetta ed esplora
           </button>

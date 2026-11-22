@@ -24,7 +24,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
               <CheckCircle2 className="size-5" />
             </span>
             <div>
-              <p className="font-bold text-[#0a2540]">Confronta prima di decidere</p>
+              <p className="font-bold text-ink">Confronta prima di decidere</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 Consultare le stime non attiva un contratto. Puoi valutare le condizioni prima di richiedere una consulenza.
               </p>
@@ -36,7 +36,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
               <Scale className="size-5" />
             </span>
             <div>
-              <p className="font-bold text-[#0a2540]">Trasparenza ARERA</p>
+              <p className="font-bold text-ink">Trasparenza ARERA</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 Ogni stima indica i consumi e i parametri utilizzati. Controlla la data di riferimento degli indici e le condizioni dell’offerta.
               </p>
@@ -44,11 +44,11 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
           </div>
 
           <div className="flex items-start gap-3">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-[#f0efff] text-[#635bff] shrink-0 mt-0.5">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-brand-soft text-brand shrink-0 mt-0.5">
               <Phone className="size-5" />
             </span>
             <div>
-              <p className="font-bold text-[#0a2540]">Contatti e assistenza</p>
+              <p className="font-bold text-ink">Contatti e assistenza</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 Numero Verde <strong>{COMPANY_PROFILE.tollFreePhone || '800 912 345'}</strong> attivo dal lunedì al venerdì dalle 9:00 alle 18:00.
               </p>
@@ -68,10 +68,10 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
           {/* Col 1: Brand & Presentation */}
           <div className="md:col-span-1 space-y-3">
             <div className="flex items-center gap-2.5">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-[#635bff] text-white">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-brand text-white">
                 <Zap className="size-4" />
               </span>
-              <span className="text-lg font-extrabold text-[#0a2540] tracking-tight">Volta Energia</span>
+              <span className="text-lg font-extrabold text-ink tracking-tight">Volta Energia</span>
             </div>
             <p className="text-xs leading-relaxed text-slate-500">
               Confronta i costi di luce e gas, consulta le condizioni e richiedi assistenza per valutare la tua fornitura.
@@ -84,7 +84,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
 
           {/* Col 2: Institutional & Legal Details */}
           <div className="space-y-2 text-xs">
-            <p className="font-bold uppercase tracking-wider text-[#0a2540] text-[11px]">Dati Societari</p>
+            <p className="font-bold uppercase tracking-wider text-ink text-[11px]">Dati Societari</p>
             <p className="font-semibold text-slate-800">{COMPANY_PROFILE.name || 'Volta Energia S.r.l.'}</p>
             <p>Sede Legale: {COMPANY_PROFILE.address || 'Via Monte Napoleone 8, 20121 Milano (MI)'}</p>
             <p>P.IVA e Codice Fiscale: <strong>{COMPANY_PROFILE.vatNumber || '12948570155'}</strong></p>
@@ -96,31 +96,31 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
 
           {/* Col 3: Contacts */}
           <div className="space-y-2 text-xs">
-            <p className="font-bold uppercase tracking-wider text-[#0a2540] text-[11px]">Contatti & Supporto</p>
+            <p className="font-bold uppercase tracking-wider text-ink text-[11px]">Contatti & Supporto</p>
             <p className="flex items-center gap-2">
-              <Phone className="size-3.5 text-[#635bff]" />
+              <Phone className="size-3.5 text-brand" />
               <span>Numero Verde: <strong>{COMPANY_PROFILE.tollFreePhone || '800 912 345'}</strong></span>
             </p>
             <p className="flex items-center gap-2">
-              <Mail className="size-3.5 text-[#635bff]" />
-              <span>Email: <a href={`mailto:${COMPANY_PROFILE.supportEmail}`} className="text-[#635bff] hover:underline">{COMPANY_PROFILE.supportEmail}</a></span>
+              <Mail className="size-3.5 text-brand" />
+              <span>Email: <a href={`mailto:${COMPANY_PROFILE.supportEmail}`} className="text-brand hover:underline">{COMPANY_PROFILE.supportEmail}</a></span>
             </p>
             <p className="flex items-center gap-2">
-              <Mail className="size-3.5 text-[#635bff]" />
-              <span>PEC: <a href={`mailto:${COMPANY_PROFILE.pecEmail}`} className="text-[#635bff] hover:underline">{COMPANY_PROFILE.pecEmail}</a></span>
+              <Mail className="size-3.5 text-brand" />
+              <span>PEC: <a href={`mailto:${COMPANY_PROFILE.pecEmail}`} className="text-brand hover:underline">{COMPANY_PROFILE.pecEmail}</a></span>
             </p>
             <p className="text-slate-500 pt-1">Orario supporto: Lunedì - Venerdì, 9:00 - 18:00</p>
           </div>
 
           {/* Col 4: Legal & Transparency Links */}
           <div className="space-y-2 text-xs">
-            <p className="font-bold uppercase tracking-wider text-[#0a2540] text-[11px]">Tutela del Consumatore</p>
+            <p className="font-bold uppercase tracking-wider text-ink text-[11px]">Tutela del Consumatore</p>
             <ul className="space-y-2">
               <li>
                 <button
                   type="button"
                   onClick={() => handleOpen('privacy')}
-                  className="flex items-center gap-1.5 text-slate-700 hover:text-[#635bff] transition underline-offset-2 hover:underline"
+                  className="flex items-center gap-1.5 text-slate-700 hover:text-brand transition underline-offset-2 hover:underline"
                 >
                   <FileText className="size-3.5 text-slate-400" />
                   Informativa Privacy (GDPR)
@@ -130,7 +130,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
                 <button
                   type="button"
                   onClick={() => handleOpen('arera')}
-                  className="flex items-center gap-1.5 text-slate-700 hover:text-[#635bff] transition underline-offset-2 hover:underline"
+                  className="flex items-center gap-1.5 text-slate-700 hover:text-brand transition underline-offset-2 hover:underline"
                 >
                   <Scale className="size-3.5 text-slate-400" />
                   Condizioni e Trasparenza ARERA
@@ -140,7 +140,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
                 <button
                   type="button"
                   onClick={() => handleOpen('terms')}
-                  className="flex items-center gap-1.5 text-slate-700 hover:text-[#635bff] transition underline-offset-2 hover:underline"
+                  className="flex items-center gap-1.5 text-slate-700 hover:text-brand transition underline-offset-2 hover:underline"
                 >
                   <FileText className="size-3.5 text-slate-400" />
                   Termini di Servizio
@@ -150,7 +150,7 @@ export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
                 <button
                   type="button"
                   onClick={() => handleOpen('privacy')}
-                  className="flex items-center gap-1.5 text-slate-500 hover:text-[#635bff] transition underline-offset-2 hover:underline"
+                  className="flex items-center gap-1.5 text-slate-500 hover:text-brand transition underline-offset-2 hover:underline"
                 >
                   <span>Preferenze Cookie</span>
                 </button>

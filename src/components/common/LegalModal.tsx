@@ -48,11 +48,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#635bff] text-white">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-brand text-white">
               <ShieldCheck className="size-5" />
             </span>
             <div>
-              <h2 id="legal-modal-title" className="text-lg font-bold text-[#0a2540]">
+              <h2 id="legal-modal-title" className="text-lg font-bold text-ink">
                 Informazioni Legali & Trasparenza
               </h2>
               <p className="text-xs text-slate-500">
@@ -64,7 +64,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition focus-visible:outline-2 focus-visible:outline-[#635bff]"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition focus-visible:outline-2 focus-visible:outline-brand"
             aria-label="Chiudi finestra modale"
           >
             <X className="size-5" />
@@ -78,7 +78,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             onClick={() => setActiveTabOverride('privacy')}
             className={`flex items-center gap-2 border-b-2 py-3 text-sm font-semibold transition ${
               activeTab === 'privacy'
-                ? 'border-[#635bff] text-[#635bff]'
+                ? 'border-brand text-brand'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -90,7 +90,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             onClick={() => setActiveTabOverride('arera')}
             className={`ml-6 flex items-center gap-2 border-b-2 py-3 text-sm font-semibold transition ${
               activeTab === 'arera'
-                ? 'border-[#635bff] text-[#635bff]'
+                ? 'border-brand text-brand'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -102,7 +102,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             onClick={() => setActiveTabOverride('terms')}
             className={`ml-6 flex items-center gap-2 border-b-2 py-3 text-sm font-semibold transition ${
               activeTab === 'terms'
-                ? 'border-[#635bff] text-[#635bff]'
+                ? 'border-brand text-brand'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -126,17 +126,17 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </div>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">
+                <h3 className="text-base font-bold text-ink">
                   1. Titolare del Trattamento (Art. 13-14 Regolamento UE 2016/679 - GDPR)
                 </h3>
                 <p>
                   Il Titolare del trattamento è <strong>Volta Energia S.r.l.</strong>, con sede legale in Via Monte Napoleone 8, 20121 Milano (MI), P.IVA e Codice Fiscale 12948570155. Contatto privacy:{' '}
-                  <a href="mailto:privacy@voltaenergia.it" className="text-[#635bff] underline">privacy@voltaenergia.it</a>.
+                  <a href="mailto:privacy@voltaenergia.it" className="text-brand underline">privacy@voltaenergia.it</a>.
                 </p>
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">2. Finalità e Base Giuridica del Trattamento</h3>
+                <h3 className="text-base font-bold text-ink">2. Finalità e Base Giuridica del Trattamento</h3>
                 <ul className="list-disc pl-5 space-y-1.5 text-slate-600">
                   <li>
                     <strong>Erogazione della simulazione e preventivo:</strong> calcolo del risparmio energetico stimato e confronto tariffe per la fornitura luce e gas. Base giuridica: esecuzione di misure precontrattuali su richiesta dell'interessato (Art. 6.1.b GDPR).
@@ -151,16 +151,16 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">3. Conservazione dei Dati e Cookie</h3>
+                <h3 className="text-base font-bold text-ink">3. Conservazione dei Dati e Cookie</h3>
                 <p>
                   I dati raccolti vengono conservati per il tempo strettamente necessario all'evasione della consulenza energetica e non oltre 24 mesi, salvo consenso esplicito per il monitoraggio continuativo del mercato. Questo sito fa uso esclusivo di <strong>cookie tecnici essenziali</strong> per il corretto funzionamento del comparatore e non impiega cookie di profilazione commerciale invasiva.
                 </p>
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">4. Diritti dell'Interessato (Art. 15-22 GDPR)</h3>
+                <h3 className="text-base font-bold text-ink">4. Diritti dell'Interessato (Art. 15-22 GDPR)</h3>
                 <p>
-                  Puoi in qualsiasi momento esercitare i diritti di accesso, rettifica, cancellazione, limitazione e revoca del consenso inviando una comunicazione a <a href="mailto:privacy@voltaenergia.it" className="text-[#635bff] underline">privacy@voltaenergia.it</a>. Hai inoltre diritto di proporre reclamo all'Autorità Garante per la Protezione dei Dati Personali.
+                  Puoi in qualsiasi momento esercitare i diritti di accesso, rettifica, cancellazione, limitazione e revoca del consenso inviando una comunicazione a <a href="mailto:privacy@voltaenergia.it" className="text-brand underline">privacy@voltaenergia.it</a>. Hai inoltre diritto di proporre reclamo all'Autorità Garante per la Protezione dei Dati Personali.
                 </p>
               </section>
             </div>
@@ -179,7 +179,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </div>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">1. Parametri di Mercato e Indici di Riferimento (PUN e PSV)</h3>
+                <h3 className="text-base font-bold text-ink">1. Parametri di Mercato e Indici di Riferimento (PUN e PSV)</h3>
                 <p>
                   Per le offerte a prezzo variabile o indicizzato, la stima della spesa fa riferimento ai valori di benchmark ufficiali:
                 </p>
@@ -197,7 +197,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">2. Scomposizione della Spesa in 4 Componenti</h3>
+                <h3 className="text-base font-bold text-ink">2. Scomposizione della Spesa in 4 Componenti</h3>
                 <p>
                   La spesa annua stimata include tutte e 4 le voci previste dalla bolletta 2.0 ARERA:
                 </p>
@@ -210,7 +210,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">3. Nessun Costo Nascosto e Condizioni Contrattuali</h3>
+                <h3 className="text-base font-bold text-ink">3. Nessun Costo Nascosto e Condizioni Contrattuali</h3>
                 <p>
                   Il confronto effettuato è gratuito e non vincolante. Prima di procedere all'eventuale sottoscrizione di qualsiasi contratto, il cliente riceverà la <em>Scheda di Confrontabilità</em> e la <em>Scheda Sintetica</em> approvate da ARERA per la conferma definitiva delle condizioni economiche.
                 </p>
@@ -221,37 +221,37 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           {activeTab === 'terms' && (
             <div className="space-y-4">
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">1. Oggetto del Servizio</h3>
+                <h3 className="text-base font-bold text-ink">1. Oggetto del Servizio</h3>
                 <p>
                   Volta Energia offre un servizio gratuito di comparazione, orientamento e consulenza indipendente per tariffe di energia elettrica e gas naturale dedicate a clienti domestici e piccole imprese.
                 </p>
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">2. Assenza di Vincoli Contrattuali Immediati</h3>
+                <h3 className="text-base font-bold text-ink">2. Assenza di Vincoli Contrattuali Immediati</h3>
                 <p>
                   L'utilizzo del comparatore online e l'invio della richiesta di preventivo o della bolletta non comportano alcun vincolo né l'attivazione immediata di contratti di fornitura. Il cambio fornitore (switch) viene avviato esclusivamente a seguito di espressa conferma del cliente tramite firma elettronica o registrazione vocale certificata.
                 </p>
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">3. Accuratezza delle Stime</h3>
+                <h3 className="text-base font-bold text-ink">3. Accuratezza delle Stime</h3>
                 <p>
                   Le stime di spesa e risparmio sono elaborate sulla base dei consumi dichiarati dall'utente o rilevati dalla bolletta caricata. Volta Energia applica rigorosi algoritmi di benchmark ma consiglia sempre la verifica puntuale della propria fattura recente con l'ausilio di un consulente.
                 </p>
               </section>
 
               <section className="space-y-2">
-                <h3 className="text-base font-bold text-[#0a2540]">4. Contatti Istituzionali</h3>
+                <h3 className="text-base font-bold text-ink">4. Contatti Istituzionali</h3>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1.5 text-xs">
                   <p className="flex items-center gap-2">
-                    <Phone className="size-4 text-[#635bff]" /> Numero Verde Gratuito: <strong>800 912 345</strong> (Lun-Ven 9:00 - 18:00)
+                    <Phone className="size-4 text-brand" /> Numero Verde Gratuito: <strong>800 912 345</strong> (Lun-Ven 9:00 - 18:00)
                   </p>
                   <p className="flex items-center gap-2">
-                    <Mail className="size-4 text-[#635bff]" /> Email di supporto: <strong>supporto@voltaenergia.it</strong>
+                    <Mail className="size-4 text-brand" /> Email di supporto: <strong>supporto@voltaenergia.it</strong>
                   </p>
                   <p className="flex items-center gap-2">
-                    <Building2 className="size-4 text-[#635bff]" /> PEC: <strong>voltaenergia@pec.it</strong>
+                    <Building2 className="size-4 text-brand" /> PEC: <strong>voltaenergia@pec.it</strong>
                   </p>
                 </div>
               </section>
@@ -264,7 +264,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-xl bg-[#635bff] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#534be5] transition focus-visible:outline-2 focus-visible:outline-[#635bff]"
+            className="rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-hover transition focus-visible:outline-2 focus-visible:outline-brand"
           >
             Ho compreso e chiudi
           </button>
