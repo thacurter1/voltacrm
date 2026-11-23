@@ -326,8 +326,6 @@ export const CrmApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F6F9FA] text-[#0F222D] flex flex-col font-sans">
-      <InstallAppBanner />
-
       {/* Header */}
       <Header
         activeTab={activeTab}
@@ -708,6 +706,9 @@ export const CrmApp: React.FC = () => {
           addToast('Firma Registrata', 'La richiesta è firmata e attende la conferma di attivazione dello staff.', 'success');
         }}
       />
+
+      {/* In-flow install hint: never overlays CRM content */}
+      <InstallAppBanner />
 
       <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
 

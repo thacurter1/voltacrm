@@ -19,7 +19,12 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+    // Bottom-right on tablet/desktop, above the Staff mobile tab bar on phones:
+    // a toast must never cover the header or its navigation (QA 2026-11).
+    <div
+      data-testid="toast-region"
+      className="fixed inset-x-4 bottom-20 z-[60] flex flex-col-reverse gap-2 pointer-events-none sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-full sm:max-w-sm"
+    >
       {toasts.map((toast) => {
         const isSuccess = toast.type === 'success';
         const isWarning = toast.type === 'warning';
@@ -27,9 +32,9 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
         return (
           <div
             key={toast.id}
-            role="alert"
-            aria-live="assertive"
-            className="pointer-events-auto p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_10px_25px_rgba(0,0,0,0.08)] flex items-start gap-3 transition-all animate-in slide-in-from-top-2 duration-200"
+            role={isWarning ? 'alert' : 'status'}
+            aria-live={isWarning ? 'assertive' : 'polite'}
+            className="pointer-events-auto py-3 pl-4 pr-1 rounded-[10px] bg-white border border-[#DCE5E8] shadow-[0_10px_25px_rgba(15,34,45,0.10)] flex items-start gap-3 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200"
           >
             {isSuccess && (
               <div className="p-1 rounded-md bg-emerald-50 text-emerald-600 mt-0.5">
@@ -49,14 +54,16 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
 
             <div className="flex-1 min-w-0">
               <h4 className="text-xs font-bold text-[#0F222D]">{toast.title}</h4>
-              <p className="text-xs text-[#425466] mt-0.5 leading-relaxed">{toast.message}</p>
+              <p className="text-xs text-[#445966] mt-0.5 leading-relaxed">{toast.message}</p>
             </div>
 
             <button
+              type="button"
               onClick={() => onDismiss(toast.id)}
-              className="text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer"
+              aria-label="Chiudi notifica"
+              className="-my-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-[#445966] hover:text-[#0F222D] hover:bg-[#F6F9FA] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0A6847]"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         );
