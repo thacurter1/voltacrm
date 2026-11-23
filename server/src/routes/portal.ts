@@ -190,6 +190,7 @@ function handlePortalRoute(fn: AsyncPortalHandler) {
       const status = typeof err.status === 'number' ? err.status : 500;
       res.status(status).json({
         success: false,
+        ...(typeof err.code === 'string' && err.code.startsWith('OCR_') ? { code: err.code, manualEntryAvailable: true } : {}),
         message: err.message || 'Errore durante l\'elaborazione della richiesta portale.',
       });
     }

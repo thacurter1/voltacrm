@@ -164,7 +164,7 @@ export async function withDecryptedGeminiKey<T>(
   if (!rawEnv || !rawEnv.trim()) {
     throw Object.assign(
       new Error('OCR Gemini non configurato: GEMINI_API_KEY_ENCRYPTED o GEMINI_API_KEY obbligatoria.'),
-      { status: 503 }
+      { status: 503, code: 'OCR_NOT_CONFIGURED' }
     );
   }
 
@@ -185,9 +185,12 @@ export async function withDecryptedGeminiKey<T>(
   } catch (err: unknown) {
     const rawMsg = err instanceof Error ? err.message : String(err);
     const safeMsg = redactSecretFromText(rawMsg, activeKey);
-    const wrapped = new Error(safeMsg) as Error & { status?: number };
+    const wrapped = new Error(safeMsg) as Error & { status?: number; code?: string };
     if (err && typeof err === 'object' && 'status' in err && typeof (err as { status?: unknown }).status === 'number') {
       wrapped.status = (err as { status: number }).status;
+    }
+    if (err && typeof err === 'object' && 'code' in err && typeof (err as { code?: unknown }).code === 'string') {
+      wrapped.code = (err as { code: string }).code;
     }
     throw wrapped;
   } finally {

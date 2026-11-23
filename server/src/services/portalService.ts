@@ -60,7 +60,7 @@ export interface PortalBackend {
   getBill(id: string): Promise<PortalBillRecord | null>;
   getBillDownload(record: PortalBillRecord): Promise<BillDownload>;
   getBillBytes(record: PortalBillRecord): Promise<{ bytes: Buffer; mimeType: string }>;
-  updateBillAnalysis(id: string, analysis: { status: 'analyzed'; extractedSavingsEur: number; ocrResult: ExtractedBillData }): Promise<PortalBillRecord>;
+  updateBillAnalysis(id: string, analysis: { status: 'analyzed'; extractedSavingsEur?: number; ocrResult: ExtractedBillData }): Promise<PortalBillRecord>;
   updateBillStatus(id: string, status: PortalBillStatus, notes?: string): Promise<PortalBillRecord>;
   claimGuestBill(claimTokenHash: string, customerId: string, customerName: string): Promise<PortalBillRecord>;
   insertReading(record: MeterReadingRecord): Promise<MeterReadingRecord>;
@@ -234,7 +234,7 @@ function createSupabaseBackend(): PortalBackend {
     async updateBillAnalysis(id, analysis) {
       const { data, error } = await client.from('portal_bills').update({
         status: analysis.status,
-        extracted_savings_eur: analysis.extractedSavingsEur,
+        extracted_savings_eur: analysis.extractedSavingsEur ?? null,
         ocr_result: analysis.ocrResult,
       }).eq('id', id).select('*').single();
       if (error) throw new Error('Esito OCR non salvato: ' + error.message);

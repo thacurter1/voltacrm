@@ -26,9 +26,13 @@ ocrRouter.post('/analyze-bill', apiLimiter, authenticateToken, async (req: Reque
       result
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
+    const status = typeof error?.status === 'number' ? error.status : 500;
+    res.status(status).json({
       success: false,
-      message: error.message || 'Errore durante l’analisi del documento.'
+      code: typeof error?.code === 'string' ? error.code : undefined,
+      // Lets the UI fall back to manual entry instead of blocking the user.
+      manualEntryAvailable: status >= 422,
+      message: error?.message || 'Errore durante l’analisi del documento.'
     });
   }
 });

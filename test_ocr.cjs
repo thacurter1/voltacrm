@@ -73,7 +73,7 @@ async function runOcrTests() {
 
   console.log('STATUS:', authRes.status);
   console.log('BODY:', JSON.stringify(authRes.data, null, 2));
-  if (authRes.status !== 503 || authRes.data?.result) {
+  if (authRes.status !== 503 || authRes.data?.result || authRes.data?.code !== 'OCR_NOT_CONFIGURED' || authRes.data?.manualEntryAvailable !== true) {
     console.error('❌ OCR senza provider deve fallire senza generare dati:', authRes.status);
     process.exit(1);
   }
