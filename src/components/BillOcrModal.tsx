@@ -1,95 +1,99 @@
-import React, { useState, useRef } from 'react';
-import { 
-  UploadCloud, 
-  CheckCircle2, 
-  FileText, 
-  X,
-  RefreshCw,
-  ShieldCheck,
-  AlertCircle,
-  FileUp,
-  Zap
-} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, FileUp, Loader2, PencilLine, X } from 'lucide-react';
 import { BillOcrResult, Customer } from '../types';
 import { api } from '../api/client';
 import { securityValidator } from '../services/securityValidator';
+import { describeOcrFailure, toOcrFailure, type OcrFailure } from './ocr/ocrFailure';
 
 interface BillOcrModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImportCustomer: (customer: Customer) => void;
+  /** Pre-filled result (e.g. a stored bill analysed from the inbox). */
+  initialResult?: BillOcrResult | null;
+  /** Failure from an analysis started elsewhere: the modal opens on manual entry. */
+  initialError?: OcrFailure | null;
 }
 
-const SAMPLE_BILLS: BillOcrResult[] = [
-  {
-    fileName: 'Bolletta_Enel_Energia_Luce_Residenziale.pdf',
-    utilityType: 'luce',
-    podOrPdr: 'IT001E99882233',
-    supplier: 'Enel Energia (Tariffa Bloccata 2024)',
-    customerName: 'Claudio Marchi',
-    fiscalCode: 'MRCCLD79H12F205K',
-    annualConsumption: 3800,
-    f1Kwh: 1400,
-    f2Kwh: 1200,
-    f3Kwh: 1200,
-    powerKw: 4.5,
-    rawCostTotal: 840.0,
-    currentUnitCost: 0.195,
-    currentFixedFeeYear: 144.0,
-    estimatedSavingEur: 215.0,
-    confidenceScore: 99.2,
-  },
-  {
-    fileName: 'Fattura_Gas_Eni_Plenitude_Casa.pdf',
-    utilityType: 'gas',
-    podOrPdr: '02581900112233',
-    supplier: 'Eni Plenitude Gas',
-    customerName: 'Federica Morelli',
-    fiscalCode: 'MRLFDR85T45H501Y',
-    annualConsumption: 1250,
-    rawCostTotal: 680.0,
-    currentUnitCost: 0.58,
-    currentFixedFeeYear: 120.0,
-    estimatedSavingEur: 148.0,
-    confidenceScore: 98.6,
-  },
-  {
-    fileName: 'Estratto_Acea_PMI_Business_Trifase.pdf',
-    utilityType: 'luce',
-    podOrPdr: 'IT001E77665544',
-    supplier: 'Acea Business Relax',
-    customerName: 'Officina Meccanica Valenti Srl',
-    fiscalCode: '08765430582',
-    annualConsumption: 22000,
-    f1Kwh: 10000,
-    f2Kwh: 6500,
-    f3Kwh: 5500,
-    powerKw: 15.0,
-    rawCostTotal: 4120.0,
-    currentUnitCost: 0.185,
-    currentFixedFeeYear: 240.0,
-    estimatedSavingEur: 790.0,
-    confidenceScore: 99.7,
-  }
-];
+interface ReviewForm {
+  utilityType: 'luce' | 'gas';
+  customerName: string;
+  fiscalCode: string;
+  supplier: string;
+  podOrPdr: string;
+  annualConsumption: string;
+  powerKw: string;
+  f1Kwh: string;
+  f2Kwh: string;
+  f3Kwh: string;
+  currentUnitCost: string;
+  currentFixedFeeYear: string;
+  rawCostTotal: string;
+  period: string;
+  phone: string;
+  email: string;
+  city: string;
+}
 
-export const BillOcrModal: React.FC<BillOcrModalProps> = ({
-  isOpen,
-  onClose,
-  onImportCustomer,
-}) => {
+const EMPTY_FORM: ReviewForm = {
+  utilityType: 'luce', customerName: '', fiscalCode: '', supplier: '', podOrPdr: '',
+  annualConsumption: '', powerKw: '', f1Kwh: '', f2Kwh: '', f3Kwh: '',
+  currentUnitCost: '', currentFixedFeeYear: '', rawCostTotal: '', period: '',
+  phone: '', email: '', city: '',
+};
+
+const str = (v: number | string | undefined) => (v === undefined || v === null ? '' : String(v));
+
+function formFromResult(result: BillOcrResult): ReviewForm {
+  return {
+    ...EMPTY_FORM,
+    utilityType: result.utilityType,
+    customerName: str(result.customerName),
+    fiscalCode: str(result.fiscalCode),
+    supplier: str(result.supplier),
+    podOrPdr: str(result.podOrPdr),
+    annualConsumption: str(result.annualConsumption),
+    powerKw: str(result.powerKw),
+    f1Kwh: str(result.f1Kwh),
+    f2Kwh: str(result.f2Kwh),
+    f3Kwh: str(result.f3Kwh),
+    currentUnitCost: str(result.currentUnitCost),
+    currentFixedFeeYear: str(result.currentFixedFeeYear),
+    rawCostTotal: str(result.rawCostTotal),
+    period: str(result.period),
+  };
+}
+
+function toNumber(value: string): number | undefined {
+  const v = value.trim().replace(/\s/g, '');
+  if (!v) return undefined;
+  const n = Number(v.includes(',') ? v.replace(/\./g, '').replace(',', '.') : v);
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  podOrPdr: 'POD / PDR', supplier: 'Fornitore', customerName: 'Intestatario', fiscalCode: 'Codice fiscale / P.IVA',
+  annualConsumption: 'Consumo annuo', rawCostTotal: 'Totale bolletta', currentUnitCost: 'Prezzo materia energia', period: 'Periodo',
+};
+
+const inputCls =
+  'mt-1 block w-full min-h-11 rounded-md border border-[#DCE5E8] bg-white px-3 text-sm text-[#0F222D] placeholder:text-[#6B7F8A] focus:border-[#0A6847] focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20';
+const monoCls = `${inputCls} font-mono tabular-nums`;
+
+/** Mount it only while open (`{open && <BillOcrModal …/>}`) so each opening starts from its initial props. */
+export const BillOcrModal: React.FC<BillOcrModalProps> = ({ isOpen, onClose, onImportCustomer, initialResult = null, initialError = null }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [selectedSample, setSelectedSample] = useState<BillOcrResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<BillOcrResult | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [result, setResult] = useState<BillOcrResult | null>(initialResult);
+  const [failure, setFailure] = useState<OcrFailure | null>(initialError);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [form, setForm] = useState<ReviewForm | null>(initialResult ? formFromResult(initialResult) : initialError ? { ...EMPTY_FORM } : null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
@@ -97,346 +101,323 @@ export const BillOcrModal: React.FC<BillOcrModalProps> = ({
   if (!isOpen) return null;
 
   const handleFileProcess = async (file: File) => {
-    if (!file) return;
-
     const validation = await securityValidator.validateFile(file);
     if (!validation.isValid) {
-      setErrorMessage(validation.error || 'Formato non supportato o file non valido (ammessi PDF, JPG, PNG).');
+      setFileError(validation.error || 'Formato non supportato (ammessi PDF, JPG, PNG).');
       return;
     }
-
     if (file.size > 10 * 1024 * 1024) {
-      setErrorMessage('La dimensione del file supera il limite massimo consentito di 10MB.');
+      setFileError('Il file supera il limite di 10 MB.');
       return;
     }
-
-    setErrorMessage(null);
+    setFileError(null);
+    setFailure(null);
+    setResult(null);
+    setForm(null);
     setIsScanning(true);
-    setSelectedSample(null);
-    setScanResult(null);
 
-    try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const base64Url = (reader.result as string) || '';
-          const base64Data = base64Url.split(',')[1] || '';
-          const mimeType = file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
-
-          const result = await api.ocr.analyzeBill({
-            fileName: file.name,
-            mimeType,
-            base64Data,
-          });
-
-          setScanResult(result);
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          setErrorMessage(`Errore durante l'analisi OCR: ${msg}`);
-        } finally {
-          setIsScanning(false);
-        }
-      };
-
-      reader.onerror = () => {
-        setErrorMessage('Impossibile leggere il file locale selezionato.');
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64Data = String(reader.result || '').split(',')[1] || '';
+        const mimeType = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+        const extracted = await api.ocr.analyzeBill({ fileName: file.name, mimeType, base64Data });
+        setResult(extracted);
+        setForm(formFromResult(extracted));
+      } catch (err) {
+        const f = toOcrFailure(err);
+        setFailure(f);
+        setForm({ ...EMPTY_FORM, utilityType: /gas/i.test(file.name) ? 'gas' : 'luce' });
+      } finally {
         setIsScanning(false);
-      };
-
-      reader.readAsDataURL(file);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setErrorMessage(`Errore inatteso: ${msg}`);
+      }
+    };
+    reader.onerror = () => {
+      setFileError('Impossibile leggere il file selezionato.');
       setIsScanning(false);
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+    else if (e.type === 'dragleave') setDragActive(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileProcess(e.dataTransfer.files[0]);
-    }
+    const file = e.dataTransfer.files?.[0];
+    if (file) void handleFileProcess(file);
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileProcess(e.target.files[0]);
-    }
-  };
+  const update = (key: keyof ReviewForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm((prev) => (prev ? { ...prev, [key]: e.target.value } : prev));
 
-  const handleRunScan = (bill: BillOcrResult) => {
-    setSelectedSample(bill);
-    setErrorMessage(null);
-    setIsScanning(true);
-    setScanResult(null);
-
-    setTimeout(() => {
-      setIsScanning(false);
-      setScanResult(bill);
-    }, 1000);
-  };
+  const missing = new Set(result?.missingFields || []);
+  const flag = (key: string) => (result && missing.has(key) ? ' border-[#9A4D09] bg-[#FFF8F0]' : '');
 
   const handleConfirmImport = () => {
-    if (!scanResult) return;
+    if (!form) return;
+    const name = form.customerName.trim();
+    const fiscalCode = form.fiscalCode.trim().toUpperCase();
+    const podOrPdr = form.podOrPdr.trim().toUpperCase();
+    const annualConsumption = toNumber(form.annualConsumption);
+    const currentUnitCost = toNumber(form.currentUnitCost);
+    const currentFixedFeeYear = toNumber(form.currentFixedFeeYear);
+    const problems: string[] = [];
+    if (name.length < 2) problems.push('intestatario');
+    if (!/^(?:[A-Z0-9]{16}|\d{11})$/.test(fiscalCode)) problems.push('codice fiscale o P.IVA');
+    if (!podOrPdr) problems.push(form.utilityType === 'luce' ? 'POD' : 'PDR');
+    if (!annualConsumption) problems.push('consumo annuo');
+    if (currentUnitCost === undefined) problems.push('prezzo materia energia');
+    if (currentFixedFeeYear === undefined) problems.push('quota fissa annua');
+    if (problems.length) {
+      setFormError(`Completa prima: ${problems.join(', ')}.`);
+      return;
+    }
+    setFormError(null);
 
     const today = new Date();
     const nextAudit = new Date();
     nextAudit.setDate(today.getDate() + 120);
+    const isLuce = form.utilityType === 'luce';
+    const source = result ? `lettura automatica (${result.model || 'OCR'}) verificata manualmente` : 'inserimento manuale da bolletta';
 
-    const newCustomer: Customer = {
+    onImportCustomer({
       id: `cust-${Date.now()}`,
-      name: scanResult.customerName,
-      fiscalCode: scanResult.fiscalCode,
-      phone: '+39 33' + Math.floor(10000000 + Math.random() * 90000000),
-      email: scanResult.customerName.toLowerCase().replace(/[^a-z0-9]/g, '.') + '@email.it',
-      city: 'Milano (MI)',
+      name,
+      fiscalCode,
+      phone: form.phone.trim(),
+      email: form.email.trim(),
+      city: form.city.trim(),
       contractStartDate: today.toISOString().split('T')[0],
       lastSwitchAuditDate: today.toISOString().split('T')[0],
       nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
-      accountManager: 'Alessandro Mori (Energy Specialist)',
-      hasBrokerageMandate: true,
-      utilityPoints: [
-        {
-          id: `util-${Date.now()}-${scanResult.utilityType}`,
-          type: scanResult.utilityType,
-          podOrPdr: scanResult.podOrPdr,
-          annualConsumption: scanResult.annualConsumption,
-          powerKw: scanResult.utilityType === 'luce' ? (scanResult.powerKw || 4.5) : undefined,
-          f1Kwh: scanResult.f1Kwh,
-          f2Kwh: scanResult.f2Kwh,
-          f3Kwh: scanResult.f3Kwh,
-          currentSupplier: scanResult.supplier,
-          currentOfferName: scanResult.period ? `Offerta rilevata (${scanResult.period})` : 'Tariffa Rilevata da Bolletta',
-          currentTariffType: scanResult.f1Kwh ? 'indexed' : 'fixed',
-          currentUnitCost: scanResult.currentUnitCost || (scanResult.utilityType === 'luce' ? 0.168 : 0.54),
-          currentFixedFeeYear: scanResult.currentFixedFeeYear || 120.0,
-        }
-      ],
-      notes: `Importato da scansione OCR Vision AI: ${scanResult.fileName}. Risparmio stimato di €${scanResult.estimatedSavingEur.toFixed(2)}/anno.`
-    };
-
-    onImportCustomer(newCustomer);
+      accountManager: '',
+      // A brokerage mandate requires the customer's signature: never assumed from a bill.
+      hasBrokerageMandate: false,
+      utilityPoints: [{
+        id: `util-${Date.now()}-${form.utilityType}`,
+        type: form.utilityType,
+        podOrPdr,
+        annualConsumption: annualConsumption as number,
+        powerKw: isLuce ? toNumber(form.powerKw) : undefined,
+        f1Kwh: isLuce ? toNumber(form.f1Kwh) : undefined,
+        f2Kwh: isLuce ? toNumber(form.f2Kwh) : undefined,
+        f3Kwh: isLuce ? toNumber(form.f3Kwh) : undefined,
+        currentSupplier: form.supplier.trim(),
+        currentOfferName: form.period.trim() ? `Offerta in bolletta (${form.period.trim()})` : 'Offerta in bolletta',
+        currentTariffType: 'fixed',
+        currentUnitCost: currentUnitCost as number,
+        currentFixedFeeYear: currentFixedFeeYear as number,
+      }],
+      notes: `Dati da ${source}${result?.fileName ? `: ${result.fileName}` : ''}.`,
+    });
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-12 flex items-center justify-center">
-      <div 
-        onClick={onClose}
-        className="fixed inset-0 bg-[#0F222D]/40 backdrop-blur-xs transition-opacity" 
-      />
+  const unit = form?.utilityType === 'gas' ? 'Smc' : 'kWh';
 
-      <div 
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+      <div onClick={onClose} className="fixed inset-0 bg-[#0F222D]/45" aria-hidden="true" />
+
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="bill-ocr-title"
-        className="relative w-full max-w-2xl bg-white rounded-xl border border-[#DCE5E8] shadow-[0_25px_60px_rgba(0,0,0,0.18)] p-6 space-y-6"
+        className="relative w-full max-w-2xl rounded-[12px] border border-[#DCE5E8] bg-white shadow-[0_25px_60px_rgba(15,34,45,0.18)]"
       >
-        {/* Header */}
-        <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-4">
-          <div>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0A6847] uppercase tracking-wider">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Gemini Vision AI • ARERA Parser
-            </span>
-            <h3 id="bill-ocr-title" className="text-lg font-bold text-[#0F222D] mt-0.5">
-              Analisi & Estrazione Automatica Bolletta
-            </h3>
-            <p className="text-xs text-[#425466]">
-              Carica una bolletta PDF o immagine: Gemini Vision AI estrae automaticamente POD/PDR, consumi, fornitore e potenziale di risparmio.
+        <div className="flex items-start justify-between gap-4 border-b border-[#DCE5E8] px-5 py-4 sm:px-6">
+          <div className="min-w-0">
+            <h3 id="bill-ocr-title" className="text-lg font-bold text-[#0F222D]">Leggi una bolletta</h3>
+            <p className="mt-1 text-sm text-[#445966]">
+              Carica PDF o foto: i dati letti vanno sempre verificati prima di creare il cliente o avviare un confronto.
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
-            <X className="h-4 w-4" />
+          <button type="button" onClick={onClose} aria-label="Chiudi" className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-[#445966] hover:bg-[#F6F9FA] cursor-pointer">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Hidden File Input */}
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileInputChange} 
-          accept="application/pdf,image/png,image/jpeg" 
-          className="hidden" 
-        />
+        <div className="space-y-5 px-5 py-5 sm:px-6">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFileProcess(f); e.target.value = ''; }}
+            accept="application/pdf,image/png,image/jpeg"
+            className="hidden"
+          />
 
-        {/* Error message alert */}
-        {errorMessage && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-xs text-rose-700">
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        {/* Dropzone & Sample Picker */}
-        <div className="space-y-3 text-xs">
-          <div 
-            onDragEnter={handleDrag}
-            onDragOver={handleDrag}
-            onDragLeave={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
-              dragActive 
-                ? 'border-[#0A6847] bg-[#EAF4F0]/50 scale-[1.01]' 
-                : 'border-[#DCE5E8] bg-[#f8fafc] hover:border-[#0A6847] hover:bg-slate-50'
-            }`}
-          >
-            <UploadCloud className={`h-8 w-8 mx-auto mb-2 transition-colors ${dragActive ? 'text-[#0A6847] animate-bounce' : 'text-[#0A6847]'}`} />
-            <span className="font-semibold text-[#0F222D] block">
-              Trascina qui la bolletta PDF o immagine oppure clicca per scegliere
-            </span>
-            <span className="text-[11px] text-[#425466] block mt-1">
-              Formati supportati: PDF, JPG, PNG (Max 10MB)
-            </span>
-            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DCE5E8] rounded-md text-[11px] font-semibold text-[#0F222D] shadow-2xs hover:border-[#0A6847]">
-              <FileUp className="h-3.5 w-3.5 text-[#0A6847]" />
-              Sfoglia File dal Computer
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <span className="text-[11px] font-bold text-[#425466] uppercase tracking-wider block">
-              Oppure testa una bolletta campione:
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {SAMPLE_BILLS.map((bill, idx) => (
+          {!form && !isScanning && (
+            <div
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+              className={`rounded-[10px] border-2 border-dashed p-6 text-center transition-colors ${dragActive ? 'border-[#0A6847] bg-[#EAF4F0]' : 'border-[#DCE5E8] bg-[#F6F9FA]'}`}
+            >
+              <p className="text-sm font-semibold text-[#0F222D]">Trascina qui la bolletta oppure scegli un file</p>
+              <p className="mt-1 text-[13px] text-[#445966]">PDF, JPG o PNG fino a 10 MB</p>
+              <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
                 <button
-                  key={idx}
-                  onClick={() => handleRunScan(bill)}
-                  className={`p-2.5 rounded-lg border text-left text-xs transition-all cursor-pointer ${
-                    selectedSample?.fileName === bill.fileName
-                      ? 'bg-[#EAF4F0]/70 border-[#0A6847] text-[#0F222D] ring-1 ring-[#0A6847]'
-                      : 'bg-white border-[#DCE5E8] text-[#425466] hover:bg-slate-50'
-                  }`}
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#0A6847] px-5 text-sm font-bold text-white hover:bg-[#085238] cursor-pointer"
                 >
-                  <div className="flex items-center gap-1.5 font-bold text-[#0F222D] text-[11px] truncate">
-                    <FileText className="h-3.5 w-3.5 text-[#0A6847] shrink-0" />
-                    <span className="truncate">{bill.customerName}</span>
-                  </div>
-                  <span className="text-[10px] text-slate-500 font-mono block mt-1">
-                    {bill.utilityType.toUpperCase()} • {bill.annualConsumption.toLocaleString()} {bill.utilityType === 'luce' ? 'kWh' : 'Smc'}
-                  </span>
+                  <FileUp className="h-4 w-4" aria-hidden="true" />
+                  Scegli file
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Scanning progress */}
-        {isScanning && (
-          <div className="p-8 rounded-xl bg-slate-50 border border-[#DCE5E8] text-center space-y-3">
-            <RefreshCw className="h-6 w-6 text-[#0A6847] animate-spin mx-auto" />
-            <span className="text-xs font-semibold text-[#0F222D] block">
-              Analisi OCR con Vision AI in corso...
-            </span>
-            <p className="text-[11px] text-[#425466]">Rilevazione codice POD/PDR, spesa materia energia e curve di consumo.</p>
-          </div>
-        )}
-
-        {/* Result Box */}
-        {scanResult && !isScanning && (
-          <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] space-y-4 shadow-xs text-xs animate-in fade-in duration-200">
-            <div className="flex items-center justify-between border-b border-[#DCE5E8] pb-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span className="font-bold text-[#0F222D]">Dati Estratti con Successo</span>
-              </div>
-              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Accuratezza OCR {scanResult.confidenceScore}%
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <span className="text-[10px] text-[#425466] block">Intestatario</span>
-                <span className="font-bold text-[#0F222D] truncate block">{scanResult.customerName}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-[#425466] block">Codice Fiscale</span>
-                <span className="font-mono font-semibold text-[#0F222D]">{scanResult.fiscalCode}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-[#425466] block">Fornitore Rilevato</span>
-                <span className="font-medium text-[#0F222D] truncate block">{scanResult.supplier}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-[#425466] block">POD / PDR</span>
-                <span className="font-mono font-bold text-[#0A6847]">{scanResult.podOrPdr}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-[#425466] block">Consumo Annuo</span>
-                <span className="font-mono font-bold text-[#0F222D]">
-                  {scanResult.annualConsumption.toLocaleString()} {scanResult.utilityType === 'luce' ? 'kWh' : 'Smc'}
-                </span>
-              </div>
-              {scanResult.utilityType === 'luce' && scanResult.f1Kwh !== undefined && (
-                <div>
-                  <span className="text-[10px] text-[#425466] block">Fasce F1 / F2 / F3</span>
-                  <span className="font-mono text-[11px] text-[#0F222D]">
-                    {scanResult.f1Kwh} / {scanResult.f2Kwh} / {scanResult.f3Kwh} kWh
-                  </span>
-                </div>
-              )}
-              {scanResult.powerKw !== undefined && (
-                <div>
-                  <span className="text-[10px] text-[#425466] block">Potenza Impegnata</span>
-                  <span className="font-mono text-[11px] text-[#0F222D] flex items-center gap-1">
-                    <Zap className="h-3 w-3 text-amber-500" />
-                    {scanResult.powerKw} kW
-                  </span>
-                </div>
-              )}
-              <div>
-                <span className="text-[10px] text-[#425466] block">Spesa Fattura</span>
-                <span className="font-mono font-semibold text-[#0F222D]">
-                  € {scanResult.rawCostTotal.toFixed(2)}
-                </span>
+                <button
+                  type="button"
+                  onClick={() => { setResult(null); setFailure(null); setForm({ ...EMPTY_FORM }); }}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-md px-4 text-sm font-bold text-[#0A3B40] hover:bg-white cursor-pointer"
+                >
+                  <PencilLine className="h-4 w-4" aria-hidden="true" />
+                  Inserisci a mano
+                </button>
               </div>
             </div>
+          )}
 
-            {/* Savings Callout */}
-            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200/70 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] text-emerald-800 uppercase font-bold block">
-                  Risparmio Rilevato rispetto al Mercato Attuale
-                </span>
-                <span className="text-base font-bold text-emerald-700 font-mono">
-                  € {scanResult.estimatedSavingEur.toFixed(2)} / anno
-                </span>
-              </div>
-              <button
-                onClick={handleConfirmImport}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-[0.99] transition-all"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Crea Cliente & Attiva Switch 120gg
-              </button>
+          {fileError && (
+            <p role="alert" className="flex items-start gap-2 rounded-md border border-[#F3C9C9] bg-[#FDF3F3] px-3 py-2.5 text-sm text-[#B91C1C]">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              {fileError}
+            </p>
+          )}
+
+          {isScanning && (
+            <div role="status" className="flex items-center gap-3 rounded-[10px] border border-[#DCE5E8] bg-[#F6F9FA] px-4 py-5 text-sm text-[#0F222D]">
+              <Loader2 className="h-5 w-5 shrink-0 motion-safe:animate-spin text-[#0A6847]" aria-hidden="true" />
+              Lettura del documento in corso. Di solito richiede meno di 30 secondi.
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Footer */}
-        <div className="flex justify-end pt-3 border-t border-[#DCE5E8]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] text-xs font-medium cursor-pointer"
-          >
-            Chiudi
-          </button>
+          {failure && form && (
+            <div role="alert" data-testid="ocr-manual-fallback" className="rounded-[10px] border border-[#E9CFA9] bg-[#FFF8F0] px-4 py-3 text-sm text-[#5C3206]">
+              <p className="font-bold text-[#9A4D09]">Lettura automatica non disponibile</p>
+              <p className="mt-1">{describeOcrFailure(failure)}</p>
+            </div>
+          )}
+
+          {result && form && (
+            <div data-testid="ocr-review-summary" className="rounded-[10px] border border-[#D5E6DF] bg-[#EAF4F0] px-4 py-3 text-sm text-[#0F222D]">
+              <p className="flex items-center gap-2 font-bold text-[#0A6847]">
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                Letti <span className="font-mono tabular-nums">{8 - missing.size}/8</span> campi principali
+              </p>
+              <p className="mt-1 text-[#445966]">
+                {missing.size
+                  ? <>Da completare: {[...missing].map((k) => FIELD_LABELS[k] || k).join(', ')}. I campi evidenziati non sono stati trovati nel documento.</>
+                  : 'Controlla comunque ogni valore con la bolletta originale.'}
+              </p>
+              {result.model === 'demo' && <p className="mt-1 font-semibold text-[#9A4D09]">Dati dimostrativi: non provengono dal documento caricato.</p>}
+            </div>
+          )}
+
+          {form && (
+            <form onSubmit={(e) => { e.preventDefault(); handleConfirmImport(); }} className="space-y-5" noValidate>
+              <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <legend className="mb-2 text-sm font-bold text-[#0F222D]">Fornitura</legend>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Tipo
+                  <select value={form.utilityType} onChange={update('utilityType')} className={inputCls}>
+                    <option value="luce">Luce</option>
+                    <option value="gas">Gas</option>
+                  </select>
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  {form.utilityType === 'luce' ? 'POD' : 'PDR'}
+                  <input value={form.podOrPdr} onChange={update('podOrPdr')} className={monoCls + flag('podOrPdr')} autoComplete="off" />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Fornitore attuale
+                  <input value={form.supplier} onChange={update('supplier')} className={inputCls + flag('supplier')} />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Periodo fatturato
+                  <input value={form.period} onChange={update('period')} className={inputCls + flag('period')} />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Consumo annuo ({unit})
+                  <input inputMode="decimal" value={form.annualConsumption} onChange={update('annualConsumption')} className={monoCls + flag('annualConsumption')} />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Totale bolletta (€)
+                  <input inputMode="decimal" value={form.rawCostTotal} onChange={update('rawCostTotal')} className={monoCls + flag('rawCostTotal')} />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Prezzo materia energia (€/{unit})
+                  <input inputMode="decimal" value={form.currentUnitCost} onChange={update('currentUnitCost')} className={monoCls + flag('currentUnitCost')} />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Quota fissa (€/anno)
+                  <input inputMode="decimal" value={form.currentFixedFeeYear} onChange={update('currentFixedFeeYear')} className={monoCls} />
+                </label>
+                {form.utilityType === 'luce' && (
+                  <>
+                    <label className="text-[13px] font-semibold text-[#445966]">
+                      Potenza impegnata (kW)
+                      <input inputMode="decimal" value={form.powerKw} onChange={update('powerKw')} className={monoCls} />
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['f1Kwh', 'f2Kwh', 'f3Kwh'] as const).map((k, i) => (
+                        <label key={k} className="text-[13px] font-semibold text-[#445966]">
+                          F{i + 1} kWh
+                          <input inputMode="decimal" value={form[k]} onChange={update(k)} className={monoCls} />
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </fieldset>
+
+              <fieldset className="grid grid-cols-1 gap-4 border-t border-[#DCE5E8] pt-5 sm:grid-cols-2">
+                <legend className="sr-only">Intestatario</legend>
+                <p className="text-sm font-bold text-[#0F222D] sm:col-span-2">Intestatario</p>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Nome e cognome / ragione sociale
+                  <input value={form.customerName} onChange={update('customerName')} className={inputCls + flag('customerName')} autoComplete="off" />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Codice fiscale / P.IVA
+                  <input value={form.fiscalCode} onChange={update('fiscalCode')} className={monoCls + flag('fiscalCode')} autoComplete="off" />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Telefono (facoltativo)
+                  <input type="tel" value={form.phone} onChange={update('phone')} className={inputCls} autoComplete="off" />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966]">
+                  Email (facoltativa)
+                  <input type="email" value={form.email} onChange={update('email')} className={inputCls} autoComplete="off" />
+                </label>
+                <label className="text-[13px] font-semibold text-[#445966] sm:col-span-2">
+                  Comune (facoltativo)
+                  <input value={form.city} onChange={update('city')} className={inputCls} />
+                </label>
+              </fieldset>
+
+              {formError && <p role="alert" className="text-sm font-semibold text-[#B91C1C]">{formError}</p>}
+
+              <div className="flex flex-col-reverse gap-2 border-t border-[#DCE5E8] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  onClick={() => { setForm(null); setResult(null); setFailure(null); setFormError(null); }}
+                  className="min-h-11 rounded-md px-4 text-sm font-bold text-[#0A3B40] hover:bg-[#F6F9FA] cursor-pointer"
+                >
+                  Carica un altro documento
+                </button>
+                <button type="submit" className="min-h-11 rounded-md bg-[#0A6847] px-5 text-sm font-bold text-white hover:bg-[#085238] cursor-pointer">
+                  Crea cliente con questi dati
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

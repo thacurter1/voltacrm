@@ -135,7 +135,7 @@ Numeri con punto decimale, senza simbolo di valuta. Nessun testo fuori dal JSON.
 
 export function resolveGeminiModel(env: NodeJS.ProcessEnv = process.env): string {
   const configured = (env.GEMINI_MODEL || '').trim();
-  return /^[a-z0-9][a-z0-9.\-]{2,63}$/i.test(configured) ? configured : DEFAULT_GEMINI_MODEL;
+  return /^[a-z0-9][a-z0-9.-]{2,63}$/i.test(configured) ? configured : DEFAULT_GEMINI_MODEL;
 }
 
 export function resolveGeminiTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {

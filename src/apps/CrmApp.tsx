@@ -485,9 +485,9 @@ export const CrmApp: React.FC = () => {
           <ClientBillsInbox
             bills={bills}
             onOpenOcrForBill={() => setIsBillOcrOpen(true)}
-            onMarkAnalyzed={(billId, savings) => {
-              setBills(prev => prev.map(b => b.id === billId ? { ...b, status: 'analyzed', extractedSavingsEur: savings } : b));
-              addToast('Bolletta Analizzata', `Risparmio calcolato: €${savings}/anno`, 'success');
+            onMarkAnalyzed={(billId) => {
+              setBills(prev => prev.map(b => b.id === billId ? { ...b, status: 'analyzed' } : b));
+              addToast('Bolletta lavorata', 'Stato aggiornato.', 'success');
             }}
           />
         )}
@@ -635,14 +635,14 @@ export const CrmApp: React.FC = () => {
       />
 
       {/* Bill OCR Modal */}
-      <BillOcrModal
+      {isBillOcrOpen && <BillOcrModal
         isOpen={isBillOcrOpen}
         onClose={() => setIsBillOcrOpen(false)}
         onImportCustomer={(cust) => {
           setCustomers(prev => [cust as Customer, ...prev]);
           addToast('Cliente Importato', `${cust.name} aggiunto dal PDF bolletta.`, 'success');
         }}
-      />
+      />}
 
       {/* Market Simulator */}
       <MarketSimulatorModal

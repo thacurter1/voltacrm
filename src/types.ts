@@ -147,22 +147,26 @@ export interface ToastNotification {
 export interface BillOcrResult {
   fileName: string;
   utilityType: 'luce' | 'gas';
-  podOrPdr: string;
-  supplier: string;
-  customerName: string;
-  fiscalCode: string;
-  annualConsumption: number;
+  podOrPdr?: string;
+  supplier?: string;
+  customerName?: string;
+  fiscalCode?: string;
+  annualConsumption?: number;
   f1Kwh?: number;
   f2Kwh?: number;
   f3Kwh?: number;
-  rawCostTotal: number;
-  estimatedSavingEur: number;
+  rawCostTotal?: number;
+  /** Only set by the comparison engine, never by OCR. */
+  estimatedSavingEur?: number;
+  /** Share (0-100) of key fields read from the document. */
   confidenceScore: number;
+  missingFields?: string[];
   powerKw?: number;
   currentUnitCost?: number;
   currentFixedFeeYear?: number;
   period?: string;
   notes?: string;
+  model?: string;
 }
 
 export type UserRole = 'call_center' | 'operator' | 'broker' | 'customer' | 'admin';

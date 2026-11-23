@@ -117,7 +117,12 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
       const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers, signal: controller.signal });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.message || `Errore HTTP ${response.status}: ${response.statusText}`);
+        // Keep status/code so callers can degrade (e.g. OCR -> manual entry) without parsing messages.
+        throw Object.assign(new Error(body.message || `Errore HTTP ${response.status}: ${response.statusText}`), {
+          status: response.status,
+          code: typeof body.code === 'string' ? body.code : undefined,
+          manualEntryAvailable: body.manualEntryAvailable === true,
+        });
       }
       return await response.json() as T;
     };

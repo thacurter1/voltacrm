@@ -1,5 +1,5 @@
 import { request, API_BASE_URL, isDemoSessionActive } from './client';
-import type { CustomerBill, Lead, AppNotification } from '../types';
+import type { CustomerBill, Lead, AppNotification, BillOcrResult } from '../types';
 import { dbService, DEMO_USERS } from '../services/db';
 
 export interface MeterReadingValues {
@@ -174,8 +174,8 @@ export const portalApi = {
     return newBill;
   },
 
-  async analyzeBill(id: string): Promise<{ bill: CustomerBill; result: Record<string, unknown> }> {
-    return request<{ success: true; bill: CustomerBill; result: Record<string, unknown> }>(
+  async analyzeBill(id: string): Promise<{ bill: CustomerBill; result: BillOcrResult }> {
+    return request<{ success: true; bill: CustomerBill; result: BillOcrResult }>(
       '/portal/bills/' + encodeURIComponent(id) + '/analyze',
       { method: 'POST' },
     );

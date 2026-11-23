@@ -12,6 +12,7 @@ import { ScheduleAppointmentModal } from './components/ScheduleAppointmentModal'
 import { SlideOverDrawer } from './components/SlideOverDrawer';
 import { CommandPalette } from './components/CommandPalette';
 import { BillOcrModal } from './components/BillOcrModal';
+import { describeOcrFailure, toOcrFailure, type OcrFailure } from './components/ocr/ocrFailure';
 import { AddCustomerModal } from './components/AddCustomerModal';
 import { ImportCustomersModal } from './components/ImportCustomersModal';
 import { MarketSimulatorModal } from './components/MarketSimulatorModal';
@@ -55,28 +56,33 @@ import {
   AuthUser,
   UserProfile,
   CustomerBill,
-  SecurityAuditLog
+  SecurityAuditLog,
+  BillOcrResult
 } from './types';
 
+/**
+ * Normalises a customer reviewed in BillOcrModal. Never fills contact data, fiscal codes or
+ * mandates with placeholders: what the operator did not confirm stays empty.
+ */
 function createCustomerFromOcr(customerData: Partial<Customer>, accountManager: string): Customer {
   const today = new Date();
   const nextAudit = new Date();
   nextAudit.setDate(today.getDate() + 120);
-  const randomSuffix = Math.random().toString(36).substring(2, 10).toUpperCase();
 
   return {
-    id: `cust-${Date.now()}`,
-    name: customerData.name || 'Nuovo Cliente da Bolletta',
-    fiscalCode: customerData.fiscalCode || `CF${randomSuffix}`,
-    phone: customerData.phone || '+39 347 0000000',
-    email: customerData.email || 'cliente.ocr@email.it',
-    city: customerData.city || 'Milano',
-    contractStartDate: today.toISOString().split('T')[0],
-    lastSwitchAuditDate: today.toISOString().split('T')[0],
-    nextSwitchAuditDate: nextAudit.toISOString().split('T')[0],
-    accountManager,
-    hasBrokerageMandate: true,
-    utilityPoints: customerData.utilityPoints || []
+    id: customerData.id || `cust-${Date.now()}`,
+    name: (customerData.name || '').trim(),
+    fiscalCode: (customerData.fiscalCode || '').trim().toUpperCase(),
+    phone: (customerData.phone || '').trim(),
+    email: (customerData.email || '').trim(),
+    city: (customerData.city || '').trim(),
+    contractStartDate: customerData.contractStartDate || today.toISOString().split('T')[0],
+    lastSwitchAuditDate: customerData.lastSwitchAuditDate || today.toISOString().split('T')[0],
+    nextSwitchAuditDate: customerData.nextSwitchAuditDate || nextAudit.toISOString().split('T')[0],
+    accountManager: customerData.accountManager || accountManager,
+    hasBrokerageMandate: false,
+    utilityPoints: customerData.utilityPoints || [],
+    notes: customerData.notes,
   };
 }
 
@@ -472,6 +478,7 @@ function UnifiedApp() {
   const [callingLead, setCallingLead] = useState<Lead | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isBillOcrOpen, setIsBillOcrOpen] = useState(false);
+  const [ocrReview, setOcrReview] = useState<{ result: BillOcrResult | null; error: OcrFailure | null }>({ result: null, error: null });
   const [isMarketSimulatorOpen, setIsMarketSimulatorOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [pending2FAUser, setPending2FAUser] = useState<UserProfile | null>(null);
@@ -617,18 +624,28 @@ function UnifiedApp() {
 
   // Marcare bolletta come analizzata
   const handleMarkBillAnalyzed = (billId: string) => {
-    setBills(prev => prev.map(b => b.id === billId ? { ...b, status: 'analyzed' as const, extractedSavingsEur: 180.0 } : b));
-    addToast('Bolletta Lavorata', 'Analisi completata e caricata nel portale del cliente.', 'success');
+    // Savings are set only by a real comparison, never by a placeholder.
+    setBills(prev => prev.map(b => b.id === billId ? { ...b, status: 'analyzed' as const } : b));
+    addToast('Bolletta lavorata', 'Stato aggiornato nel portale del cliente.', 'success');
   };
 
   const handleAnalyzeStoredBill = async (bill: CustomerBill) => {
     try {
       const analysis = await portalApi.analyzeBill(bill.id);
       setBills(prev => prev.map(item => item.id === bill.id ? analysis.bill : item));
-      addToast('Bolletta Analizzata', `Analisi OCR salvata per ${bill.customerName}.`, 'success');
+      const missing = analysis.result.missingFields?.length || 0;
+      addToast(
+        'Dati letti dalla bolletta',
+        missing ? `${bill.customerName}: ${missing} campi da completare a mano.` : `${bill.customerName}: verifica i dati estratti.`,
+        'success'
+      );
+      setOcrReview({ result: analysis.result, error: null });
     } catch (error) {
-      addToast('Analisi non completata', error instanceof Error ? error.message : 'Provider OCR non disponibile.', 'warning');
+      const failure = toOcrFailure(error);
+      addToast('Lettura automatica non riuscita', describeOcrFailure(failure), 'warning');
+      setOcrReview({ result: null, error: failure });
     }
+    setIsBillOcrOpen(true);
   };
 
   // Switch approval
@@ -1121,11 +1138,13 @@ function UnifiedApp() {
       />
 
       {/* OCR Bolletta Modal (per Call Center) */}
-      <BillOcrModal
+      {isBillOcrOpen && <BillOcrModal
         isOpen={isBillOcrOpen}
-        onClose={() => setIsBillOcrOpen(false)}
+        onClose={() => { setIsBillOcrOpen(false); setOcrReview({ result: null, error: null }); }}
         onImportCustomer={handleImportFromOcr}
-      />
+        initialResult={ocrReview.result}
+        initialError={ocrReview.error}
+      />}
 
       {/* Market Scenario Stress Test Modal */}
       <MarketSimulatorModal
