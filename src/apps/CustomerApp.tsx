@@ -717,11 +717,11 @@ export const CustomerApp: React.FC<CustomerAppProps> = ({
         </div>
       )}
 
+      {/* Technical cookie notice: in page flow, never over content */}
+      <CookieBanner onOpenLegal={(tab) => setLegalModalTab(tab)} />
+
       {/* Institutional Legal Footer & Compliance */}
       <LegalFooter onOpenLegal={(tab) => setLegalModalTab(tab)} />
-
-      {/* Technical Cookie Notice */}
-      <CookieBanner onOpenLegal={(tab) => setLegalModalTab(tab)} />
 
       {/* Legal & Compliance Modal (GDPR, ARERA, Terms) */}
       <LegalModal

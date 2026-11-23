@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Check, FileUp, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, Check, FileUp, Home } from 'lucide-react';
 import type { UtilityType } from '../../services/offerComparison';
 
 interface Props {
@@ -89,34 +89,32 @@ const faqs = [
 export function EnergyWelcome({ onStart }: Props) {
   const [utility, setUtility] = useState<UtilityType>('luce');
   const [both, setBoth] = useState(false);
-  const [segment, setSegment] = useState<'domestico' | 'piva'>('domestico');
 
   const activeCatalog = PREVIEW_OFFERS[utility];
+  const chooseUtility = (value: UtilityType | 'both') => {
+    setBoth(value === 'both');
+    setUtility(value === 'gas' ? 'gas' : 'luce');
+  };
 
   return (
     <div className="w-full">
-      {/* Fascia Hero a tutta larghezza blu petrolio (#0A3B40) */}
-      <section
-        className="w-full bg-[#0A3B40] text-white overflow-hidden"
-        aria-labelledby="welcome-title"
-      >
-        <div className="max-w-[1380px] mx-auto pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-0 py-8 sm:py-11 grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-5 items-center">
-          {/* Sinistra: Headline, selettore fornitura e CTA bianca */}
-          <div className="lg:col-span-4 space-y-4">
+      {/* Hero: la bolletta come punto di partenza */}
+      <section className="w-full bg-[#0A3B40] text-white" aria-labelledby="welcome-title">
+        <div className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-8 px-4 py-9 sm:px-6 sm:py-12 lg:grid-cols-12 lg:gap-10 lg:px-8 lg:py-16">
+          <div className="lg:col-span-7">
             <h1
               id="welcome-title"
-              className="text-[28px] sm:text-[38px] lg:text-[40px] font-bold leading-[1.08] tracking-[-0.025em] text-white"
+              className="max-w-[18ch] text-[clamp(1.85rem,3.8vw,2.75rem)] font-bold leading-[1.08] tracking-[-0.025em] text-white"
             >
-              Confronta Luce e Gas partendo dai tuoi consumi reali
+              Confronta luce e gas partendo dalla tua bolletta
             </h1>
-            <p className="text-sm sm:text-base text-[#D7E6E8] leading-relaxed max-w-[40ch]">
-              Stime trasparenti su parametri ARERA, senza attivazioni automatiche né vincoli.
+            <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#D7E6E8]">
+              Leggiamo consumi e quota fissa dal documento, tu verifichi i dati e vedi le stime. Nessuna attivazione automatica, nessun vincolo.
             </p>
 
-            {/* Selettore fornitura compatto */}
-            <fieldset className="pt-1">
-              <legend className="sr-only">Scegli la fornitura</legend>
-              <div className="inline-flex flex-wrap gap-1.5 bg-[#072B2F] p-1 rounded-lg border border-white/15 text-xs font-semibold">
+            <fieldset className="mt-6">
+              <legend className="mb-2 text-sm font-semibold text-[#D7E6E8]">Che fornitura vuoi confrontare?</legend>
+              <div className="inline-flex flex-wrap gap-1 rounded-lg border border-white/15 bg-[#072B2F] p-1">
                 {([
                   { label: 'Solo luce', value: 'luce' },
                   { label: 'Solo gas', value: 'gas' },
@@ -128,14 +126,9 @@ export function EnergyWelcome({ onStart }: Props) {
                       key={value}
                       type="button"
                       aria-pressed={selected}
-                      onClick={() => {
-                        setBoth(value === 'both');
-                        setUtility(value === 'gas' ? 'gas' : 'luce');
-                      }}
-                      className={`min-h-[38px] px-3 py-1.5 rounded-md transition cursor-pointer ${
-                        selected
-                          ? 'bg-white text-[#0A3B40] font-bold'
-                          : 'text-[#D7E6E8] hover:text-white'
+                      onClick={() => chooseUtility(value)}
+                      className={`min-h-11 rounded-md px-4 text-sm font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                        selected ? 'bg-white text-[#0A3B40]' : 'text-[#D7E6E8] hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       {label}
@@ -144,213 +137,163 @@ export function EnergyWelcome({ onStart }: Props) {
                 })}
               </div>
               {both && (
-                <p className="text-xs text-[#A7F3D0] mt-2" aria-live="polite">
-                  Confrontiamo una fornitura alla volta: iniziamo dalla luce, poi passi al gas.
+                <p className="mt-2 max-w-[52ch] text-sm text-[#A7F3D0]" aria-live="polite">
+                  Luce e gas restano due confronti separati: partiamo dalla luce, poi passi al gas.
                 </p>
               )}
             </fieldset>
 
-            <div className="pt-2">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => onStart(utility, 'upload')}
+                className="group flex min-h-[112px] flex-col justify-between gap-3 rounded-[12px] bg-white p-5 text-left text-[#0F222D] shadow-[0_8px_24px_rgba(7,43,47,0.35)] transition-colors hover:bg-[#F6F9FA] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#EAF4F0] text-[#0A6847]">
+                    <FileUp className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="text-base font-bold">Analizza la tua bolletta</span>
+                </span>
+                <span className="flex items-end justify-between gap-3 text-sm text-[#445966]">
+                  <span>Hai la bolletta: carica PDF o foto, verifichi tu i dati letti.</span>
+                  <ArrowRight className="h-5 w-5 shrink-0 text-[#0A6847] transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => onStart(utility, 'wizard')}
-                className="min-h-[46px] px-6 py-3 rounded-md bg-white hover:bg-[#F1F5F6] text-[#0A3B40] font-bold text-sm inline-flex items-center gap-2.5 cursor-pointer transition active:scale-[0.98]"
+                className="group flex min-h-[112px] flex-col justify-between gap-3 rounded-[12px] border border-white/25 bg-[#072B2F] p-5 text-left text-white transition-colors hover:border-white/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                <span>Confronta le offerte</span>
-                <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-white/10 text-[#A7F3D0]">
+                    <Home className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="text-base font-bold">Stima i tuoi consumi</span>
+                </span>
+                <span className="flex items-end justify-between gap-3 text-sm text-[#D7E6E8]">
+                  <span>Non hai la bolletta: poche domande sulla casa, circa un minuto.</span>
+                  <ArrowRight className="h-5 w-5 shrink-0 text-[#A7F3D0] transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
               </button>
             </div>
           </div>
 
-          {/* Centro: Fotografia d'interni reale (nessun hover zoom) */}
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="w-full max-w-[470px] rounded-xl overflow-hidden border border-white/15 bg-[#072B2F] shadow-md">
-              <img
-                src="/images/volta-hero-home.jpg"
-                alt="Interno domestico luminoso in stile contemporaneo"
-                className="w-full h-[220px] sm:h-[268px] object-cover block"
-              />
-            </div>
-          </div>
-
-          {/* Destra: Linguette bianche ancorate al bordo destro per i due percorsi */}
-          <div className="lg:col-span-3 flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => onStart(utility, 'upload')}
-              className="w-full text-left bg-white hover:bg-[#F6F9FA] text-[#0F222D] px-5 py-4 rounded-xl lg:rounded-l-2xl lg:rounded-r-none shadow-sm flex items-center gap-3.5 cursor-pointer transition min-h-[72px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              <span className="w-10 h-10 rounded-lg bg-[#EAF4F0] text-[#0A6847] flex items-center justify-center shrink-0">
-                <FileUp className="w-5 h-5" aria-hidden="true" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-bold text-[#0F222D]">
-                  Analizza la tua bolletta
-                </span>
-                <span className="block text-xs text-[#445966] mt-0.5">
-                  PDF o foto · consumi reali
-                </span>
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onStart(utility, 'wizard')}
-              className="w-full text-left bg-white hover:bg-[#F6F9FA] text-[#0F222D] px-5 py-4 rounded-xl lg:rounded-l-2xl lg:rounded-r-none shadow-sm flex items-center gap-3.5 cursor-pointer transition min-h-[72px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              <span className="w-10 h-10 rounded-lg bg-[#EDF3F5] text-[#0A3B40] flex items-center justify-center shrink-0">
-                <SlidersHorizontal className="w-5 h-5" aria-hidden="true" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-bold text-[#0F222D]">
-                  Stima i tuoi consumi
-                </span>
-                <span className="block text-xs text-[#445966] mt-0.5">
-                  Senza bolletta · 60 secondi
-                </span>
-              </span>
-            </button>
-          </div>
+          <figure className="lg:col-span-5">
+            <img
+              src="/images/volta-hero-home.jpg"
+              alt="Una cucina di casa illuminata dalla luce del giorno"
+              width={1024}
+              height={684}
+              decoding="async"
+              className="block aspect-[21/9] w-full rounded-[12px] object-cover lg:aspect-[4/3]"
+            />
+          </figure>
         </div>
       </section>
 
-      {/* Barra trasparenza lineare */}
-      <div className="bg-white border-b border-[#DCE5E8] px-4 sm:px-6 lg:px-8 py-3.5">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs sm:text-sm font-medium text-[#445966]">
-          <span className="inline-flex items-center gap-2">
-            <Check className="w-4 h-4 text-[#0A6847] shrink-0" aria-hidden="true" />
-            Confronto gratuito
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Check className="w-4 h-4 text-[#0A6847] shrink-0" aria-hidden="true" />
-            Nessun contratto attivato online
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Check className="w-4 h-4 text-[#0A6847] shrink-0" aria-hidden="true" />
-            Luce e gas confrontati separatamente
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Check className="w-4 h-4 text-[#0A6847] shrink-0" aria-hidden="true" />
-            Indici PUN / PSV dichiarati
-          </span>
-        </div>
+      {/* Barra trasparenza */}
+      <div className="border-b border-[#DCE5E8] bg-white px-4 py-3.5 sm:px-6 lg:px-8">
+        <ul className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm font-medium text-[#445966]">
+          {['Confronto gratuito', 'Nessun contratto attivato online', 'Luce e gas confrontati separatamente', 'Indici PUN / PSV dichiarati'].map((item) => (
+            <li key={item} className="inline-flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0 text-[#0A6847]" aria-hidden="true" />
+              {item}
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {/* Sezione Offerte commerciali centrata con toggle Offerte Luce | Offerte Gas */}
-      <section className="bg-[#F6F9FA] px-4 sm:px-6 lg:px-8 py-12 sm:py-14" aria-labelledby="offers-preview-title">
-        <div className="max-w-6xl mx-auto space-y-7">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="inline-flex rounded-lg bg-white border border-[#DCE5E8] p-1" role="tablist" aria-label="Scegli fornitura tariffe">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={utility === 'luce'}
-                onClick={() => {
-                  setBoth(false);
-                  setUtility('luce');
-                }}
-                className={`min-h-[40px] px-5 py-2 rounded-md text-xs sm:text-sm font-bold cursor-pointer transition ${
-                  utility === 'luce'
-                    ? 'bg-[#0A6847] text-white'
-                    : 'text-[#445966] hover:text-[#0F222D]'
-                }`}
-              >
-                Offerte Luce
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={utility === 'gas'}
-                onClick={() => {
-                  setBoth(false);
-                  setUtility('gas');
-                }}
-                className={`min-h-[40px] px-5 py-2 rounded-md text-xs sm:text-sm font-bold cursor-pointer transition ${
-                  utility === 'gas'
-                    ? 'bg-[#0A6847] text-white'
-                    : 'text-[#445966] hover:text-[#0F222D]'
-                }`}
-              >
-                Offerte Gas
-              </button>
-            </div>
-
+      {/* Anteprima offerte: un solo controllo condiviso con l'hero */}
+      <section className="bg-[#F6F9FA] px-4 py-12 sm:px-6 sm:py-16 lg:px-8" aria-labelledby="offers-preview-title">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <h2 id="offers-preview-title" className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F222D]">
-                {activeCatalog.heading}
+              <h2 id="offers-preview-title" className="text-2xl font-bold tracking-tight text-[#0F222D] sm:text-3xl">
+                Confronta le offerte {utility === 'luce' ? 'luce' : 'gas'}
               </h2>
-              <p className="text-xs sm:text-sm text-[#445966] mt-1 tabular-nums">
-                {activeCatalog.basis}
-              </p>
+              <p className="mt-1.5 text-sm text-[#445966] tabular-nums">{activeCatalog.basis}</p>
+              {both && (
+                <p className="mt-1.5 text-sm font-semibold text-[#145374]">
+                  Hai scelto luce e gas: qui vedi la luce, passa a Gas per la seconda fornitura.
+                </p>
+              )}
+            </div>
+            <div className="inline-flex self-start rounded-lg border border-[#DCE5E8] bg-white p-1 md:self-auto" role="tablist" aria-label="Fornitura delle offerte">
+              {(['luce', 'gas'] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={utility === value}
+                  onClick={() => setUtility(value)}
+                  className={`min-h-11 rounded-md px-5 text-sm font-bold transition-colors cursor-pointer ${
+                    utility === value ? 'bg-[#0A3B40] text-white' : 'text-[#445966] hover:text-[#0F222D]'
+                  }`}
+                >
+                  {value === 'luce' ? 'Luce' : 'Gas'}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             {activeCatalog.items.map((item) => (
-              <article
-                key={item.name}
-                className="bg-white rounded-xl border border-[#DCE5E8] p-5 flex flex-col justify-between gap-5"
-              >
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-[#0F222D]">{item.name}</h3>
-                    <p className="text-xs font-medium text-[#0A6847] mt-0.5">{item.subtitle}</p>
+              <article key={item.name} className="flex flex-col rounded-[12px] border border-[#DCE5E8] bg-white p-5">
+                <h3 className="text-lg font-bold text-[#0F222D]">{item.name}</h3>
+                <p className="mt-1 text-sm text-[#445966]">{item.subtitle}</p>
+                <p className="mt-5 font-mono text-2xl font-semibold leading-tight tracking-tight text-[#0A6847] tabular-nums">{item.unitPrice}</p>
+                <p className="mt-1 text-sm text-[#445966]">{item.unitNote}</p>
+                <dl className="mt-5 space-y-2 border-t border-[#DCE5E8] pt-4 text-sm">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                    <dt className="text-[#445966]">Quota fissa</dt>
+                    <dd className="font-mono font-semibold text-[#0F222D] tabular-nums">{item.fixedFee}</dd>
                   </div>
-
-                  <div className="grid grid-cols-2 border border-[#DCE5E8] rounded-md overflow-hidden text-xs font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => setSegment('domestico')}
-                      className={`py-2 px-2 cursor-pointer transition ${
-                        segment === 'domestico'
-                          ? 'bg-[#0A3B40] text-white'
-                          : 'bg-white text-[#445966] hover:text-[#0F222D]'
-                      }`}
-                    >
-                      Uso domestico
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSegment('piva')}
-                      className={`py-2 px-2 border-l border-[#DCE5E8] cursor-pointer transition ${
-                        segment === 'piva'
-                          ? 'bg-[#0A3B40] text-white'
-                          : 'bg-white text-[#445966] hover:text-[#0F222D]'
-                      }`}
-                    >
-                      Partita IVA
-                    </button>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                    <dt className="text-[#445966]">Spesa annua stimata</dt>
+                    <dd className="font-mono font-semibold text-[#0F222D] tabular-nums">{item.annualEstimate}</dd>
                   </div>
-
-                  <div className="pt-1">
-                    <p className="text-2xl font-extrabold text-[#0A6847] tabular-nums">{item.unitPrice}</p>
-                    <p className="text-xs text-[#445966] mt-0.5">{item.unitNote}</p>
-                  </div>
-
-                  <div className="border-t border-[#DCE5E8] pt-3 space-y-2 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[#445966]">Quota fissa</span>
-                      <span className="font-bold text-[#0F222D] tabular-nums">{item.fixedFee}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[#445966]">Spesa annua stimata</span>
-                      <span className="font-bold text-[#0F222D] tabular-nums">{item.annualEstimate}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-1 space-y-2 text-center">
-                  <button
-                    type="button"
-                    onClick={() => onStart(utility, 'wizard')}
-                    className="w-full min-h-[44px] px-4 py-2.5 rounded-md bg-[#0A6847] hover:bg-[#085238] text-white text-sm font-bold cursor-pointer transition"
-                  >
-                    Personalizza sui tuoi consumi
-                  </button>
-                </div>
+                </dl>
               </article>
             ))}
           </div>
+
+          <div className="mt-6 flex flex-col gap-4 rounded-[12px] border border-[#DCE5E8] bg-white p-5 md:flex-row md:items-center md:justify-between">
+            <p className="max-w-[60ch] text-sm leading-relaxed text-[#445966]">
+              Sono stime su un consumo tipo. Con i tuoi consumi vedi quanto spenderesti davvero con ciascuna offerta.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:shrink-0">
+              <button
+                type="button"
+                onClick={() => onStart(utility, 'upload')}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#0A6847] px-5 text-sm font-bold text-white transition-colors hover:bg-[#085238] cursor-pointer"
+              >
+                Usa la tua bolletta
+              </button>
+              <button
+                type="button"
+                onClick={() => onStart(utility, 'wizard')}
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#DCE5E8] px-5 text-sm font-bold text-[#0A3B40] transition-colors hover:bg-[#F6F9FA] cursor-pointer"
+              >
+                Stima senza bolletta
+              </button>
+            </div>
+          </div>
+
+          <dl className="mt-8 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
+            {[
+              ['PUN e PSV', 'Prezzi all’ingrosso di luce (PUN) e gas (PSV). Le offerte variabili li seguono, più uno spread fisso.'],
+              ['Quota fissa', 'Costo mensile che paghi anche senza consumare, indicato per POD (luce) o PDR (gas).'],
+              ['POD e PDR', 'Codici che identificano il tuo punto di fornitura: li trovi nella prima pagina della bolletta.'],
+              ['Spesa annua stimata', 'Materia energia più quota fissa sul consumo indicato sopra, senza imposte e oneri di rete.'],
+            ].map(([term, def]) => (
+              <div key={term} className="border-t border-[#DCE5E8] pt-3">
+                <dt className="font-bold text-[#0F222D]">{term}</dt>
+                <dd className="mt-1 leading-relaxed text-[#445966]">{def}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -367,7 +310,7 @@ export function EnergyWelcome({ onStart }: Props) {
               ['La tua decisione', 'Se trovi una proposta interessante, chiedi una consulenza dedicata per verificare i dettagli.'],
             ].map(([title, description], index) => (
               <li key={title} className="border-t border-[#DCE5E8] pt-5">
-                <span className="font-mono text-xs font-semibold text-[#0A6847]">Passo {index + 1}</span>
+                <span className="font-mono text-sm font-semibold text-[#0A6847]">Passo {index + 1}</span>
                 <h3 className="mt-2 text-lg font-bold text-[#0F222D]">{title}</h3>
                 <p className="mt-2 text-[#445966] leading-relaxed text-sm">{description}</p>
               </li>
@@ -389,11 +332,11 @@ export function EnergyWelcome({ onStart }: Props) {
           </div>
           <div className="bg-white border border-[#DCE5E8] rounded-xl px-5 sm:px-6 divide-y divide-[#DCE5E8]">
             {faqs.map(([question, answer]) => (
-              <details key={question} className="group py-4">
-                <summary className="cursor-pointer font-semibold text-sm sm:text-base text-[#0F222D] rounded focus-visible:outline-2 focus-visible:outline-[#0A6847]">
+              <details key={question} className="group py-2">
+                <summary className="flex min-h-11 cursor-pointer items-center rounded py-2 text-base font-semibold text-[#0F222D] focus-visible:outline-2 focus-visible:outline-[#0A6847]">
                   {question}
                 </summary>
-                <p className="mt-2.5 text-sm leading-relaxed text-[#445966]">{answer}</p>
+                <p className="max-w-[65ch] pb-3 text-sm leading-relaxed text-[#445966]">{answer}</p>
               </details>
             ))}
           </div>

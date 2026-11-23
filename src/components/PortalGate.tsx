@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheck,
   ArrowRight,
   Lock,
   User,
@@ -15,6 +14,19 @@ import { Customer, UserProfile } from '../types';
 import { api, DEMO_MODE } from '../api/client';
 import { INITIAL_PROFILES } from '../services/supabaseClient';
 import { OAuthButtons } from './OAuthButtons';
+
+/** Maps transport/auth failures to Italian copy with a next step; never shows raw browser errors. */
+function friendlyAuthError(err: unknown, fallback: string): string {
+  const raw = err instanceof Error ? err.message : '';
+  if (!raw) return fallback;
+  if (/failed to fetch|networkerror|load failed|network request failed|err_connection/i.test(raw)) {
+    return 'Servizio di accesso non raggiungibile. Controlla la connessione e riprova tra poco.';
+  }
+  if (/tempo previsto|timeout/i.test(raw)) {
+    return 'Il servizio sta impiegando più del solito a rispondere. Riprova tra qualche secondo.';
+  }
+  return /[a-z]/i.test(raw) && !/^[A-Za-z ]+$/.test(raw) ? raw : fallback;
+}
 
 type CustomerGateMode =
   | 'login'
@@ -217,7 +229,6 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
     if (!query) {
       reportFormError('Inserisci la tua email o il tuo Codice Fiscale.', 'customer-identifier');
-      onToast('Dati Mancanti', 'Inserisci la tua email o Codice Fiscale.', 'warning');
       return;
     }
 
@@ -255,12 +266,11 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         onLoginCustomer(matched);
         return;
       }
-      const message = err instanceof Error ? err.message : 'Accesso non riuscito.';
+      const message = friendlyAuthError(err, 'Accesso non riuscito.');
       if (/verifica/i.test(message) && query.includes('@')) {
         setPendingEmail(query.toLowerCase());
       }
       reportFormError(message, 'customer-identifier');
-      onToast('Accesso Negato', message, 'warning');
     } finally {
       setIsSubmitting(false);
     }
@@ -334,7 +344,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       onToast('Registrazione Completata!', 'Il tuo profilo cliente è attivo.', 'success');
       onLoginCustomer(result.user);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Impossibile completare la registrazione.';
+      const msg = friendlyAuthError(err, 'Impossibile completare la registrazione.');
       reportFormError(msg, /fiscale|iva/i.test(msg) ? 'register-fiscal-code' : /email/i.test(msg) ? 'register-email' : 'portal-gate-error');
       onToast('Errore', msg, 'warning');
     } finally {
@@ -358,7 +368,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       setCustomerMode('login');
       onToast('Email verificata', res.message || 'Puoi accedere al portale.', 'success');
     } catch (err) {
-      reportFormError(err instanceof Error ? err.message : 'Token di verifica non valido o scaduto.', 'verify-email-token');
+      reportFormError(friendlyAuthError(err, 'Token di verifica non valido o scaduto.'), 'verify-email-token');
     } finally {
       setIsSubmitting(false);
     }
@@ -381,7 +391,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
         setFormNotice(res.message);
       }
     } catch (err) {
-      reportFormError(err instanceof Error ? err.message : 'Impossibile reinviare l’email di verifica.');
+      reportFormError(friendlyAuthError(err, 'Impossibile reinviare l’email di verifica.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -400,7 +410,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       const res = await api.auth.forgotPassword(forgotEmail.trim());
       setFormNotice(res.message);
     } catch (err) {
-      reportFormError(err instanceof Error ? err.message : 'Impossibile elaborare la richiesta di recupero.');
+      reportFormError(friendlyAuthError(err, 'Impossibile elaborare la richiesta di recupero.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -427,7 +437,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       setCustomerMode('login');
       onToast('Password reimpostata', 'Accedi ora con la nuova password.', 'success');
     } catch (err) {
-      reportFormError(err instanceof Error ? err.message : 'Token di reset non valido o scaduto.', 'reset-token');
+      reportFormError(friendlyAuthError(err, 'Token di reset non valido o scaduto.'), 'reset-token');
     } finally {
       setIsSubmitting(false);
     }
@@ -449,7 +459,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       setCustomerMode('login');
       onToast('Email aggiornata', res.message, 'success');
     } catch (err) {
-      reportFormError(err instanceof Error ? err.message : 'Token cambio email non valido o scaduto.', 'confirm-email-change-token');
+      reportFormError(friendlyAuthError(err, 'Token cambio email non valido o scaduto.'), 'confirm-email-change-token');
     } finally {
       setIsSubmitting(false);
     }
@@ -486,9 +496,8 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       }
     } catch (_err) {
       if (!DEMO_MODE) {
-        const msg = _err instanceof Error ? _err.message : 'Controlla le credenziali e riprova.';
+        const msg = friendlyAuthError(_err, 'Controlla le credenziali e riprova.');
         reportFormError(msg, 'operator-email');
-        onToast('Accesso non riuscito', msg, 'warning');
         return;
       }
       const matched = INITIAL_PROFILES.find(p => p.email.toLowerCase() === operatorEmail.toLowerCase()) || INITIAL_PROFILES[0];
@@ -513,12 +522,12 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       <header className="relative z-10 px-4 sm:px-8 py-4 bg-white border-b border-[#DCE5E8]">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-              <rect width="28" height="28" rx="6" fill="#0A3B40" />
-              <path d="M8.2 8.5L13.1 20H15.1L20 8.5H17.3L14.1 16.4L10.9 8.5H8.2Z" fill="#FFFFFF" />
-              <rect x="19.2" y="17.2" width="3.2" height="3.2" rx="0.8" fill="#34D399" />
+            <svg className="h-8 w-8 shrink-0" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <rect width="32" height="32" rx="7" fill="#0A3B40" />
+              <path d="M9.5 9.5L16 23L22.5 9.5" stroke="#FFFFFF" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M13 9.5L16 16L19 9.5" stroke="#34D399" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="font-extrabold text-base tracking-tight text-[#0F222D]">
+            <span className="font-display font-bold text-lg tracking-tight text-[#0F222D]">
               Volta Energia
             </span>
           </div>
@@ -640,16 +649,16 @@ export const PortalGate: React.FC<PortalGateProps> = ({
 
           {/* 1-Click Demo Sandbox Quick Strip */}
           {DEMO_MODE && <div className="bg-[#F6F9FA] border border-[#DCE5E8] rounded-xl p-3 space-y-2">
-            <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-[#0F222D]">
                 Accesso rapido demo
               </span>
-              <span className="text-[10px] text-[#0A6847] font-bold uppercase tracking-wider">
+              <span className="text-xs text-[#0A6847] font-bold uppercase tracking-wider">
                 Sandbox
               </span>
             </div>
             
-            <div className="grid grid-cols-3 gap-1.5 text-[11px]">
+            <div className="grid grid-cols-3 gap-1.5 text-xs">
               {portal !== 'customer' && <button
                 type="button"
                 onClick={() => handleDirectDemoLogin('admin', 'user-admin-1')}
@@ -762,7 +771,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       value={customerIdentifier}
                       onChange={(e) => setCustomerIdentifier(e.target.value)}
                       placeholder="nome.cognome@email.it oppure RSSMRA80A01H501U"
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-medium"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-base sm:text-sm text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-medium"
                     />
                   </div>
 
@@ -772,12 +781,12 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         Password
                       </label>
                       {DEMO_MODE ? (
-                        <span className="text-[10px] text-slate-400 font-mono">Demo: qualsiasi</span>
+                        <span className="text-xs text-slate-400 font-mono">Demo: qualsiasi</span>
                       ) : (
                         <button
                           type="button"
                           onClick={() => switchCustomerMode('forgot_password')}
-                          className="text-[11px] font-semibold text-[#0A6847] hover:text-[#085238] cursor-pointer"
+                          className="text-xs font-semibold text-[#0A6847] hover:text-[#085238] cursor-pointer"
                         >
                           Password dimenticata?
                         </button>
@@ -791,7 +800,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                         value={customerPassword}
                         onChange={(e) => setCustomerPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all"
+                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-base sm:text-sm text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all"
                       />
                       <button
                         type="button"
@@ -1128,7 +1137,7 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                     <button
                       type="button"
                       onClick={() => switchCustomerMode('verify_email')}
-                      className="text-[11px] font-medium text-slate-500 hover:text-slate-800 cursor-pointer"
+                      className="text-xs font-medium text-slate-500 hover:text-slate-800 cursor-pointer"
                     >
                       Devi verificare l’email di registrazione?
                     </button>
@@ -1149,10 +1158,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                   <input
                     id="operator-email"
                     type="email"
+                    required
+                    autoComplete="username"
+                    spellCheck={false}
                     value={operatorEmail}
                     onChange={(e) => setOperatorEmail(e.target.value)}
                     placeholder="m.riva@voltagroup.it"
-                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-mono"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-base sm:text-sm text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-mono"
                   />
                 </div>
 
@@ -1164,12 +1176,13 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                     <div className="relative">
                       <input
                         id="operator-pwd"
+                        required
                         type={showOperatorPassword ? 'text' : 'password'}
                         autoComplete="current-password"
                         value={operatorPassword}
                         onChange={(e) => setOperatorPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all"
+                        className="w-full min-h-[44px] px-3.5 pr-11 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-base sm:text-sm text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all"
                       />
                       <button
                         type="button"
@@ -1187,28 +1200,38 @@ export const PortalGate: React.FC<PortalGateProps> = ({
                       <label htmlFor="operator-totp" className="block text-xs font-bold text-[#0F222D]">
                         Codice 2FA (TOTP)
                       </label>
-                      {DEMO_MODE && <span className="text-[10px] text-slate-400 font-mono">Demo: 123456</span>}
+                      {DEMO_MODE && <span className="text-xs text-[#445966] font-mono">Demo: 123456</span>}
                     </div>
                     <input
                       id="operator-totp"
                       type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{6}"
                       maxLength={6}
                       value={operatorTotp}
-                      onChange={(e) => setOperatorTotp(e.target.value)}
-                      placeholder="123456"
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-xs text-[#0F222D] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-mono text-center tracking-widest font-bold"
+                      onChange={(e) => setOperatorTotp(e.target.value.replace(/\D/g, ''))}
+                      placeholder="6 cifre"
+                      aria-describedby="operator-totp-hint"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-[#DCE5E8] bg-white text-base text-[#0F222D] placeholder:text-[#5F7380] placeholder:tracking-normal placeholder:font-sans placeholder:font-normal focus:outline-none focus:ring-4 focus:ring-[#0A6847]/10 focus:border-[#0A6847] transition-all font-mono text-center tracking-[0.3em] font-semibold"
                     />
+                    <p id="operator-totp-hint" className="mt-1 text-xs text-[#445966]">Dall’app di autenticazione associata al tuo account.</p>
                   </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0F222D] hover:bg-slate-800 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                  aria-busy={isSubmitting}
+                  className="w-full min-h-[44px] px-5 py-3 rounded-xl bg-[#0A3B40] hover:bg-[#072B2F] text-white font-bold text-sm transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-80 flex items-center justify-center gap-2"
                 >
-                  <Lock className="h-4 w-4 text-[#00d4aa]" />
-                  <span>Accedi al CRM & Backend Operativo</span>
+                  <Lock className="h-4 w-4 text-[#A7F3D0]" aria-hidden="true" />
+                  <span>{isSubmitting ? 'Accesso in corso...' : 'Accedi all’area operativa'}</span>
                 </button>
+                <p className="text-sm text-[#445966]">
+                  Password dimenticata o 2FA non disponibile? Scrivi all’amministratore del tuo team o a{' '}
+                  <a href="mailto:supporto@voltaenergia.it" className="font-semibold text-[#0A3B40] underline underline-offset-4">supporto@voltaenergia.it</a>.
+                </p>
               </form>
             </div>
           )}
@@ -1216,10 +1239,9 @@ export const PortalGate: React.FC<PortalGateProps> = ({
       </main>
 
       {/* Minimal Footer */}
-      <footer className="relative z-10 py-6 px-4 text-center text-xs text-slate-400">
+      <footer className="relative z-10 py-6 px-4 text-center text-sm text-[#445966]">
         <div className="max-w-md mx-auto flex items-center justify-center gap-2">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>© Volta Energia • Portale clienti e area operativa</span>
+          <span>© Volta Energia · Portale clienti e area operativa</span>
         </div>
       </footer>
 

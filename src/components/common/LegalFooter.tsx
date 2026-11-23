@@ -1,171 +1,87 @@
 import React from 'react';
-import { ShieldCheck, Phone, Mail, Scale, FileText, CheckCircle2 } from 'lucide-react';
+import { Phone, Mail, Info } from 'lucide-react';
 import type { LegalTab } from './LegalModal';
 import { COMPANY_PROFILE } from '../../config/companyProfile';
+import { VoltaBrandMark } from './VoltaBrandMark';
 
 export interface LegalFooterProps {
   onOpenLegal?: (tab: LegalTab) => void;
 }
 
+const linkCls =
+  'inline-flex min-h-11 items-center text-left text-sm text-[#0F222D] underline decoration-[#DCE5E8] underline-offset-4 hover:text-[#0A6847] hover:decoration-[#0A6847] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0A6847]';
+
 export const LegalFooter: React.FC<LegalFooterProps> = ({ onOpenLegal }) => {
-  const handleOpen = (tab: LegalTab) => {
-    if (onOpenLegal) {
-      onOpenLegal(tab);
-    }
-  };
+  const handleOpen = (tab: LegalTab) => onOpenLegal?.(tab);
+  const phone = COMPANY_PROFILE.tollFreePhone || '800 912 345';
 
   return (
-    <footer className="mt-auto border-t border-slate-200 bg-white text-slate-600 font-sans">
-      {/* Top Banner / Trust Bar */}
-      <div className="border-b border-[#DCE5E8] bg-[#F6F9FA] py-6 px-6">
-        <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-          <div className="flex items-start gap-3">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#EAF4F0] text-[#0A6847] shrink-0 mt-0.5">
-              <CheckCircle2 className="size-5" />
-            </span>
-            <div>
-              <p className="font-bold text-[#0F222D]">Confronta prima di decidere</p>
-              <p className="text-xs text-[#445966] mt-0.5">
-                Consultare le stime non attiva un contratto. Puoi valutare le condizioni prima di richiedere una consulenza.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#EAF4F0] text-[#0A3B40] shrink-0 mt-0.5">
-              <Scale className="size-5" />
-            </span>
-            <div>
-              <p className="font-bold text-[#0F222D]">Trasparenza ARERA</p>
-              <p className="text-xs text-[#445966] mt-0.5">
-                Ogni stima indica i consumi e i parametri utilizzati. Controlla la data di riferimento degli indici e le condizioni dell’offerta.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#EAF4F0] text-[#0A6847] shrink-0 mt-0.5">
-              <Phone className="size-5" />
-            </span>
-            <div>
-              <p className="font-bold text-[#0F222D]">Contatti e assistenza</p>
-              <p className="text-xs text-[#445966] mt-0.5">
-                Numero Verde <strong>{COMPANY_PROFILE.tollFreePhone || '800 912 345'}</strong> attivo dal lunedì al venerdì dalle 9:00 alle 18:00.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Corporate Section */}
-      <div className="mx-auto max-w-7xl px-6 py-10">
+    <footer className="mt-auto border-t border-[#DCE5E8] bg-white text-[#445966]">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {!COMPANY_PROFILE.isConfiguredCorporateIdentity && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-2.5 text-xs text-amber-900">
-            <strong>Nota Ambiente Dimostrativo:</strong> I dati societari e i recapiti telefonici/PEC esposti di seguito ({COMPANY_PROFILE.name}, P.IVA {COMPANY_PROFILE.vatNumber}) sono esempi dimostrativi. I recapiti effettivi saranno disponibili prima dell’apertura del servizio.
-          </div>
+          // Kept visible until real company data is configured (no flag hides it).
+          <p className="mb-8 flex items-start gap-2.5 rounded-[10px] border border-[#C9DCE8] bg-[#EAF2F7] px-4 py-3 text-sm text-[#0F3D57]">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#145374]" aria-hidden="true" />
+            <span>
+              <strong>Dati societari dimostrativi.</strong> Ragione sociale, P.IVA e recapiti qui sotto ({COMPANY_PROFILE.name}, P.IVA {COMPANY_PROFILE.vatNumber}) sono esempi: quelli effettivi saranno pubblicati prima dell’apertura del servizio.
+            </span>
+          </p>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Col 1: Brand & Presentation */}
-          <div className="md:col-span-1 space-y-3">
+
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-3">
             <div className="flex items-center gap-2.5">
-              <svg className="w-8 h-8 shrink-0" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                <rect width="32" height="32" rx="7" fill="#0A3B40" />
-                <path d="M9.5 9.5L16 23L22.5 9.5" stroke="#FFFFFF" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M13 9.5L16 16L19 9.5" stroke="#34D399" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="text-lg font-extrabold text-[#0F222D] tracking-tight">Volta Energia</span>
+              <VoltaBrandMark className="h-8 w-8" />
+              <span className="text-lg font-bold tracking-tight text-[#0F222D]">Volta Energia</span>
             </div>
-            <p className="text-xs leading-relaxed text-[#445966]">
-              Confronta i costi di luce e gas, consulta le condizioni e richiedi assistenza per valutare la tua fornitura.
+            <p className="max-w-[40ch] text-sm leading-relaxed">
+              Confronta i costi di luce e gas, consulta le condizioni e chiedi assistenza prima di decidere. Consultare le stime non attiva un contratto.
             </p>
-            <div className="flex items-center gap-1.5 text-xs text-[#0A6847] font-semibold pt-1">
-              <ShieldCheck className="size-4" />
-              <span>Connessione Protetta & Crittografata</span>
-            </div>
           </div>
 
-          {/* Col 2: Institutional & Legal Details */}
-          <div className="space-y-2 text-xs">
-            <p className="font-bold uppercase tracking-wider text-[#0F222D] text-[11px]">Dati Societari</p>
-            <p className="font-semibold text-slate-800">{COMPANY_PROFILE.name || 'Volta Energia S.r.l.'}</p>
-            <p>Sede Legale: {COMPANY_PROFILE.address || 'Via Monte Napoleone 8, 20121 Milano (MI)'}</p>
-            <p>P.IVA e Codice Fiscale: <strong>{COMPANY_PROFILE.vatNumber || '12948570155'}</strong></p>
-            <p>REA: {COMPANY_PROFILE.reaNumber || 'MI-2684910'} • Cap. Soc. {COMPANY_PROFILE.shareCapital || '€ 100.000,00 i.v.'}</p>
-            <p className="text-slate-500 pt-1">
+          <div className="space-y-1.5 text-sm">
+            <h2 className="mb-2 text-base font-bold text-[#0F222D]">Dati societari</h2>
+            <p className="font-semibold text-[#0F222D]">{COMPANY_PROFILE.name || 'Volta Energia S.r.l.'}</p>
+            <p>Sede legale: {COMPANY_PROFILE.address || 'Via Monte Napoleone 8, 20121 Milano (MI)'}</p>
+            <p>P.IVA e C.F.: <span className="font-mono tabular-nums text-[#0F222D]">{COMPANY_PROFILE.vatNumber || '12948570155'}</span></p>
+            <p>REA {COMPANY_PROFILE.reaNumber || 'MI-2684910'} · Cap. Soc. {COMPANY_PROFILE.shareCapital || '€ 100.000,00 i.v.'}</p>
+            <p className="pt-1">
               Volta Energia opera come mediatore e consulente energetico indipendente per il libero mercato, ai sensi della regolamentazione ARERA.
             </p>
           </div>
 
-          {/* Col 3: Contacts */}
-          <div className="space-y-2 text-xs">
-            <p className="font-bold uppercase tracking-wider text-[#0F222D] text-[11px]">Contatti & Supporto</p>
+          <div className="space-y-1 text-sm">
+            <h2 className="mb-2 text-base font-bold text-[#0F222D]">Contatti e assistenza</h2>
             <p className="flex items-center gap-2">
-              <Phone className="size-3.5 text-[#0A6847]" />
-              <span>Numero Verde: <strong>{COMPANY_PROFILE.tollFreePhone || '800 912 345'}</strong></span>
+              <Phone className="h-4 w-4 shrink-0 text-[#0A6847]" aria-hidden="true" />
+              <span>Numero Verde <a href={`tel:${phone.replace(/\s/g, '')}`} className="font-mono font-semibold tabular-nums text-[#0F222D] underline-offset-4 hover:underline">{phone}</a></span>
             </p>
             <p className="flex items-center gap-2">
-              <Mail className="size-3.5 text-[#0A6847]" />
-              <span>Email: <a href={`mailto:${COMPANY_PROFILE.supportEmail}`} className="text-[#0A6847] hover:underline">{COMPANY_PROFILE.supportEmail}</a></span>
+              <Mail className="h-4 w-4 shrink-0 text-[#0A6847]" aria-hidden="true" />
+              <a href={`mailto:${COMPANY_PROFILE.supportEmail}`} className={linkCls}>{COMPANY_PROFILE.supportEmail}</a>
             </p>
             <p className="flex items-center gap-2">
-              <Mail className="size-3.5 text-[#0A6847]" />
-              <span>PEC: <a href={`mailto:${COMPANY_PROFILE.pecEmail}`} className="text-[#0A6847] hover:underline">{COMPANY_PROFILE.pecEmail}</a></span>
+              <Mail className="h-4 w-4 shrink-0 text-[#0A6847]" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1">PEC <a href={`mailto:${COMPANY_PROFILE.pecEmail}`} className={linkCls}>{COMPANY_PROFILE.pecEmail}</a></span>
             </p>
-            <p className="text-slate-500 pt-1">Orario supporto: Lunedì - Venerdì, 9:00 - 18:00</p>
+            <p>Lunedì – venerdì, 9:00 – 18:00</p>
           </div>
 
-          {/* Col 4: Legal & Transparency Links */}
-          <div className="space-y-2 text-xs">
-            <p className="font-bold uppercase tracking-wider text-[#0F222D] text-[11px]">Tutela del Consumatore</p>
-            <ul className="space-y-2">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleOpen('privacy')}
-                  className="flex items-center gap-1.5 text-slate-700 hover:text-[#0A6847] transition underline-offset-2 hover:underline"
-                >
-                  <FileText className="size-3.5 text-slate-400" />
-                  Informativa Privacy (GDPR)
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleOpen('arera')}
-                  className="flex items-center gap-1.5 text-slate-700 hover:text-[#0A6847] transition underline-offset-2 hover:underline"
-                >
-                  <Scale className="size-3.5 text-slate-400" />
-                  Condizioni e Trasparenza ARERA
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleOpen('terms')}
-                  className="flex items-center gap-1.5 text-slate-700 hover:text-[#0A6847] transition underline-offset-2 hover:underline"
-                >
-                  <FileText className="size-3.5 text-slate-400" />
-                  Termini di Servizio
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleOpen('privacy')}
-                  className="flex items-center gap-1.5 text-slate-500 hover:text-[#0A6847] transition underline-offset-2 hover:underline"
-                >
-                  <span>Preferenze Cookie</span>
-                </button>
-              </li>
+          <nav aria-label="Informazioni legali" className="text-sm">
+            <h2 className="mb-2 text-base font-bold text-[#0F222D]">Tutela del consumatore</h2>
+            <ul>
+              <li><button type="button" onClick={() => handleOpen('privacy')} className={linkCls}>Informativa privacy (GDPR)</button></li>
+              <li><button type="button" onClick={() => handleOpen('arera')} className={linkCls}>Condizioni e trasparenza ARERA</button></li>
+              <li><button type="button" onClick={() => handleOpen('terms')} className={linkCls}>Termini di servizio</button></li>
+              <li><button type="button" onClick={() => handleOpen('privacy')} className={linkCls}>Cookie: solo tecnici</button></li>
             </ul>
-          </div>
+          </nav>
         </div>
 
-        {/* Bottom copyright line */}
-        <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Volta Energia S.r.l. - Tutti i diritti riservati.</p>
-          <p className="text-center sm:text-right">
-            Tariffe e simulazioni a scopo informativo e comparativo. Condizioni definitive verificate con l'operatore prima della sottoscrizione.
+        <div className="mt-8 flex flex-col gap-2 border-t border-[#DCE5E8] pt-6 text-sm sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+          <p className="shrink-0">© {new Date().getFullYear()} Volta Energia S.r.l.</p>
+          <p className="max-w-[70ch] sm:text-right">
+            Tariffe e simulazioni a scopo informativo e comparativo. Le condizioni definitive vengono verificate con l’operatore prima della sottoscrizione.
           </p>
         </div>
       </div>

@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Map Tailwind's font utilities to the self-hosted brand faces (DESIGN.md Typography).
+   Without this, `font-sans` resolves to the platform stack and Manrope never renders. */
+@theme {
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
+}
+
 @layer base {
   :root {
     --volta-petrol: #0A3B40;
@@ -37,6 +45,10 @@
     text-wrap: balance;
   }
 
+  p, dd, li, figcaption {
+    text-wrap: pretty;
+  }
+
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
@@ -44,6 +56,25 @@
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Browser surfaces carry the palette too */
+::selection {
+  background-color: #CDE7DC;
+  color: #0F222D;
+}
+:root {
+  accent-color: #0A6847;
+  caret-color: #0A6847;
+}
+a {
+  text-underline-offset: 3px;
+}
+summary {
+  list-style-position: inside;
+}
+summary::marker {
+  color: #0A6847;
 }
 
 /* Unified Volta Surface & Badge Utilities */

@@ -29,12 +29,12 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
 }) => {
   return (
     <header className="bg-white border-b border-[#DCE5E8] sticky top-0 z-30">
-      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <div className={`max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3 ${isPublicVisitor ? 'flex-nowrap' : 'flex-wrap'}`}>
         {/* Brand Mark */}
         <button
           type="button"
           aria-label="Volta Energia, torna al confronto"
-          className="flex items-center gap-2.5 cursor-pointer shrink-0 text-left rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847]"
+          className="flex min-h-11 items-center gap-2.5 cursor-pointer shrink-0 text-left rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847]"
           onClick={() => onSelectView('offers')}
         >
           <svg className="w-8 h-8 shrink-0" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -43,11 +43,11 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             <path d="M13 9.5L16 16L19 9.5" stroke="#34D399" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <div>
-            <span className="font-bold text-base sm:text-lg text-[#0F222D] tracking-tight block leading-none">
+            <span className="font-display font-bold text-base sm:text-lg text-[#0F222D] tracking-tight block leading-none">
               Volta Energia
             </span>
             {!isPublicVisitor && (
-              <span className="text-[11px] text-[#445966] font-medium block mt-0.5">
+              <span className="text-xs text-[#445966] font-medium block mt-0.5">
                 Portale clienti
               </span>
             )}
@@ -55,7 +55,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
         </button>
 
         {/* Navigation & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className={`flex items-center gap-1 sm:gap-3 ${isPublicVisitor ? 'flex-nowrap' : 'flex-wrap'}`}>
           {!isPublicVisitor && (
             <nav className="flex flex-wrap sm:flex-nowrap bg-[#F6F9FA] border border-[#DCE5E8] p-1 rounded-lg text-xs font-semibold max-w-full" aria-label="Navigazione portale">
               <button
@@ -102,11 +102,12 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             <button
               type="button"
               onClick={onOpenStaffLogin}
-              className="min-h-[38px] flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[#445966] hover:text-[#0F222D] hover:bg-[#F6F9FA] text-xs sm:text-sm font-medium transition cursor-pointer shrink-0"
+              className="min-h-11 flex items-center gap-1.5 px-2.5 sm:px-3 rounded-md text-[#445966] hover:text-[#0F222D] hover:bg-[#F6F9FA] text-sm font-medium transition cursor-pointer shrink-0"
               title="Area riservata per consulenti, broker e staff"
             >
               <Lock className="w-3.5 h-3.5 text-[#445966] shrink-0" aria-hidden="true" />
-              <span>Area Staff & Broker</span>
+              <span className="hidden sm:inline">Area Staff & Broker</span>
+              <span className="sm:hidden">Staff</span>
             </button>
           )}
 
@@ -115,7 +116,7 @@ export const EnergyPortalHeader: React.FC<EnergyPortalHeaderProps> = ({
             <button
               type="button"
               onClick={onOpenCustomerLogin}
-              className="min-h-[38px] flex items-center gap-1.5 px-4 py-2 rounded-md bg-[#0A6847] hover:bg-[#085238] text-white text-xs sm:text-sm font-semibold transition cursor-pointer active:scale-[0.98] shrink-0"
+              className="min-h-11 flex items-center gap-1.5 px-3 sm:px-4 rounded-md bg-[#0A6847] hover:bg-[#085238] text-white text-sm font-semibold transition cursor-pointer shrink-0"
               title="Accedi o registrati all'Area Clienti per vedere bollette e forniture"
             >
               <User className="w-4 h-4 text-white shrink-0" aria-hidden="true" />
