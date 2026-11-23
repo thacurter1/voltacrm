@@ -77,7 +77,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 const inputCls =
-  'mt-1 block w-full min-h-11 rounded-md border border-[#DCE5E8] bg-white px-3 text-sm text-[#0F222D] placeholder:text-[#6B7F8A] focus:border-[#0A6847] focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20';
+  'mt-1 block w-full min-h-11 rounded-md border border-[#DCE5E8] bg-white px-3 text-sm text-[#0F222D] placeholder:text-[#5F7380] focus:border-[#0A6847] focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20';
 const monoCls = `${inputCls} font-mono tabular-nums`;
 
 /** Mount it only while open (`{open && <BillOcrModal …/>}`) so each opening starts from its initial props. */

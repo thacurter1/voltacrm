@@ -302,7 +302,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_12px_32px_rgba(10, 59, 64,0.04)]">
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-[0_12px_32px_rgba(10, 59, 64,0.04)]">
       {/* Utility Type Selector */}
       <div className="p-5 sm:p-7 border-b border-slate-200">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -368,30 +368,15 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
               }}
               aria-pressed={activeMode === 'profile'}
               className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
-                activeMode === 'profile' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
+                activeMode === 'profile' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-[#DCE5E8] bg-white text-[#0F222D] hover:border-[#0A6847]'
               }`}
             >
               <span className="block text-sm font-bold">Usa la mia fornitura</span>
-              <span className="block text-xs text-slate-600 mt-1">
+              <span className="block text-[13px] leading-snug text-[#445966] mt-1">
                 {matchingPoints.length} {matchingPoints.length === 1 ? 'fornitura disponibile' : 'forniture disponibili'}
               </span>
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveMode('wizard');
-              setUploadError(null);
-            }}
-            aria-pressed={activeMode === 'wizard'}
-            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
-              activeMode === 'wizard' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
-            }`}
-          >
-            <span className="block text-sm font-bold">Stima da profilo casa</span>
-            <span className="block text-xs text-slate-600 mt-1">Senza bolletta · Calcolo guidato</span>
-          </button>
 
           <button
             type="button"
@@ -401,11 +386,26 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             }}
             aria-pressed={activeMode === 'upload'}
             className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
-              activeMode === 'upload' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
+              activeMode === 'upload' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-[#DCE5E8] bg-white text-[#0F222D] hover:border-[#0A6847]'
             }`}
           >
             <span className="block text-sm font-bold">Carica una bolletta</span>
-            <span className="block text-xs text-slate-600 mt-1">PDF, JPG o PNG · max 10 MB</span>
+            <span className="block text-[13px] leading-snug text-[#445966] mt-1">Hai la bolletta: la verifichiamo noi · PDF, JPG o PNG fino a 10 MB</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('wizard');
+              setUploadError(null);
+            }}
+            aria-pressed={activeMode === 'wizard'}
+            className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
+              activeMode === 'wizard' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-[#DCE5E8] bg-white text-[#0F222D] hover:border-[#0A6847]'
+            }`}
+          >
+            <span className="block text-sm font-bold">Stima da profilo casa</span>
+            <span className="block text-[13px] leading-snug text-[#445966] mt-1">Non hai la bolletta: stima immediata da poche domande sulla casa</span>
           </button>
 
           <button
@@ -416,11 +416,11 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             }}
             aria-pressed={activeMode === 'manual'}
             className={`min-h-[82px] p-4 rounded-xl border-2 text-left transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6847] ${
-              activeMode === 'manual' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-slate-200 text-slate-700 hover:border-[#0A6847]'
+              activeMode === 'manual' ? 'border-[#0A6847] bg-[#EAF4F0] text-[#0F222D]' : 'border-[#DCE5E8] bg-white text-[#0F222D] hover:border-[#0A6847]'
             }`}
           >
             <span className="block text-sm font-bold">Inserisci i consumi</span>
-            <span className="block text-xs text-slate-600 mt-1">Se hai i dati già a portata di mano</span>
+            <span className="block text-[13px] leading-snug text-[#445966] mt-1">Se hai i dati già a portata di mano</span>
           </button>
         </div>
       </div>
@@ -431,7 +431,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
           <div className="space-y-4">
             {matchingPoints.length === 0 ? (
               <div className="bg-slate-50 rounded-xl border border-dashed border-slate-300 p-8 text-center space-y-3">
-                <Info className="w-6 h-6 text-slate-400 mx-auto" />
+                <Info className="w-6 h-6 text-[#5F7380] mx-auto" />
                 <p className="text-xs text-slate-600 font-medium">
                   Nessuna fornitura {utilityType.toUpperCase()} registrata attualmente nel tuo profilo.
                 </p>
@@ -486,7 +486,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                           </h4>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                         Profilo
                       </span>
                     </div>
@@ -577,7 +577,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       <User className="w-4 h-4" />
                     </div>
                     {householdSize === 'single' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
                         Selezionato
                       </span>
                     )}
@@ -611,7 +611,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       <Users className="w-4 h-4" />
                     </div>
                     {householdSize === 'couple' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
                         Selezionato
                       </span>
                     )}
@@ -645,7 +645,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                       <Home className="w-4 h-4" />
                     </div>
                     {householdSize === 'family' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#0A6847]/10 text-[#0A6847]">
                         Selezionato
                       </span>
                     )}
@@ -742,10 +742,10 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-slate-500">
                     Stima Consumo Annuo
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                     Stima Abitudini Q1 2026
                   </span>
                 </div>
@@ -820,7 +820,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 <div className="flex items-center gap-2 truncate">
                   <FileText className="w-4 h-4 text-[#0A6847] shrink-0" />
                   <span className="font-semibold text-slate-900 truncate">{selectedFile.name}</span>
-                  <span className="text-slate-400 text-[10px]">
+                  <span className="text-[#5F7380] text-xs">
                     ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                   </span>
                 </div>
@@ -908,7 +908,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   placeholder={utilityType === 'luce' ? 'es. 2700' : 'es. 1000'}
                   className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">
+                <span className="text-xs text-[#5F7380] mt-0.5 block">
                   Media nazionale: {utilityType === 'luce' ? '~2.700 kWh/anno' : '~1.000 Smc/anno'}
                 </span>
               </div>
@@ -929,7 +929,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                     placeholder="es. 3.0"
                     className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                  <span className="text-xs text-[#5F7380] mt-0.5 block">
                     Residenziale tipico: 3.0 kW (o 4.5 kW)
                   </span>
                 </div>
@@ -963,7 +963,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   placeholder={utilityType === 'luce' ? 'es. 0.1850' : 'es. 0.5500'}
                   className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">
+                <span className="text-xs text-[#5F7380] mt-0.5 block">
                   Necessario per calcolare il risparmio personalizzato
                 </span>
               </div>
@@ -982,7 +982,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   placeholder="es. 120"
                   className="w-full min-h-[48px] px-3 py-2 bg-white border border-slate-300 rounded-xl text-base text-slate-900 focus:outline-none focus:border-[#0A6847] focus:ring-2 focus:ring-[#0A6847]/30"
                 />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">
+                <span className="text-xs text-[#5F7380] mt-0.5 block">
                   Commercializzazione e vendita (€/anno)
                 </span>
               </div>
@@ -1066,7 +1066,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
           aria-labelledby="guest-bill-modal-title"
           className="fixed inset-0 z-50 bg-[#0F222D]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 my-8">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 my-8">
             <button
               type="button"
               onClick={() => {
@@ -1074,7 +1074,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                 setGuestSuccess(false);
                 setGuestSubmitError(null);
               }}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              className="absolute top-4 right-4 p-2 text-[#5F7380] hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
               aria-label="Chiudi"
             >
               <X className="w-5 h-5" />
@@ -1133,7 +1133,7 @@ export const EnergyBillIntake: React.FC<EnergyBillIntakeProps> = ({
                   <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
                     <FileText className="w-4 h-4 text-[#0A6847] shrink-0" />
                     <span className="font-semibold truncate">{selectedFile.name}</span>
-                    <span className="text-slate-400 text-[10px] shrink-0">
+                    <span className="text-[#5F7380] text-xs shrink-0">
                       ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB • {utilityType.toUpperCase()})
                     </span>
                   </div>

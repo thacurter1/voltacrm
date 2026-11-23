@@ -308,7 +308,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                     <td className="py-3.5 px-4">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         op.role === 'admin'
-                          ? 'bg-purple-100 text-purple-700'
+                          ? 'bg-[#DCEAF3] text-[#145374]'
                           : 'bg-[#EAF4F0] text-[#0A6847]'
                       }`}>
                         {op.role === 'admin' ? 'Super Admin' : 'Consulente Call Center'}

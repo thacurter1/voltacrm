@@ -68,7 +68,7 @@ export const TotemApp: React.FC = () => {
           } finally {
             setIsVerifying(false);
           }
-        }} className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+        }} className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 shadow-xl">
           <div className="mb-8 flex items-center gap-3">
             <span className="flex size-12 items-center justify-center rounded-xl bg-[#0A6847] text-white shadow-xs">
               <Zap className="size-6 fill-white" />

@@ -787,7 +787,7 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({
       </div>
 
       {/* SEZIONE 4: PROGRAMMA REFERRAL (Stripe Climate Style) */}
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-[#EAF4F0]/80 via-white to-purple-50/80 border border-[#BFE0D2]/80 stripe-card space-y-4">
+      <div className="p-6 rounded-2xl bg-white border border-[#BFE0D2]/80 stripe-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <span className="stripe-badge-blurple">

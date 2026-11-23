@@ -92,7 +92,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       case 'landing_page':
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/50">Landing Page</span>;
       default:
-        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200/50">Referral</span>;
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#EAF2F7] text-[#145374] border border-[#C9DCE8]">Referral</span>;
     }
   };
 
@@ -149,7 +149,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#DCE5E8]">
         <div>
           <h1 className="text-xl font-bold text-[#0F222D] tracking-tight">Lead Inbound & Reparto Marketing</h1>
-          <p className="text-xs text-[#425466] mt-0.5">
+          <p className="text-xs text-[#445966] mt-0.5">
             Ricezione real-time dei contatti dalle campagne pubblicitarie per l'assegnazione al call center.
           </p>
         </div>
@@ -166,18 +166,18 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       {/* Stripe Filter Bar */}
       <div className="p-3 bg-white rounded-xl border border-[#DCE5E8] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-wrap items-center gap-3 text-xs">
         <div className="flex-1 min-w-[240px] relative">
-          <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="h-3.5 w-3.5 text-[#5F7380] absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Filtra per nome, telefono, città..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] placeholder-slate-400 focus:outline-none focus:border-[#0A6847] focus:bg-white text-xs transition-colors"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:border-[#0A6847] focus:bg-white text-xs transition-colors"
           />
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-[#425466] font-medium">Canale:</span>
+          <span className="text-[#445966] font-medium">Canale:</span>
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
@@ -194,7 +194,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-[#425466] font-medium">Stato:</span>
+          <span className="text-[#445966] font-medium">Stato:</span>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
@@ -213,7 +213,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       {/* Mobile Cards for Leads (<sm screens) */}
       <div className="sm:hidden space-y-3">
         {filteredLeads.length === 0 ? (
-          <div className="p-8 text-center rounded-xl bg-white border border-[#DCE5E8] text-slate-400 text-xs">
+          <div className="p-8 text-center rounded-xl bg-white border border-[#DCE5E8] text-[#5F7380] text-xs">
             Nessun lead trovato con i filtri correnti.
           </div>
         ) : (
@@ -256,7 +256,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   </div>
                 )}
                 {lead.assignedCallCenterAgent && (
-                  <span className="ml-auto text-[10px] text-slate-400 truncate max-w-[100px]">
+                  <span className="ml-auto text-xs text-[#5F7380] truncate max-w-[100px]">
                     {lead.assignedCallCenterAgent}
                   </span>
                 )}
@@ -302,7 +302,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
       <div className="hidden sm:block rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#f8fafc] text-[#425466] font-semibold border-b border-[#DCE5E8]">
+            <thead className="bg-[#f8fafc] text-[#445966] font-semibold border-b border-[#DCE5E8]">
               <tr>
                 <th className="py-3.5 px-4">Contatto</th>
                 <th className="py-3.5 px-4">Origine</th>
@@ -315,7 +315,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
             <tbody className="divide-y divide-[#DCE5E8]">
               {filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 text-xs">
+                  <td colSpan={6} className="py-12 text-center text-[#5F7380] text-xs">
                     Nessun lead trovato con i filtri correnti. Prova a modificare i criteri di ricerca.
                   </td>
                 </tr>
@@ -329,7 +329,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     {/* Contatto */}
                     <td className="py-3.5 px-4">
                       <span className="font-semibold text-[#0F222D] text-sm block group-hover:text-[#0A6847] transition-colors">{lead.name}</span>
-                      <div className="flex items-center gap-2 text-[11px] text-[#425466] mt-0.5">
+                      <div className="flex items-center gap-2 text-[11px] text-[#445966] mt-0.5">
                         <span className="font-mono text-slate-700">{lead.phone}</span>
                         <span>•</span>
                         <span>{lead.city}</span>
@@ -366,7 +366,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                     </td>
 
                     {/* Operatore */}
-                    <td className="py-3.5 px-4 text-[11px] text-[#425466]">
+                    <td className="py-3.5 px-4 text-[11px] text-[#445966]">
                       {lead.assignedCallCenterAgent ? (
                         <span className="font-medium text-[#0F222D]">{lead.assignedCallCenterAgent}</span>
                       ) : (
@@ -420,11 +420,11 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
             <div className="flex justify-between items-center border-b border-[#DCE5E8] pb-3">
               <div>
                 <h3 className="font-bold text-sm sm:text-base text-[#0F222D]">Simula Webhook Inbound Marketing</h3>
-                <p className="text-xs text-[#425466]">Inietta un nuovo contatto generato da Meta Lead Ads o Google Ads</p>
+                <p className="text-xs text-[#445966]">Inietta un nuovo contatto generato da Meta Lead Ads o Google Ads</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 cursor-pointer rounded-lg hover:bg-slate-100"
+                className="text-[#5F7380] hover:text-slate-700 p-1.5 cursor-pointer rounded-lg hover:bg-slate-100"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -433,7 +433,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
             <form onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Nome o Ragione Sociale *</label>
+                  <label className="text-[#445966] font-medium block mb-1">Nome o Ragione Sociale *</label>
                   <input
                     type="text"
                     required
@@ -444,7 +444,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Telefono *</label>
+                  <label className="text-[#445966] font-medium block mb-1">Telefono *</label>
                   <input
                     type="text"
                     required
@@ -458,7 +458,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Email</label>
+                  <label className="text-[#445966] font-medium block mb-1">Email</label>
                   <input
                     type="email"
                     placeholder="marco.rossi@email.it"
@@ -468,7 +468,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Città</label>
+                  <label className="text-[#445966] font-medium block mb-1">Città</label>
                   <input
                     type="text"
                     placeholder="Milano (MI)"
@@ -481,7 +481,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Campagna</label>
+                  <label className="text-[#445966] font-medium block mb-1">Campagna</label>
                   <select
                     value={newLeadSource}
                     onChange={(e) => setNewLeadSource(e.target.value as LeadSource)}
@@ -494,7 +494,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Consumo Luce (kWh)</label>
+                  <label className="text-[#445966] font-medium block mb-1">Consumo Luce (kWh)</label>
                   <input
                     type="number"
                     value={newLeadKwh}
@@ -503,7 +503,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-[#425466] font-medium block mb-1">Consumo Gas (Smc)</label>
+                  <label className="text-[#445966] font-medium block mb-1">Consumo Gas (Smc)</label>
                   <input
                     type="number"
                     value={newLeadSmc}
@@ -514,7 +514,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
               </div>
 
               <div>
-                <label className="text-[#425466] font-medium block mb-1">Note di Marketing</label>
+                <label className="text-[#445966] font-medium block mb-1">Note di Marketing</label>
                 <textarea
                   rows={2}
                   placeholder="es. Campagna Instagram comparatore bolletta con upload foto."
@@ -528,7 +528,7 @@ export const LeadsManager: React.FC<LeadsManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="min-h-[44px] px-4 py-2 rounded-lg border border-[#DCE5E8] text-[#425466] hover:bg-slate-50 font-semibold cursor-pointer text-center"
+                  className="min-h-[44px] px-4 py-2 rounded-lg border border-[#DCE5E8] text-[#445966] hover:bg-slate-50 font-semibold cursor-pointer text-center"
                 >
                   Annulla
                 </button>

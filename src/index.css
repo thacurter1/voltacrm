@@ -134,3 +134,21 @@
     border: none !important;
   }
 }
+
+/*
+ * Touch targets >= 44px on phones and tablets (WCAG 2.5.5 / PRODUCT.md).
+ * Applies to block, flex and inline-block controls only; inline text buttons inside
+ * paragraphs are unaffected because min-height does not apply to inline boxes.
+ */
+@media (pointer: coarse) {
+  button:not([data-compact]),
+  [role="button"]:not([data-compact]),
+  [role="tab"]:not([data-compact]),
+  select,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]) {
+    min-height: 44px;
+  }
+  button:not([data-compact]):has(> svg:only-child) {
+    min-width: 44px;
+  }
+}

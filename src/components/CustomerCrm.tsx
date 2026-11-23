@@ -76,7 +76,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               <span>{showGuide ? 'Nascondi Guida' : 'Come Aggiungere Clienti?'}</span>
             </button>
           </div>
-          <p className="text-xs text-[#425466] mt-0.5">
+          <p className="text-xs text-[#445966] mt-0.5">
             Gestione anagrafiche contrattualizzate, mandati di brokeraggio continuo e scadenze quadrimestrali ARERA.
           </p>
         </div>
@@ -131,7 +131,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
 
       {/* Guide Banner: 4 Ways to Add Customers */}
       {showGuide && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#EAF4F0]/70 via-white to-sky-50/50 border border-[#D5E6DF]/80 shadow-xs space-y-3 animate-in fade-in-50 duration-200">
+        <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-[#EAF4F0]/70 via-white to-sky-50/50 border border-[#D5E6DF]/80 shadow-xs space-y-3 animate-in fade-in-50 duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#0A6847]" />
@@ -143,9 +143,9 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               type="button"
               onClick={() => setShowGuide(false)}
               aria-label="Chiudi guida rapida anagrafica clienti"
-              className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#0A6847] rounded px-1"
+              className="text-[#5F7380] hover:text-slate-600 text-xs cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#0A6847] rounded px-1"
             >
-              ✕ Chiudi
+              Chiudi
             </button>
           </div>
 
@@ -167,7 +167,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               <p className="text-[11px] text-slate-500 font-normal">
                 Compila i dati anagrafici, associa POD/PDR e attiva il mandato di brokeraggio.
               </p>
-              <span className="text-[10px] font-bold text-[#0A6847] inline-block pt-1">Apri modulo →</span>
+              <span className="text-xs font-bold text-[#0A6847] inline-block pt-1">Apri modulo →</span>
             </button>
 
             {/* Card 2: OCR Bolletta */}
@@ -189,7 +189,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               <p className="text-[11px] text-slate-500 font-normal">
                 Carica PDF/foto della bolletta: l'AI estrae intestatario, POD/PDR, spesa e crea il cliente.
               </p>
-              <span className="text-[10px] font-bold text-[#0A6847] inline-block pt-1">Avvia OCR →</span>
+              <span className="text-xs font-bold text-[#0A6847] inline-block pt-1">Avvia OCR →</span>
             </button>
 
             {/* Card 3: Lead Conversion */}
@@ -211,7 +211,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               <p className="text-[11px] text-slate-500 font-normal">
                 Dai contatti telemarketing/campagne: clicca "Converti in Cliente" sul lead firmato.
               </p>
-              <span className="text-[10px] font-bold text-emerald-700 inline-block pt-1">Vai ai Lead →</span>
+              <span className="text-xs font-bold text-emerald-700 inline-block pt-1">Vai ai Lead →</span>
             </button>
 
             {/* Card 4: Import Massivo */}
@@ -231,7 +231,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
               <p className="text-[11px] text-slate-500 font-normal">
                 Carica elenchi Excel/CSV: importa centinaia di anagrafiche e punti con un solo click.
               </p>
-              <span className="text-[10px] font-bold text-sky-700 inline-block pt-1">Importa file →</span>
+              <span className="text-xs font-bold text-sky-700 inline-block pt-1">Importa file →</span>
             </button>
           </div>
         </div>
@@ -240,18 +240,18 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
       {/* Stripe Filter Bar */}
       <div className="p-3 bg-white rounded-xl border border-[#DCE5E8] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-wrap items-center gap-3 text-xs">
         <div className="flex-1 min-w-[220px] relative">
-          <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="h-3.5 w-3.5 text-[#5F7380] absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Cerca cliente per nome, Codice Fiscale, POD o PDR..."
             aria-label="Cerca cliente per nome, Codice Fiscale, POD o PDR"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] placeholder-slate-400 focus:outline-none focus:border-[#0A6847] focus:bg-white text-xs transition-colors"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-50 border border-[#DCE5E8] text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:border-[#0A6847] focus:bg-white text-xs transition-colors"
           />
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-[#425466] shrink-0">
+        <div className="flex items-center gap-2 text-xs text-[#445966] shrink-0">
           <span>Delega Continua:</span>
           <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/60 font-bold text-emerald-700">
             {customers.filter((c) => c.hasBrokerageMandate).length} / {customers.length}
@@ -262,8 +262,8 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
       {/* Customer Cards List */}
       <div className="grid grid-cols-1 gap-4">
         {filteredCustomers.length === 0 ? (
-          <div className="p-8 sm:p-12 text-center rounded-2xl bg-white border border-[#DCE5E8] shadow-xs space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-[#EAF4F0] text-[#0A6847] flex items-center justify-center mx-auto">
+          <div className="p-8 sm:p-12 text-center rounded-xl bg-white border border-[#DCE5E8] shadow-xs space-y-4">
+            <div className="h-12 w-12 rounded-xl bg-[#EAF4F0] text-[#0A6847] flex items-center justify-center mx-auto">
               <Users className="h-6 w-6" />
             </div>
             <div className="max-w-md mx-auto space-y-1">
@@ -341,7 +341,7 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#425466]">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#445966]">
                     <span>CF: <strong className="font-mono text-[#0F222D]">{customer.fiscalCode}</strong></span>
                     <span>•</span>
                     <span>{customer.city}</span>
@@ -355,9 +355,9 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                 {/* 120 Days Badge */}
                 <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 bg-slate-50 px-3 py-2 rounded-lg border border-[#DCE5E8]">
                   <div className="flex items-center gap-2">
-                    <Clock className={`h-4 w-4 shrink-0 ${isAuditDue ? 'text-orange-500' : 'text-slate-400'}`} />
+                    <Clock className={`h-4 w-4 shrink-0 ${isAuditDue ? 'text-orange-500' : 'text-[#5F7380]'}`} />
                     <div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#425466] block">
+                      <span className="text-xs uppercase font-bold tracking-wider text-[#445966] block">
                         Ciclo 4 Mesi (120gg)
                       </span>
                       {isAuditDue ? (
@@ -416,24 +416,24 @@ export const CustomerCrm: React.FC<CustomerCrmProps> = ({
                         </div>
                       </div>
 
-                      <span className="text-[10px] sm:text-[11px] font-medium px-2 py-0.5 rounded bg-white border border-[#DCE5E8] text-[#425466] shrink-0">
+                      <span className="text-xs sm:text-[11px] font-medium px-2 py-0.5 rounded bg-white border border-[#DCE5E8] text-[#445966] shrink-0">
                         {utility.currentTariffType === 'fixed' ? 'Prezzo Fisso' : 'Indicizzato'}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-xs pt-2 border-t border-[#DCE5E8]">
                       <div>
-                        <span className="text-[10px] text-[#425466] block">Fornitore</span>
+                        <span className="text-xs text-[#445966] block">Fornitore</span>
                         <span className="font-semibold text-[#0F222D] truncate block">{utility.currentSupplier}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#425466] block">Consumo</span>
+                        <span className="text-xs text-[#445966] block">Consumo</span>
                         <span className="font-semibold text-[#0F222D] font-mono text-[11px] block truncate">
                           {utility.annualConsumption.toLocaleString()} {utility.type === 'luce' ? 'kWh' : 'Smc'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#425466] block">Prezzo</span>
+                        <span className="text-xs text-[#445966] block">Prezzo</span>
                         <span className="font-bold text-[#0F222D] font-mono text-[11px] block truncate">
                           {utility.currentUnitCost.toFixed(4)} €
                         </span>

@@ -253,8 +253,8 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
           if (event.key === 'Escape') onClose();
         }}
       >
-        <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden p-6 sm:p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+        <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden p-6 sm:p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle2 className="w-10 h-10 text-emerald-600" />
           </div>
 
@@ -269,15 +269,15 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 text-left space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Offerta:</span>
+              <span className="text-[#5F7380]">Offerta:</span>
               <span className="font-bold text-slate-900">{offer.name}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Fornitore:</span>
+              <span className="text-[#5F7380]">Fornitore:</span>
               <span className="font-semibold text-slate-800">{offer.supplier}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Fascia oraria preferita:</span>
+              <span className="text-[#5F7380]">Fascia oraria preferita:</span>
               <span className="font-semibold text-slate-800">{preferredTime}</span>
             </div>
           </div>
@@ -305,7 +305,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
         if (event.key === 'Escape' && !isSubmitting) onClose();
       }}
     >
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-6 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -318,7 +318,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-500">
                   {offer.supplier}
                 </span>
                 {isDemoCatalog && <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-200 text-slate-700">Catalogo demo</span>}
@@ -354,7 +354,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
               ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition cursor-pointer"
+              className="p-2 rounded-xl text-[#5F7380] hover:text-slate-600 hover:bg-slate-200/50 transition cursor-pointer"
               aria-label="Chiudi dettagli offerta"
             >
               <X className="w-5 h-5" />
@@ -571,7 +571,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
 
           {/* Consultation Intake Section */}
           {isGuestMode ? (
-            <div className="rounded-2xl border border-[#D5E6DF] bg-[#EAF4F0]/40 p-4 sm:p-5 space-y-4">
+            <div className="rounded-xl border border-[#D5E6DF] bg-[#EAF4F0]/40 p-4 sm:p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <PhoneCall className="w-4 h-4 text-[#0A6847]" />
                 <h3 className="font-bold text-sm text-[#0F222D]">
@@ -594,7 +594,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="Mario Rossi"
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-[#5F7380]"
                   />
                 </div>
 
@@ -609,7 +609,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     placeholder="+39 347 1234567"
-                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
+                    className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-[#5F7380]"
                   />
                 </div>
               </div>
@@ -624,7 +624,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                   value={guestEmail}
                   onChange={(e) => setGuestEmail(e.target.value)}
                   placeholder="mario.rossi@email.it"
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
+                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-[#5F7380]"
                 />
               </div>
 
@@ -665,7 +665,7 @@ export const EnergyOfferDetails: React.FC<EnergyOfferDetailsProps> = ({
                   value={customerNotes}
                   onChange={(e) => setCustomerNotes(e.target.value)}
                   placeholder="Es. Richiamare preferibilmente su WhatsApp..."
-                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-slate-400"
+                  className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A6847] text-slate-800 placeholder:text-[#5F7380]"
                 />
               </div>
 

@@ -290,7 +290,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-[#0F222D]">Il mio Account</h2>
@@ -315,7 +315,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Editable Contact Data */}
-        <form onSubmit={handleSaveContacts} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <form onSubmit={handleSaveContacts} className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
             <User className="w-4 h-4 text-[#0A6847]" />
             <h3>Recapiti di contatto</h3>
@@ -361,7 +361,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
         </form>
 
         {/* Verified Email Change */}
-        <form onSubmit={handleRequestEmailChange} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <form onSubmit={handleRequestEmailChange} className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
             <Mail className="w-4 h-4 text-[#0A6847]" />
             <h3>Cambio email con verifica</h3>
@@ -419,7 +419,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
         </form>
 
         {/* Password Change & Session Revocation */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
             <Lock className="w-4 h-4 text-[#0A6847]" />
             <h3>Sicurezza password e sessioni</h3>
@@ -500,7 +500,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
         </div>
 
         {/* Claim Guest Bill */}
-        <form onSubmit={handleClaimGuestBill} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <form onSubmit={handleClaimGuestBill} className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
             <FileCheck2 className="w-4 h-4 text-[#0A6847]" />
             <h3>Associa una bolletta caricata da ospite</h3>
@@ -538,7 +538,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
       </div>
 
       {/* Support Requests */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
         <div className="flex items-center gap-2 text-[#0F222D] font-bold text-base">
           <LifeBuoy className="w-4 h-4 text-[#0A6847]" />
           <h3>Richieste di assistenza</h3>
@@ -585,9 +585,9 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
           </form>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Storico richieste</h4>
+            <h4 className="text-xs font-bold text-slate-700">Storico richieste</h4>
             {loadingSupport ? (
-              <p className="text-xs text-slate-400">Caricamento richieste...</p>
+              <p className="text-xs text-[#5F7380]">Caricamento richieste...</p>
             ) : supportRequests.length === 0 ? (
               <p className="text-xs text-slate-500 bg-slate-50 border border-dashed border-slate-200 rounded-xl p-4">
                 Nessuna richiesta di assistenza aperta al momento.
@@ -612,7 +612,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
       </div>
 
       {/* Data Export & Account Closure */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h3 className="text-sm font-bold text-[#0F222D]">Portabilità e chiusura account</h3>
           <p className="text-xs text-slate-500 max-w-2xl">
@@ -641,7 +641,7 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
       </div>
 
       {showClosureBox && (
-        <form onSubmit={handleAccountClosure} className="bg-rose-50/70 rounded-2xl border border-rose-200 p-6 space-y-4">
+        <form onSubmit={handleAccountClosure} className="bg-rose-50/70 rounded-xl border border-rose-200 p-6 space-y-4">
           <h4 className="text-sm font-bold text-rose-900">Conferma disattivazione e richiesta chiusura account</h4>
           <p className="text-xs text-rose-800">
             Questa operazione disattiva immediatamente l’accesso al portale e revoca tutte le sessioni. Eventuali mandati e documenti contrattuali non vengono eliminati automaticamente ma conservati secondo gli obblighi normativi.

@@ -68,10 +68,10 @@ const STAGES_CONFIG: {
   {
     id: 'firma_mandato',
     label: 'Firma Mandato',
-    color: 'text-purple-700',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
-    badgeBg: 'bg-purple-100 text-purple-800',
+    color: 'text-[#145374]',
+    bgColor: 'bg-[#EAF2F7]',
+    borderColor: 'border-[#C9DCE8]',
+    badgeBg: 'bg-[#DCEAF3] text-[#0F3D57]',
     description: 'Mandato di brokeraggio e consenso GDPR in attesa di firma OTP'
   },
   {
@@ -465,7 +465,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
   return (
     <div className="space-y-6">
       {/* Testata della Sezione Onboarding */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="p-2 bg-[#EAF4F0] border border-[#BFE0D2] rounded-xl text-[#0A6847]">
@@ -536,7 +536,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
           <div className="text-xs font-medium text-slate-500 mb-1">Pratiche Totali</div>
           <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
           <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-            <Clock className="h-3 w-3 text-slate-400" /> Pipeline attiva
+            <Clock className="h-3 w-3 text-[#5F7380]" /> Pipeline attiva
           </div>
         </div>
 
@@ -582,18 +582,18 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#5F7380]" />
                 <input
                   type="text"
                   placeholder="Cerca per cliente, CF, POD, PDR..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-[#5F7380] focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20 focus:border-[#0A6847]"
                 />
               </div>
 
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-slate-400" />
+                <Filter className="h-4 w-4 text-[#5F7380]" />
                 <select
                   value={filterStage}
                   onChange={(e) => setFilterStage(e.target.value)}
@@ -691,7 +691,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     {/* Header Colonna */}
                     <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 mb-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs uppercase tracking-wider text-slate-800">
+                        <span className="font-bold text-xs text-slate-800">
                           {stage.label}
                         </span>
                       </div>
@@ -712,9 +712,9 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                             <span className="font-semibold text-sm text-slate-900 line-clamp-1 group-hover:text-[#0A6847] transition-colors">
                               {record.customerName}
                             </span>
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ${
+                            <span className={`px-1.5 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${
                               record.customerType === 'business'
-                                ? 'bg-purple-100 text-purple-700'
+                                ? 'bg-[#DCEAF3] text-[#145374]'
                                 : 'bg-slate-100 text-slate-600'
                             }`}>
                               {record.customerType === 'business' ? 'Azienda' : 'Privato'}
@@ -746,7 +746,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                             <div className="text-emerald-700 font-semibold">
                               +€{record.estimatedAnnualSavingsEur}/anno
                             </div>
-                            <div className="text-slate-400 text-[11px] truncate max-w-[90px]">
+                            <div className="text-[#5F7380] text-[11px] truncate max-w-[90px]">
                               {record.assignedAgent.split(' ')[0]}
                             </div>
                           </div>
@@ -768,7 +768,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                       ))}
 
                       {stageRecords.length === 0 && (
-                        <div className="h-28 border border-dashed border-slate-300 rounded-xl flex items-center justify-center text-center p-3 text-xs text-slate-400">
+                        <div className="h-28 border border-dashed border-slate-300 rounded-xl flex items-center justify-center text-center p-3 text-xs text-[#5F7380]">
                           Nessuna pratica in questo stadio
                         </div>
                       )}
@@ -807,12 +807,12 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                         >
                           <td className="px-4 py-3">
                             <div className="font-semibold text-slate-900">{record.customerName}</div>
-                            <div className="text-xs text-slate-400">{record.city} • {record.phone}</div>
+                            <div className="text-xs text-[#5F7380]">{record.city} • {record.phone}</div>
                           </td>
                           <td className="px-4 py-3 font-mono text-xs">
-                            <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase mb-1 ${
+                            <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-bold uppercase mb-1 ${
                               record.customerType === 'business'
-                                ? 'bg-purple-100 text-purple-700'
+                                ? 'bg-[#DCEAF3] text-[#145374]'
                                 : 'bg-slate-100 text-slate-600'
                             }`}>
                               {record.customerType === 'business' ? 'Azienda' : 'Privato'}
@@ -869,7 +869,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
                     {filteredRecords.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="text-center py-10 text-slate-400">
+                        <td colSpan={7} className="text-center py-10 text-[#5F7380]">
                           Nessuna pratica trovata con i filtri attuali.
                         </td>
                       </tr>
@@ -886,7 +886,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
       {/* VISTA 2: WIZARD GUIDATO IN 5 STEP          */}
       {/* ========================================== */}
       {activeView === 'wizard' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           {/* Progress Stepper Bar */}
           <div className="border-b border-slate-200 bg-slate-50/60 p-4 sm:p-6">
             <div className="max-w-4xl mx-auto">
@@ -910,14 +910,14 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                             isCompleted
                               ? 'bg-emerald-600 text-white shadow-xs'
                               : isCurrent
-                              ? 'bg-[#0A6847] text-white ring-4 ring-indigo-100 shadow-xs'
+                              ? 'bg-[#0A6847] text-white ring-4 ring-[#EAF4F0] shadow-xs'
                               : 'bg-slate-200 text-slate-500'
                           }`}
                         >
                           {isCompleted ? <Check className="h-5 w-5 stroke-[2.5]" /> : <Icon className="h-5 w-5" />}
                         </div>
                         <span className={`text-[11px] sm:text-xs mt-1.5 font-medium hidden sm:block ${
-                          isCurrent ? 'text-[#0A6847] font-bold' : isCompleted ? 'text-emerald-700' : 'text-slate-400'
+                          isCurrent ? 'text-[#0A6847] font-bold' : isCompleted ? 'text-emerald-700' : 'text-[#5F7380]'
                         }`}>
                           {s.title}
                         </span>
@@ -975,7 +975,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <div className="p-2.5 bg-white rounded-lg shadow-xs text-purple-600">
+                    <div className="p-2.5 bg-white rounded-lg shadow-xs text-[#145374]">
                       <Building2 className="h-5 w-5" />
                     </div>
                     <div>
@@ -988,7 +988,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                 {/* Form Anagrafica */}
                 <div className="space-y-4 pt-2">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       {wizardCustomerType === 'business' ? 'Ragione Sociale Completa *' : 'Nome e Cognome *'}
                     </label>
                     <input
@@ -1003,7 +1003,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         {wizardCustomerType === 'business' ? 'Partita IVA / Codice Fiscale *' : 'Codice Fiscale *'}
                       </label>
                       <input
@@ -1017,7 +1017,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Città di Residenza / Sede *
                       </label>
                       <input
@@ -1032,7 +1032,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Numero di Telefono *
                       </label>
                       <input
@@ -1046,7 +1046,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Email di Contatto *
                       </label>
                       <input
@@ -1111,7 +1111,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
                 {/* Dati Fornitore Attuale */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Fornitore Attuale
                   </label>
                   <input
@@ -1269,9 +1269,9 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
                 </div>
 
                 {/* Banner Risparmio Calcolato */}
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
+                <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-100">
+                    <span className="text-xs font-semibold text-emerald-100">
                       Risparmio Annuo Stimato Garantito
                     </span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-400/30 text-white text-[11px] font-bold">
@@ -1288,7 +1288,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
                 {/* Selezione Tariffa di Ingresso */}
                 <div className="space-y-3">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  <label className="block text-xs font-semibold text-slate-700">
                     Scegli la Tariffa di Onboarding
                   </label>
 
@@ -1409,7 +1409,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
                 {/* Metodo di Firma */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-700 mb-2">
                     Metodo di Perfezionamento Mandato
                   </label>
                   <div className="grid grid-cols-3 gap-3">
@@ -1556,12 +1556,12 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
       {/* MODAL DETTAGLIO PRATICA ONBOARDING */}
       {selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-start justify-between">
               <div>
                 <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase mb-1.5 inline-block ${
                   selectedRecord.customerType === 'business'
-                    ? 'bg-purple-100 text-purple-700'
+                    ? 'bg-[#DCEAF3] text-[#145374]'
                     : 'bg-slate-100 text-slate-600'
                 }`}>
                   {selectedRecord.customerType === 'business' ? 'Azienda' : 'Residenziale'}
@@ -1571,7 +1571,7 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
               </div>
               <button
                 onClick={() => setSelectedRecord(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-1.5 text-[#5F7380] hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1590,20 +1590,20 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
             {/* Dettagli Tecnici */}
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                <div className="text-slate-400 mb-0.5">Recapito & Città</div>
+                <div className="text-[#5F7380] mb-0.5">Recapito & Città</div>
                 <div className="font-semibold text-slate-800 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-slate-400" /> {selectedRecord.city}
+                  <MapPin className="h-3 w-3 text-[#5F7380]" /> {selectedRecord.city}
                 </div>
                 <div className="text-slate-600 flex items-center gap-1 mt-1">
-                  <Phone className="h-3 w-3 text-slate-400" /> {selectedRecord.phone}
+                  <Phone className="h-3 w-3 text-[#5F7380]" /> {selectedRecord.phone}
                 </div>
                 <div className="text-slate-600 flex items-center gap-1 mt-0.5 truncate">
-                  <Mail className="h-3 w-3 text-slate-400" /> {selectedRecord.email}
+                  <Mail className="h-3 w-3 text-[#5F7380]" /> {selectedRecord.email}
                 </div>
               </div>
 
               <div className="p-3 rounded-lg border border-slate-200 bg-white">
-                <div className="text-slate-400 mb-0.5">Forniture e Codici</div>
+                <div className="text-[#5F7380] mb-0.5">Forniture e Codici</div>
                 {selectedRecord.pod && (
                   <div className="font-mono text-[11px] text-amber-700 font-semibold truncate">
                     Luce: {selectedRecord.pod}

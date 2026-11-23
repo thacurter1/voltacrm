@@ -73,7 +73,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               <h1 className="text-xl font-bold text-[#0F222D] tracking-tight">
                 Portafoglio Clienti & Previsione Guadagni
               </h1>
-              <p className="text-xs text-[#425466] mt-0.5">
+              <p className="text-xs text-[#445966] mt-0.5">
                 Monitoraggio del portafoglio per consulente, rendita ricorrente e proiezione guadagni sui prossimi switch.
               </p>
             </div>
@@ -83,14 +83,14 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
         {/* Global summary badge */}
         <div className="flex items-center gap-3 bg-slate-50 px-4 py-2.5 rounded-xl border border-[#DCE5E8] text-xs">
           <div>
-            <span className="text-[#425466] block text-[10px] uppercase font-semibold">Rendita Ricorrente Totale</span>
+            <span className="text-[#445966] block text-xs uppercase font-semibold">Rendita Ricorrente Totale</span>
             <span className="text-sm font-bold text-emerald-600 font-mono">
               €{summary.totalProjectedAnnualRecurringEur.toLocaleString('it-IT')}/anno
             </span>
           </div>
           <div className="h-7 w-px bg-[#DCE5E8]" />
           <div>
-            <span className="text-[#425466] block text-[10px] uppercase font-semibold">Stima Upfront Prossimi Switch</span>
+            <span className="text-[#445966] block text-xs uppercase font-semibold">Stima Upfront Prossimi Switch</span>
             <span className="text-sm font-bold text-[#0A6847] font-mono">
               €{summary.totalProjectedUpfrontEur.toLocaleString('it-IT')}
             </span>
@@ -102,14 +102,14 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Total Customers */}
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between text-[#425466] mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Clienti in Gestione</span>
+          <div className="flex items-center justify-between text-[#445966] mb-1">
+            <span className="text-xs font-semibold">Clienti in Gestione</span>
             <Users className="w-4 h-4 text-[#0A6847]" />
           </div>
           <div className="text-2xl font-bold text-[#0F222D] font-mono">
             {activeConsultantSummary ? activeConsultantSummary.totalCustomers : summary.totalCustomers}
           </div>
-          <div className="text-xs text-[#425466] mt-1 flex items-center gap-1.5">
+          <div className="text-xs text-[#445966] mt-1 flex items-center gap-1.5">
             <span>{activeConsultantSummary ? activeConsultantSummary.totalUtilityPoints : summary.totalUtilityPoints} utenze</span>
             <span>•</span>
             <span className="text-emerald-600 font-medium">{summary.consultants.length} consulenti</span>
@@ -118,28 +118,28 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
 
         {/* Managed Volumes */}
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between text-[#425466] mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Volumi Energia Gestiti</span>
+          <div className="flex items-center justify-between text-[#445966] mb-1">
+            <span className="text-xs font-semibold">Volumi Energia Gestiti</span>
             <Zap className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-xl font-bold text-amber-600 font-mono truncate">
             {Math.round((activeConsultantSummary ? activeConsultantSummary.totalKwh : summary.totalLuceKwh) / 1000).toLocaleString('it-IT')} MWh
           </div>
-          <div className="text-xs text-[#425466] mt-1">
+          <div className="text-xs text-[#445966] mt-1">
             + {Math.round((activeConsultantSummary ? activeConsultantSummary.totalSmc : summary.totalGasSmc)).toLocaleString('it-IT')} Smc gas
           </div>
         </div>
 
         {/* Projected Upfront Switch Commission */}
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between text-[#425466] mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Previsione Upfront Switch</span>
+          <div className="flex items-center justify-between text-[#445966] mb-1">
+            <span className="text-xs font-semibold">Previsione Upfront Switch</span>
             <Coins className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-bold text-emerald-600 font-mono">
             €{(activeConsultantSummary ? activeConsultantSummary.projectedUpfrontSwitchEur : summary.totalProjectedUpfrontEur).toLocaleString('it-IT')}
           </div>
-          <div className="text-xs text-[#425466] mt-1 flex items-center gap-1">
+          <div className="text-xs text-[#445966] mt-1 flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
             <span className="text-amber-800 font-medium">
               {activeConsultantSummary ? activeConsultantSummary.switchesNext30Days : summary.switchesNext30Days} a scadenza 30gg
@@ -149,15 +149,15 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
 
         {/* Projected Recurring Commission */}
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between text-[#425466] mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Ricorrente Mensile</span>
+          <div className="flex items-center justify-between text-[#445966] mb-1">
+            <span className="text-xs font-semibold">Ricorrente Mensile</span>
             <Briefcase className="w-4 h-4 text-[#0A6847]" />
           </div>
           <div className="text-2xl font-bold text-[#0F222D] font-mono">
             €{(activeConsultantSummary ? activeConsultantSummary.projectedMonthlyRecurringEur : summary.totalProjectedMonthlyRecurringEur).toLocaleString('it-IT')}
-            <span className="text-xs text-[#425466] font-normal">/mese</span>
+            <span className="text-xs text-[#445966] font-normal">/mese</span>
           </div>
-          <div className="text-xs text-[#425466] mt-1">
+          <div className="text-xs text-[#445966] mt-1">
             €{(activeConsultantSummary ? activeConsultantSummary.projectedAnnualRecurringEur : summary.totalProjectedAnnualRecurringEur).toLocaleString('it-IT')} all'anno
           </div>
         </div>
@@ -170,7 +170,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
             <Users className="w-4 h-4 text-[#0A6847]" />
             <h3 className="text-sm font-bold text-[#0F222D]">Filtra per Portafoglio Consulente</h3>
           </div>
-          <span className="text-xs text-[#425466]">
+          <span className="text-xs text-[#445966]">
             {summary.consultants.length} portafogli attivi
           </span>
         </div>
@@ -189,11 +189,11 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                 selectedConsultant === 'all'
                   ? 'bg-[#0A6847] text-white shadow-xs'
-                  : 'bg-slate-100 text-[#425466] hover:bg-slate-200 hover:text-[#0F222D]'
+                  : 'bg-slate-100 text-[#445966] hover:bg-slate-200 hover:text-[#0F222D]'
               }`}
             >
               <span>Tutti i Portafogli</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+              <span className={`px-1.5 py-0.2 rounded-full text-xs ${
                 selectedConsultant === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
               }`}>
                 {customers.length}
@@ -207,16 +207,16 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-2 ${
                   selectedConsultant === c.consultantName
                     ? 'bg-[#0A6847] text-white shadow-xs'
-                    : 'bg-slate-100 text-[#425466] hover:bg-slate-200 hover:text-[#0F222D]'
+                    : 'bg-slate-100 text-[#445966] hover:bg-slate-200 hover:text-[#0F222D]'
                 }`}
               >
                 <span>{c.consultantName}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                <span className={`px-1.5 py-0.2 rounded-full text-xs ${
                   selectedConsultant === c.consultantName ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
                 }`}>
                   {c.totalCustomers} clienti
                 </span>
-                <span className={`text-[10px] font-semibold font-mono ${
+                <span className={`text-xs font-semibold font-mono ${
                   selectedConsultant === c.consultantName ? 'text-emerald-200' : 'text-emerald-600'
                 }`}>
                   €{c.projectedUpfrontSwitchEur}
@@ -230,24 +230,24 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
       {/* Switch Window Pipeline Breakdown for Active Portfolio */}
       {activeConsultantSummary && (
         <div className="bg-[#EAF4F0]/40 border border-[#D5E6DF] rounded-xl p-4">
-          <h4 className="text-xs font-bold text-[#0A6847] uppercase tracking-wider mb-2">
+          <h4 className="text-xs font-bold text-[#0A6847] mb-2">
             Pipeline Rinegoziazione Switch: {activeConsultantSummary.consultantName}
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div className="bg-white p-3 rounded-lg border border-[#DCE5E8] shadow-xs">
               <span className="text-amber-800 font-semibold block text-[11px]">Entro 30 Giorni</span>
               <span className="text-lg font-bold text-[#0F222D] font-mono">{activeConsultantSummary.switchesNext30Days} contratti</span>
-              <p className="text-[10px] text-[#425466] mt-0.5">Switch imminente, preparare proposta comparatore</p>
+              <p className="text-xs text-[#445966] mt-0.5">Switch imminente, preparare proposta comparatore</p>
             </div>
             <div className="bg-white p-3 rounded-lg border border-[#DCE5E8] shadow-xs">
               <span className="text-[#0A6847] font-semibold block text-[11px]">Entro 60 Giorni</span>
               <span className="text-lg font-bold text-[#0F222D] font-mono">{activeConsultantSummary.switchesNext60Days} contratti</span>
-              <p className="text-[10px] text-[#425466] mt-0.5">Finestra di preavviso e contatto cliente</p>
+              <p className="text-xs text-[#445966] mt-0.5">Finestra di preavviso e contatto cliente</p>
             </div>
             <div className="bg-white p-3 rounded-lg border border-[#DCE5E8] shadow-xs">
-              <span className="text-[#425466] font-semibold block text-[11px]">Entro 90 Giorni</span>
+              <span className="text-[#445966] font-semibold block text-[11px]">Entro 90 Giorni</span>
               <span className="text-lg font-bold text-[#0F222D] font-mono">{activeConsultantSummary.switchesNext90Days} contratti</span>
-              <p className="text-[10px] text-[#425466] mt-0.5">Pipeline consolidata</p>
+              <p className="text-xs text-[#445966] mt-0.5">Pipeline consolidata</p>
             </div>
           </div>
         </div>
@@ -256,18 +256,18 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
       {/* Search & Filters Bar */}
       <div className="bg-white border border-[#DCE5E8] rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-[#5F7380] absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cerca cliente, comune, consulente..."
-            className="w-full bg-slate-50 border border-[#DCE5E8] rounded-lg pl-9 pr-3 py-2 text-xs text-[#0F222D] placeholder-slate-400 focus:outline-none focus:border-[#0A6847] focus:bg-white"
+            className="w-full bg-slate-50 border border-[#DCE5E8] rounded-lg pl-9 pr-3 py-2 text-xs text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:border-[#0A6847] focus:bg-white"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
+          <Filter className="w-3.5 h-3.5 text-[#5F7380]" />
           <select
             value={filterSwitchStatus}
             onChange={(e) => setFilterSwitchStatus(e.target.value as any)}
@@ -284,7 +284,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
       <div className="bg-white border border-[#DCE5E8] rounded-xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-[#425466] uppercase tracking-wider text-[10px] font-semibold border-b border-[#DCE5E8]">
+            <thead className="bg-slate-50 text-[#445966] text-xs font-semibold border-b border-[#DCE5E8]">
               <tr>
                 <th className="py-3 px-4">Cliente & Città</th>
                 <th className="py-3 px-4">Consulente</th>
@@ -295,10 +295,10 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                 <th className="py-3 px-4 text-center">Azione</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#DCE5E8] text-[#425466]">
+            <tbody className="divide-y divide-[#DCE5E8] text-[#445966]">
               {filteredForecasts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400">
+                  <td colSpan={7} className="text-center py-12 text-[#5F7380]">
                     Nessun cliente trovato per i parametri impostati.
                   </td>
                 </tr>
@@ -314,7 +314,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                     >
                       <td className="py-3.5 px-4 font-medium">
                         <div className="text-[#0F222D] font-bold">{item.customerName}</div>
-                        <div className="text-[#425466] text-[11px]">{item.city}</div>
+                        <div className="text-[#445966] text-[11px]">{item.city}</div>
                       </td>
 
                       <td className="py-3.5 px-4">
@@ -326,7 +326,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-1.5">
                           {item.isDualFuel ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
                               Dual Fuel (Luce + Gas)
                             </span>
                           ) : item.utilityTypes.includes('luce') ? (
@@ -339,7 +339,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-[#425466] mt-0.5 font-mono">
+                        <div className="text-[11px] text-[#445966] mt-0.5 font-mono">
                           {item.totalKwh > 0 && `${item.totalKwh.toLocaleString()} kWh`}
                           {item.totalKwh > 0 && item.totalSmc > 0 && ' • '}
                           {item.totalSmc > 0 && `${item.totalSmc.toLocaleString()} Smc`}
@@ -352,15 +352,15 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                             {item.nextSwitchDate ? new Date(item.nextSwitchDate).toLocaleDateString('it-IT') : 'Da fissare'}
                           </span>
                           {item.status === 'due_soon' ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 ">
+                            <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 ">
                               Scade tra {item.daysUntilSwitch}gg
                             </span>
                           ) : item.status === 'upcoming' ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                            <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
                               Tra {item.daysUntilSwitch}gg
                             </span>
                           ) : (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                            <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                               Ottimale
                             </span>
                           )}
@@ -369,14 +369,14 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
 
                       <td className="py-3.5 px-4 text-right font-bold text-emerald-600 font-mono">
                         €{item.projectedUpfrontEur}
-                        {item.isDualFuel && <span className="text-[10px] text-emerald-600 block font-normal">+€25 bonus</span>}
+                        {item.isDualFuel && <span className="text-xs text-emerald-600 block font-normal">+€25 bonus</span>}
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
                         <span className="font-bold text-[#0F222D] font-mono">
                           €{item.projectedAnnualRecurringEur}/a
                         </span>
-                        <span className="text-[10px] text-[#425466] block font-mono">
+                        <span className="text-xs text-[#445966] block font-mono">
                           (€{item.projectedMonthlyRecurringEur}/m)
                         </span>
                       </td>

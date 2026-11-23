@@ -102,7 +102,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
               <h1 className="text-xl font-bold text-[#0F222D] tracking-tight">
                 Call Center & Marketing Dialer
               </h1>
-              <p className="text-xs text-[#425466] mt-0.5">
+              <p className="text-xs text-[#445966] mt-0.5">
                 Gestione outbound marketing, import liste massive CSV e fissaggio appuntamenti con consulenti.
               </p>
             </div>
@@ -115,7 +115,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
             <button
               onClick={() => setActiveSubTab('queue')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                activeSubTab === 'queue' ? 'bg-white text-[#0F222D] shadow-xs' : 'text-[#425466] hover:text-[#0F222D]'
+                activeSubTab === 'queue' ? 'bg-white text-[#0F222D] shadow-xs' : 'text-[#445966] hover:text-[#0F222D]'
               }`}
             >
               <PhoneCall className="w-3.5 h-3.5 text-[#0A6847]" />
@@ -124,7 +124,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
             <button
               onClick={() => setActiveSubTab('calendar')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                activeSubTab === 'calendar' ? 'bg-white text-[#0F222D] shadow-xs' : 'text-[#425466] hover:text-[#0F222D]'
+                activeSubTab === 'calendar' ? 'bg-white text-[#0F222D] shadow-xs' : 'text-[#445966] hover:text-[#0F222D]'
               }`}
             >
               <CalendarIcon className="w-3.5 h-3.5 text-[#0A6847]" />
@@ -146,7 +146,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
       {/* KPI Stats Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <span className="text-[11px] font-semibold text-[#425466] uppercase tracking-wider block">Lead Totali</span>
+          <span className="text-[11px] font-semibold text-[#445966] block">Lead Totali</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-[#0F222D] font-mono">{totalLeads}</span>
             <span className="text-xs text-slate-500">nel database</span>
@@ -154,7 +154,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
         </div>
 
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider block">Da Contattare</span>
+          <span className="text-[11px] font-semibold text-amber-700 block">Da Contattare</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-amber-700 font-mono">{toCallCount}</span>
             <span className="text-xs text-slate-500">prioritari</span>
@@ -162,7 +162,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
         </div>
 
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider block">Appuntamenti Presi</span>
+          <span className="text-[11px] font-semibold text-emerald-700 block">Appuntamenti Presi</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-emerald-700 font-mono">{bookedCount}</span>
             <span className="text-xs text-emerald-700 font-bold font-mono">{conversionRate}% conv.</span>
@@ -170,7 +170,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
         </div>
 
         <div className="bg-white border border-[#DCE5E8] rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Non Interessati / Lost</span>
+          <span className="text-[11px] font-semibold text-slate-500 block">Non Interessati / Lost</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl font-bold text-slate-700 font-mono">{lostCount}</span>
             <span className="text-xs text-slate-500">scartati</span>
@@ -248,13 +248,13 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                 </div>
 
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                  <Search className="w-3.5 h-3.5 text-[#5F7380] absolute left-2.5 top-2.5" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cerca nome, telefono, città..."
-                    className="w-full sm:w-60 bg-white border border-[#DCE5E8] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#0F222D] placeholder-slate-400 focus:outline-none focus:border-[#0A6847] focus:ring-1 focus:ring-[#0A6847]"
+                    className="w-full sm:w-60 bg-white border border-[#DCE5E8] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:border-[#0A6847] focus:ring-1 focus:ring-[#0A6847]"
                   />
                 </div>
               </div>
@@ -264,9 +264,9 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
             <div className="space-y-3">
               {filteredLeads.length === 0 ? (
                 <div className="bg-white border border-[#DCE5E8] rounded-xl p-12 text-center text-slate-500 shadow-xs">
-                  <PhoneCall className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                  <PhoneCall className="w-8 h-8 mx-auto mb-2 text-[#5F7380]" />
                   <p className="text-sm font-semibold text-[#0F222D]">Nessun contatto presente in questa lista.</p>
-                  <p className="text-xs text-[#425466] mt-1">Carica nuovi lead tramite CSV o seleziona un altro filtro.</p>
+                  <p className="text-xs text-[#445966] mt-1">Carica nuovi lead tramite CSV o seleziona un altro filtro.</p>
                 </div>
               ) : (
                 filteredLeads.map(lead => {
@@ -286,23 +286,23 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-sm font-bold text-[#0F222D]">{lead.name}</h3>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-semibold">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-semibold">
                               {lead.source}
                             </span>
                             {lead.status === 'appointment_booked' && (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
                                 Appuntamento Fissato
                               </span>
                             )}
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-[#425466] mt-1.5">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-[#445966] mt-1.5">
                             <span className="flex items-center gap-1 font-mono text-[#0F222D] font-semibold">
                               <PhoneCall className="w-3 h-3 text-emerald-600" />
                               {lead.phone}
                             </span>
                             <span className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-slate-400" />
+                              <MapPin className="w-3 h-3 text-[#5F7380]" />
                               {lead.city}
                             </span>
                             {lead.estimatedConsumptionKwh && (
@@ -314,7 +314,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                           </div>
 
                           {lead.notes && (
-                            <p className="text-xs text-[#425466] mt-2 bg-slate-50 p-2.5 rounded-lg border border-[#DCE5E8]">
+                            <p className="text-xs text-[#445966] mt-2 bg-slate-50 p-2.5 rounded-lg border border-[#DCE5E8]">
                               {lead.notes}
                             </p>
                           )}
@@ -373,7 +373,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                   <h3 className="text-sm font-bold text-[#0F222D]">Assistente Script AIDA</h3>
                 </div>
                 {selectedLeadForCall && (
-                  <span className="text-[10px] text-[#0A6847] font-mono font-bold bg-[#EAF4F0] px-2 py-0.5 rounded-full border border-[#BFE0D2]">
+                  <span className="text-xs text-[#0A6847] font-mono font-bold bg-[#EAF4F0] px-2 py-0.5 rounded-full border border-[#BFE0D2]">
                     {selectedLeadForCall.name.split(' ')[0]}
                   </span>
                 )}
@@ -384,12 +384,12 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                   {/* Lead banner in script */}
                   <div className="bg-[#EAF4F0]/50 rounded-lg p-3 border border-[#D5E6DF]">
                     <p className="text-[#0F222D] font-bold text-xs">{selectedLeadForCall.name}</p>
-                    <p className="text-[#425466] text-[11px] mt-0.5 font-mono">{selectedLeadForCall.phone} • {selectedLeadForCall.city}</p>
+                    <p className="text-[#445966] text-[11px] mt-0.5 font-mono">{selectedLeadForCall.phone} • {selectedLeadForCall.city}</p>
                   </div>
 
                   {/* Step A: Attenzione */}
                   <div className="space-y-1">
-                    <span className="font-bold text-amber-700 flex items-center gap-1 uppercase text-[10px] tracking-wider">
+                    <span className="font-bold text-amber-700 flex items-center gap-1 uppercase text-xs tracking-wider">
                       1. Attenzione (Hook 10s)
                     </span>
                     <p className="bg-amber-50/40 p-3 rounded-lg border border-amber-200/60 text-[#0F222D] leading-relaxed text-[11px]">
@@ -399,7 +399,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
 
                   {/* Step I: Interesse */}
                   <div className="space-y-1">
-                    <span className="font-bold text-[#0A6847] flex items-center gap-1 uppercase text-[10px] tracking-wider">
+                    <span className="font-bold text-[#0A6847] flex items-center gap-1 uppercase text-xs tracking-wider">
                       2. Interesse (Pain Point)
                     </span>
                     <p className="bg-[#EAF4F0]/40 p-3 rounded-lg border border-[#BFE0D2]/60 text-[#0F222D] leading-relaxed text-[11px]">
@@ -409,7 +409,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
 
                   {/* Step D: Desiderio */}
                   <div className="space-y-1">
-                    <span className="font-bold text-emerald-700 flex items-center gap-1 uppercase text-[10px] tracking-wider">
+                    <span className="font-bold text-emerald-700 flex items-center gap-1 uppercase text-xs tracking-wider">
                       3. Desiderio (Soluzione a zero rischi)
                     </span>
                     <p className="bg-emerald-50/40 p-3 rounded-lg border border-emerald-200/60 text-[#0F222D] leading-relaxed text-[11px]">
@@ -419,7 +419,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
 
                   {/* Step A: Azione */}
                   <div className="space-y-1">
-                    <span className="font-bold text-sky-700 flex items-center gap-1 uppercase text-[10px] tracking-wider">
+                    <span className="font-bold text-sky-700 flex items-center gap-1 uppercase text-xs tracking-wider">
                       4. Azione (Close per Appuntamento)
                     </span>
                     <p className="bg-sky-50/40 p-3 rounded-lg border border-sky-200/60 text-[#0F222D] leading-relaxed text-[11px]">
@@ -458,18 +458,18 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
       {/* Embedded Scheduling Modal for a specific lead */}
       {isScheduleModalOpen && schedulingTargetLead && (
         <div className="fixed inset-0 z-50 bg-[#0F222D]/40 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#DCE5E8] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs text-[#0F222D]">
+          <div className="bg-white border border-[#DCE5E8] rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs text-[#0F222D]">
             <div className="flex justify-between items-center border-b border-[#DCE5E8] pb-3">
               <div>
                 <h3 className="text-base font-bold text-[#0F222D]">Assegna Appuntamento a Consulente</h3>
-                <p className="text-xs text-[#425466]">Lead: <strong className="text-[#0F222D]">{schedulingTargetLead.name}</strong> ({schedulingTargetLead.phone})</p>
+                <p className="text-xs text-[#445966]">Lead: <strong className="text-[#0F222D]">{schedulingTargetLead.name}</strong> ({schedulingTargetLead.phone})</p>
               </div>
               <button 
                 onClick={() => {
                   setIsScheduleModalOpen(false);
                   setSchedulingTargetLead(null);
                 }} 
-                className="text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+                className="text-[#5F7380] hover:text-slate-700 cursor-pointer p-1"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -514,7 +514,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[#425466] mb-1 font-medium">Data</label>
+                  <label className="block text-[#445966] mb-1 font-medium">Data</label>
                   <input
                     type="date"
                     name="date"
@@ -525,7 +525,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[#425466] mb-1 font-medium">Ora</label>
+                  <label className="block text-[#445966] mb-1 font-medium">Ora</label>
                   <input
                     type="time"
                     name="time"
@@ -535,7 +535,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[#425466] mb-1 font-medium">Durata</label>
+                  <label className="block text-[#445966] mb-1 font-medium">Durata</label>
                   <select
                     name="duration"
                     defaultValue={45}
@@ -549,7 +549,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#425466] mb-1 font-medium">Tipologia</label>
+                <label className="block text-[#445966] mb-1 font-medium">Tipologia</label>
                 <select
                   name="type"
                   defaultValue="phone_consultation"
@@ -562,13 +562,13 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
               </div>
 
               <div>
-                <label className="block text-[#425466] mb-1 font-medium">Note Consulenza</label>
+                <label className="block text-[#445966] mb-1 font-medium">Note Consulenza</label>
                 <textarea
                   name="notes"
                   rows={2}
                   defaultValue={schedulingTargetLead.notes || ''}
                   placeholder="Obiettivo chiamata, tariffa attuale del cliente..."
-                  className="w-full bg-white border border-[#DCE5E8] rounded-lg px-3 py-2 text-[#0F222D] placeholder-slate-400 focus:outline-none focus:border-[#0A6847] focus:ring-1 focus:ring-[#0A6847]"
+                  className="w-full bg-white border border-[#DCE5E8] rounded-lg px-3 py-2 text-[#0F222D] placeholder:text-[#5F7380] focus:outline-none focus:border-[#0A6847] focus:ring-1 focus:ring-[#0A6847]"
                 />
               </div>
 

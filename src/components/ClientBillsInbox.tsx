@@ -97,13 +97,13 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({ bills, onOpe
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <label className="relative block w-full lg:w-80">
           <span className="sr-only">Cerca per cliente o nome file</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7F8A]" aria-hidden="true" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5F7380]" aria-hidden="true" />
           <input
             type="search"
             placeholder="Cerca per cliente o file"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="min-h-11 w-full rounded-md border border-[#DCE5E8] bg-white pl-9 pr-3 text-sm text-[#0F222D] placeholder:text-[#6B7F8A] focus:border-[#0A6847] focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
+            className="min-h-11 w-full rounded-md border border-[#DCE5E8] bg-white pl-9 pr-3 text-sm text-[#0F222D] placeholder:text-[#5F7380] focus:border-[#0A6847] focus:outline-none focus:ring-2 focus:ring-[#0A6847]/20"
           />
         </label>
 
@@ -171,14 +171,14 @@ export const ClientBillsInbox: React.FC<ClientBillsInboxProps> = ({ bills, onOpe
                   <tr key={bill.id} className="align-top hover:bg-[#F6F9FA]/60">
                     <td className="px-4 py-3.5">
                       <span className="block font-bold text-[#0F222D]">{bill.customerName}</span>
-                      <span className="font-mono text-xs tabular-nums text-[#6B7F8A]">{bill.customerId}</span>
+                      <span className="font-mono text-xs tabular-nums text-[#5F7380]">{bill.customerId}</span>
                     </td>
                     <td className="px-4 py-3.5">
                       <span className="flex items-center gap-2">
                         <FileText className="h-4 w-4 shrink-0 text-[#0A6847]" aria-hidden="true" />
                         <span className="max-w-xs truncate font-semibold text-[#0F222D]">{bill.fileName}</span>
                       </span>
-                      <span className="ml-6 font-mono text-xs tabular-nums text-[#6B7F8A]">{bill.fileSizeKb} KB</span>
+                      <span className="ml-6 font-mono text-xs tabular-nums text-[#5F7380]">{bill.fileSizeKb} KB</span>
                       {bill.notes && <p className="ml-6 mt-1 max-w-sm text-[13px] text-[#445966]">Nota cliente: {bill.notes}</p>}
                     </td>
                     <td className="px-4 py-3.5 font-semibold text-[#0A3B40]">{bill.utilityType === 'luce' ? 'Luce' : 'Gas'}</td>

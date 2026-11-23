@@ -33,7 +33,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
   return (
     <div className="space-y-6">
       {/* Overview Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-[#0F222D]">Le tue forniture e bollette</h2>
           <p className="text-sm font-medium text-slate-700">{customer.name}</p>
@@ -90,8 +90,8 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
       {/* Tab 1: Utility Points */}
       {activeTab === 'supplies' && (
         (!customer.utilityPoints || customer.utilityPoints.length === 0) ? (
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4 shadow-xs">
-            <div className="w-14 h-14 bg-[#0A6847]/10 text-[#0A6847] rounded-2xl flex items-center justify-center mx-auto">
+          <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center space-y-4 shadow-xs">
+            <div className="w-14 h-14 bg-[#0A6847]/10 text-[#0A6847] rounded-xl flex items-center justify-center mx-auto">
               <Zap className="w-7 h-7" />
             </div>
             <div>
@@ -111,7 +111,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
             </button>
             {bills.length > 0 && (
               <div className="max-w-lg mx-auto mt-6 text-left border-t border-slate-200 pt-4 space-y-2">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <p className="text-[11px] font-bold text-slate-500">
                   Stato delle pratiche inviate
                 </p>
                 {bills.slice(0, 3).map((bill) => {
@@ -135,7 +135,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
               return (
                 <div
                   key={point.id}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-all space-y-4"
+                  className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-all space-y-4"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -145,7 +145,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                         {isLuce ? <Zap className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <span className="text-xs font-bold text-[#5F7380]">
                           Fornitura {point.type}
                         </span>
                         <h4 className="text-sm font-black text-slate-900 font-mono">
@@ -154,28 +154,28 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                       </div>
                     </div>
 
-                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
                       Attiva
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl text-xs">
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Fornitore Attuale</span>
+                      <span className="text-[#5F7380] block text-xs uppercase font-bold">Fornitore Attuale</span>
                       <span className="font-bold text-slate-900">{point.currentSupplier}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Piano Tariffario</span>
+                      <span className="text-[#5F7380] block text-xs uppercase font-bold">Piano Tariffario</span>
                       <span className="font-semibold text-slate-700">{point.currentOfferName}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Consumo Annuo</span>
+                      <span className="text-[#5F7380] block text-xs uppercase font-bold">Consumo Annuo</span>
                       <span className="font-bold text-slate-900">
                         {point.annualConsumption.toLocaleString('it-IT')} {isLuce ? 'kWh' : 'Smc'}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Tipo Tariffa</span>
+                      <span className="text-[#5F7380] block text-xs uppercase font-bold">Tipo Tariffa</span>
                       <span className="font-bold text-slate-900 capitalize">
                         {point.currentTariffType === 'fixed' ? 'Prezzo Fisso' : 'Indicizzata (PUN/PSV)'}
                       </span>
@@ -195,9 +195,9 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
 
       {/* Tab 2: Bills */}
       {activeTab === 'bills' && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
           {bills.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 space-y-3">
+            <div className="p-8 text-center text-[#5F7380] space-y-3">
               <FileText className="w-10 h-10 mx-auto text-slate-300" />
               <p className="text-xs">Nessuna bolletta caricata finora.</p>
               <button
@@ -224,7 +224,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                       <h4 className="text-xs font-bold text-slate-900 hover:text-[#0A6847] transition-colors">
                         {bill.fileName}
                       </h4>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-[#5F7380]">
                         Caricata il {bill.uploadDate} • {bill.utilityType.toUpperCase()} • {bill.fileSizeKb} KB
                       </p>
                     </div>
@@ -239,7 +239,7 @@ export const SubitoMySupplies: React.FC<SubitoMySuppliesProps> = ({
                         </span>
                       );
                     })()}
-                    <ArrowUpRight className="w-4 h-4 text-slate-400" />
+                    <ArrowUpRight className="w-4 h-4 text-[#5F7380]" />
                   </div>
                 </button>
               ))}

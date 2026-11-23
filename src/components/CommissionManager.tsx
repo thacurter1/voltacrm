@@ -297,18 +297,18 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#DCE5E8]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A6847] uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A6847]">
               <Coins className="h-4 w-4" />
               Modulo Provvigioni & Compensi
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-[#EAF4F0] border border-[#BFE0D2] text-[#0A6847] text-[10px] font-bold">
+            <span className="px-2 py-0.5 rounded-full bg-[#EAF4F0] border border-[#BFE0D2] text-[#0A6847] text-xs font-bold">
               Energy Compensation 2026
             </span>
           </div>
           <h1 className="text-xl font-bold text-[#0F222D] tracking-tight mt-1">
             Registro Provvigioni & Liquidazione Distinte Agenti
           </h1>
-          <p className="text-xs text-[#425466] mt-0.5">
+          <p className="text-xs text-[#445966] mt-0.5">
             Calcolo automatico gettoni di attivazione (Luce/Gas/Dual Fuel) e margini ricorrenti a consumo sul portafoglio clienti.
           </p>
         </div>
@@ -341,8 +341,8 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
       {/* 4 KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
-          <div className="flex justify-between items-center text-slate-400">
-            <span className="text-xs font-medium text-[#425466]">Maturato da Liquidare</span>
+          <div className="flex justify-between items-center text-[#5F7380]">
+            <span className="text-xs font-medium text-[#445966]">Maturato da Liquidare</span>
             <div className="p-1.5 rounded-md bg-amber-50 text-amber-600">
               <Clock className="h-4 w-4" />
             </div>
@@ -356,8 +356,8 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
-          <div className="flex justify-between items-center text-slate-400">
-            <span className="text-xs font-medium text-[#425466]">Già Liquidato (Anno)</span>
+          <div className="flex justify-between items-center text-[#5F7380]">
+            <span className="text-xs font-medium text-[#445966]">Già Liquidato (Anno)</span>
             <div className="p-1.5 rounded-md bg-emerald-50 text-emerald-600">
               <CheckCircle2 className="h-4 w-4" />
             </div>
@@ -371,8 +371,8 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
-          <div className="flex justify-between items-center text-slate-400">
-            <span className="text-xs font-medium text-[#425466]">In Attivazione (Stima)</span>
+          <div className="flex justify-between items-center text-[#5F7380]">
+            <span className="text-xs font-medium text-[#445966]">In Attivazione (Stima)</span>
             <div className="p-1.5 rounded-md bg-sky-50 text-sky-600">
               <ArrowUpRight className="h-4 w-4" />
             </div>
@@ -386,8 +386,8 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-[#DCE5E8] shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-1">
-          <div className="flex justify-between items-center text-slate-400">
-            <span className="text-xs font-medium text-[#425466]">Contratti a Premio</span>
+          <div className="flex justify-between items-center text-[#5F7380]">
+            <span className="text-xs font-medium text-[#445966]">Contratti a Premio</span>
             <div className="p-1.5 rounded-md bg-[#EAF4F0] text-[#0A6847]">
               <Award className="h-4 w-4" />
             </div>
@@ -430,25 +430,25 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                     <h3 className="text-xs font-bold text-[#0F222D] leading-snug">
                       {agent.agentName}
                     </h3>
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                    <span className="text-xs text-slate-500 font-semibold">
                       {agent.role === 'admin' ? 'Broker Director' : 'Consulente Vendite'}
                     </span>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                   {agent.contractsCount} contratti
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-500 block">Da Liquidare:</span>
+                  <span className="text-xs text-slate-500 block">Da Liquidare:</span>
                   <span className="font-mono font-bold text-amber-700">
                     € {agent.accruedAmountEur.toFixed(2)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 block">Già Liquidato:</span>
+                  <span className="text-xs text-slate-500 block">Già Liquidato:</span>
                   <span className="font-mono font-bold text-slate-700">
                     € {agent.settledAmountEur.toFixed(2)}
                   </span>
@@ -484,13 +484,13 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <h2 className="text-sm font-bold text-[#0F222D]">
               Registro Singole Voci Provvigionali
             </h2>
-            <span className="text-xs text-slate-400">({filteredCommissions.length} record)</span>
+            <span className="text-xs text-[#5F7380]">({filteredCommissions.length} record)</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {/* Cerca */}
             <div className="relative">
-              <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="h-3.5 w-3.5 text-[#5F7380] absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchTerm}
@@ -552,7 +552,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
         {/* Tabella Dati */}
         <div className="border border-slate-200 rounded-lg overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-bold">
               <tr>
                 <th className="py-2.5 px-3">Agente</th>
                 <th className="py-2.5 px-3">Cliente & Fornitura</th>
@@ -566,7 +566,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <tbody className="divide-y divide-slate-100">
               {filteredCommissions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-[#5F7380]">
                     Nessuna provvigione trovata con i filtri selezionati.
                   </td>
                 </tr>
@@ -578,7 +578,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="font-semibold text-[#0F222D]">{c.customerName}</div>
-                      <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                      <div className="text-xs text-slate-500 font-mono flex items-center gap-1">
                         {c.utilityType === 'luce' ? (
                           <Zap className="h-3 w-3 text-amber-500 inline" />
                         ) : (
@@ -591,9 +591,9 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                       </div>
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
                         c.type === 'upfront'
-                          ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                          ? 'bg-[#EAF2F7] text-[#145374] border border-[#C9DCE8]'
                           : c.type === 'recurring'
                             ? 'bg-blue-50 text-blue-700 border border-blue-200'
                             : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -606,21 +606,21 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                     </td>
                     <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
                       <div>{c.period}</div>
-                      <div className="text-[10px] text-slate-400">{c.accrualDate}</div>
+                      <div className="text-xs text-[#5F7380]">{c.accrualDate}</div>
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap">
                       {c.status === 'accrued' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                           <Clock className="h-3 w-3" /> Maturata
                         </span>
                       )}
                       {c.status === 'pending' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
                           In attivazione
                         </span>
                       )}
                       {c.status === 'settled' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="h-3 w-3" /> Liquidata
                         </span>
                       )}
@@ -650,7 +650,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <h2 className="text-sm font-bold text-[#0F222D]">
               Distinte di Liquidazione & Ordini di Bonifico SEPA
             </h2>
-            <span className="text-xs text-slate-400">({batches.length} distinte emesse)</span>
+            <span className="text-xs text-[#5F7380]">({batches.length} distinte emesse)</span>
           </div>
           <span className="text-xs text-slate-500">
             Formato compatibile con tracciato bancario SEPA CBI e sistemi paghe
@@ -659,7 +659,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
 
         <div className="border border-slate-200 rounded-lg overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-bold">
               <tr>
                 <th className="py-2.5 px-3 font-mono">Protocollo Distinta</th>
                 <th className="py-2.5 px-3">Data Emessa</th>
@@ -674,7 +674,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <tbody className="divide-y divide-slate-100">
               {batches.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={8} className="py-8 text-center text-[#5F7380]">
                     Nessuna distinta contabile ancora registrata. Clicca su &quot;Emetti Distinta Liquidazione&quot; per generare un ordine di pagamento.
                   </td>
                 </tr>
@@ -738,22 +738,22 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             <div className="flex justify-between items-start border-b border-[#DCE5E8] pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0A6847] uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0A6847]">
                     <Wallet className="h-3.5 w-3.5" />
                     Emissione Distinta Contabile
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold">
                     Approvazione Pagamento
                   </span>
                 </div>
                 <h3 className="text-lg font-bold text-[#0F222D] mt-0.5">
                   Liquidazione Competenze per {targetAgentSummary.agentName}
                 </h3>
-                <p className="text-xs text-[#425466]">
+                <p className="text-xs text-[#445966]">
                   Seleziona le provvigioni maturate da includere nella distinta di bonifico o autofattura.
                 </p>
               </div>
-              <button onClick={() => setIsSettleModalOpen(false)} className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+              <button onClick={() => setIsSettleModalOpen(false)} className="text-[#5F7380] hover:text-slate-700 p-1 cursor-pointer">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -761,7 +761,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             {/* Riepilogo Selezionato */}
             <div className="p-3.5 rounded-lg bg-[#EAF4F0]/60 border border-[#D5E6DF] flex items-center justify-between">
               <div>
-                <span className="text-[11px] text-[#425466] font-medium block">
+                <span className="text-[11px] text-[#445966] font-medium block">
                   Totale Selezionato per il Pagamento:
                 </span>
                 <span className="text-2xl font-bold font-mono text-[#0A6847]">
@@ -790,12 +790,12 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
 
             {/* Lista Provvigioni Maturate Spuntabili */}
             <div className="space-y-2">
-              <span className="text-[10px] font-bold text-[#425466] uppercase tracking-wider block">
+              <span className="text-xs font-bold text-[#445966] block">
                 Seleziona Provvigioni Maturate:
               </span>
               <div className="border border-slate-200 rounded-lg max-h-56 overflow-y-auto divide-y divide-slate-100">
                 {targetAgentAccruedList.length === 0 ? (
-                  <div className="p-4 text-center text-slate-400">
+                  <div className="p-4 text-center text-[#5F7380]">
                     Nessuna provvigione maturata disponibile per questo agente.
                   </div>
                 ) : (
@@ -821,7 +821,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
                           />
                           <div>
                             <div className="font-semibold text-slate-800">{c.customerName}</div>
-                            <div className="text-[10px] text-slate-500 font-mono">
+                            <div className="text-xs text-slate-500 font-mono">
                               {c.utilityType.toUpperCase()} • {c.podOrPdr} • {c.notes}
                             </div>
                           </div>
@@ -839,7 +839,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
             {/* Dati Distinta & Riferimento Contabile */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200">
               <div>
-                <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                <label className="text-xs font-bold text-slate-600 block mb-1">
                   Codice Distinta / Protocollo Bonifico:
                 </label>
                 <input
@@ -851,7 +851,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                <label className="text-xs font-bold text-slate-600 block mb-1">
                   Note Contabili:
                 </label>
                 <input
@@ -869,7 +869,7 @@ export const CommissionManager: React.FC<CommissionManagerProps> = ({ currentUse
               <button
                 type="button"
                 onClick={() => setIsSettleModalOpen(false)}
-                className="px-3.5 py-1.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#425466] font-medium cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg border border-[#DCE5E8] hover:bg-slate-50 text-[#445966] font-medium cursor-pointer"
               >
                 Annulla
               </button>
