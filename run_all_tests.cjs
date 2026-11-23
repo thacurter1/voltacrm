@@ -160,7 +160,9 @@ async function main() {
     path.join('tests', 'test_account_lifecycle_e2e.cjs'),
     path.join('tests', 'test_customer_account_and_guest_claim.cjs'),
     path.join('tests', 'test_frontend_operational_flows.cjs'),
-    path.join('tests', 'test_full_customer_journey_e2e.cjs')
+    path.join('tests', 'test_full_customer_journey_e2e.cjs'),
+    path.join('tests', 'test_portal_intent_routing.cjs'),
+    path.join('tests', 'test_toast_and_install_banner_placement.cjs')
   ];
 
   let passed = 0;

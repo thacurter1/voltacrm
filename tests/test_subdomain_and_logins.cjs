@@ -25,18 +25,13 @@ const portalGateTsx = fs.readFileSync(path.join(__dirname, '..', 'src', 'compone
 const viteConfig = fs.readFileSync(path.join(__dirname, '..', 'vite.config.ts'), 'utf8');
 const serverIndex = fs.readFileSync(path.join(__dirname, '..', 'server', 'src', 'index.ts'), 'utf8');
 
-// 1. Subdomain detection in App.tsx supports both clienti.* / cliente.* and staff.* / crm.*
-test('App.tsx: detects customer subdomains (clienti.* and cliente.* and clienti-*) and staff subdomains (staff.* and crm.* and staff-*)', () => {
-  assert.ok(appTsx.includes("host.startsWith('clienti-')"), 'Must support clienti- Vercel subdomains');
-  assert.ok(appTsx.includes("host.startsWith('staff-')"), 'Must support staff- Vercel subdomains');
-  assert.ok(
-    appTsx.includes("portalHost.startsWith('clienti.')") && appTsx.includes("portalHost.startsWith('cliente.')"),
-    'App.tsx must detect both clienti.* and cliente.* subdomains as customer portal'
-  );
-  assert.ok(
-    appTsx.includes("portalHost.startsWith('staff.')") && appTsx.includes("portalHost.startsWith('crm.')"),
-    'App.tsx must detect both staff.* and crm.* subdomains as staff portal'
-  );
+// 1. Subdomain detection lives in src/config/portalRouting.ts and App.tsx consumes it
+const portalRoutingTs = fs.readFileSync(path.join(__dirname, '..', 'src', 'config', 'portalRouting.ts'), 'utf8');
+test('portalRouting.ts: detects customer subdomains (clienti.* / cliente.* / clienti-*) and staff subdomains (staff.* / crm.* / staff-*)', () => {
+  for (const prefix of ['clienti.', 'clienti-', 'cliente.', 'cliente-', 'staff.', 'staff-', 'crm.', 'crm-']) {
+    assert.ok(portalRoutingTs.includes(`host.startsWith('${prefix}')`), `Must support ${prefix} hosts`);
+  }
+  assert.ok(appTsx.includes('currentPortalIntent()'), 'App.tsx must derive portal routing from currentPortalIntent()');
 });
 
 // 2. Customer Login Gate in App.tsx opens PortalGate portal="customer" on customer subdomain or when Area Clienti is clicked

@@ -26,6 +26,7 @@ import { TeamProfilesManager } from './components/TeamProfilesManager';
 import { InvitationActivation } from './components/InvitationActivation';
 import { PortalGate } from './components/PortalGate';
 import { PortalHome } from './components/PortalHome';
+import { currentPortalIntent } from './config/portalRouting';
 import { createOperationGuard } from './services/operationGuard';
 import { mergeRecords } from './services/mergeRecords';
 import { SavingsProposalPdfModal } from './components/SavingsProposalPdfModal';
@@ -109,43 +110,11 @@ function UnifiedApp() {
     }
     return true;
   });
-  const [isStaffGateOpen, setIsStaffGateOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const search = window.location.search;
-      const params = new URLSearchParams(search);
-      const host = window.location.hostname;
-      const pathname = window.location.pathname.toLowerCase();
-      return (
-        params.get('portal') === 'staff' ||
-        params.get('login') === 'true' ||
-        host.startsWith('staff.') ||
-        host.startsWith('staff-') ||
-        host.startsWith('crm-') ||
-        host.startsWith('crm.') ||
-        pathname === '/staff' ||
-        pathname === '/crm'
-      );
-    }
-    return false;
-  });
-  const [isCustomerGateOpen, setIsCustomerGateOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const search = window.location.search;
-      const params = new URLSearchParams(search);
-      const host = window.location.hostname;
-      const pathname = window.location.pathname.toLowerCase();
-      return (
-        params.get('login') === 'customer' ||
-        host.startsWith('clienti.') ||
-        host.startsWith('clienti-') ||
-        host.startsWith('cliente-') ||
-        host.startsWith('cliente.') ||
-        pathname === '/clienti' ||
-        pathname === '/cliente'
-      );
-    }
-    return false;
-  });
+  // Initial gate state comes from the URL intent: /?portal=staff (or staff.*, /staff, ?login=true)
+  // opens the Staff gate, /?portal=customer (or clienti.*, /clienti, ?login=customer) opens the
+  // Customer gate, while plain / stays on the public landing.
+  const [isStaffGateOpen, setIsStaffGateOpen] = useState(() => currentPortalIntent() === 'staff');
+  const [isCustomerGateOpen, setIsCustomerGateOpen] = useState(() => currentPortalIntent() === 'customer');
   const openTotem = () => { window.location.href = '/?portal=totem'; };
   const [profiles, setProfiles] = useState<UserProfile[]>(isDemo ? INITIAL_PROFILES : []);
 
@@ -718,19 +687,12 @@ function UnifiedApp() {
   };
 
   const portalParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const legacyPortal = portalParams.get('app') || portalParams.get('mode');
-  const portalHost = typeof window !== 'undefined' ? window.location.hostname : '';
-  const portalPathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '/';
-  const isCustomerSubdomain = portalHost.startsWith('clienti.') || portalHost.startsWith('cliente.') || portalPathname === '/clienti' || portalPathname === '/cliente';
-  const isStaffSubdomain = portalHost.startsWith('staff.') || portalHost.startsWith('crm.') || portalPathname === '/staff' || portalPathname === '/crm';
-  const portalParam = portalParams.get('portal') ||
-    (isCustomerSubdomain || legacyPortal === 'cliente' || legacyPortal === 'customer' ? 'customer' :
-      isStaffSubdomain || legacyPortal === 'crm' || legacyPortal === 'staff' ? 'staff' : null);
+  const portalParam = currentPortalIntent();
   const portalRoleMismatch = (portalParam === 'customer' && currentUser.role !== 'customer') ||
     (portalParam === 'staff' && currentUser.role === 'customer');
 
   const isExplicitStaffLogin = portalParam === 'staff' || portalParams.get('login') === 'true' || isStaffGateOpen;
-  const isExplicitCustomerLogin = portalParams.get('login') === 'customer' || isCustomerGateOpen;
+  const isExplicitCustomerLogin = portalParam === 'customer' || isCustomerGateOpen;
 
   const clearLoginQueryParams = () => {
     if (typeof window !== 'undefined') {
@@ -1224,7 +1186,7 @@ function UnifiedApp() {
         }}
       />
 
-      {/* Install PWA Mobile Banner */}
+      {/* In-flow install hint (only when installable): never overlays CRM content */}
       <InstallAppBanner />
 
       {/* Toast Notifications */}
