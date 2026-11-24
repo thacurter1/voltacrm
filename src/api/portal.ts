@@ -175,10 +175,53 @@ export const portalApi = {
   },
 
   async analyzeBill(id: string): Promise<{ bill: CustomerBill; result: BillOcrResult }> {
-    return request<{ success: true; bill: CustomerBill; result: BillOcrResult }>(
-      '/portal/bills/' + encodeURIComponent(id) + '/analyze',
-      { method: 'POST' },
-    );
+    if (API_BASE_URL) {
+      try {
+        return await request<{ success: true; bill: CustomerBill; result: BillOcrResult }>(
+          '/portal/bills/' + encodeURIComponent(id) + '/analyze',
+          { method: 'POST' },
+        );
+      } catch (err) {
+        if (!isDemoSessionActive()) throw err;
+        console.warn('[portalApi] Backend OCR non disponibile in demo, uso dati dimostrativi:', err);
+      }
+    }
+    if (!isDemoSessionActive()) throw new Error('Servizio analisi bollette non configurato.');
+    const state = dbService.load();
+    const existing = (state.bills || []).find(b => b.id === id);
+    if (!existing) throw new Error('Bolletta richiesta non trovata.');
+    const isGas = existing.utilityType === 'gas' || existing.fileName.toLowerCase().includes('gas');
+    const matchedCust = (state.customers || []).find(c => c.id === existing.customerId);
+    const result: BillOcrResult = {
+      fileName: existing.fileName,
+      utilityType: isGas ? 'gas' : 'luce',
+      podOrPdr: isGas ? '02581900112233' : 'IT001E00459821',
+      supplier: isGas ? 'Eni Plenitude' : 'Enel Energia',
+      customerName: existing.customerName || matchedCust?.name || 'Cliente dimostrativo',
+      fiscalCode: matchedCust?.fiscalCode,
+      annualConsumption: isGas ? 1150 : 3400,
+      f1Kwh: isGas ? undefined : 1280,
+      f2Kwh: isGas ? undefined : 1120,
+      f3Kwh: isGas ? undefined : 1000,
+      rawCostTotal: isGas ? 165.0 : 186.4,
+      powerKw: isGas ? undefined : 3.5,
+      currentUnitCost: isGas ? 0.54 : 0.178,
+      currentFixedFeeYear: isGas ? 96 : 120,
+      period: 'Bimestre dimostrativo',
+      confidenceScore: 92,
+      missingFields: matchedCust?.fiscalCode ? [] : ['fiscalCode'],
+      notes: 'Dati dimostrativi: OCR reale non disponibile in questa sessione demo.',
+      model: 'demo',
+    };
+    const updatedBill: CustomerBill = {
+      ...existing,
+      status: 'analyzed',
+    };
+    dbService.save({
+      ...state,
+      bills: (state.bills || []).map(b => b.id === id ? updatedBill : b),
+    });
+    return { bill: updatedBill, result };
   },
 
   async listReadings(customerId?: string): Promise<MeterReading[]> {
@@ -321,10 +364,38 @@ export const portalApi = {
   },
 
   async claimGuestBill(claimToken: string, customerId?: string): Promise<{ success: boolean; bill: CustomerBill; message: string }> {
-    return request<{ success: boolean; bill: CustomerBill; message: string }>('/portal/bills/claim', {
-      method: 'POST',
-      body: JSON.stringify({ claimToken, ...(customerId ? { customerId } : {}) }),
+    if (API_BASE_URL) {
+      try {
+        return await request<{ success: boolean; bill: CustomerBill; message: string }>('/portal/bills/claim', {
+          method: 'POST',
+          body: JSON.stringify({ claimToken, ...(customerId ? { customerId } : {}) }),
+        });
+      } catch (err) {
+        if (!isDemoSessionActive()) throw err;
+      }
+    }
+    if (!isDemoSessionActive()) throw new Error('Servizio associazione bolletta non configurato.');
+    const state = dbService.load();
+    const cust = customerId ? (state.customers || []).find(c => c.id === customerId) : undefined;
+    const target = (state.bills || []).find(b => b.claimToken === claimToken || b.id === claimToken);
+    if (!target) {
+      throw new Error('Codice associazione non trovato o già utilizzato.');
+    }
+    const updatedBill: CustomerBill = {
+      ...target,
+      customerId: customerId || target.customerId,
+      customerName: cust?.name || target.customerName,
+      claimToken: undefined,
+    };
+    dbService.save({
+      ...state,
+      bills: (state.bills || []).map(b => b.id === target.id ? updatedBill : b),
     });
+    return {
+      success: true,
+      bill: updatedBill,
+      message: 'Bolletta collegata correttamente al tuo profilo (modalità demo).',
+    };
   },
 
   async listSupportRequests(customerId?: string): Promise<Array<{ id: string; status: string; createdAt: string; summary: string; assignedBrokerId?: string }>> {
@@ -357,25 +428,71 @@ export const portalApi = {
       }
     }
     if (!isDemoSessionActive()) throw new Error('Servizio richieste assistenza non configurato.');
+    const state = dbService.load();
+    const cust = customerId ? (state.customers || []).find(c => c.id === customerId) : undefined;
     const reqRecord = {
       id: `supp-${customerId || 'demo'}-${Date.now()}`,
-      status: 'new',
+      status: 'new' as const,
       createdAt: new Date().toISOString().split('T')[0],
       summary: `[ASSISTENZA PORTALE] ${subject} — ${message}`,
+      assignedBrokerId: cust?.assignedBrokerId,
     };
+    const supportLead: Lead = {
+      id: reqRecord.id,
+      name: cust?.name || 'Cliente Portale',
+      phone: cust?.phone || '+39 300 0000000',
+      email: cust?.email || 'assistenza@cliente.volta.it',
+      city: cust?.city || 'Italia',
+      source: 'landing_page',
+      status: 'new',
+      notes: reqRecord.summary,
+      createdAt: reqRecord.createdAt,
+      assignedBrokerId: cust?.assignedBrokerId,
+    };
+    dbService.save({
+      ...state,
+      leads: [supportLead, ...(state.leads || [])],
+    });
     return { success: true, request: reqRecord };
   },
 
   async exportAccountData(customerId?: string): Promise<Record<string, unknown>> {
-    const query = customerId ? '?customerId=' + encodeURIComponent(customerId) : '';
-    return request<Record<string, unknown>>('/portal/account/export' + query);
+    if (API_BASE_URL) {
+      try {
+        const query = customerId ? '?customerId=' + encodeURIComponent(customerId) : '';
+        return await request<Record<string, unknown>>('/portal/account/export' + query);
+      } catch (err) {
+        if (!isDemoSessionActive()) throw err;
+      }
+    }
+    if (!isDemoSessionActive()) throw new Error('Servizio esportazione dati non configurato.');
+    const state = dbService.load();
+    const customer = (state.customers || []).find(c => c.id === customerId) || null;
+    const bills = (state.bills || []).filter(b => b.customerId === customerId);
+    return {
+      exportedAt: new Date().toISOString(),
+      mode: 'demo',
+      customer,
+      bills,
+    };
   },
 
   async requestAccountClosure(payload: { password?: string; confirmPhrase?: string; reason?: string; customerId?: string }): Promise<{ success: boolean; message: string }> {
-    return request<{ success: boolean; message: string }>('/portal/account/closure-request', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    if (API_BASE_URL) {
+      try {
+        return await request<{ success: boolean; message: string }>('/portal/account/closure-request', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        if (!isDemoSessionActive()) throw err;
+      }
+    }
+    if (!isDemoSessionActive()) throw new Error('Servizio chiusura account non configurato.');
+    return {
+      success: true,
+      message: 'Richiesta registrata in modalità dimostrativa. In produzione l’account viene sospeso e preso in carico dal team GDPR.',
+    };
   },
 };
 

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { Appointment, AppointmentType, Lead } from '../types';
+import { Appointment, AppointmentType, Lead, UserProfile } from '../types';
 
 interface ScheduleAppointmentModalProps {
   lead: Lead | null;
+  consultants?: UserProfile[];
   isOpen: boolean;
   onClose: () => void;
   onSchedule: (appointment: Appointment) => void;
@@ -12,11 +13,15 @@ interface ScheduleAppointmentModalProps {
 
 const ScheduleAppointmentDialog: React.FC<{
   lead: Lead;
+  consultants?: UserProfile[];
   onClose: () => void;
   onSchedule: (appointment: Appointment) => void;
-}> = ({ lead, onClose, onSchedule }) => {
-  const [agentName, setAgentName] = useState('Alessandro Mori (Energy Specialist)');
-  const [date, setDate] = useState('2026-09-05');
+}> = ({ lead, consultants, onClose, onSchedule }) => {
+  const activeConsultants = (consultants || []).filter((c) => c.role !== 'customer');
+  const [agentName, setAgentName] = useState(
+    activeConsultants[0]?.name || 'Valentina Neri (Consulente Energetico)'
+  );
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState('11:00');
   const [duration, setDuration] = useState(45);
   const [type, setType] = useState<AppointmentType>('phone_consultation');
@@ -65,9 +70,17 @@ const ScheduleAppointmentDialog: React.FC<{
               onChange={(e) => setAgentName(e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#DCE5E8] text-[#0F222D] focus:outline-none focus:border-[#0A6847]"
             >
-              <option value="Alessandro Mori (Energy Specialist)">Alessandro Mori (Energy Specialist)</option>
-              <option value="Valentina Neri (Account Manager B2B)">Valentina Neri (Account Manager B2B)</option>
-              <option value="Luca Ferri (Consulente Telefonico)">Luca Ferri (Consulente Telefonico)</option>
+              {activeConsultants.length > 0 ? (
+                activeConsultants.map((c) => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))
+              ) : (
+                <>
+                  <option value="Matteo Riva (Broker Owner)">Matteo Riva (Broker Owner)</option>
+                  <option value="Chiara Bianchi (Consulente Senior)">Chiara Bianchi (Consulente Senior)</option>
+                  <option value="Valentina Neri (Consulente Energetico)">Valentina Neri (Consulente Energetico)</option>
+                </>
+              )}
             </select>
           </div>
 
@@ -151,10 +164,11 @@ const ScheduleAppointmentDialog: React.FC<{
 
 export const ScheduleAppointmentModal: React.FC<ScheduleAppointmentModalProps> = ({
   lead,
+  consultants,
   isOpen,
   onClose,
   onSchedule,
 }) => {
   if (!isOpen || !lead) return null;
-  return <ScheduleAppointmentDialog key={lead.id} lead={lead} onClose={onClose} onSchedule={onSchedule} />;
+  return <ScheduleAppointmentDialog key={lead.id} lead={lead} consultants={consultants} onClose={onClose} onSchedule={onSchedule} />;
 };

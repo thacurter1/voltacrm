@@ -22,6 +22,7 @@ interface CallCenterWorkspaceProps {
   onUpdateAppointmentStatus: (id: string, status: AppointmentStatus) => Promise<void> | void;
   onConvertToCustomer?: (app: Appointment) => Promise<void> | void;
   onBulkImportSuccess?: () => void;
+  onToast?: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
 }
 
 export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
@@ -33,14 +34,23 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
   onUpdateAppointmentStatus,
   onConvertToCustomer,
   onBulkImportSuccess,
+  onToast,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'queue' | 'calendar'>('queue');
   const [statusFilter, setStatusFilter] = useState<'all' | 'to_call' | 'queue' | 'booked' | 'lost'>('to_call');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
-  const [selectedLeadForCall, setSelectedLeadForCall] = useState<Lead | null>(leads[0] || null);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(leads[0]?.id || null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [schedulingTargetLead, setSchedulingTargetLead] = useState<Lead | null>(null);
+
+  const selectedLeadForCall = useMemo(() => {
+    if (selectedLeadId) {
+      const found = leads.find((l) => l.id === selectedLeadId);
+      if (found) return found;
+    }
+    return leads[0] || null;
+  }, [leads, selectedLeadId]);
 
   // Filter leads based on status and search query
   const filteredLeads = useMemo(() => {
@@ -82,9 +92,6 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
 
   const handleScheduleSubmit = async (data: Omit<Appointment, 'id'> & { id?: string }) => {
     await onScheduleAppointment(data);
-    if (schedulingTargetLead) {
-      await onUpdateLeadStatus(schedulingTargetLead.id, 'appointment_booked', `Appuntamento fissato con ${data.agentName}`);
-    }
     setIsScheduleModalOpen(false);
     setSchedulingTargetLead(null);
   };
@@ -275,7 +282,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
                   return (
                     <div
                       key={lead.id}
-                      onClick={() => setSelectedLeadForCall(lead)}
+                      onClick={() => setSelectedLeadId(lead.id)}
                       className={`bg-white border rounded-xl p-4 transition cursor-pointer shadow-xs ${
                         isSelected 
                           ? 'border-[#0A6847] bg-[#EAF4F0]/20 ring-1 ring-[#0A6847] shadow-sm' 
@@ -449,6 +456,7 @@ export const CallCenterWorkspace: React.FC<CallCenterWorkspaceProps> = ({
       <BulkCsvImportModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
+        onToast={onToast}
         onImportSuccess={() => {
           setIsCsvModalOpen(false);
           if (onBulkImportSuccess) onBulkImportSuccess();

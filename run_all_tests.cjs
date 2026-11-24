@@ -164,7 +164,8 @@ async function main() {
     path.join('tests', 'test_portal_intent_routing.cjs'),
     path.join('tests', 'test_toast_and_install_banner_placement.cjs'),
     path.join('tests', 'test_gemini_ocr_service.cjs'),
-    path.join('tests', 'test_ocr_review_ui.cjs')
+    path.join('tests', 'test_ocr_review_ui.cjs'),
+    path.join('tests', 'test_end_to_end_operational_parity.cjs')
   ];
 
   let passed = 0;

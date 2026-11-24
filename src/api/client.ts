@@ -275,29 +275,66 @@ export const api = {
     },
 
     async changePassword(currentPassword: string, newPassword: string) {
-      const res = await request<{ success: boolean; token?: string; message: string }>('/auth/change-password', {
-        method: 'POST',
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      if (res.token && typeof window !== 'undefined') {
-        localStorage.setItem('VOLTA_AUTH_TOKEN', res.token);
+      if (API_BASE_URL) {
+        try {
+          const res = await request<{ success: boolean; token?: string; message: string }>('/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({ currentPassword, newPassword }),
+          });
+          if (res.token && typeof window !== 'undefined') {
+            localStorage.setItem('VOLTA_AUTH_TOKEN', res.token);
+          }
+          return res;
+        } catch (err) {
+          if (!isDemoSessionActive()) throw err;
+        }
       }
-      return res;
+      if (!isDemoSessionActive()) throw new Error('Servizio cambio password non configurato.');
+      if (newPassword.length < 12) {
+        throw new Error('La nuova password deve contenere almeno 12 caratteri.');
+      }
+      return {
+        success: true,
+        message: 'Password aggiornata per la sessione dimostrativa.',
+      };
     },
 
     async logoutAllSessions() {
-      const res = await request<{ success: boolean; message: string }>('/auth/logout-all', {
-        method: 'POST',
-      });
+      if (API_BASE_URL) {
+        try {
+          const res = await request<{ success: boolean; message: string }>('/auth/logout-all', {
+            method: 'POST',
+          });
+          api.auth.logout();
+          return res;
+        } catch (err) {
+          if (!isDemoSessionActive()) throw err;
+        }
+      }
       api.auth.logout();
-      return res;
+      return {
+        success: true,
+        message: 'Tutte le sessioni attive sono state disconnesse.',
+      };
     },
 
     async requestEmailChange(newEmail: string, password?: string) {
-      return request<{ success: boolean; emailSent?: boolean; message: string }>('/auth/request-email-change', {
-        method: 'POST',
-        body: JSON.stringify({ newEmail, ...(password ? { password } : {}) }),
-      });
+      if (API_BASE_URL) {
+        try {
+          return await request<{ success: boolean; emailSent?: boolean; message: string }>('/auth/request-email-change', {
+            method: 'POST',
+            body: JSON.stringify({ newEmail, ...(password ? { password } : {}) }),
+          });
+        } catch (err) {
+          if (!isDemoSessionActive()) throw err;
+        }
+      }
+      if (!isDemoSessionActive()) throw new Error('Servizio cambio email non configurato.');
+      return {
+        success: true,
+        emailSent: false,
+        message: `Richiesta cambio email verso ${newEmail} registrata in modalità dimostrativa.`,
+      };
     },
 
     async confirmEmailChange(token: string) {
@@ -681,14 +718,27 @@ export const api = {
         const list = stored ? JSON.parse(stored) : [];
         const target = list.find((s: any) => s.id === id);
         if (target) {
-          target.status = 'activated';
+          target.status = 'signed';
+          target.activationStatus = 'activated';
           target.activationReference = payload.activationReference;
           target.activatedAt = payload.activatedAt;
           localStorage.setItem('VOLTA_SIGNATURES', JSON.stringify(list));
-          return { success: true, signatureReceipt: target };
+          let commissions: { records: CommissionRecord[]; totalEur: number } | undefined;
+          if (payload.generateCommission) {
+            commissions = await api.commissions.generate({
+              agentId: payload.agentId || 'user-admin-1',
+              agentName: 'Matteo Riva (Broker Owner)',
+              contractId: `act-${id}`,
+              customerName: target.customerName || 'Cliente Contraente',
+              podOrPdr: target.podOrPdr || 'IT001E00000000',
+              utilityType: String(target.podOrPdr || '').startsWith('IT') ? 'luce' : 'gas',
+              annualConsumption: 3200,
+            });
+          }
+          return { success: true, signatureReceipt: target, commissions };
         }
       } catch {}
-      return { success: true, signatureReceipt: { id, status: 'activated', ...payload } };
+      return { success: true, signatureReceipt: { id, status: 'signed', activationStatus: 'activated', ...payload } };
     },
     async signContract(payload: {
       customerId: string; customerName?: string; signerFiscalCode?: string; phone?: string;
@@ -705,6 +755,8 @@ export const api = {
           console.warn('[API Client] Fallback locale per signContract:', err);
         }
       }
+      const nowIso = new Date().toISOString();
+      const seal = `SHA256:DEMO:${Date.now().toString(16)}`;
       const receipt = {
         id: `sig-${Date.now()}`,
         customerId: payload.customerId,
@@ -714,10 +766,13 @@ export const api = {
         offerId: payload.offerId,
         supplier: payload.supplier || 'Fornitore Partner Selezionato',
         signatureType: payload.signatureType,
-        signedAt: new Date().toISOString(),
-        status: 'pending_activation',
+        signedAt: nowIso,
+        timestamp: nowIso,
+        status: 'signed' as const,
+        activationStatus: 'pending_activation' as const,
         consentVersion: payload.consentVersion,
-        cryptoSeal: `SHA256:DEMO:${Date.now().toString(16)}`
+        signatureHash: seal,
+        cryptoSeal: seal
       };
       try {
         const stored = localStorage.getItem('VOLTA_SIGNATURES');
@@ -925,12 +980,16 @@ export const api = {
         if (API_BASE_URL && !isDemoSessionActive()) throw err;
         if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
         console.warn('[API Client] Errore sendOtp backend, attivo fallback locale:', err);
+        const demoOtp = '849201';
+        if (typeof window !== 'undefined') {
+          try { sessionStorage.setItem('VOLTA_DEMO_LAST_OTP', demoOtp); } catch {}
+        }
         return {
           success: true,
           messageId: `local-otp-${Date.now()}`,
           expiresAt: new Date(Date.now() + 300000).toISOString(),
           channel: payload.channel || 'sms',
-          debugOtp: '849201',
+          debugOtp: demoOtp,
           sandboxMode: true
         };
       }
@@ -945,11 +1004,18 @@ export const api = {
       } catch (err) {
         if (API_BASE_URL && !isDemoSessionActive()) throw err;
         if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
-        console.warn('[API Client] Errore verifyOtp backend:', err);
+        const expected = (typeof window !== 'undefined' && sessionStorage.getItem('VOLTA_DEMO_LAST_OTP')) || '849201';
+        if (payload.code.trim() === expected) {
+          return {
+            success: true,
+            verified: true,
+            message: 'Codice OTP verificato con successo (Demo Sandbox).'
+          };
+        }
         return {
           success: false,
           verified: false,
-          message: err instanceof Error ? err.message : 'Verifica OTP non riuscita. Riprova.'
+          message: `Codice OTP non valido. In modalità demo usa ${expected}.`
         };
       }
     },
@@ -1090,153 +1156,362 @@ export const api = {
   },
 
   // --- COMMISSIONS & SETTLEMENTS ---
-  commissions: {
-    async getSummaries(): Promise<AgentCommissionSummary[]> {
+  commissions: (() => {
+    const DEMO_COMM_KEY = 'VOLTA_DEMO_COMMISSIONS_V1';
+    const DEMO_BATCH_KEY = 'VOLTA_DEMO_BATCHES_V1';
+
+    const SEED_COMMISSIONS: CommissionRecord[] = [
+      {
+        id: 'comm-demo-1',
+        agentId: 'user-admin-1',
+        agentName: 'Matteo Riva (Broker Owner)',
+        contractId: 'ctr-cust-1-luce',
+        customerName: 'Andrea Moretti',
+        podOrPdr: 'IT001E00459821',
+        utilityType: 'luce',
+        customerType: 'residential',
+        annualConsumption: 3400,
+        type: 'upfront',
+        amountEur: 95.0,
+        status: 'settled',
+        period: '2026-09',
+        accrualDate: '2026-09-12T10:00:00Z',
+        settlementDate: '2026-10-05T14:30:00Z',
+        paymentReference: 'DIST-2026-09-MIN1-4821',
+      },
+      {
+        id: 'comm-demo-2',
+        agentId: 'user-admin-1',
+        agentName: 'Matteo Riva (Broker Owner)',
+        contractId: 'ctr-cust-2-luce',
+        customerName: 'Ristorante La Terrazza Srl',
+        podOrPdr: 'IT001E88192044',
+        utilityType: 'luce',
+        customerType: 'business',
+        annualConsumption: 18500,
+        type: 'upfront',
+        amountEur: 140.0,
+        status: 'accrued',
+        period: '2026-11',
+        accrualDate: '2026-11-04T09:15:00Z',
+      },
+      {
+        id: 'comm-demo-3',
+        agentId: 'user-admin-1',
+        agentName: 'Matteo Riva (Broker Owner)',
+        contractId: 'ctr-cust-2-luce',
+        customerName: 'Ristorante La Terrazza Srl',
+        podOrPdr: 'IT001E88192044',
+        utilityType: 'luce',
+        customerType: 'business',
+        annualConsumption: 18500,
+        type: 'recurring',
+        amountEur: 26.25,
+        status: 'accrued',
+        period: '2026-11',
+        accrualDate: '2026-11-10T09:15:00Z',
+      },
+      {
+        id: 'comm-demo-4',
+        agentId: 'user-op-2',
+        agentName: 'Chiara Bianchi (Consulente Senior)',
+        contractId: 'ctr-cb-1',
+        customerName: 'Ristorante La Terrazza Srl',
+        podOrPdr: '09918273645512',
+        utilityType: 'gas',
+        customerType: 'business',
+        annualConsumption: 4200,
+        type: 'upfront',
+        amountEur: 110.0,
+        status: 'accrued',
+        period: '2026-11',
+        accrualDate: '2026-11-06T11:20:00Z',
+      },
+      {
+        id: 'comm-demo-5',
+        agentId: 'user-op-2',
+        agentName: 'Chiara Bianchi (Consulente Senior)',
+        contractId: 'ctr-cb-2',
+        customerName: 'Farmacia San Marco Snc',
+        podOrPdr: 'IT001E77331122',
+        utilityType: 'luce',
+        customerType: 'business',
+        annualConsumption: 8600,
+        type: 'bonus',
+        amountEur: 38.5,
+        status: 'accrued',
+        period: '2026-11',
+        accrualDate: '2026-11-11T16:00:00Z',
+      },
+      {
+        id: 'comm-demo-6',
+        agentId: 'user-op-3',
+        agentName: 'Valentina Neri (Consulente Energetico)',
+        contractId: 'ctr-vn-1',
+        customerName: 'Elena Fontana',
+        podOrPdr: 'IT001E55443322',
+        utilityType: 'luce',
+        customerType: 'residential',
+        annualConsumption: 2900,
+        type: 'upfront',
+        amountEur: 85.0,
+        status: 'accrued',
+        period: '2026-11',
+        accrualDate: '2026-11-08T10:45:00Z',
+      },
+      {
+        id: 'comm-demo-7',
+        agentId: 'user-op-3',
+        agentName: 'Valentina Neri (Consulente Energetico)',
+        contractId: 'ctr-vn-2',
+        customerName: 'Andrea Moretti',
+        podOrPdr: '02581900441122',
+        utilityType: 'gas',
+        customerType: 'residential',
+        annualConsumption: 1100,
+        type: 'bonus',
+        amountEur: 50.0,
+        status: 'pending',
+        period: '2026-11',
+        accrualDate: '2026-11-15T12:10:00Z',
+      },
+    ];
+
+    const SEED_BATCHES: SettlementBatch[] = [
+      {
+        id: 'batch-demo-1',
+        agentId: 'user-admin-1',
+        agentName: 'Matteo Riva (Broker Owner)',
+        period: '2026-09',
+        totalAmountEur: 95.0,
+        settlementDate: '2026-10-05T14:30:00Z',
+        paymentReference: 'DIST-2026-09-MIN1-4821',
+        commissionCount: 1,
+        notes: 'Liquidazione competenze settembre 2026',
+      },
+    ];
+
+    const loadDemoCommissions = (): CommissionRecord[] => {
+      if (typeof window === 'undefined') return SEED_COMMISSIONS;
       try {
-        await api.auth.ensureToken();
-        const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
-        return data.summaries;
-      } catch (err) {
-        if (API_BASE_URL && !isDemoSessionActive()) throw err;
-        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
-        console.warn('[API Client] Errore getSummaries commissions, uso fallback locale:', err);
-        return [
-          {
-            agentId: 'user-admin-1',
-            agentName: 'Matteo Riva (Broker Owner)',
-            role: 'admin',
-            pendingCount: 0,
-            pendingAmountEur: 0,
-            accruedCount: 2,
-            accruedAmountEur: 166.25,
-            settledCount: 1,
-            settledAmountEur: 95.00,
-            totalEarnedEur: 261.25,
-            contractsCount: 2
-          },
-          {
-            agentId: 'user-op-2',
-            agentName: 'Chiara Bianchi (Consulente Senior)',
-            role: 'operator',
-            pendingCount: 1,
-            pendingAmountEur: 40.00,
-            accruedCount: 3,
-            accruedAmountEur: 148.50,
-            settledCount: 1,
-            settledAmountEur: 45.00,
-            totalEarnedEur: 193.50,
-            contractsCount: 4
-          },
-          {
-            agentId: 'user-op-3',
-            agentName: 'Valentina Neri (Consulente Energetico)',
-            role: 'broker',
-            pendingCount: 2,
-            pendingAmountEur: 75.00,
-            accruedCount: 4,
-            accruedAmountEur: 210.00,
-            settledCount: 2,
-            settledAmountEur: 110.00,
-            totalEarnedEur: 320.00,
-            contractsCount: 6
-          }
-        ];
+        const raw = localStorage.getItem(DEMO_COMM_KEY);
+        if (!raw) {
+          localStorage.setItem(DEMO_COMM_KEY, JSON.stringify(SEED_COMMISSIONS));
+          return SEED_COMMISSIONS;
+        }
+        return JSON.parse(raw);
+      } catch {
+        return SEED_COMMISSIONS;
       }
-    },
+    };
 
-    async getAll(filters?: { agentId?: string; status?: string; period?: string; type?: string }): Promise<CommissionRecord[]> {
+    const saveDemoCommissions = (list: CommissionRecord[]) => {
+      if (typeof window === 'undefined') return;
+      try { localStorage.setItem(DEMO_COMM_KEY, JSON.stringify(list)); } catch {}
+    };
+
+    const loadDemoBatches = (): SettlementBatch[] => {
+      if (typeof window === 'undefined') return SEED_BATCHES;
       try {
-        await api.auth.ensureToken();
-        const queryParams = new URLSearchParams();
-        if (filters?.agentId) queryParams.append('agentId', filters.agentId);
-        if (filters?.status) queryParams.append('status', filters.status);
-        if (filters?.period) queryParams.append('period', filters.period);
-        if (filters?.type) queryParams.append('type', filters.type);
-
-        const qs = queryParams.toString();
-        const data = await request<{ success: boolean; commissions: CommissionRecord[] }>(`/commissions${qs ? `?${qs}` : ''}`);
-        return data.commissions;
-      } catch (err) {
-        if (API_BASE_URL && !isDemoSessionActive()) throw err;
-        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
-        console.warn('[API Client] Errore getAll commissions, uso fallback locale:', err);
-        return [];
+        const raw = localStorage.getItem(DEMO_BATCH_KEY);
+        if (!raw) {
+          localStorage.setItem(DEMO_BATCH_KEY, JSON.stringify(SEED_BATCHES));
+          return SEED_BATCHES;
+        }
+        return JSON.parse(raw);
+      } catch {
+        return SEED_BATCHES;
       }
-    },
+    };
 
-    async getBatches(agentId?: string): Promise<SettlementBatch[]> {
-      try {
-        await api.auth.ensureToken();
-        const qs = agentId ? `?agentId=${encodeURIComponent(agentId)}` : '';
-        const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
-        return data.batches;
-      } catch (err) {
-        if (API_BASE_URL && !isDemoSessionActive()) throw err;
-        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
-        console.warn('[API Client] Errore getBatches commissions:', err);
-        return [];
-      }
-    },
+    const saveDemoBatches = (list: SettlementBatch[]) => {
+      if (typeof window === 'undefined') return;
+      try { localStorage.setItem(DEMO_BATCH_KEY, JSON.stringify(list)); } catch {}
+    };
 
-    async generate(payload: {
-      agentId: string;
-      agentName: string;
-      contractId: string;
-      customerName: string;
-      podOrPdr: string;
-      utilityType: 'luce' | 'gas';
-      customerType?: 'residential' | 'business';
-      annualConsumption?: number;
-      isDualFuel?: boolean;
-    }): Promise<{ records: CommissionRecord[]; totalEur: number }> {
-      try {
-        await api.auth.ensureToken();
-        const data = await request<{ success: boolean; records: CommissionRecord[]; totalEur: number }>('/commissions/generate', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        return { records: data.records, totalEur: data.totalEur };
-      } catch (err) {
-        if (API_BASE_URL && !isDemoSessionActive()) throw err;
-        if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
-        console.warn('[API Client] Errore generate commissions:', err);
-        return { records: [], totalEur: 0 };
-      }
-    },
+    const buildDemoSummaries = (records: CommissionRecord[]): AgentCommissionSummary[] => {
+      const agents: Array<{ id: string; name: string; role: 'admin' | 'operator' | 'broker' | 'call_center' }> = [
+        { id: 'user-admin-1', name: 'Matteo Riva (Broker Owner)', role: 'admin' },
+        { id: 'user-op-2', name: 'Chiara Bianchi (Consulente Senior)', role: 'operator' },
+        { id: 'user-op-3', name: 'Valentina Neri (Consulente Energetico)', role: 'broker' },
+      ];
+      return agents.map((ag) => {
+        const mine = records.filter((r) => r.agentId === ag.id);
+        const pending = mine.filter((r) => r.status === 'pending');
+        const accrued = mine.filter((r) => r.status === 'accrued');
+        const settled = mine.filter((r) => r.status === 'settled');
+        const sum = (arr: CommissionRecord[]) => Number(arr.reduce((s, r) => s + r.amountEur, 0).toFixed(2));
+        const accruedEur = sum(accrued);
+        const settledEur = sum(settled);
+        return {
+          agentId: ag.id,
+          agentName: ag.name,
+          role: ag.role,
+          pendingCount: pending.length,
+          pendingAmountEur: sum(pending),
+          accruedCount: accrued.length,
+          accruedAmountEur: accruedEur,
+          settledCount: settled.length,
+          settledAmountEur: settledEur,
+          totalEarnedEur: Number((accruedEur + settledEur).toFixed(2)),
+          contractsCount: new Set(mine.map((r) => r.contractId)).size,
+        };
+      });
+    };
 
-    async settle(payload: {
-      agentId: string;
-      commissionIds: string[];
-      paymentReference?: string;
-      notes?: string;
-    }): Promise<{ batch: SettlementBatch; updatedCount: number }> {
-      if (API_BASE_URL) {
+    return {
+      async getSummaries(): Promise<AgentCommissionSummary[]> {
         try {
           await api.auth.ensureToken();
-          const data = await request<{ success: boolean; batch: SettlementBatch; updatedCount: number }>('/commissions/settle', {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          });
-          return { batch: data.batch, updatedCount: data.updatedCount };
+          const data = await request<{ success: boolean; summaries: AgentCommissionSummary[] }>('/commissions/summaries');
+          return data.summaries;
         } catch (err) {
           if (API_BASE_URL && !isDemoSessionActive()) throw err;
           if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
-          console.warn('[API Client] Fallback locale per settle commissions:', err);
+          return buildDemoSummaries(loadDemoCommissions());
         }
+      },
+
+      async getAll(filters?: { agentId?: string; status?: string; period?: string; type?: string }): Promise<CommissionRecord[]> {
+        try {
+          await api.auth.ensureToken();
+          const queryParams = new URLSearchParams();
+          if (filters?.agentId) queryParams.append('agentId', filters.agentId);
+          if (filters?.status) queryParams.append('status', filters.status);
+          if (filters?.period) queryParams.append('period', filters.period);
+          if (filters?.type) queryParams.append('type', filters.type);
+
+          const qs = queryParams.toString();
+          const data = await request<{ success: boolean; commissions: CommissionRecord[] }>(`/commissions${qs ? `?${qs}` : ''}`);
+          return data.commissions;
+        } catch (err) {
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
+          return loadDemoCommissions().filter((c) => {
+            if (filters?.agentId && c.agentId !== filters.agentId) return false;
+            if (filters?.status && c.status !== filters.status) return false;
+            if (filters?.period && c.period !== filters.period) return false;
+            if (filters?.type && c.type !== filters.type) return false;
+            return true;
+          });
+        }
+      },
+
+      async getBatches(agentId?: string): Promise<SettlementBatch[]> {
+        try {
+          await api.auth.ensureToken();
+          const qs = agentId ? `?agentId=${encodeURIComponent(agentId)}` : '';
+          const data = await request<{ success: boolean; batches: SettlementBatch[] }>(`/commissions/batches${qs}`);
+          return data.batches;
+        } catch (err) {
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
+          const batches = loadDemoBatches();
+          return agentId ? batches.filter((b) => b.agentId === agentId) : batches;
+        }
+      },
+
+      async generate(payload: {
+        agentId: string;
+        agentName: string;
+        contractId: string;
+        customerName: string;
+        podOrPdr: string;
+        utilityType: 'luce' | 'gas';
+        customerType?: 'residential' | 'business';
+        annualConsumption?: number;
+        isDualFuel?: boolean;
+      }): Promise<{ records: CommissionRecord[]; totalEur: number }> {
+        try {
+          await api.auth.ensureToken();
+          const data = await request<{ success: boolean; records: CommissionRecord[]; totalEur: number }>('/commissions/generate', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          return { records: data.records, totalEur: data.totalEur };
+        } catch (err) {
+          if (API_BASE_URL && !isDemoSessionActive()) throw err;
+          if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
+          const existing = loadDemoCommissions();
+          const already = existing.filter((r) => r.contractId === payload.contractId);
+          if (already.length > 0) {
+            return { records: already, totalEur: Number(already.reduce((s, r) => s + r.amountEur, 0).toFixed(2)) };
+          }
+          const amount = payload.customerType === 'business' ? 130.0 : 75.0;
+          const rec: CommissionRecord = {
+            id: `comm-${Date.now()}`,
+            agentId: payload.agentId,
+            agentName: payload.agentName,
+            contractId: payload.contractId,
+            customerName: payload.customerName,
+            podOrPdr: payload.podOrPdr,
+            utilityType: payload.utilityType,
+            customerType: payload.customerType || 'residential',
+            annualConsumption: payload.annualConsumption || 3200,
+            type: 'bonus',
+            amountEur: amount,
+            status: 'accrued',
+            period: new Date().toISOString().slice(0, 7),
+            accrualDate: new Date().toISOString(),
+          };
+          saveDemoCommissions([rec, ...existing]);
+          return { records: [rec], totalEur: amount };
+        }
+      },
+
+      async settle(payload: {
+        agentId: string;
+        commissionIds: string[];
+        paymentReference?: string;
+        notes?: string;
+      }): Promise<{ batch: SettlementBatch; updatedCount: number }> {
+        if (API_BASE_URL) {
+          try {
+            await api.auth.ensureToken();
+            const data = await request<{ success: boolean; batch: SettlementBatch; updatedCount: number }>('/commissions/settle', {
+              method: 'POST',
+              body: JSON.stringify(payload)
+            });
+            return { batch: data.batch, updatedCount: data.updatedCount };
+          } catch (err) {
+            if (API_BASE_URL && !isDemoSessionActive()) throw err;
+            if (!isStandaloneDemo && !isDemoSessionActive()) throw err;
+          }
+        }
+        const nowIso = new Date().toISOString();
+        const batchId = `batch-${Date.now()}`;
+        const payRef = payload.paymentReference || `BON-${Date.now()}`;
+        const idSet = new Set(payload.commissionIds);
+        const all = loadDemoCommissions();
+        let totalAmountEur = 0;
+        let updatedCount = 0;
+        let agentName = 'Consulente Volta';
+        const updated = all.map((c) => {
+          if (idSet.has(c.id) && c.agentId === payload.agentId && c.status !== 'settled') {
+            totalAmountEur += c.amountEur;
+            updatedCount += 1;
+            agentName = c.agentName;
+            return { ...c, status: 'settled' as const, settlementDate: nowIso, paymentReference: payRef };
+          }
+          if (c.agentId === payload.agentId) agentName = c.agentName;
+          return c;
+        });
+        saveDemoCommissions(updated);
+        const batch: SettlementBatch = {
+          id: batchId,
+          agentId: payload.agentId,
+          agentName,
+          period: nowIso.slice(0, 7),
+          totalAmountEur: Number(totalAmountEur.toFixed(2)),
+          settlementDate: nowIso,
+          paymentReference: payRef,
+          commissionCount: updatedCount,
+          notes: payload.notes,
+        };
+        saveDemoBatches([batch, ...loadDemoBatches()]);
+        return { batch, updatedCount };
       }
-      const dummyBatch: SettlementBatch = {
-        id: `batch-${Date.now()}`,
-        agentId: payload.agentId,
-        agentName: 'Agente Liquidato',
-        period: new Date().toISOString().slice(0, 7),
-        totalAmountEur: 0,
-        settlementDate: new Date().toISOString(),
-        paymentReference: payload.paymentReference || `BON-${Date.now()}`,
-        commissionCount: payload.commissionIds.length,
-        notes: payload.notes
-      };
-      return { batch: dummyBatch, updatedCount: payload.commissionIds.length };
-    }
-  }
+    };
+  })()
 };
 

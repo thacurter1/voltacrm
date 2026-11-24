@@ -53,7 +53,7 @@ app.use(cors({
     }
     try {
       const parsed = new URL(origin);
-      const isLocalSubdomain = parsed.hostname === 'localhost' || parsed.hostname.endsWith('.localhost');
+      const isLocalSubdomain = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname.endsWith('.localhost');
       const isAllowedProdSubdomain = allowedOrigins.some(allowed => {
         try {
           const base = new URL(allowed);

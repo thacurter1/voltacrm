@@ -43,7 +43,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
   const [newOpName, setNewOpName] = useState('');
   const [newOpEmail, setNewOpEmail] = useState('');
   const [newOpPhone, setNewOpPhone] = useState('');
-  const [newOpRole, setNewOpRole] = useState<'admin' | 'call_center'>('call_center');
+  const [newOpRole, setNewOpRole] = useState<'admin' | 'call_center' | 'broker' | 'operator'>('call_center');
   const [generatedStaffInvite, setGeneratedStaffInvite] = useState<{ link: string; name: string } | null>(null);
 
   // Form State: Invito Cliente
@@ -58,7 +58,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
     clientName: string;
   } | null>(null);
 
-  const operators = profiles.filter(p => p.role === 'admin' || p.role === 'call_center');
+  const operators = profiles.filter(p => p.role !== 'customer');
   const customerProfiles = profiles.filter(p => p.role === 'customer');
 
   const handleCopyLink = (text: string, id: string) => {
@@ -311,7 +311,13 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                           ? 'bg-[#DCEAF3] text-[#145374]'
                           : 'bg-[#EAF4F0] text-[#0A6847]'
                       }`}>
-                        {op.role === 'admin' ? 'Super Admin' : 'Consulente Call Center'}
+                        {op.role === 'admin'
+                          ? 'Super Admin'
+                          : op.role === 'broker'
+                            ? 'Broker Energetico'
+                            : op.role === 'operator'
+                              ? 'Consulente Senior'
+                              : 'Consulente Call Center'}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-[#425466]">
@@ -355,7 +361,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
             </span>
             <button
               onClick={() => setIsInviteCustomerOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-[#0A6847] text-white text-xs font-semibold hover:bg-[#534be0] transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#0A6847] text-white text-xs font-semibold hover:bg-[#085238] transition-colors cursor-pointer"
             >
               + Genera Nuovo Invito
             </button>
@@ -479,11 +485,13 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                 <label className="block text-[11px] font-semibold text-[#0F222D] mb-1">Livello di Accesso</label>
                 <select
                   value={newOpRole}
-                  onChange={e => setNewOpRole(e.target.value as 'admin' | 'call_center')}
+                  onChange={e => setNewOpRole(e.target.value as 'admin' | 'call_center' | 'broker' | 'operator')}
                   className="w-full px-3 py-2 rounded-xl border border-[#DCE5E8] focus:border-[#0A6847] focus:outline-hidden bg-white"
                 >
-                  <option value="call_center">Consulente Call Center / Commerciale</option>
-                  <option value="admin">Super Admin / Amministratore Agenzia</option>
+                  <option value="call_center">Operatore Call Center / Presa Appuntamenti</option>
+                  <option value="broker">Broker / Consulente Energetico</option>
+                  <option value="operator">Consulente Senior / Backoffice</option>
+                  <option value="admin">Super Admin / Direzione Agenzia</option>
                 </select>
               </div>
 
@@ -497,7 +505,7 @@ export const TeamProfilesManager: React.FC<TeamProfilesManagerProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#0A6847] text-white font-semibold hover:bg-[#534be0] cursor-pointer shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-[#0A6847] text-white font-semibold hover:bg-[#085238] cursor-pointer shadow-xs"
                 >
                   Crea Profilo Operatore
                 </button>

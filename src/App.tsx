@@ -484,6 +484,7 @@ function UnifiedApp() {
   const [pending2FAUser, setPending2FAUser] = useState<UserProfile | null>(null);
   const [pdfProposalAudit, setPdfProposalAudit] = useState<SwitchAudit | null>(null);
   const [signatureAudit, setSignatureAudit] = useState<SwitchAudit | null>(null);
+  const [signaturesVersion, setSignaturesVersion] = useState(0);
   
   // Slide Over Drawer State
   const [drawerState, setDrawerState] = useState<{
@@ -546,17 +547,25 @@ function UnifiedApp() {
     try {
       const saved = await api.operations.saveAppointment(newApp);
       setAppointments(prev => [saved, ...prev.filter(item => item.id !== saved.id)]);
-    setLeads(prev => prev.map(l => {
-      if (l.id === saved.leadId) {
-        return {
-          ...l,
-          status: 'appointment_booked' as LeadStatus,
-          appointmentId: saved.id,
-          assignedCallCenterAgent: saved.agentName,
-        };
+      const matchingLead = leads.find(l => l.id === saved.leadId);
+      if (matchingLead) {
+        const persistedLead = await api.leads.updateStatus(
+          saved.leadId,
+          'appointment_booked',
+          `Appuntamento fissato con ${saved.agentName}`
+        ).catch(() => undefined);
+        setLeads(prev => prev.map(l => {
+          if (l.id === saved.leadId) {
+            return {
+              ...(persistedLead || l),
+              status: 'appointment_booked' as LeadStatus,
+              appointmentId: saved.id,
+              assignedCallCenterAgent: saved.agentName,
+            };
+          }
+          return l;
+        }));
       }
-      return l;
-    }));
       addToast('Appuntamento Confermato', `Fissato incontro con ${saved.customerName} per il ${new Date(saved.scheduledAt).toLocaleDateString('it-IT')}.`, 'success');
     } catch (error) {
       addToast('Appuntamento non salvato', error instanceof Error ? error.message : 'Riprova.', 'warning');
@@ -923,12 +932,13 @@ function UnifiedApp() {
                     ...data,
                     id: data.id || `app-${Date.now()}`
                   } as Appointment;
-                  handleScheduleAppointment(fullApp);
+                  return handleScheduleAppointment(fullApp);
                 }}
                 onUpdateAppointmentStatus={(id, st) => {
-                  handleUpdateAppointmentStatus(id, st);
+                  return handleUpdateAppointmentStatus(id, st);
                 }}
                 onConvertToCustomer={handleConvertToCustomer}
+                onToast={addToast}
                 onBulkImportSuccess={() => {
                   api.leads.getAll().then((updatedLeads: Lead[]) => {
                     if (updatedLeads && updatedLeads.length > 0) setLeads(updatedLeads);
@@ -1038,7 +1048,9 @@ function UnifiedApp() {
                   onOpenProposalPdf={(audit) => setPdfProposalAudit(audit)}
                   onToast={addToast}
                 />
-                <SignatureActivationPanel onActivated={(signature, commissions) => {
+                <SignatureActivationPanel
+                  key={signaturesVersion}
+                  onActivated={(signature, commissions) => {
                   setAudits(prev => prev.map(a => a.customerId === signature.customerId && a.podOrPdr === signature.podOrPdr
                     ? { ...a, status: 'switched' as const }
                     : a));
@@ -1113,6 +1125,7 @@ function UnifiedApp() {
       {/* Modal di prenotazione appuntamento */}
       <ScheduleAppointmentModal
         lead={schedulingLead}
+        consultants={profiles}
         isOpen={!!schedulingLead}
         onClose={() => setSchedulingLead(null)}
         onSchedule={handleScheduleAppointment}
@@ -1196,6 +1209,7 @@ function UnifiedApp() {
         customerFiscalCode={customers.find(c => c.id === signatureAudit?.customerId)?.fiscalCode}
         onSigned={(auditId, signatureType, receipt) => {
           setAudits(prev => prev.map(a => a.id === auditId ? { ...a, status: 'signed' as const } : a));
+          setSignaturesVersion(v => v + 1);
           addToast('Firma Registrata', 'La richiesta è firmata e attende la conferma di attivazione dello staff.', 'success');
           recordSecurityLog(
             'switch_signed_otp', 

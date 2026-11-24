@@ -20,7 +20,7 @@ export const validate = (schema: ZodSchema) => {
 export const createLeadSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(1),
-  email: z.string().email().optional(),
+  email: z.union([z.string().email(), z.literal('')]).optional(),
   city: z.string().optional(),
   source: z.string().optional(),
   status: z.string().optional(),

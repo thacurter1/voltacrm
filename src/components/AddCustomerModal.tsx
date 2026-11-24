@@ -645,8 +645,10 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
 
             {activeTab === 'anagrafica' ? (
               <button
+                key="next-to-forniture"
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   if (!name.trim()) {
                     setError('Inserisci il nome del cliente prima di procedere.');
                     return;
@@ -664,6 +666,7 @@ const AddCustomerModalDialog: React.FC<AddCustomerModalProps> = ({
               </button>
             ) : (
               <button
+                key="submit-new-customer"
                 type="submit"
                 disabled={isSubmitting}
                 className="min-h-[44px] px-5 py-2.5 rounded-lg bg-[#0A6847] hover:bg-[#085238] text-white font-semibold shadow-xs cursor-pointer active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"

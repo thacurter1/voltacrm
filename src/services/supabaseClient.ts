@@ -173,7 +173,7 @@ class ProfileService {
   async createOperatorProfile(operator: {
     name: string;
     email: string;
-    role: 'admin' | 'call_center';
+    role: 'admin' | 'call_center' | 'broker' | 'operator';
     phone: string;
     whatsapp: string;
   }): Promise<{ profile: UserProfile; inviteLink?: string; emailSent?: boolean; deliveryError?: string }> {
