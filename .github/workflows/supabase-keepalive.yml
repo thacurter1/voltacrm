@@ -1,0 +1,24 @@
+name: Supabase & Render Keep-Alive
+
+on:
+  schedule:
+    # Runs twice daily (07:17 and 19:17 UTC) off the top of the hour to avoid runner queue spikes
+    - cron: '17 7,19 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Wake Render API and ping Supabase
+        env:
+          HEALTH_URL: ${{ vars.HEALTHCHECK_URL || 'https://voltacrm-api.onrender.com/api/health' }}
+        run: |
+          echo "Pinging $HEALTH_URL (allowing up to 90s for Render cold start)..."
+          RESPONSE=$(curl -fsS --max-time 90 --retry 3 --retry-delay 10 --retry-all-errors "$HEALTH_URL")
+          echo "Health response received."
+          echo "$RESPONSE" | grep -q '"status":"healthy"'
+          echo "Supabase & Render health verified."
